@@ -8,14 +8,14 @@
 
 ## SECTION A
 
-|                         |                                                   |
-|-------------------------|---------------------------------------------------|
-| **Project Title:**      | Blockchain-based Credential Verification Platform |
-| **Student 1 Name:**     | Christopher Dobey                                 |
-| **Student 1 ID:**       | 20756959                                          |
-| **Student 2 Name:**     | Pádraig Mann                                      |
-| **Student 2 ID:**       | 21477812                                          |
-| **Project Supervisor:** | *[TBC]* <---------------------                    |
+|                         |                                                         |
+|-------------------------|---------------------------------------------------------|
+| **Project Title:**      | Legitify: Empowering Trust Through Verified Credentials |
+| **Student 1 Name:**     | Christopher Dobey                                       |
+| **Student 1 ID:**       | 20756959                                                |
+| **Student 2 Name:**     | Pádraig Mann                                            |
+| **Student 2 ID:**       | 21477812                                                |
+| **Project Supervisor:** | *[TBC]* <---------------------                          |
 
 > Ensure that the Supervisor formally agrees to supervise your project; this is only recognised once the
 > Supervisor assigns herself/himself via the project Dashboard.
