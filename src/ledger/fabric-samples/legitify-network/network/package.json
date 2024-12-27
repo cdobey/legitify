@@ -1,0 +1,13 @@
+{
+    "devDependencies": {
+        "@types/jest": "^29.5.14",
+        "fabric-ca-client": "^2.2.20",
+        "fabric-network": "^2.2.20",
+        "jest": "^29.7.0",
+        "typescript": "^5.7.2"
+    },
+    "scripts": {
+        "test": "jest --forceExit --detectOpenHandles",
+        "build": "npx tsc"
+    }
+}

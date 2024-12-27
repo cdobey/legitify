@@ -1,0 +1,191 @@
+################################################################################
+#
+#   configtx.yaml
+#
+################################################################################
+
+###############################################################################
+#
+#   1)  Organizations
+#       Define each organization, its MSP ID, MSP directory, and (optionally)
+#       organizational policies.
+#
+###############################################################################
+Organizations:
+  ###########################################################################
+  # Orderer Organization
+  ###########################################################################
+  - &OrdererOrg
+    Name: OrdererMSP
+    ID: OrdererMSP
+    MSPDir: ../organizations/ordererOrganizations/legitify.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererMSP.admin')"
+
+  ###########################################################################
+  # Peer Organization (University)
+  ###########################################################################
+  - &UniversityOrg
+    Name: UniversityMSP
+    ID: UniversityMSP
+    MSPDir: ../organizations/peerOrganizations/university.legitify.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('UniversityMSP.admin', 'UniversityMSP.peer', 'UniversityMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('UniversityMSP.admin', 'UniversityMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('UniversityMSP.admin')"
+
+###############################################################################
+#
+#   2)  Capabilities
+#       Enable capabilities for the channel, orderer, and application groups.
+#
+###############################################################################
+Capabilities:
+  Channel: &ChannelCapabilities
+    V2_0: true
+
+  Orderer: &OrdererCapabilities
+    V2_0: true
+
+  Application: &ApplicationCapabilities
+    V2_0: true
+
+###############################################################################
+#
+#   3)  Application Defaults
+#       Default values and policies for the application group.
+#
+###############################################################################
+Application: &ApplicationDefaults
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+  Capabilities:
+    <<: *ApplicationCapabilities
+
+###############################################################################
+#
+#   4)  Orderer Defaults
+#       Default values for the orderer group (etcdraft example here).
+#
+###############################################################################
+Orderer: &OrdererDefaults
+  OrdererType: etcdraft
+  Addresses:
+    - orderer.legitify.com:7050
+
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+
+  EtcdRaft:
+    Consenters:
+      - Host: orderer.legitify.com
+        Port: 7050
+        ClientTLSCert: ../organizations/ordererOrganizations/legitify.com/orderers/orderer.legitify.com/tls/server.crt
+        ServerTLSCert: ../organizations/ordererOrganizations/legitify.com/orderers/orderer.legitify.com/tls/server.crt
+
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+
+  Capabilities:
+    <<: *OrdererCapabilities
+
+###############################################################################
+#
+#   5)  Channel Defaults
+#       Top-level channel policies/capabilities. Critical for system-channel.
+#
+###############################################################################
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+  Capabilities:
+    <<: *ChannelCapabilities
+
+###############################################################################
+#
+#   6)  Profiles
+#       Profiles define combinations of:
+#         - Channel-level defaults (policies, capabilities)
+#         - Orderer configuration
+#         - Consortium definitions
+#         - Organizations participating
+#
+###############################################################################
+Profiles:
+  ###########################################################################
+  # Profile for creating an application channel
+  ###########################################################################
+  TwoOrgsChannel:
+    Consortium: SampleConsortium
+    <<: *ChannelDefaults
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *UniversityOrg
+
+  ###########################################################################
+  # Profile for creating the system channel (genesis block)
+  ###########################################################################
+  TwoOrgsOrdererGenesis:
+    <<: *ChannelDefaults # Inherit channel-level policies to avoid "no policies defined" error
+
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererOrg
+
+    Consortiums:
+      SampleConsortium:
+        Organizations:
+          - *UniversityOrg

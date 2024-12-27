@@ -1,0 +1,51 @@
+{
+    "name": "legitify-network",
+    "version": "1.0.0",
+    "client": {
+        "organization": "UniversityOrg",
+        "connection": {
+            "timeout": {
+                "peer": {
+                    "endorser": "300"
+                },
+                "orderer": "300"
+            }
+        }
+    },
+    "organizations": {
+        "UniversityOrg": {
+            "mspid": "UniversityMSP",
+            "peers": ["peer0.university.legitify.com"],
+            "certificateAuthorities": []
+        }
+    },
+    "peers": {
+        "peer0.university.legitify.com": {
+            "url": "grpcs://localhost:7051",
+            "tlsCACerts": {
+                "path": "/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/ledger/fabric-samples/legitify-network/network/organizations/peerOrganizations/university.legitify.com/tlsca/tlsca.university.legitify.com-cert.pem"
+            }
+        }
+    },
+    "orderers": {
+        "orderer.legitify.com": {
+            "url": "grpcs://localhost:7050",
+            "tlsCACerts": {
+                "path": "/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/ledger/fabric-samples/legitify-network/network/organizations/ordererOrganizations/legitify.com/tlsca/tlsca.legitify.com-cert.pem"
+            }
+        }
+    },
+    "channels": {
+        "legitifychannel": {
+            "orderers": ["orderer.legitify.com"],
+            "peers": {
+                "peer0.university.legitify.com": {
+                    "endorsingPeer": true,
+                    "chaincodeQuery": true,
+                    "ledgerQuery": true,
+                    "eventSource": true
+                }
+            }
+        }
+    }
+}
