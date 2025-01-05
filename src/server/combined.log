@@ -1,0 +1,28 @@
+2025-01-05T23:13:33.862Z [[32minfo[39m]: Environment Variables:
+2025-01-05T23:13:33.864Z [[32minfo[39m]: Resolved ccpPath:
+2025-01-05T23:13:33.872Z [[32minfo[39m]: Wallet contents:
+2025-01-05T23:13:33.873Z [[32minfo[39m]: Retrieved identity:
+2025-01-05T23:18:23.878Z [[32minfo[39m]: Environment Variables:
+2025-01-05T23:18:23.878Z [[32minfo[39m]: Resolved ccpPath:
+2025-01-05T23:18:23.881Z [[32minfo[39m]: Wallet contents:
+2025-01-05T23:18:23.887Z [[32minfo[39m]: Retrieved identity:
+2025-01-05T23:24:59.457Z [[32minfo[39m]: Environment Variables:
+2025-01-05T23:24:59.459Z [[32minfo[39m]: Resolved ccpPath:
+2025-01-05T23:29:33.832Z [[32minfo[39m]: Environment Variables:
+2025-01-05T23:29:33.835Z [[32minfo[39m]: Resolved ccpPath:
+2025-01-05T23:32:05.517Z [[32minfo[39m]: Environment Variables:
+2025-01-05T23:32:05.519Z [[32minfo[39m]: Resolved ccpPath:
+2025-01-05T23:34:07.937Z [[32minfo[39m]: Environment Variables:
+2025-01-05T23:34:07.939Z [[32minfo[39m]: Resolved ccpPath:
+2025-01-05T23:34:07.940Z [[31merror[39m]: Error reading keystore directory: ENOENT: no such file or directory, scandir '/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/ledger/fabric-samples/test-network/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore'
+2025-01-05T23:40:25.552Z [[31merror[39m]: Base directory does not exist: /Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/ledger/fabric-samples/test-network
+2025-01-05T23:42:25.411Z [[32minfo[39m]: Environment Variables:
+2025-01-05T23:42:25.415Z [[32minfo[39m]: Successfully loaded connection profile
+2025-01-05T23:42:25.416Z [[32minfo[39m]: Wallet initialized at:
+2025-01-05T23:42:25.416Z [[32minfo[39m]: Found 1 files in keystore directory
+2025-01-05T23:42:25.416Z [[32minfo[39m]: Found private key file: 3a0a96b665b26393b3e0e0417943335b846692644125c00c846cbc0d31ac2614_sk
+2025-01-05T23:42:25.433Z [[32minfo[39m]: Successfully stored admin identity in wallet
+2025-01-05T23:42:25.434Z [[32minfo[39m]: Wallet contents:
+2025-01-05T23:42:25.439Z [[32minfo[39m]: Successfully retrieved identity from wallet
+2025-01-05T23:42:25.541Z [[32minfo[39m]: Successfully connected to gateway
+2025-01-05T23:42:25.582Z [[32minfo[39m]: Successfully connected to the network and contract

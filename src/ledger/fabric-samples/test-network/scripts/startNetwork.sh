@@ -1,9 +1,7 @@
 #!/bin/bash
 
-# Load environment variables
-set -o allexport
+# Source the .env file
 source .env
-set +o allexport
 
 # Bring down any existing network
 echo "Shutting down existing network..."

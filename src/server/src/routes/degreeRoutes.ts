@@ -7,13 +7,7 @@ app.post("/issueDegree", async (req: Request, res: Response) => {
   try {
     const { id, university, recipient, title, issueDate } = req.body;
 
-    const { network, gateway } = await getNetwork(
-      "./connections/connection-org1.json", // example path
-      "./wallet", // example wallet path
-      "appUser", // user in your wallet
-      "mychannel",
-      "degreeCC"
-    );
+    const { network, gateway } = await getNetwork();
 
     const contract = network.getContract("degreeCC");
     const result = await contract.submitTransaction(
