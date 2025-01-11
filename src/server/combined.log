@@ -26,3 +26,53 @@
 2025-01-05T23:42:25.439Z [[32minfo[39m]: Successfully retrieved identity from wallet
 2025-01-05T23:42:25.541Z [[32minfo[39m]: Successfully connected to gateway
 2025-01-05T23:42:25.582Z [[32minfo[39m]: Successfully connected to the network and contract
+2025-01-05T23:43:40.575Z [[32minfo[39m]: Environment Variables:
+2025-01-05T23:43:40.575Z [[32minfo[39m]: Successfully loaded connection profile
+2025-01-05T23:43:40.576Z [[32minfo[39m]: Wallet initialized at:
+2025-01-05T23:43:40.576Z [[32minfo[39m]: Found 1 files in keystore directory
+2025-01-05T23:43:40.576Z [[32minfo[39m]: Found private key file: 3a0a96b665b26393b3e0e0417943335b846692644125c00c846cbc0d31ac2614_sk
+2025-01-05T23:43:40.577Z [[32minfo[39m]: Successfully stored admin identity in wallet
+2025-01-05T23:43:40.577Z [[32minfo[39m]: Wallet contents:
+2025-01-05T23:43:40.581Z [[32minfo[39m]: Successfully retrieved identity from wallet
+2025-01-05T23:43:40.646Z [[32minfo[39m]: Successfully connected to gateway
+2025-01-05T23:43:40.674Z [[32minfo[39m]: Successfully connected to the network and contract
+2025-01-05T23:43:45.687Z [[32minfo[39m]: Environment Variables:
+2025-01-05T23:43:45.687Z [[32minfo[39m]: Successfully loaded connection profile
+2025-01-05T23:43:45.687Z [[32minfo[39m]: Wallet initialized at:
+2025-01-05T23:43:45.688Z [[32minfo[39m]: Found 1 files in keystore directory
+2025-01-05T23:43:45.688Z [[32minfo[39m]: Found private key file: 3a0a96b665b26393b3e0e0417943335b846692644125c00c846cbc0d31ac2614_sk
+2025-01-05T23:43:45.688Z [[32minfo[39m]: Successfully stored admin identity in wallet
+2025-01-05T23:43:45.689Z [[32minfo[39m]: Wallet contents:
+2025-01-05T23:43:45.693Z [[32minfo[39m]: Successfully retrieved identity from wallet
+2025-01-05T23:43:45.746Z [[32minfo[39m]: Successfully connected to gateway
+2025-01-05T23:43:45.771Z [[32minfo[39m]: Successfully connected to the network and contract
+2025-01-11T01:47:47.532Z [[32minfo[39m]: Environment Variables:
+2025-01-11T01:47:47.535Z [[32minfo[39m]: Successfully loaded connection profile
+2025-01-11T01:47:47.536Z [[32minfo[39m]: Wallet initialized at:
+2025-01-11T01:47:47.537Z [[32minfo[39m]: Found 1 files in keystore directory
+2025-01-11T01:47:47.537Z [[32minfo[39m]: Found private key file: 6e0b2bf1e4376e2fab57a092fbd3ab88dfd2e4ef5710209f6de9782acdd3df89_sk
+2025-01-11T01:47:47.540Z [[32minfo[39m]: Successfully stored admin identity in wallet
+2025-01-11T01:47:47.541Z [[32minfo[39m]: Wallet contents:
+2025-01-11T01:47:47.544Z [[32minfo[39m]: Successfully retrieved identity from wallet
+2025-01-11T01:47:47.653Z [[32minfo[39m]: Successfully connected to gateway
+2025-01-11T01:47:47.692Z [[32minfo[39m]: Successfully connected to the network and contract
+2025-01-11T01:52:00.877Z [[32minfo[39m]: Environment Variables:
+2025-01-11T01:52:00.904Z [[32minfo[39m]: Successfully loaded connection profile
+2025-01-11T01:52:00.905Z [[32minfo[39m]: Wallet initialized at:
+2025-01-11T01:52:00.907Z [[32minfo[39m]: Found 1 files in keystore directory
+2025-01-11T01:52:00.907Z [[32minfo[39m]: Found private key file: 6e0b2bf1e4376e2fab57a092fbd3ab88dfd2e4ef5710209f6de9782acdd3df89_sk
+2025-01-11T01:52:00.938Z [[32minfo[39m]: Successfully stored admin identity in wallet
+2025-01-11T01:52:00.938Z [[32minfo[39m]: Wallet contents:
+2025-01-11T01:52:00.941Z [[32minfo[39m]: Successfully retrieved identity from wallet
+2025-01-11T01:52:00.998Z [[32minfo[39m]: Successfully connected to gateway
+2025-01-11T01:52:01.027Z [[32minfo[39m]: Successfully connected to the network and contract
+2025-01-11T01:52:25.111Z [[32minfo[39m]: Environment Variables:
+2025-01-11T01:52:25.114Z [[32minfo[39m]: Successfully loaded connection profile
+2025-01-11T01:52:25.115Z [[32minfo[39m]: Wallet initialized at:
+2025-01-11T01:52:25.116Z [[32minfo[39m]: Found 1 files in keystore directory
+2025-01-11T01:52:25.116Z [[32minfo[39m]: Found private key file: 6e0b2bf1e4376e2fab57a092fbd3ab88dfd2e4ef5710209f6de9782acdd3df89_sk
+2025-01-11T01:52:25.117Z [[32minfo[39m]: Successfully stored admin identity in wallet
+2025-01-11T01:52:25.118Z [[32minfo[39m]: Wallet contents:
+2025-01-11T01:52:25.121Z [[32minfo[39m]: Successfully retrieved identity from wallet
+2025-01-11T01:52:25.235Z [[32minfo[39m]: Successfully connected to gateway
+2025-01-11T01:52:25.277Z [[32minfo[39m]: Successfully connected to the network and contract
