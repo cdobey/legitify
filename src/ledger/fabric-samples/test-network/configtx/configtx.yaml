@@ -229,7 +229,7 @@ Channel: &ChannelDefaults
 #
 ################################################################################
 Profiles:
-  ThreeOrgsApplicationChannel:
+  ChannelUsingRaft:
     <<: *ChannelDefaults
     Orderer:
       <<: *OrdererDefaults
