@@ -23,6 +23,15 @@ type SmartContract struct {
 
 // IssueDegree issues a degree
 func (s *SmartContract) IssueDegree(ctx contractapi.TransactionContextInterface, id string, university string, recipient string, title string, issueDate string) error {
+	// Check if the initiator is the university
+	clientMSPID, err := ctx.GetClientIdentity().GetMSPID()
+	if err != nil {
+		return fmt.Errorf("failed to get client MSP ID: %v", err)
+	}
+	if clientMSPID != "OrgUniversityMSP" {
+		return fmt.Errorf("only the university can issue degrees")
+	}
+
 	degree := Degree{
 		ID:         id,
 		University: university,
@@ -41,6 +50,15 @@ func (s *SmartContract) IssueDegree(ctx contractapi.TransactionContextInterface,
 
 // ReadDegree retrieves a degree
 func (s *SmartContract) ReadDegree(ctx contractapi.TransactionContextInterface, id string) (*Degree, error) {
+	// Check if the initiator is an employer or individual
+	clientMSPID, err := ctx.GetClientIdentity().GetMSPID()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get client MSP ID: %v", err)
+	}
+	if clientMSPID != "OrgEmployerMSP" && clientMSPID != "OrgIndividualMSP" {
+		return nil, fmt.Errorf("only employers and individuals can query degrees")
+	}
+
 	degreeJSON, err := ctx.GetStub().GetState(id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read from world state: %v", err)
@@ -60,6 +78,15 @@ func (s *SmartContract) ReadDegree(ctx contractapi.TransactionContextInterface, 
 
 // ValidateDegree checks the existence of a degree
 func (s *SmartContract) ValidateDegree(ctx contractapi.TransactionContextInterface, id string) (bool, error) {
+	// Check if the initiator is an employer or individual
+	clientMSPID, err := ctx.GetClientIdentity().GetMSPID()
+	if err != nil {
+		return false, fmt.Errorf("failed to get client MSP ID: %v", err)
+	}
+	if clientMSPID != "OrgEmployerMSP" && clientMSPID != "OrgIndividualMSP" {
+		return false, fmt.Errorf("only employers and individuals can validate degrees")
+	}
+
 	degreeJSON, err := ctx.GetStub().GetState(id)
 	if err != nil {
 		return false, err
