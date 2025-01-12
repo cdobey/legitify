@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# imports  
+# Imports  
 . scripts/envVar.sh
 
 CHANNEL_NAME="$1"
@@ -95,7 +95,6 @@ setAnchorPeer() {
   . scripts/setAnchorPeer.sh $ORG $CHANNEL_NAME 
 }
 
-
 ## User attempts to use BFT orderer in Fabric network with CA
 if [ $BFT -eq 1 ] && [ -d "organizations/fabric-ca/ordererOrg/msp" ]; then
   fatalln "Fabric network seems to be using CA. This sample does not yet support the use of consensus type BFT and CA together."
@@ -111,7 +110,6 @@ if [ $BFT -eq 1 ]; then
   FABRIC_CFG_PATH=${PWD}/bft-config
 fi
 createChannelGenesisBlock $BFT
-
 
 ## Create channel
 infoln "Creating channel ${CHANNEL_NAME}"

@@ -1,19 +1,9 @@
 #!/bin/bash
 #
-# Copyright IBM Corp All Rights Reserved
-#
-# SPDX-License-Identifier: Apache-2.0
+# Collection of bash functions used by different scripts
 #
 
-# This is a collection of bash functions used by different scripts
-
-# imports
-# test network home var targets to test-network folder
-# the reason we use a var here is to accommodate scenarios
-# where execution occurs from folders outside of default as $PWD, such as the test-network/addOrg3 folder.
-# For setting environment variables, simple relative paths like ".." could lead to unintended references
-# due to how they interact with FABRIC_CFG_PATH. It's advised to specify paths more explicitly,
-# such as using "../${PWD}", to ensure that Fabric's environment variables are pointing to the correct paths.
+# Import utilities
 TEST_NETWORK_HOME=${TEST_NETWORK_HOME:-${PWD}}
 . ${TEST_NETWORK_HOME}/scripts/utils.sh
 
@@ -49,6 +39,7 @@ setGlobals() {
     export CORE_PEER_ADDRESS=localhost:9051
   else
     errorln "ORG Unknown"
+    exit 1
   fi
 
   if [ "$VERBOSE" = "true" ]; then
@@ -83,7 +74,13 @@ parsePeerConnectionParameters() {
     PEER_CONN_PARMS=("${PEER_CONN_PARMS[@]}" --peerAddresses $CORE_PEER_ADDRESS)
 
     # Add TLS root certificate
-    CA=PEER0_ORG$1_CA
+    case $1 in
+      1) CA=PEER0_ORGUNIVERSITY_CA ;;
+      2) CA=PEER0_ORGEMPLOYER_CA ;;
+      3) CA=PEER0_ORGINDIVIDUAL_CA ;;
+      *) errorln "Invalid organization identifier: $1. Must be 1, 2, or 3." ;;
+    esac
+
     if [ -z "${!CA}" ]; then
       errorln "TLS root certificate file for $PEER is not set or invalid."
       exit 1
@@ -98,7 +95,6 @@ parsePeerConnectionParameters() {
   # Debug output
   infoln "PEER_CONN_PARMS: ${PEER_CONN_PARMS[@]}"
 }
-
 
 verifyResult() {
   if [ $1 -ne 0 ]; then
