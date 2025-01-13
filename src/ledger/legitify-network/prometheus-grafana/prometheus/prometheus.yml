@@ -1,25 +1,60 @@
 global:
-  scrape_interval: 1s
+  scrape_interval: 15s
+  evaluation_interval: 15s
   external_labels:
-    monitor: 'devopsage-monitor'
+    monitor: "fabric-monitor"
 
 scrape_configs:
   - job_name: "prometheus"
     static_configs:
       - targets: ["localhost:9090"]
+
   - job_name: "orderer"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/certs/orderer_ca.crt
+      cert_file: /etc/prometheus/certs/orderer_ca.crt # Typically, Prometheus doesn't need client certs unless mutual TLS is required
+      key_file: /etc/prometheus/certs/orderer_ca.crt # Not needed unless mutual TLS
+      insecure_skip_verify: true
     static_configs:
       - targets: ["orderer.example.com:9443"]
-  - job_name: "peer0_org1"
+
+  - job_name: "peer0_orgemployer"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/certs/peer0_orgemployer_ca.crt
+      cert_file: /etc/prometheus/certs/peer0_orgemployer_ca.crt # Typically not needed unless mutual TLS
+      key_file: /etc/prometheus/certs/peer0_orgemployer_ca.crt # Typically not needed unless mutual TLS
+      insecure_skip_verify: true
     static_configs:
-      - targets: ["peer0.org1.example.com:9444"]
-  - job_name: "peer0_org2"
+      - targets: ["peer0.orgemployer.com:9445"]
+
+  - job_name: "peer0_orguniversity"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/certs/peer0_orguniversity_ca.crt
+      cert_file: /etc/prometheus/certs/peer0_orguniversity_ca.crt
+      key_file: /etc/prometheus/certs/peer0_orguniversity_ca.crt
+      insecure_skip_verify: true
     static_configs:
-      - targets: ["peer0.org2.example.com:9445"]
-  - job_name: cadvisor
+      - targets: ["peer0.orguniversity.com:9444"]
+
+  - job_name: "peer0_orgindividual"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/certs/peer0_orgindividual_ca.crt
+      cert_file: /etc/prometheus/certs/peer0_orgindividual_ca.crt
+      key_file: /etc/prometheus/certs/peer0_orgindividual_ca.crt
+      insecure_skip_verify: true
+    static_configs:
+      - targets: ["peer0.orgindividual.com:9446"]
+
+  - job_name: "cadvisor"
     scrape_interval: 5s
     static_configs:
-      - targets: ['cadvisor:8080']
-  - job_name: node
+      - targets: ["cadvisor:8080"]
+
+  - job_name: "node_exporter"
+    scrape_interval: 5s
     static_configs:
-      - targets: ['node-exporter:9100']
+      - targets: ["node-exporter:9100"]
