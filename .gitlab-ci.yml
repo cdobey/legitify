@@ -9,6 +9,7 @@ stages:
 variables:
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
+  DOCKER_HOST: tcp://docker:2375
   NETWORK_NAME: legitify-network
   CHANNEL_NAME: mychannel
   ORDERER_IMAGE: hyperledger/fabric-orderer:2.5
@@ -18,10 +19,10 @@ variables:
   CORE_PEER_TLS_ENABLED: "true"
 
 services:
-  - docker:dind
+  - name: docker:dind
+    alias: docker
 
 before_script:
-  # Ensure Docker is accessible
   - docker info
 
 prepare:
