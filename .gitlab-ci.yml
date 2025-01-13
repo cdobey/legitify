@@ -6,6 +6,17 @@ stages:
   - chaincode-test
   - cleanup
 
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_HOST: tcp://docker:2375  # Direct Docker commands to the DinD service
+  NETWORK_NAME: legitify-network
+  CHANNEL_NAME: mychannel
+
+services:
+  - name: docker:dind
+    alias: docker
+
 before_script:
   - docker info  # Verify Docker daemon connectivity
 
