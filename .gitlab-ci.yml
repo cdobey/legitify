@@ -1,85 +1,17 @@
 # .gitlab-ci.yml
 
 stages:
-  - prepare
-  - deploy
-  - chaincode-test
-  - cleanup
+  - test
 
-variables:
-  DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: ""
-  DOCKER_HOST: tcp://docker:2375  # Direct Docker commands to the DinD service
-  NETWORK_NAME: legitify-network
-  CHANNEL_NAME: mychannel
-
-services:
-  - name: docker:dind
-    alias: docker
-
-before_script:
-  - docker info  # Verify Docker daemon connectivity
-
-prepare:
-  stage: prepare
-  image: docker:20.10.16
+test_job:
+  stage: test
+  image: alpine:latest
   script:
-    - echo "Preparing environment..."
-    - apk add --no-cache bash jq curl
-    - curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    - chmod +x /usr/local/bin/docker-compose
-    - docker-compose --version
+    - echo "Running Test Job"
+    - pwd
+    - ls -la
   tags:
     - docker
-  only:
-    - main
-    - merge_requests
-
-deploy_network:
-  stage: deploy
-  image: docker/compose:1.29.2
-  script:
-    - echo "Deploying Hyperledger Fabric network..."
-    - cd ./src/ledger/legitify-network
-    - chmod +x ./scripts/*.sh
-    - ./scripts/startNetwork.sh
-    - sleep 30  # Adjust based on network startup time
-    - docker ps -a
-  tags:
-    - docker
-  dependencies:
-    - prepare
-  only:
-    - main
-    - merge_requests
-
-chaincode_test:
-  stage: chaincode-test
-  image: docker:20.10.16
-  script:
-    - echo "Running Chaincode Tests..."
-    - cd ./src/ledger/legitify-network
-    - ./scripts/invokeDegree.sh
-    - ./scripts/queryDegree.sh
-  tags:
-    - docker
-  dependencies:
-    - deploy_network
-  only:
-    - main
-    - merge_requests
-
-cleanup:
-  stage: cleanup
-  image: docker/compose:1.29.2
-  script:
-    - echo "Cleaning up Fabric network..."
-    - cd ./src/ledger/legitify-network
-    - ./network.sh down
-    - docker system prune -f
-  tags:
-    - docker
-  when: always
   only:
     - main
     - merge_requests
