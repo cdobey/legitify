@@ -1,0 +1,63 @@
+# .gitlab-ci.yml
+
+# 1) Define stages
+stages:
+  - prepare
+  - chaincode-test
+
+# 2) Global variables (optional)
+variables:
+  # Needed if you use Docker-in-Docker
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+  # For storing build outputs, logs, etc.
+  # if you want to keep them as artifacts
+  # or control your environment further.
+
+# 3) Service to enable Docker-in-Docker
+#    This allows you to spin up containers in the pipeline.
+services:
+  - docker:dind
+
+# 4) Prepare Job: Install dependencies or retrieve artifacts
+prepare:
+  stage: prepare
+  image: docker:latest
+  script:
+    - echo "Preparing environment..."
+    # Optionally set up Docker Compose, install packages, etc.
+  tags:
+    - docker  # or any tag that matches your GitLab runner
+  only:
+    - main
+    - merge_requests
+
+# 5) Chaincode Test
+chaincode_test:
+  stage: chaincode-test
+  image: docker:latest
+  tags:
+    - docker
+  script:
+    - echo "Setting up Hyperledger Fabric network for chaincode tests..."
+    # 5.1 Install Docker Compose if not already available on runner
+    - apk add --no-cache docker-compose
+    
+    # 5.2 Spin up Fabric network (using your scripts)
+    #     Example: If you have a startNetwork.sh or you rely on the Fabric test-network
+    - cd ./src/ledger/legitify-network
+    - chmod +x ./*.sh
+    - chmod +x ./scripts/*.sh
+    - ./scripts/startNetwork.sh
+
+    # 5.3 (Optional) Run chaincode tests if you have any Go tests
+    #     For example, if you keep chaincode tests in chaincode/degreeChaincode
+    - ./scripts/invokeDegree.sh
+    - ./scripts/queryDegree.sh
+
+    # 5.4 Shut down Fabric network if desired
+    #     or keep it running for subsequent jobs
+    # - ./network.sh down
+  only:
+    - main
+    - merge_requests
