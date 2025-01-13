@@ -314,7 +314,7 @@ function networkUp() {
     COMPOSE_FILES="${COMPOSE_FILES} -f compose/${COMPOSE_FILE_COUCH} -f compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_COUCH}"
   fi
 
-  DOCKER_SOCK="${DOCKER_SOCK}" ${CONTAINER_CLI_COMPOSE} ${COMPOSE_FILES} up -d 2>&1
+  DOCKER_SOCK="${DOCKER_SOCK}" ${CONTAINER_CLI_COMPOSE} ${COMPOSE_FILES} up -d --remove-orphans 2>&1
 
   $CONTAINER_CLI ps -a
   if [ $? -ne 0 ]; then
@@ -443,16 +443,8 @@ function networkDown() {
   COMPOSE_CA_FILES="-f compose/${COMPOSE_FILE_CA} -f compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_CA}"
   COMPOSE_FILES="${COMPOSE_BASE_FILES} ${COMPOSE_COUCH_FILES} ${COMPOSE_CA_FILES}"
 
-  # stop org3 containers also in addition to org1 and org2, in case we were running sample to add org3
-  COMPOSE_ORG3_BASE_FILES="-f addOrg3/compose/${COMPOSE_FILE_ORG3_BASE} -f addOrg3/compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_ORG3_BASE}"
-  COMPOSE_ORG3_COUCH_FILES="-f addOrg3/compose/${COMPOSE_FILE_ORG3_COUCH} -f addOrg3/compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_ORG3_COUCH}"
-  COMPOSE_ORG3_CA_FILES="-f addOrg3/compose/${COMPOSE_FILE_ORG3_CA} -f addOrg3/compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_ORG3_CA}"
-  COMPOSE_ORG3_FILES="${COMPOSE_ORG3_BASE_FILES} ${COMPOSE_ORG3_COUCH_FILES} ${COMPOSE_ORG3_CA_FILES}"
-
   if [ "${CONTAINER_CLI}" == "docker" ]; then
-    DOCKER_SOCK=$DOCKER_SOCK ${CONTAINER_CLI_COMPOSE} ${COMPOSE_FILES} ${COMPOSE_ORG3_FILES} down --volumes --remove-orphans
-  elif [ "${CONTAINER_CLI}" == "podman" ]; then
-    ${CONTAINER_CLI_COMPOSE} ${COMPOSE_FILES} ${COMPOSE_ORG3_FILES} down --volumes
+    DOCKER_SOCK=$DOCKER_SOCK ${CONTAINER_CLI_COMPOSE} ${COMPOSE_FILES} down --volumes --remove-orphans
   else
     fatalln "Container CLI  ${CONTAINER_CLI} not supported"
   fi
@@ -462,7 +454,13 @@ function networkDown() {
   # Don't remove the generated artifacts -- note, the ledgers are always removed
   if [ "$MODE" != "restart" ]; then
     # Bring down the network, deleting the volumes
-    ${CONTAINER_CLI} volume rm docker_orderer.example.com docker_peer0.orguniversity.com docker_peer0.orgemployer.com docker_peer0.orgindividual.com
+    for volume in docker_orderer.example.com docker_peer0.orguniversity.com docker_peer0.orgemployer.com docker_peer0.orgindividual.com; do
+      if ${CONTAINER_CLI} volume inspect $volume > /dev/null 2>&1; then
+        ${CONTAINER_CLI} volume rm $volume
+      else
+        infoln "Volume $volume does not exist, skipping removal"
+      fi
+    done
     #Cleanup the chaincode containers
     clearContainers
     #Cleanup images
@@ -474,7 +472,6 @@ function networkDown() {
     ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf organizations/fabric-ca/orgemployer/msp organizations/fabric-ca/orgemployer/tls-cert.pem organizations/fabric-ca/orgemployer/ca-cert.pem organizations/fabric-ca/orgemployer/IssuerPublicKey organizations/fabric-ca/orgemployer/IssuerRevocationPublicKey organizations/fabric-ca/orgemployer/fabric-ca-server.db'
     ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf organizations/fabric-ca/orgindividual/msp organizations/fabric-ca/orgindividual/tls-cert.pem organizations/fabric-ca/orgindividual/ca-cert.pem organizations/fabric-ca/orgindividual/IssuerPublicKey organizations/fabric-ca/orgindividual/IssuerRevocationPublicKey organizations/fabric-ca/orgindividual/fabric-ca-server.db'
     ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf organizations/fabric-ca/ordererOrg/msp organizations/fabric-ca/ordererOrg/tls-cert.pem organizations/fabric-ca/ordererOrg/ca-cert.pem organizations/fabric-ca/ordererOrg/IssuerPublicKey organizations/fabric-ca/ordererOrg/IssuerRevocationPublicKey organizations/fabric-ca/ordererOrg/fabric-ca-server.db'
-    ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf addOrg3/fabric-ca/org3/msp addOrg3/fabric-ca/org3/tls-cert.pem addOrg3/fabric-ca/org3/ca-cert.pem addOrg3/fabric-ca/org3/IssuerPublicKey addOrg3/fabric-ca/org3/IssuerRevocationPublicKey addOrg3/fabric-ca/org3/fabric-ca-server.db'
     # remove channel and script artifacts
     ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf channel-artifacts log.txt *.tar.gz'
   fi
@@ -488,8 +485,6 @@ COMPOSE_FILE_BASE=compose-test-net.yaml
 COMPOSE_FILE_COUCH=compose-couch.yaml
 # certificate authorities compose file
 COMPOSE_FILE_CA=compose-ca.yaml
-# use this as the default docker-compose yaml definition for org3
-COMPOSE_FILE_ORG3_BASE=compose-org3.yaml
 # use this as the docker compose couch file for org3
 COMPOSE_FILE_ORG3_COUCH=compose-couch-org3.yaml
 # certificate authorities compose file
