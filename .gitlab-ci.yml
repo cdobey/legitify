@@ -1,63 +1,89 @@
 # .gitlab-ci.yml
 
-# 1) Define stages
 stages:
   - prepare
+  - deploy
   - chaincode-test
+  - cleanup
 
-# 2) Global variables (optional)
 variables:
-  # Needed if you use Docker-in-Docker
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
-  # For storing build outputs, logs, etc.
-  # if you want to keep them as artifacts
-  # or control your environment further.
+  NETWORK_NAME: legitify-network
+  CHANNEL_NAME: mychannel
+  ORDERER_IMAGE: hyperledger/fabric-orderer:2.5
+  PEER_IMAGE: hyperledger/fabric-peer:2.5
+  CA_IMAGE: hyperledger/fabric-ca:1.5
+  CLI_IMAGE: hyperledger/fabric-tools:2.5
+  CORE_PEER_TLS_ENABLED: "true"
 
-# 3) Service to enable Docker-in-Docker
-#    This allows you to spin up containers in the pipeline.
 services:
   - docker:dind
 
-# 4) Prepare Job: Install dependencies or retrieve artifacts
+before_script:
+  # Ensure Docker is accessible
+  - docker info
+
 prepare:
   stage: prepare
-  image: docker:latest
+  image: docker:20.10.16
   script:
     - echo "Preparing environment..."
-    # Optionally set up Docker Compose, install packages, etc.
+    - apk add --no-cache bash jq curl
+    - curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    - chmod +x /usr/local/bin/docker-compose
+    - docker-compose --version
   tags:
-    - docker  # or any tag that matches your GitLab runner
+    - docker
   only:
     - main
     - merge_requests
 
-# 5) Chaincode Test
-chaincode_test:
-  stage: chaincode-test
-  image: docker:latest
-  tags:
-    - docker
+deploy_network:
+  stage: deploy
+  image: docker/compose:1.29.2
   script:
-    - echo "Setting up Hyperledger Fabric network for chaincode tests..."
-    # 5.1 Install Docker Compose if not already available on runner
-    - apk add --no-cache docker-compose
-    
-    # 5.2 Spin up Fabric network (using your scripts)
-    #     Example: If you have a startNetwork.sh or you rely on the Fabric test-network
+    - echo "Deploying Hyperledger Fabric network..."
     - cd ./src/ledger/legitify-network
-    - chmod +x ./*.sh
     - chmod +x ./scripts/*.sh
     - ./scripts/startNetwork.sh
+    - sleep 30 # Adjust based on network startup time
+    - docker ps -a
+  tags:
+    - docker
+  dependencies:
+    - prepare
+  only:
+    - main
+    - merge_requests
 
-    # 5.3 (Optional) Run chaincode tests if you have any Go tests
-    #     For example, if you keep chaincode tests in chaincode/degreeChaincode
+chaincode_test:
+  stage: chaincode-test
+  image: docker:20.10.16
+  script:
+    - echo "Running Chaincode Tests..."
+    - cd ./src/ledger/legitify-network
     - ./scripts/invokeDegree.sh
     - ./scripts/queryDegree.sh
+  tags:
+    - docker
+  dependencies:
+    - deploy_network
+  only:
+    - main
+    - merge_requests
 
-    # 5.4 Shut down Fabric network if desired
-    #     or keep it running for subsequent jobs
-    # - ./network.sh down
+cleanup:
+  stage: cleanup
+  image: docker/compose:1.29.2
+  script:
+    - echo "Cleaning up Fabric network..."
+    - cd ./src/ledger/legitify-network
+    - ./scripts/cleanupNetwork.sh
+    - docker system prune -f
+  tags:
+    - docker
+  when: always
   only:
     - main
     - merge_requests
