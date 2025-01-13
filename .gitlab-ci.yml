@@ -6,22 +6,6 @@ stages:
   - chaincode-test
   - cleanup
 
-variables:
-  DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: ""
-  DOCKER_HOST: tcp://docker:2375  # Direct Docker commands to the DinD service
-  NETWORK_NAME: legitify-network
-  CHANNEL_NAME: mychannel
-  ORDERER_IMAGE: hyperledger/fabric-orderer:2.5
-  PEER_IMAGE: hyperledger/fabric-peer:2.5
-  CA_IMAGE: hyperledger/fabric-ca:1.5
-  CLI_IMAGE: hyperledger/fabric-tools:2.5
-  CORE_PEER_TLS_ENABLED: "true"
-
-services:
-  - name: docker:dind
-    alias: docker
-
 before_script:
   - docker info  # Verify Docker daemon connectivity
 
@@ -80,7 +64,7 @@ cleanup:
   script:
     - echo "Cleaning up Fabric network..."
     - cd ./src/ledger/legitify-network
-    - ./scripts/cleanupNetwork.sh
+    - ./network.sh down
     - docker system prune -f
   tags:
     - docker
