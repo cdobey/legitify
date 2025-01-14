@@ -15,8 +15,6 @@ prepare:
   image: docker:20.10.16
   before_script:
     - apk update && apk add --no-cache bash jq curl go tar ca-certificates wget
-  services:
-    - docker:dind
   script:
     - echo "Pulling Hyperledger Fabric Docker images..."
     - docker pull hyperledger/fabric-peer:2.5.10
@@ -36,8 +34,6 @@ prepare:
 setup_network:
   stage: setup
   image: docker:20.10.16
-  services:
-    - docker:dind
   script:
     - echo "Verifying Docker images..."
     - docker images
