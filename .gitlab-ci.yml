@@ -37,8 +37,6 @@ invoke_degree:
   image: docker:20.10.16
   script:
     - apt-get update && apt-get install -y curl jq golang tar ca-certificates
-    - curl -fsSL https://get.docker.com | bash  # Install Docker
-    - service docker start  # Start Docker service
     - cd src/ledger/legitify-network
     - bash scripts/invokeDegree.sh
   tags:
