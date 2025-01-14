@@ -11,16 +11,17 @@ services:
   - docker:dind
 
 before_script:
-  - apk add --no-cache bash jq curl go tar
+  - apk add --no-cache bash jq curl go tar || apt-get update && apt-get install -y bash jq curl golang tar
   - mkdir -p /host/var/run
+  - docker system prune -af || true
 
 setup_network:
   stage: setup
-  image: docker:20.10.16
+  image: debian:bullseye
   script:
-    - cd src/ledger
+    - apt-get update && apt-get install -y curl jq golang tar
     - curl -sSLO https://raw.githubusercontent.com/hyperledger/fabric/main/scripts/install-fabric.sh && chmod +x install-fabric.sh
-    - ./install-fabric.sh docker binary
+    - ./install-fabric.sh docker binary --os linux --arch amd64
     - cd legitify-network
     - bash scripts/startNetwork.sh
   tags:
@@ -31,7 +32,7 @@ setup_network:
 
 invoke_degree:
   stage: invoke
-  image: docker:20.10.16
+  image: debian:bullseye
   script:
     - cd src/ledger/legitify-network
     - bash scripts/invokeDegree.sh
@@ -45,7 +46,7 @@ invoke_degree:
 
 query_degree:
   stage: query
-  image: docker:20.10.16
+  image: debian:bullseye
   script:
     - cd src/ledger/legitify-network
     - bash scripts/queryDegree.sh
