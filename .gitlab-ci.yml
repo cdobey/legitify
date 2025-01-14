@@ -1,20 +1,53 @@
 stages:
-  - build
+  - setup
+  - invoke
+  - query
 
-build_job:
-  stage: build
+variables:
+  DOCKER_HOST: tcp://docker:2375 # Required for Docker-in-Docker
+
+services:
+  - docker:dind
+
+setup_network:
+  stage: setup
   image: docker:20.10.16
-  services:
-    - name: docker:dind
-      alias: docker
-  variables:
-    DOCKER_TLS_CERTDIR: ""          # Disable TLS for DinD
-    DOCKER_HOST: tcp://docker:2375  # Connect to Docker-in-Docker daemon
-  before_script:
-    - apk add --no-cache bash
-    - docker info                   # Verify Docker daemon is working
   script:
-    - echo "Running Docker Test"
-    - docker run hello-world
+    - apk add --no-cache bash
+    - cd src/ledger/legitify-network
+    - bash scripts/startNetwork.sh
   tags:
     - docker
+  only:
+    - main
+    - merge_requests
+
+invoke_degree:
+  stage: invoke
+  image: docker:20.10.16
+  script:
+    - apk add --no-cache bash
+    - cd src/ledger/legitify-network
+    - bash scripts/invokeDegree.sh
+  tags:
+    - docker
+  only:
+    - main
+    - merge_requests
+  dependencies:
+    - setup_network
+
+query_degree:
+  stage: query
+  image: docker:20.10.16
+  script:
+    - apk add --no-cache bash
+    - cd src/ledger/legitify-network
+    - bash scripts/queryDegree.sh
+  tags:
+    - docker
+  only:
+    - main
+    - merge_requests
+  dependencies:
+    - invoke_degree
