@@ -30,10 +30,6 @@ prepare:
   only:
     - main
     - merge_requests
-  artifacts:
-    paths:
-      - src/ledger/bin
-      - src/ledger/config
 
 setup_network:
   stage: setup
