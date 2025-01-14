@@ -19,7 +19,7 @@ setup_network:
   image: docker:20.10.16
   script:
     - cd src/ledger
-    - chmod +x ./install-fabric.sh
+    - curl -sSLO https://raw.githubusercontent.com/hyperledger/fabric/main/scripts/install-fabric.sh && chmod +x install-fabric.sh
     - ./install-fabric.sh docker binary
     - cd legitify-network
     - bash scripts/startNetwork.sh
