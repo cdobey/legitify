@@ -12,12 +12,9 @@ services:
 
 setup_network:
   stage: setup
-  image: debian:bullseye
+  image: docker:20.10.16
   script:
     - apt-get update && apt-get install -y curl jq golang tar ca-certificates
-    - curl -fsSL https://get.docker.com | bash  # Install Docker
-    - service docker start  # Start Docker service
-    - docker version       # Verify Docker installation
     - curl -sSLO https://raw.githubusercontent.com/hyperledger/fabric/main/scripts/install-fabric.sh && chmod +x install-fabric.sh
     - ./install-fabric.sh docker binary --os linux --arch amd64
     - cd legitify-network
@@ -35,7 +32,7 @@ setup_network:
 
 invoke_degree:
   stage: invoke
-  image: debian:bullseye
+  image: docker:20.10.16
   script:
     - apt-get update && apt-get install -y curl jq golang tar ca-certificates
     - curl -fsSL https://get.docker.com | bash  # Install Docker
@@ -52,7 +49,7 @@ invoke_degree:
 
 query_degree:
   stage: query
-  image: debian:bullseye
+  image: docker:20.10.16
   script:
     - apt-get update && apt-get install -y curl jq golang tar ca-certificates
     - curl -fsSL https://get.docker.com | bash  # Install Docker
