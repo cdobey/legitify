@@ -13,6 +13,8 @@ services:
 prepare:
   stage: prepare
   image: docker:20.10.16
+  before_script:
+    - apk update && apk add --no-cache bash jq curl go tar ca-certificates wget
   services:
     - docker:dind
   script:
@@ -25,6 +27,11 @@ prepare:
     - ls -la src/ledger/bin
     - ls -la src/ledger/config
     - chmod -R +x src/ledger/bin
+  tags:
+    - docker
+  only:
+    - main
+    - merge_requests
 
 setup_network:
   stage: setup
@@ -39,5 +46,10 @@ setup_network:
     - echo "Starting the Hyperledger Fabric network..."
     - cd src/ledger/legitify-network
     - bash scripts/startNetwork.sh
+  tags:
+    - docker
+  only:
+    - main
+    - merge_requests
   dependencies:
     - prepare
