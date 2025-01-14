@@ -14,7 +14,8 @@ setup_network:
   stage: setup
   image: docker:20.10.16
   script:
-    - apt-get update && apt-get install -y curl jq golang tar ca-certificates
+    - apk add --no-cache bash jq curl go tar ca-certificates
+    - mkdir -p /host/var/run
     - curl -sSLO https://raw.githubusercontent.com/hyperledger/fabric/main/scripts/install-fabric.sh && chmod +x install-fabric.sh
     - ./install-fabric.sh docker binary --os linux --arch amd64
     - cd legitify-network
