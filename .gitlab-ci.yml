@@ -64,7 +64,6 @@ setup_network:
     - merge_requests
   dependencies:
     # No dependencies for the first job
-  privileged: true  # Enable privileged mode for Docker-in-Docker
 
 invoke_degree:
   stage: invoke
@@ -92,7 +91,6 @@ invoke_degree:
     - merge_requests
   dependencies:
     - setup_network
-  privileged: true  # Enable privileged mode for Docker-in-Docker
 
 query_degree:
   stage: query
