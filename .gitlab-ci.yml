@@ -12,31 +12,24 @@ services:
 
 prepare:
   stage: prepare
-  image: docker:stable
+  image: docker:20.10.16
   before_script:
-    # Install additional tools required for the pipeline
-    - apk add --no-cache bash jq
+    - apk update && apk add --no-cache bash jq curl go tar ca-certificates wget
   script:
-    # Pull the necessary Docker images for Hyperledger Fabric
     - echo "Pulling Hyperledger Fabric Docker images..."
     - docker pull hyperledger/fabric-peer:2.5.10
     - docker pull hyperledger/fabric-orderer:2.5.10
     - docker pull hyperledger/fabric-ca:1.5.0
-
-    # Copy the Fabric binaries and configuration files to the target directory
     - echo "Copying Hyperledger Fabric binaries and configuration files..."
     - cp -r src/ledger/hyperledger-fabric-linux-amd64-2.5.10/* src/ledger/
-
-    # Verify that the binaries and configs were copied successfully
-    - echo "Verifying copied binaries and configurations..."
     - ls -la src/ledger/bin
     - ls -la src/ledger/config
-
-    # Make the binaries executable
-    - echo "Making Fabric binaries executable..."
     - chmod -R +x src/ledger/bin
-
-  # Artifacts to pass along to subsequent stages
+  tags:
+    - docker
+  only:
+    - main
+    - merge_requests
   artifacts:
     paths:
       - src/ledger/bin
@@ -44,11 +37,13 @@ prepare:
 
 setup_network:
   stage: setup
-  image: docker:stable
+  image: docker:20.10.16
   script:
-    - set -x  # Enable script debugging
+    - set -x
     - cd src/ledger/legitify-network
     - bash scripts/startNetwork.sh
+  tags:
+    - docker
   only:
     - main
     - merge_requests
