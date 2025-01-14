@@ -10,6 +10,8 @@ test_job:
     - echo "Running Test Job"
     - pwd
     - ls -la
+    - cd src/ledger/legitify-network
+    - bash scripts/startNetwork.sh
   tags:
     - docker
   only:
