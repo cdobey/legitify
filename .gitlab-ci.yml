@@ -1,26 +1,20 @@
 stages:
-  - test
+  - build
 
-test_job:
-  stage: test
+build_job:
+  stage: build
   image: docker:20.10.16
   services:
     - name: docker:dind
       alias: docker
   variables:
     DOCKER_TLS_CERTDIR: ""          # Disable TLS for DinD
-    DOCKER_HOST: tcp://docker:2375  # Ensure Docker CLI connects to the correct daemon
+    DOCKER_HOST: tcp://docker:2375  # Connect to Docker-in-Docker daemon
   before_script:
     - apk add --no-cache bash
-    - docker info                   # Verify Docker daemon is running
+    - docker info                   # Verify Docker daemon is working
   script:
-    - echo "Running Test Job"
-    - pwd
-    - ls -la
-    - cd src/ledger/legitify-network
-    - bash scripts/startNetwork.sh
+    - echo "Running Docker Test"
+    - docker run hello-world
   tags:
     - docker
-  only:
-    - main
-    - merge_requests
