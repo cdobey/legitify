@@ -7,7 +7,8 @@ test_job:
   services:
     - docker:dind
   variables:
-    DOCKER_TLS_CERTDIR: ""
+    DOCKER_TLS_CERTDIR: ""           # Disable TLS for DinD
+    DOCKER_HOST: tcp://localhost:2375 # Ensure Docker CLI connects to the right socket
   before_script:
     - apk add --no-cache bash
     - docker info
