@@ -49,8 +49,6 @@ setup_network:
     - set -x  # Enable script debugging
     - cd src/ledger/legitify-network
     - bash scripts/startNetwork.sh
-  tags:
-    - docker
   only:
     - main
     - merge_requests
