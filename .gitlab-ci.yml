@@ -16,6 +16,7 @@ setup_network:
   script:
     - apk add --no-cache bash jq curl go tar ca-certificates
     - mkdir -p /host/var/run
+    - cd src/ledger
     - curl -sSLO https://raw.githubusercontent.com/hyperledger/fabric/main/scripts/install-fabric.sh && chmod +x install-fabric.sh
     - ./install-fabric.sh docker binary --os linux --arch amd64
     - cd legitify-network
