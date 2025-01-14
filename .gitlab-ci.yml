@@ -1,11 +1,9 @@
-# .gitlab-ci.yml
-
 stages:
   - test
 
 test_job:
   stage: test
-  image: alpine:latest
+  image: ubuntu:latest
   script:
     - echo "Running Test Job"
     - pwd
