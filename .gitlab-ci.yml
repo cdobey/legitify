@@ -10,21 +10,23 @@ variables:
 services:
   - docker:dind
 
-before_script:
-  - apk add --no-cache bash jq curl go tar || apt-get update && apt-get install -y bash jq curl golang tar
-  - mkdir -p /host/var/run
-  - docker system prune -af || true
-
 setup_network:
   stage: setup
   image: debian:bullseye
   script:
-    - apt-get update && apt-get install -y curl jq golang tar
-    - cd src/ledger
+    - apt-get update && apt-get install -y curl jq golang tar ca-certificates
+    - curl -fsSL https://get.docker.com | bash  # Install Docker
+    - service docker start  # Start Docker service
+    - docker version       # Verify Docker installation
     - curl -sSLO https://raw.githubusercontent.com/hyperledger/fabric/main/scripts/install-fabric.sh && chmod +x install-fabric.sh
     - ./install-fabric.sh docker binary --os linux --arch amd64
     - cd legitify-network
     - bash scripts/startNetwork.sh
+    # Verify crypto material
+    - if [ ! -d "organizations/peerOrganizations/orguniversity.com/users/Admin@orguniversity.com/msp" ]; then
+        echo "MSP path is missing. Ensure cryptogen or CA setup runs correctly.";
+        exit 1;
+      fi
   tags:
     - docker
   only:
@@ -35,6 +37,9 @@ invoke_degree:
   stage: invoke
   image: debian:bullseye
   script:
+    - apt-get update && apt-get install -y curl jq golang tar ca-certificates
+    - curl -fsSL https://get.docker.com | bash  # Install Docker
+    - service docker start  # Start Docker service
     - cd src/ledger/legitify-network
     - bash scripts/invokeDegree.sh
   tags:
@@ -49,6 +54,9 @@ query_degree:
   stage: query
   image: debian:bullseye
   script:
+    - apt-get update && apt-get install -y curl jq golang tar ca-certificates
+    - curl -fsSL https://get.docker.com | bash  # Install Docker
+    - service docker start  # Start Docker service
     - cd src/ledger/legitify-network
     - bash scripts/queryDegree.sh
   tags:
