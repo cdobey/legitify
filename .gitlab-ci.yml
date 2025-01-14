@@ -27,10 +27,10 @@ setup_network:
     # Install necessary packages
     - apk update && apk add --no-cache bash jq curl go tar ca-certificates wget
     # Install glibc
-    - wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub
-    - wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-${GLIBC_VERSION}.apk
-    - apk add glibc-${GLIBC_VERSION}.apk
-    - rm glibc-${GLIBC_VERSION}.apk
+    # - wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub
+    # - wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-${GLIBC_VERSION}.apk
+    # - apk add glibc-${GLIBC_VERSION}.apk
+    # - rm glibc-${GLIBC_VERSION}.apk
     # Setup Docker environment
     - mkdir -p /host/var/run
     # Navigate to ledger source
