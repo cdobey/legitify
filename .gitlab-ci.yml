@@ -6,45 +6,47 @@ stages:
 variables:
   DOCKER_HOST: tcp://docker:2375
   DOCKER_TLS_CERTDIR: ""
-  GLIBC_VERSION: "2.34-r0"  # Update as needed
+  GLIBC_VERSION: "2.34-r0"  # Ensure this matches the version you're installing
 
 services:
   - name: docker:dind
     alias: docker
 
-# Optional: Define a global before_script if there are common steps
-# before_script:
-#   - apk update && apk add --no-cache bash jq curl go tar ca-certificates wget
-#   - wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub
-#   - wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-${GLIBC_VERSION}.apk
-#   - apk add glibc-${GLIBC_VERSION}.apk
-#   - rm glibc-${GLIBC_VERSION}.apk
-
 setup_network:
   stage: setup
   image: docker:20.10.16
   script:
-    # Install necessary packages
+    # 1. Update and install necessary packages
     - apk update && apk add --no-cache bash jq curl go tar ca-certificates wget
-    # Install glibc
-    # - wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub
-    # - wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-${GLIBC_VERSION}.apk
-    # - apk add glibc-${GLIBC_VERSION}.apk
-    # - rm glibc-${GLIBC_VERSION}.apk
-    # Setup Docker environment
+    
+    # 2. Remove libc6-compat to avoid conflicts with glibc
+    - apk del libc6-compat
+    
+    # 3. Add glibc public key
+    - wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub
+    
+    # 4. Download and install glibc
+    - wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-${GLIBC_VERSION}.apk
+    - apk add glibc-${GLIBC_VERSION}.apk
+    - rm glibc-${GLIBC_VERSION}.apk
+    
+    # 5. Setup Docker environment
     - mkdir -p /host/var/run
-    # Navigate to ledger source
+    
+    # 6. Navigate to ledger source and install Hyperledger Fabric binaries
     - cd src/ledger
-    # Download and install Hyperledger Fabric binaries
     - curl -sSLO https://raw.githubusercontent.com/hyperledger/fabric/main/scripts/install-fabric.sh
     - chmod +x install-fabric.sh
     - ./install-fabric.sh docker binary --os linux --arch amd64
-    # Navigate to network directory
+    
+    # 7. Navigate to network directory and start the network
     - cd legitify-network
-    # **Important:** Ensure that your `docker-compose.yml` does NOT contain invalid volume mounts like `tcp://docker:2375:/host/var/run/docker.sock`
-    # Instead, it should reference the Docker daemon via the `DOCKER_HOST` variable
+    
+    # **Important:** Ensure your `docker-compose.yml` does NOT contain invalid volume mounts like `tcp://docker:2375:/host/var/run/docker.sock`
+    # Instead, it should use the Docker daemon via the `DOCKER_HOST` variable or mount the Docker socket correctly
     - bash scripts/startNetwork.sh
-    # Verify crypto materials
+    
+    # 8. Verify crypto materials
     - |
       if [ ! -d "organizations/peerOrganizations/orguniversity.com/users/Admin@orguniversity.com/msp" ]; then
         echo "MSP path is missing. Ensure cryptogen or CA setup runs correctly."
@@ -62,18 +64,25 @@ invoke_degree:
   stage: invoke
   image: docker:20.10.16
   script:
-    # Install necessary packages
+    # 1. Update and install necessary packages
     - apk update && apk add --no-cache bash jq curl go tar ca-certificates wget
-    # Install glibc
+    
+    # 2. Remove libc6-compat to avoid conflicts with glibc
+    - apk del libc6-compat
+    
+    # 3. Add glibc public key
     - wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub
+    
+    # 4. Download and install glibc
     - wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-${GLIBC_VERSION}.apk
     - apk add glibc-${GLIBC_VERSION}.apk
     - rm glibc-${GLIBC_VERSION}.apk
-    # Setup Docker environment
+    
+    # 5. Setup Docker environment
     - mkdir -p /host/var/run
-    # Navigate to network directory
+    
+    # 6. Navigate to network directory and invoke the chaincode
     - cd src/ledger/legitify-network
-    # Invoke the chaincode
     - bash scripts/invokeDegree.sh
   tags:
     - docker
@@ -87,18 +96,25 @@ query_degree:
   stage: query
   image: docker:20.10.16
   script:
-    # Install necessary packages
+    # 1. Update and install necessary packages
     - apk update && apk add --no-cache bash jq curl go tar ca-certificates wget
-    # Install glibc
+    
+    # 2. Remove libc6-compat to avoid conflicts with glibc
+    - apk del libc6-compat
+    
+    # 3. Add glibc public key
     - wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub
+    
+    # 4. Download and install glibc
     - wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-${GLIBC_VERSION}.apk
     - apk add glibc-${GLIBC_VERSION}.apk
     - rm glibc-${GLIBC_VERSION}.apk
-    # Setup Docker environment
+    
+    # 5. Setup Docker environment
     - mkdir -p /host/var/run
-    # Navigate to network directory
+    
+    # 6. Navigate to network directory and query the chaincode
     - cd src/ledger/legitify-network
-    # Query the chaincode
     - bash scripts/queryDegree.sh
   tags:
     - docker
