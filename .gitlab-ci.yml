@@ -14,6 +14,8 @@ before_script:
 
 build_chaincode:
   stage: build
+  tags:
+    - docker
   script:
     - echo "Tidying Go modules for chaincode..."
     - cd ../chaincode/degreeChaincode
@@ -27,6 +29,8 @@ build_chaincode:
 
 deploy_fabric_network:
   stage: deploy
+  tags:
+    - docker
   script:    
     - echo "Starting network..."
     - bash scripts/startNetwork.sh
@@ -36,3 +40,5 @@ deploy_fabric_network:
     - main
     - master
     - merge_requests
+  dependencies:
+    - build
