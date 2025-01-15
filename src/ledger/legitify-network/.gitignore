@@ -6,8 +6,9 @@
 /channel-artifacts/*.pb
 /org3-artifacts/crypto-config/*
 organizations/fabric-ca/ordererOrg/*
-organizations/fabric-ca/org1/*
-organizations/fabric-ca/org2/*
+organizations/fabric-ca/orguniversity/*
+organizations/fabric-ca/orgemployer/*
+organizations/fabric-ca/orgindividual/*
 organizations/ordererOrganizations/*
 organizations/peerOrganizations/*
 system-genesis-block/*
