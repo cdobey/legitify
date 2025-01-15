@@ -10,7 +10,11 @@ services:
 deploy_network:
   image: docker:20.10.16
   before_script:
-    - apk update && apk add --no-cache bash jq curl go tar ca-certificates wget
+    # Install required packages including glibc compatibility for the Fabric binaries
+    - apk update && apk add --no-cache bash jq curl go tar ca-certificates wget libc6-compat gcompat
+    # Install docker-compose
+    - curl -L "https://github.com/docker/compose/releases/download/v2.23.0/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+    - chmod +x /usr/local/bin/docker-compose
   script:
     # Prepare phase
     - echo "Pulling Hyperledger Fabric Docker images..."
@@ -27,6 +31,10 @@ deploy_network:
     - docker images
     - ls -la src/ledger/bin
     - ls -la src/ledger/config
+    
+    # Setup network environment variables
+    - export FABRIC_CFG_PATH=$PWD/src/ledger/config
+    - export PATH=$PATH:$PWD/src/ledger/bin
     
     # Setup phase
     - echo "Starting the Hyperledger Fabric network..."
