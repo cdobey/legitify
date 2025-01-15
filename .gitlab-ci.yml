@@ -16,11 +16,11 @@ build_chaincode:
     - echo "Copying AMD-based Fabric binaries into src/ledger/bin..."
     # 1. Remove old bin folder if it exists
     - rm -rf src/ledger/bin
+    - cd src/ledger
     # 2. Copy your known-good binaries from hyperledger-fabric-linux-amd64-2.5.10
-    - ./src/ledger/install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
-    - pwd
-    - ls
-    - chmod +x src/ledger/bin/*
+    - ./install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
+
+    - chmod +x bin/*
     
     # 3. (Optional) Build or tidy chaincode
     - echo "Tidying chaincode dependencies..."
