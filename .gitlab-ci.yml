@@ -34,7 +34,14 @@ deploy_network:
     - bash scripts/stopNetwork.sh || true
     - bash scripts/startNetwork.sh
     - echo "Network deployment step complete."
+
+    # Invoke and query the chaincode
+    - bash scripts/invokeDegree.sh
+    - bash scripts/queryDegree.sh
+    
+    # Tear down the network
     - ./network.sh down
+    
   only:
     - main
     - master
