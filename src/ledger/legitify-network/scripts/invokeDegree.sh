@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Enable debugging
+set -x
+
 # Load environment variables
 source .env
 
