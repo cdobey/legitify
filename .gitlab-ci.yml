@@ -3,25 +3,28 @@ stages:
   - deploy
 
 before_script:
-  # 1) Make sure Docker is running
-  - sudo systemctl start docker || true
-  
-  # 2) cd into network folder so scripts can run
-  - cd src/ledger/legitify-network
-  
-  # 3) Confirm go version
-  - go version
+  # If Docker is already running on the instance, you can skip starting it.
+  - docker --version
+  - echo "Runner is on x86_64 (Intel/AMD)."
+  - cd $CI_PROJECT_DIR  # Ensure we are in the project directory where GitLab cloned the repo
 
 build_chaincode:
   stage: build
   tags:
-    - docker
+    - docker  # Or whatever tag matches your runner
   script:
-    - echo "Tidying Go modules for chaincode..."
-    - cd ../chaincode/degreeChaincode
+    - echo "Copying AMD-based Fabric binaries into src/ledger/bin..."
+    # 1. Remove old bin folder if it exists
+    - rm -rf src/ledger/bin
+    # 2. Copy your known-good binaries from hyperledger-fabric-linux-amd64-2.5.10
+    - cp -r src/ledger/hyperledger-fabric-linux-amd64-2.5.10/bin src/ledger/bin
+    - chmod +x src/ledger/bin/*
+    
+    # 3. (Optional) Build or tidy chaincode
+    - echo "Tidying chaincode dependencies..."
+    - cd src/ledger/chaincode/degreeChaincode
     - go mod tidy
-    - cd ../../legitify-network
-    - echo "Go chaincode dependencies updated."
+    - echo "Chaincode build step complete."
   only:
     - main
     - master
@@ -31,11 +34,17 @@ deploy_fabric_network:
   stage: deploy
   tags:
     - docker
-  script:    
-    - echo "Starting network..."
-    - bash scripts/startNetwork.sh
+  script:
+    - echo "Deploying the Fabric network..."
+    - cd $CI_PROJECT_DIR/src/ledger/legitify-network
     
-    - echo "Deployment stage complete."
+    # 1. Stop existing network if still running
+    - bash scripts/stopNetwork.sh || true
+    
+    # 2. Start the network (includes chaincode deployment)
+    - bash scripts/startNetwork.sh
+
+    - echo "Network deployment step complete."
   only:
     - main
     - master
