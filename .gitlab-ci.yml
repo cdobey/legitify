@@ -1,51 +1,30 @@
 stages:
-  - prepare
   - build
   - deploy
 
 before_script:
-  - sudo systemctl start docker || true
+  # If Docker is already running on the instance, you can skip starting it.
   - docker --version
   - echo "Runner is on x86_64 (Intel/AMD)."
-
-pull_required_images:
-  stage: prepare
-  tags:
-    - docker
-  script:
-    - echo "Pulling Hyperledger Fabric Docker images..."
-    - docker pull hyperledger/fabric-peer:2.5.10
-    - docker pull hyperledger/fabric-orderer:2.5.10
-    - docker pull hyperledger/fabric-ca:1.5.13
-    - docker pull busybox:latest
-  only:
-    - main
-    - master
-    - merge_requests
+  - cd $CI_PROJECT_DIR  # Ensure we are in the project directory where GitLab cloned the repo
 
 build_chaincode:
   stage: build
   tags:
-    - docker
+    - docker  # Or whatever tag matches your runner
   script:
-    - echo "Ensuring we have correct Fabric binaries in ../bin for x86_64..."
-
-    # 1. Clean out old / mismatched binaries, if any
-    - cd /home/ec2-user/2025-csc1097-mannp2-dobeyc3/src/ledger/legitify-network
-    - rm -rf ../bin
-
-    # 2. Copy the known-good x86_64 Fabric binaries from fabric-samples
-    - cp -r /home/ec2-user/fabric-samples/bin ../bin
-    - chmod +x ../bin/*
-
-    # 3. Build chaincode dependencies (assuming Go chaincode)
-    - echo "Building chaincode..."
-    - cd ../chaincode/degreeChaincode
-    - go mod tidy  # or go mod download
+    - echo "Copying AMD-based Fabric binaries into src/ledger/bin..."
+    # 1. Remove old bin folder if it exists
+    - rm -rf src/ledger/bin
+    # 2. Copy your known-good binaries from hyperledger-fabric-linux-amd64-2.5.10
+    - cp -r src/ledger/hyperledger-fabric-linux-amd64-2.5.10/bin src/ledger/bin
+    - chmod +x src/ledger/bin/*
+    
+    # 3. (Optional) Build or tidy chaincode
+    - echo "Tidying chaincode dependencies..."
+    - cd src/ledger/chaincode/degreeChaincode
+    - go mod tidy
     - echo "Chaincode build step complete."
-  dependencies:
-    - pull_required_images
-
   only:
     - main
     - master
@@ -57,15 +36,13 @@ deploy_fabric_network:
     - docker
   script:
     - echo "Deploying the Fabric network..."
-    - cd /home/ec2-user/2025-csc1097-mannp2-dobeyc3/src/ledger/legitify-network
-
-    # 1. (Optional) Stop an existing network if one is still running
+    - cd $CI_PROJECT_DIR/src/ledger/legitify-network
+    
+    # 1. Stop existing network if still running
     - bash scripts/stopNetwork.sh || true
-
+    
     # 2. Start the network (includes chaincode deployment)
     - bash scripts/startNetwork.sh
-
-    # 3. (Optional) Add test commands, e.g. chaincode queries / invokes
 
     - echo "Network deployment step complete."
   only:
