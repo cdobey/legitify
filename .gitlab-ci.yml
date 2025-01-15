@@ -5,6 +5,7 @@ before_script:
   - docker --version
   - echo "Runner is on x86_64 (Intel/AMD)."
   - cd $CI_PROJECT_DIR
+  - git clean -fdx
 
 deploy_network:
   stage: deploy
