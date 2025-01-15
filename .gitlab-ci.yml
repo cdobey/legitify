@@ -1,44 +1,34 @@
-stages:
-  - prepare
-  - setup
-
 variables:
   DOCKER_HOST: tcp://docker:2375
   DOCKER_TLS_CERTDIR: ""
+  DOCKER_DRIVER: overlay2
 
 services:
   - name: docker:dind
     alias: docker
 
-prepare:
-  stage: prepare
+deploy_network:
   image: docker:20.10.16
   before_script:
     - apk update && apk add --no-cache bash jq curl go tar ca-certificates wget
   script:
+    # Prepare phase
     - echo "Pulling Hyperledger Fabric Docker images..."
     - docker pull hyperledger/fabric-peer:2.5.10
     - docker pull hyperledger/fabric-orderer:2.5.10
     - docker pull hyperledger/fabric-ca:1.5.0
+    
     - echo "Copying Hyperledger Fabric binaries and configuration files..."
     - cp -r src/ledger/hyperledger-fabric-linux-amd64-2.5.10/* src/ledger/
+    - chmod -R +x src/ledger/bin
+    
+    # Verify everything is in place
+    - echo "Verifying setup..."
+    - docker images
     - ls -la src/ledger/bin
     - ls -la src/ledger/config
-    - chmod -R +x src/ledger/bin
-  tags:
-    - docker
-  only:
-    - main
-    - merge_requests
-
-setup_network:
-  stage: setup
-  image: docker:20.10.16
-  script:
-    - echo "Verifying Docker images..."
-    - docker images
-    - echo "Verifying binaries..."
-    - ls -la src/ledger/bin
+    
+    # Setup phase
     - echo "Starting the Hyperledger Fabric network..."
     - cd src/ledger/legitify-network
     - bash scripts/startNetwork.sh
@@ -47,5 +37,3 @@ setup_network:
   only:
     - main
     - merge_requests
-  dependencies:
-    - prepare
