@@ -41,4 +41,4 @@ deploy_fabric_network:
     - master
     - merge_requests
   dependencies:
-    - build
+    - build_chaincode
