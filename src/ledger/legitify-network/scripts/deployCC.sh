@@ -78,6 +78,8 @@ infoln "Installing chaincode on peer0.orguniversity..."
 installChaincode 1
 infoln "Installing chaincode on peer0.orgemployer..."
 installChaincode 2
+echo "Sleeping 60s before installing on org3"
+sleep 60
 infoln "Installing chaincode on peer0.orgindividual..."
 installChaincode 3
 
