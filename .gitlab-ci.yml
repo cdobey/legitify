@@ -1,5 +1,4 @@
 stages:
-  - build
   - deploy
 
 before_script:
@@ -7,11 +6,16 @@ before_script:
   - echo "Runner is on x86_64 (Intel/AMD)."
   - cd $CI_PROJECT_DIR
 
-build_chaincode:
-  stage: build
+deploy_network:
+  stage: deploy
   tags:
     - docker
   script:
+    - docker --version
+    - echo "Runner is on x86_64 (Intel/AMD)."
+    - cd $CI_PROJECT_DIR
+    
+    # Install binaries
     - echo "Copying AMD-based Fabric binaries into src/ledger/bin..."
     - rm -rf src/ledger/bin
     - cd src/ledger
@@ -19,32 +23,17 @@ build_chaincode:
     - export FABRIC_PATH=$PWD
     - ./install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
     - chmod +x bin/*
+    
+    # Build chaincode
     - cd chaincode/degreeChaincode
     - go mod tidy
     - echo "Chaincode build step complete."
-  artifacts:
-    paths:
-      - src/ledger/bin/    # This preserves the binaries for the next job
-      - src/ledger/config/ # You might need this too depending on your setup
-    expire_in: 1 hour      # Adjust as needed
-  only:
-    - main
-    - master
-    - merge_requests
-
-deploy_fabric_network:
-  stage: deploy
-  tags:
-    - docker
-  script:
-    - echo "Deploying the Fabric network..."
+    
+    # Deploy network
     - cd $CI_PROJECT_DIR/src/ledger/legitify-network
-    - file ../bin/peer
     - bash scripts/stopNetwork.sh || true
     - bash scripts/startNetwork.sh
     - echo "Network deployment step complete."
-  dependencies:
-    - build_chaincode
   only:
     - main
     - master
