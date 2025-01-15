@@ -35,7 +35,7 @@ setup_network:
   stage: setup
   image: docker:20.10.16
   script:
-    - echo "Verifying Docker images.."
+    - echo "Verifying Docker images..."
     - docker images
     - echo "Verifying binaries..."
     - ls -la src/ledger/bin
