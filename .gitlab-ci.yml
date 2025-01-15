@@ -3,32 +3,30 @@ stages:
   - deploy
 
 before_script:
-  # If Docker is already running on the instance, you can skip starting it.
   - docker --version
   - echo "Runner is on x86_64 (Intel/AMD)."
-  - cd $CI_PROJECT_DIR  # Ensure we are in the project directory where GitLab cloned the repo
+  - cd $CI_PROJECT_DIR
 
 build_chaincode:
   stage: build
   tags:
-    - docker  # Or whatever tag matches your runner
+    - docker
   script:
     - echo "Copying AMD-based Fabric binaries into src/ledger/bin..."
-    # 1. Remove old bin folder if it exists
     - rm -rf src/ledger/bin
     - cd src/ledger
-    # 2. Copy your known-good binaries from hyperledger-fabric-linux-amd64-2.5.10
     - export ARCH=amd64
     - export FABRIC_PATH=$PWD
     - ./install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
-
     - chmod +x bin/*
-    
-    # 3. (Optional) Build or tidy chaincode
-    - echo "Tidying chaincode dependencies..."
     - cd chaincode/degreeChaincode
     - go mod tidy
     - echo "Chaincode build step complete."
+  artifacts:
+    paths:
+      - src/ledger/bin/    # This preserves the binaries for the next job
+      - src/ledger/config/ # You might need this too depending on your setup
+    expire_in: 1 hour      # Adjust as needed
   only:
     - main
     - master
@@ -42,16 +40,12 @@ deploy_fabric_network:
     - echo "Deploying the Fabric network..."
     - cd $CI_PROJECT_DIR/src/ledger/legitify-network
     - file ../bin/peer
-    # 1. Stop existing network if still running
     - bash scripts/stopNetwork.sh || true
-    
-    # 2. Start the network (includes chaincode deployment)
     - bash scripts/startNetwork.sh
-
     - echo "Network deployment step complete."
+  dependencies:
+    - build_chaincode
   only:
     - main
     - master
     - merge_requests
-  dependencies:
-    - build_chaincode
