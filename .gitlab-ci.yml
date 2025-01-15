@@ -2,6 +2,7 @@ variables:
   DOCKER_HOST: tcp://docker:2375
   DOCKER_TLS_CERTDIR: ""
   DOCKER_DRIVER: overlay2
+  FABRIC_CFG_PATH: ${CI_PROJECT_DIR}/src/ledger/config
 
 services:
   - name: docker:dind
@@ -16,29 +17,45 @@ deploy_network:
     - curl -L "https://github.com/docker/compose/releases/download/v2.23.0/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
     - chmod +x /usr/local/bin/docker-compose
   script:
+    # Debug: Print working directory and list contents
+    - pwd
+    - ls -la
+    
     # Prepare phase
     - echo "Pulling Hyperledger Fabric Docker images..."
     - docker pull hyperledger/fabric-peer:2.5.10
     - docker pull hyperledger/fabric-orderer:2.5.10
     - docker pull hyperledger/fabric-ca:1.5.0
     
+    # Create necessary directories if they don't exist
+    - mkdir -p src/ledger/bin
+    - mkdir -p src/ledger/config
+    
     - echo "Copying Hyperledger Fabric binaries and configuration files..."
-    - cp -r src/ledger/hyperledger-fabric-linux-amd64-2.5.10/* src/ledger/
+    - cp -rv src/ledger/hyperledger-fabric-linux-amd64-2.5.10/* src/ledger/
     - chmod -R +x src/ledger/bin
     
-    # Verify everything is in place
-    - echo "Verifying setup..."
-    - docker images
+    # Debug: Verify files are copied correctly
+    - echo "Verifying binary files..."
     - ls -la src/ledger/bin
+    - echo "Verifying config files..."
     - ls -la src/ledger/config
     
-    # Setup network environment variables
-    - export FABRIC_CFG_PATH=$PWD/src/ledger/config
-    - export PATH=$PATH:$PWD/src/ledger/bin
+    # Set up environment variables
+    - export PATH=$PATH:${CI_PROJECT_DIR}/src/ledger/bin
+    - echo $PATH
+    - echo $FABRIC_CFG_PATH
+    
+    # Verify binaries are executable
+    - which peer
+    - which orderer
+    - which configtxgen
     
     # Setup phase
     - echo "Starting the Hyperledger Fabric network..."
     - cd src/ledger/legitify-network
+    - pwd
+    - ls -la
     - bash scripts/startNetwork.sh
   tags:
     - docker
