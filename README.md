@@ -27,4 +27,3 @@ It looks like this:
 You should replace all of this file with a README describing your own project.
 
 ## Additional resources
-.
