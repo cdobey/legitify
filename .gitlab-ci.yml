@@ -18,6 +18,8 @@ build_chaincode:
     - rm -rf src/ledger/bin
     # 2. Copy your known-good binaries from hyperledger-fabric-linux-amd64-2.5.10
     - ./src/ledger/install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
+    - pwd
+    - ls
     - chmod +x src/ledger/bin/*
     
     # 3. (Optional) Build or tidy chaincode
