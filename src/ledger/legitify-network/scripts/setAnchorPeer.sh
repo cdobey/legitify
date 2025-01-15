@@ -59,8 +59,8 @@ updateAnchorPeer() {
   configtxlator proto_decode --input ${CONFIG_UPDATE_FILE} --type common.ConfigUpdate | jq . > ${TEST_NETWORK_HOME}/channel-artifacts/${CHANNEL_NAME}_anchor_update.json
 
   # Wrap the config update in an envelope using jq
-  jq -n --arg channel "mychannel" \
-    --slurpfile update ./channel-artifacts/OrgUniversityMSPconfig.json \
+  jq -n --arg channel "$CHANNEL_NAME" \
+    --slurpfile update ${TEST_NETWORK_HOME}/channel-artifacts/${CHANNEL_NAME}_anchor_update.json \
     '{
       payload: {
         header: {
@@ -73,11 +73,10 @@ updateAnchorPeer() {
           config_update: $update[0]
         }
       }
-    }' > ./channel-artifacts/config_update_in_envelope.json
-
+    }' > ${TEST_NETWORK_HOME}/channel-artifacts/config_update_in_envelope.json
 
   # Encode the envelope back to protobuf
-  configtxlator proto_encode --input "${TEST_NETWORK_HOME}/channel-artifacts/${CHANNEL_NAME}_anchor_update_in_envelope.json" --type common.Envelope --output "${TEST_NETWORK_HOME}/channel-artifacts/${CHANNEL_NAME}_anchor_update_envelope.pb"
+  configtxlator proto_encode --input ${TEST_NETWORK_HOME}/channel-artifacts/config_update_in_envelope.json --type common.Envelope --output ${TEST_NETWORK_HOME}/channel-artifacts/${CHANNEL_NAME}_anchor_update_envelope.pb
 
   # Sign the config update as all organizations
   collectSignatures "${TEST_NETWORK_HOME}/channel-artifacts/${CHANNEL_NAME}_anchor_update_envelope.pb"
@@ -89,7 +88,6 @@ updateAnchorPeer() {
   verifyResult $res "Anchor peer update failed"
   successln "Anchor peer set for org '$CORE_PEER_LOCALMSPID' on channel '$CHANNEL_NAME'"
 }
-
 
 # Collect signatures from all organizations for a given config update file
 collectSignatures() {
