@@ -39,7 +39,7 @@ deploy_fabric_network:
   script:
     - echo "Deploying the Fabric network..."
     - cd $CI_PROJECT_DIR/src/ledger/legitify-network
-    
+    - file ../bin/peer
     # 1. Stop existing network if still running
     - bash scripts/stopNetwork.sh || true
     
