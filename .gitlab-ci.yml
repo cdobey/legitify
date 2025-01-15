@@ -6,6 +6,10 @@ before_script:
   - echo "Runner is on x86_64 (Intel/AMD)."
   - cd $CI_PROJECT_DIR
   - git clean -fdx
+  # Remove fabric-ca directories to ensure a clean state
+  - rm -rf src/ledger/legitify-network/organizations/fabric-ca
+  # Optional: Recreate the fabric-ca directory structure if needed
+  - mkdir -p src/ledger/legitify-network/organizations/fabric-ca
 
 deploy_network:
   stage: deploy
@@ -16,32 +20,40 @@ deploy_network:
     - echo "Runner is on x86_64 (Intel/AMD)."
     - cd $CI_PROJECT_DIR
     
-    # Install binaries
+    # Install Fabric binaries
     - echo "Copying AMD-based Fabric binaries into src/ledger/bin..."
     - rm -rf src/ledger/bin
     - cd src/ledger
     - export ARCH=amd64
     - export FABRIC_PATH=$PWD
     - ./install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
+    # Set executable permissions for all binaries
     - chmod +x bin/*
+    # Ensure fabric-ca directories have correct permissions
+    - chmod -R 755 organizations/fabric-ca
     
-    # Build chaincode
+    # Build Chaincode
     - cd chaincode/degreeChaincode
     - go mod tidy
     - echo "Chaincode build step complete."
     
-    # Deploy network
+    # Deploy Network
     - cd $CI_PROJECT_DIR/src/ledger/legitify-network
     - bash scripts/stopNetwork.sh || true
     - bash scripts/startNetwork.sh
+    # After starting the network, set permissions again to ensure accessibility
+    - chmod -R 755 organizations/fabric-ca
     - echo "Network deployment step complete."
-
-    # Invoke and query the chaincode
+    
+    # Invoke and Query the Chaincode
     - bash scripts/invokeDegree.sh
     - bash scripts/queryDegree.sh
     
-    # Tear down the network
+    # Tear Down the Network
     - ./network.sh down
+    
+    # Final Cleanup: Reset permissions to prevent future conflicts
+    - chmod -R 755 src/ledger/legitify-network/organizations
     
   only:
     - main
