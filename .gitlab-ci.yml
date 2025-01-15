@@ -34,6 +34,7 @@ deploy_network:
     - bash scripts/stopNetwork.sh || true
     - bash scripts/startNetwork.sh
     - echo "Network deployment step complete."
+    - ./network.sh down
   only:
     - main
     - master
