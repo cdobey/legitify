@@ -24,7 +24,7 @@ build_chaincode:
     
     # 3. (Optional) Build or tidy chaincode
     - echo "Tidying chaincode dependencies..."
-    - cd src/ledger/chaincode/degreeChaincode
+    - cd chaincode/degreeChaincode
     - go mod tidy
     - echo "Chaincode build step complete."
   only:
