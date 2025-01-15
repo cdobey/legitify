@@ -23,7 +23,7 @@ services:
       - "17054:17054"
     command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
     volumes:
-      - ../organizations/fabric-ca/orgUniversity:/etc/hyperledger/fabric-ca-server
+      - ../organizations/fabric-ca/orguniversity:/etc/hyperledger/fabric-ca-server
     container_name: ca.orguniversity.com
     networks:
       - test
@@ -43,7 +43,7 @@ services:
       - "18054:18054"
     command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
     volumes:
-      - ../organizations/fabric-ca/orgEmployer:/etc/hyperledger/fabric-ca-server
+      - ../organizations/fabric-ca/orgemployer:/etc/hyperledger/fabric-ca-server
     container_name: ca.orgemployer.com
     networks:
       - test
@@ -59,7 +59,7 @@ services:
       - "9054:9054"
     command: fabric-ca-server start -b admin:adminpw --port 9054
     volumes:
-      - ../organizations/fabric-ca/orgIndividual:/etc/hyperledger/fabric-ca-server
+      - ../organizations/fabric-ca/orgindividual:/etc/hyperledger/fabric-ca-server
     networks:
       - test
 
