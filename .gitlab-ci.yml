@@ -1,64 +1,44 @@
-variables:
-  DOCKER_HOST: tcp://docker:2375
-  DOCKER_TLS_CERTDIR: ""
-  DOCKER_DRIVER: overlay2
-  FABRIC_CFG_PATH: ${CI_PROJECT_DIR}/src/ledger/config
+stages:
+  - build
+  - deploy
 
-services:
-  - name: docker:dind
-    alias: docker
+before_script:
+  # 1) Make sure Docker is running
+  - sudo systemctl start docker || true
+  
+  # 2) cd into network folder so scripts can run
+  - cd src/ledger/legitify-network
+  
+  # 3) Confirm go version
+  - go version
 
-deploy_network:
-  image: docker:20.10.16
-  before_script:
-    # Install required packages including glibc compatibility for the Fabric binaries
-    - apk update && apk add --no-cache bash jq curl go tar ca-certificates wget libc6-compat gcompat
-    # Install docker-compose
-    - curl -L "https://github.com/docker/compose/releases/download/v2.23.0/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
-    - chmod +x /usr/local/bin/docker-compose
-  script:
-    # Debug: Print working directory and list contents
-    - pwd
-    - ls -la
-    
-    # Prepare phase
-    - echo "Pulling Hyperledger Fabric Docker images..."
-    - docker pull hyperledger/fabric-peer:2.5.10
-    - docker pull hyperledger/fabric-orderer:2.5.10
-    - docker pull hyperledger/fabric-ca:1.5.0
-    
-    # Create necessary directories if they don't exist
-    - mkdir -p src/ledger/bin
-    - mkdir -p src/ledger/config
-    
-    - echo "Copying Hyperledger Fabric binaries and configuration files..."
-    - cp -rv src/ledger/hyperledger-fabric-linux-amd64-2.5.10/* src/ledger/
-    - chmod -R +x src/ledger/bin
-    
-    # Debug: Verify files are copied correctly
-    - echo "Verifying binary files..."
-    - ls -la src/ledger/bin
-    - echo "Verifying config files..."
-    - ls -la src/ledger/config
-    
-    # Set up environment variables
-    - export PATH=$PATH:${CI_PROJECT_DIR}/src/ledger/bin
-    - echo $PATH
-    - echo $FABRIC_CFG_PATH
-    
-    # Verify binaries are executable
-    - which peer
-    - which orderer
-    - which configtxgen
-    
-    # Setup phase
-    - echo "Starting the Hyperledger Fabric network..."
-    - cd src/ledger/legitify-network
-    - pwd
-    - ls -la
-    - bash scripts/startNetwork.sh
+build_chaincode:
+  stage: build
   tags:
     - docker
+  script:
+    - echo "Tidying Go modules for chaincode..."
+    - cd ../chaincode/degreeChaincode
+    - go mod tidy
+    - cd ../../legitify-network
+    - echo "Go chaincode dependencies updated."
   only:
     - main
+    - master
     - merge_requests
+
+deploy_fabric_network:
+  stage: deploy
+  tags:
+    - docker
+  script:    
+    - echo "Starting network..."
+    - bash scripts/startNetwork.sh
+    
+    - echo "Deployment stage complete."
+  only:
+    - main
+    - master
+    - merge_requests
+  dependencies:
+    - build_chaincode
