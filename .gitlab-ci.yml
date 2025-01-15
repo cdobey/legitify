@@ -1,56 +1,41 @@
 stages:
-  - build
   - deploy
 
 before_script:
-  # If Docker is already running on the instance, you can skip starting it.
   - docker --version
   - echo "Runner is on x86_64 (Intel/AMD)."
-  - cd $CI_PROJECT_DIR  # Ensure we are in the project directory where GitLab cloned the repo
+  - cd $CI_PROJECT_DIR
 
-build_chaincode:
-  stage: build
-  tags:
-    - docker  # Or whatever tag matches your runner
-  script:
-    - echo "Copying AMD-based Fabric binaries into src/ledger/bin..."
-    # 1. Remove old bin folder if it exists
-    - rm -rf src/ledger/bin
-    - cd src/ledger
-    # 2. Copy your known-good binaries from hyperledger-fabric-linux-amd64-2.5.10
-    - export ARCH=amd64
-    - ./install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
-
-    - chmod +x bin/*
-    
-    # 3. (Optional) Build or tidy chaincode
-    - echo "Tidying chaincode dependencies..."
-    - cd chaincode/degreeChaincode
-    - go mod tidy
-    - echo "Chaincode build step complete."
-  only:
-    - main
-    - master
-    - merge_requests
-
-deploy_fabric_network:
+deploy_network:
   stage: deploy
   tags:
     - docker
   script:
-    - echo "Deploying the Fabric network..."
-    - cd $CI_PROJECT_DIR/src/ledger/legitify-network
-    - file ../bin/peer
-    # 1. Stop existing network if still running
-    - bash scripts/stopNetwork.sh || true
+    - docker --version
+    - echo "Runner is on x86_64 (Intel/AMD)."
+    - cd $CI_PROJECT_DIR
     
-    # 2. Start the network (includes chaincode deployment)
+    # Install binaries
+    - echo "Copying AMD-based Fabric binaries into src/ledger/bin..."
+    - rm -rf src/ledger/bin
+    - cd src/ledger
+    - export ARCH=amd64
+    - export FABRIC_PATH=$PWD
+    - ./install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
+    - chmod +x bin/*
+    
+    # Build chaincode
+    - cd chaincode/degreeChaincode
+    - go mod tidy
+    - echo "Chaincode build step complete."
+    
+    # Deploy network
+    - cd $CI_PROJECT_DIR/src/ledger/legitify-network
+    - bash scripts/stopNetwork.sh || true
     - bash scripts/startNetwork.sh
-
     - echo "Network deployment step complete."
+    - ./network.sh down
   only:
     - main
     - master
     - merge_requests
-  dependencies:
-    - build_chaincode
