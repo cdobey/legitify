@@ -1,27 +1,51 @@
 stages:
+  - prepare
   - build
   - deploy
 
 before_script:
-  # 1) Make sure Docker is running
   - sudo systemctl start docker || true
-  
-  # 2) cd into network folder so scripts can run
-  - cd src/ledger/legitify-network
-  
-  # 3) Confirm go version
-  - go version
+  - docker --version
+  - echo "Runner is on x86_64 (Intel/AMD)."
+
+pull_required_images:
+  stage: prepare
+  tags:
+    - docker
+  script:
+    - echo "Pulling Hyperledger Fabric Docker images..."
+    - docker pull hyperledger/fabric-peer:2.5.10
+    - docker pull hyperledger/fabric-orderer:2.5.10
+    - docker pull hyperledger/fabric-ca:1.5.13
+    - docker pull busybox:latest
+  only:
+    - main
+    - master
+    - merge_requests
 
 build_chaincode:
   stage: build
   tags:
     - docker
   script:
-    - echo "Tidying Go modules for chaincode..."
+    - echo "Ensuring we have correct Fabric binaries in ../bin for x86_64..."
+
+    # 1. Clean out old / mismatched binaries, if any
+    - cd /home/ec2-user/2025-csc1097-mannp2-dobeyc3/src/ledger/legitify-network
+    - rm -rf ../bin
+
+    # 2. Copy the known-good x86_64 Fabric binaries from fabric-samples
+    - cp -r /home/ec2-user/fabric-samples/bin ../bin
+    - chmod +x ../bin/*
+
+    # 3. Build chaincode dependencies (assuming Go chaincode)
+    - echo "Building chaincode..."
     - cd ../chaincode/degreeChaincode
-    - go mod tidy
-    - cd ../../legitify-network
-    - echo "Go chaincode dependencies updated."
+    - go mod tidy  # or go mod download
+    - echo "Chaincode build step complete."
+  dependencies:
+    - pull_required_images
+
   only:
     - main
     - master
@@ -31,11 +55,19 @@ deploy_fabric_network:
   stage: deploy
   tags:
     - docker
-  script:    
-    - echo "Starting network..."
+  script:
+    - echo "Deploying the Fabric network..."
+    - cd /home/ec2-user/2025-csc1097-mannp2-dobeyc3/src/ledger/legitify-network
+
+    # 1. (Optional) Stop an existing network if one is still running
+    - bash scripts/stopNetwork.sh || true
+
+    # 2. Start the network (includes chaincode deployment)
     - bash scripts/startNetwork.sh
-    
-    - echo "Deployment stage complete."
+
+    # 3. (Optional) Add test commands, e.g. chaincode queries / invokes
+
+    - echo "Network deployment step complete."
   only:
     - main
     - master
