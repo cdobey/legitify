@@ -5,11 +5,13 @@ deploy_network:
   stage: deploy
   tags:
     - docker
-  image: hyperledger/fabric-tools:2.5.10  # Use a specific Hyperledger Fabric image
+  image: hyperledger/fabric-tools:2.5.10  # Or your custom image with git installed
   services:
     - docker:dind
   variables:
     DOCKER_DRIVER: overlay2
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_TLS_CERTDIR: ""  # Disable TLS for DinD
     FABRIC_VERSION: 2.5.10
     CA_VERSION: 1.5.13
     CHANNEL_NAME: mychannel
@@ -18,22 +20,27 @@ deploy_network:
   script:
     - echo "Starting deployment inside Docker container..."
     
-    # Install git
+    # Install git (if not using a custom image)
     - apt-get update && apt-get install -y git
+    
+    # Debugging: List current directory
+    - ls -la
     
     # Clean the repository
     - git clean -fdx
     
-    # Remove and recreate fabric-ca directories
-    - rm -rf src/ledger/legitify-network/organizations/fabric-ca
-    - mkdir -p src/ledger/legitify-network/organizations/fabric-ca
+    # Remove and recreate fabric-ca directories correctly
+    - rm -rf organizations/fabric-ca
+    - mkdir -p organizations/fabric-ca
     
     # Set appropriate permissions
-    - chmod -R 755 src/ledger/legitify-network
+    - chmod -R 755 .
+    
+    # Debugging: Verify fabric-ca directory
+    - ls -la organizations/
     
     # Install Fabric binaries
     - echo "Installing Fabric binaries..."
-    - cd src/ledger
     - export ARCH=amd64
     - export FABRIC_PATH=$PWD
     - ./install-fabric.sh --fabric-version $FABRIC_VERSION binary --ca-version $CA_VERSION
@@ -69,7 +76,7 @@ deploy_network:
     - ./network.sh down
     
     # Final Cleanup: Reset permissions to prevent future conflicts
-    - chmod -R 755 src/ledger/legitify-network/organizations
+    - chmod -R 755 organizations
     
   only:
     - main
