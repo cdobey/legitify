@@ -43,13 +43,12 @@ deploy_network:
     - echo "Installing Fabric binaries..."
     - export ARCH=amd64
     - export FABRIC_PATH=$PWD
-    - pwd
-    - ls
+    - cd src/ledger
     - ./install-fabric.sh --fabric-version $FABRIC_VERSION binary --ca-version $CA_VERSION
     
     # Make binaries executable
     - chmod +x bin/*
-    
+    - cd legitify-network
     # Set permissions for fabric-ca
     - chmod -R 755 organizations/fabric-ca
     
@@ -57,7 +56,7 @@ deploy_network:
     - chown -R gitlab-runner:gitlab-runner organizations/fabric-ca/
     
     # Build Chaincode
-    - cd chaincode/degreeChaincode
+    - cd ../chaincode/degreeChaincode
     - go mod tidy
     - echo "Chaincode build step complete."
     
