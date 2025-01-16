@@ -16,7 +16,7 @@ deploy_network:
   tags:
     - docker
   script:
-    - mkdir test
+    - ls
     - docker --version
     - echo "Runner is on x86_64 (Intel/AMD)."
     - cd $CI_PROJECT_DIR
