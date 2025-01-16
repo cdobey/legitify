@@ -8,15 +8,16 @@ before_script:
   - git clean -fdx
   # Remove fabric-ca directories to ensure a clean state
   - rm -rf src/ledger/legitify-network/organizations/fabric-ca
-  # Optional: Recreate the fabric-ca directory structure if needed
+  # Recreate the fabric-ca directory structure if needed
   - mkdir -p src/ledger/legitify-network/organizations/fabric-ca
+  # Set appropriate permissions for the project directory
+  - chmod -R 755 src/ledger/legitify-network
 
 deploy_network:
   stage: deploy
   tags:
     - docker
   script:
-    - ls
     - docker --version
     - echo "Runner is on x86_64 (Intel/AMD)."
     - cd $CI_PROJECT_DIR
