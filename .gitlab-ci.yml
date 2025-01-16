@@ -1,38 +1,43 @@
 stages:
   - deploy
 
-before_script:
-  - docker --version
-  - echo "Runner is on x86_64 (Intel/AMD)."
-  - cd $CI_PROJECT_DIR
-  - git clean -fdx
-  # Remove fabric-ca directories to ensure a clean state
-  - rm -rf src/ledger/legitify-network/organizations/fabric-ca
-  # Recreate the fabric-ca directory structure if needed
-  - mkdir -p src/ledger/legitify-network/organizations/fabric-ca
-  # Set appropriate permissions for the project directory
-  - chmod -R 755 src/ledger/legitify-network
-
 deploy_network:
   stage: deploy
-  tags:
-    - docker
+  image: hyperledger/fabric-tools:2.5.10  # Use a specific Hyperledger Fabric image
+  services:
+    - docker:dind
+  variables:
+    DOCKER_DRIVER: overlay2
+    FABRIC_VERSION: 2.5.10
+    CA_VERSION: 1.5.13
+    CHANNEL_NAME: mychannel
+    ORDERER_CA: /path/to/orderer/tls/ca-cert.pem  # Update with actual path
+    PEER_ADDRESSES: "--peerAddresses localhost:7051 --tlsRootCertFiles /path/to/orguniversity/tls/ca-cert.pem --peerAddresses localhost:8051 --tlsRootCertFiles /path/to/orgemployer/tls/ca-cert.pem --peerAddresses localhost:9051 --tlsRootCertFiles /path/to/orgindividual/tls/ca-cert.pem"  # Update paths accordingly
   script:
-    - docker --version
-    - echo "Runner is on x86_64 (Intel/AMD)."
-    - cd $CI_PROJECT_DIR
+    - echo "Starting deployment inside Docker container..."
+    
+    # Clean the repository
+    - git clean -fdx
+    
+    # Remove and recreate fabric-ca directories
+    - rm -rf src/ledger/legitify-network/organizations/fabric-ca
+    - mkdir -p src/ledger/legitify-network/organizations/fabric-ca
+    
+    # Set appropriate permissions
+    - chmod -R 755 src/ledger/legitify-network
     
     # Install Fabric binaries
-    - echo "Copying AMD-based Fabric binaries into src/ledger/bin..."
-    - rm -rf src/ledger/bin
+    - echo "Installing Fabric binaries..."
     - cd src/ledger
     - export ARCH=amd64
     - export FABRIC_PATH=$PWD
-    - ./install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
-    # Set executable permissions for all binaries
+    - ./install-fabric.sh --fabric-version $FABRIC_VERSION binary --ca-version $CA_VERSION
+    
+    # Make binaries executable
     - chmod +x bin/*
-    # Ensure fabric-ca directories have correct permissions
-    - chmod -R 755 legitify-network/organizations/fabric-ca
+    
+    # Set permissions for fabric-ca
+    - chmod -R 755 organizations/fabric-ca
     
     # Build Chaincode
     - cd chaincode/degreeChaincode
@@ -43,7 +48,8 @@ deploy_network:
     - cd $CI_PROJECT_DIR/src/ledger/legitify-network
     - bash scripts/stopNetwork.sh || true
     - bash scripts/startNetwork.sh
-    # After starting the network, set permissions again to ensure accessibility
+    
+    # Set permissions again to ensure accessibility
     - chmod -R 755 organizations/fabric-ca
     - echo "Network deployment step complete."
     
