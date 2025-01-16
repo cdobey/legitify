@@ -44,6 +44,7 @@ deploy_network:
     - export ARCH=amd64
     - export FABRIC_PATH=$PWD
     - pwd
+    - ls
     - ./install-fabric.sh --fabric-version $FABRIC_VERSION binary --ca-version $CA_VERSION
     
     # Make binaries executable
