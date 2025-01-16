@@ -3,6 +3,8 @@ stages:
 
 deploy_network:
   stage: deploy
+  tags:
+    - docker
   image: hyperledger/fabric-tools:2.5.10  # Use a specific Hyperledger Fabric image
   services:
     - docker:dind
