@@ -51,10 +51,7 @@ deploy_network:
     - cd legitify-network
     # Set permissions for fabric-ca
     - chmod -R 755 organizations/fabric-ca
-    
-    # Adjust ownership if necessary
-    - chown -R gitlab-runner:gitlab-runner organizations/fabric-ca/
-    
+        
     # Build Chaincode
     - cd ../chaincode/degreeChaincode
     - go mod tidy
