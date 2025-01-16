@@ -20,9 +20,15 @@ deploy_network:
   script:
     - echo "Starting deployment inside Docker container..."
     
-    # Install git (if not using a custom image)
+    # Install git
     - apt-get update && apt-get install -y git
-    
+
+    # Install Docker CLI
+    - apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
+    - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+    - echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" > /etc/apt/sources.list.d/docker.list
+    - apt-get update && apt-get install -y docker-ce-cli
+
     # Debugging: List current directory
     - ls -la
     
@@ -61,6 +67,11 @@ deploy_network:
     - cd $CI_PROJECT_DIR/src/ledger/legitify-network
     - bash scripts/stopNetwork.sh || true
     - bash scripts/startNetwork.sh
+    
+    # Debugging: Check MSP directories
+    - ls -la organizations/peerOrganizations/orguniversity.com/users/Admin@orguniversity.com/msp
+    - ls -la organizations/peerOrganizations/orgemployer.com/users/Admin@orgemployer.com/msp
+    - ls -la organizations/peerOrganizations/orgindividual.com/users/Admin@orgindividual.com/msp
     
     # Set permissions again to ensure accessibility
     - chmod -R 755 organizations/fabric-ca
