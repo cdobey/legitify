@@ -32,7 +32,7 @@ deploy_network:
     # Set executable permissions for all binaries
     - chmod +x bin/*
     # Ensure fabric-ca directories have correct permissions
-    - chmod -R 755 organizations/fabric-ca
+    - chmod -R 755 legitify-network/organizations/fabric-ca
     
     # Build Chaincode
     - cd chaincode/degreeChaincode
