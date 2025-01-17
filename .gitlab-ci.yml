@@ -1,91 +1,47 @@
 stages:
   - deploy
 
+before_script:
+  - docker --version
+  - echo "Runner is on x86_64 (Intel/AMD)."
+  - cd $CI_PROJECT_DIR
+  - git clean -fdx
+
 deploy_network:
   stage: deploy
   tags:
     - docker
-  image: hyperledger/fabric-tools:2.5.10  # Or your custom image with git installed
-  services:
-    - docker:dind
-  variables:
-    DOCKER_DRIVER: overlay2
-    DOCKER_HOST: tcp://docker:2375/
-    DOCKER_TLS_CERTDIR: ""  # Disable TLS for DinD
-    FABRIC_VERSION: 2.5.10
-    CA_VERSION: 1.5.13
-    CHANNEL_NAME: mychannel
-    ORDERER_CA: /path/to/orderer/tls/ca-cert.pem  # Update with actual path
-    PEER_ADDRESSES: "--peerAddresses localhost:7051 --tlsRootCertFiles /path/to/orguniversity/tls/ca-cert.pem --peerAddresses localhost:8051 --tlsRootCertFiles /path/to/orgemployer/tls/ca-cert.pem --peerAddresses localhost:9051 --tlsRootCertFiles /path/to/orgindividual/tls/ca-cert.pem"  # Update paths accordingly
   script:
-    - echo "Starting deployment inside Docker container..."
+    - docker --version
+    - echo "Runner is on x86_64 (Intel/AMD)."
+    - cd $CI_PROJECT_DIR
     
-    # Install git
-    - apt-get update && apt-get install -y git
-
-    # Install Docker CLI
-    - apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
-    - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-    - echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" > /etc/apt/sources.list.d/docker.list
-    - apt-get update && apt-get install -y docker-ce-cli
-
-    # Debugging: List current directory
-    - ls -la
-    
-    # Clean the repository
-    - git clean -fdx
-    
-    # Remove and recreate fabric-ca directories correctly
-    - rm -rf organizations/fabric-ca
-    - mkdir -p organizations/fabric-ca
-    
-    # Set appropriate permissions
-    - chmod -R 755 .
-    
-    # Debugging: Verify fabric-ca directory
-    - ls -la organizations/
-    
-    # Install Fabric binaries
-    - echo "Installing Fabric binaries..."
+    # Install binaries
+    - echo "Copying AMD-based Fabric binaries into src/ledger/bin..."
+    - rm -rf src/ledger/bin
+    - cd src/ledger
     - export ARCH=amd64
     - export FABRIC_PATH=$PWD
-    - cd src/ledger
-    - ./install-fabric.sh --fabric-version $FABRIC_VERSION binary --ca-version $CA_VERSION
-    
-    # Make binaries executable
+    - ./install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
     - chmod +x bin/*
-    - cd legitify-network
-    # Set permissions for fabric-ca
-    - chmod -R 755 organizations/fabric-ca
-        
-    # Build Chaincode
-    - cd ../chaincode/degreeChaincode
+    
+    # Build chaincode
+    - cd chaincode/degreeChaincode
     - go mod tidy
     - echo "Chaincode build step complete."
     
-    # Deploy Network
+    # Deploy network
     - cd $CI_PROJECT_DIR/src/ledger/legitify-network
     - bash scripts/stopNetwork.sh || true
     - bash scripts/startNetwork.sh
-    
-    # Debugging: Check MSP directories
-    - ls -la organizations/peerOrganizations/orguniversity.com/users/Admin@orguniversity.com/msp
-    - ls -la organizations/peerOrganizations/orgemployer.com/users/Admin@orgemployer.com/msp
-    - ls -la organizations/peerOrganizations/orgindividual.com/users/Admin@orgindividual.com/msp
-    
-    # Set permissions again to ensure accessibility
-    - chmod -R 755 organizations/fabric-ca
     - echo "Network deployment step complete."
-    
-    # Invoke and Query the Chaincode
+
+    # Invoke and query the chaincode
     - bash scripts/invokeDegree.sh
     - bash scripts/queryDegree.sh
     
-    # Tear Down the Network
+    # Tear down the network
     - ./network.sh down
-    
-    # Final Cleanup: Reset permissions to prevent future conflicts
-    - chmod -R 755 organizations
     
   only:
     - main
