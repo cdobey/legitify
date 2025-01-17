@@ -16,7 +16,7 @@ deploy_network:
     - echo "Runner is on x86_64 (Intel/AMD)."
     - cd $CI_PROJECT_DIR
 
-    # Install Fabric binaries
+    # Install Fabric binaries...
     - echo "Copying AMD-based Fabric binaries into src/ledger/bin..."
     - cd src/ledger
     - export ARCH=amd64
