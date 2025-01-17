@@ -22,6 +22,7 @@ deploy_network:
     - cd src/ledger
     - export ARCH=amd64
     - export FABRIC_PATH=$PWD
+    - chmod +x src/ledger/install-fabric.sh
     - ./install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
     - chmod +x bin/*
     
