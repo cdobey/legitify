@@ -15,7 +15,7 @@ deploy_network:
     - docker --version
     - echo "Runner is on x86_64 (Intel/AMD)."
     - cd $CI_PROJECT_DIR
-    
+
     # Install Fabric binaries
     - echo "Copying AMD-based Fabric binaries into src/ledger/bin..."
     - cd src/ledger
@@ -24,29 +24,28 @@ deploy_network:
     - bash ./install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
     # Set executable permissions for all binaries
     - chmod +x bin/*
-    
+
     # Build Chaincode
     - cd chaincode/degreeChaincode
     - go mod tidy
     - echo "Chaincode build step complete."
-    
+
     # Deploy Network
     - cd $CI_PROJECT_DIR/src/ledger/legitify-network
     - bash scripts/stopNetwork.sh || true
     - bash scripts/startNetwork.sh
     - echo "Network deployment step complete."
 
-    
     # Invoke and Query the Chaincode
     - bash scripts/invokeDegree.sh
     - bash scripts/queryDegree.sh
-    
+    - bash scripts/validateDegree.sh
     # Tear Down the Network
     - ./network.sh down
-    
+
     # Final Cleanup: Reset permissions to prevent future conflicts
     - chmod -R 755 src/ledger/legitify-network/organizations
-    
+
   only:
     - main
     - master

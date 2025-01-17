@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 # Load environment variables
 source .env
 
