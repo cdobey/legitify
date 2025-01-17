@@ -23,6 +23,7 @@ deploy_network:
     - export ARCH=amd64
     - export FABRIC_PATH=$PWD
     - chmod +x ./install-fabric.sh
+    - ls -l
     - ./install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
     - chmod +x bin/*
     
