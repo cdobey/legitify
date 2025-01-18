@@ -44,9 +44,11 @@ deploy_network:
     - bash scripts/stopNetwork.sh || true
     - bash scripts/startNetwork.sh
     - echo "Network deployment step complete."
+    - sleep 30
 
     # Invoke and Query the Chaincode
     - bash scripts/invokeDegree.sh
+    - sleep 30
     - bash scripts/queryDegree.sh
     - bash scripts/validateDegree.sh
 
