@@ -75,8 +75,16 @@ updateAnchorPeer() {
       }
     }' > ${TEST_NETWORK_HOME}/channel-artifacts/config_update_in_envelope.json
 
+  # --- Add these lines to remove CRLF and BOM: ---
+  sed -i 's/\r//g' ${TEST_NETWORK_HOME}/channel-artifacts/config_update_in_envelope.json
+  sed -i '1s/^\xEF\xBB\xBF//' ${TEST_NETWORK_HOME}/channel-artifacts/config_update_in_envelope.json
+  # ----------------------------------------------
+
   # Encode the envelope back to protobuf
-  configtxlator proto_encode --input ${TEST_NETWORK_HOME}/channel-artifacts/config_update_in_envelope.json --type common.Envelope --output ${TEST_NETWORK_HOME}/channel-artifacts/${CHANNEL_NAME}_anchor_update_envelope.pb
+  configtxlator proto_encode \
+      --input ${TEST_NETWORK_HOME}/channel-artifacts/config_update_in_envelope.json \
+      --type common.Envelope \
+      --output ${TEST_NETWORK_HOME}/channel-artifacts/${CHANNEL_NAME}_anchor_update_envelope.pb
 
   # Sign the config update as all organizations
   collectSignatures "${TEST_NETWORK_HOME}/channel-artifacts/${CHANNEL_NAME}_anchor_update_envelope.pb"
