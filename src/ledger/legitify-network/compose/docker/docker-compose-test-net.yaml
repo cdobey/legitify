@@ -6,7 +6,7 @@
 services:
   peer0.orguniversity.com:
     container_name: peer0.orguniversity.com
-    image: hyperledger/fabric-peer:2.5
+    image: hyperledger/fabric-peer:2.5.10
     labels:
       service: hyperledger-fabric
     environment:
@@ -19,7 +19,7 @@ services:
 
   peer0.orgemployer.com:
     container_name: peer0.orgemployer.com
-    image: hyperledger/fabric-peer:2.5
+    image: hyperledger/fabric-peer:2.5.10
     labels:
       service: hyperledger-fabric
     environment:
@@ -32,7 +32,7 @@ services:
 
   peer0.orgindividual.com:
     container_name: peer0.orgindividual.com
-    image: hyperledger/fabric-peer:2.5
+    image: hyperledger/fabric-peer:2.5.10
     labels:
       service: hyperledger-fabric
     environment:
