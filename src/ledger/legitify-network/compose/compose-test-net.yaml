@@ -161,7 +161,7 @@ services:
       - CORE_OPERATIONS_LISTENADDRESS=peer0.orgindividual.com:9446
       - CORE_METRICS_PROVIDER=prometheus
       - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer0orgindividual"}
-      - CORE_CHAINCODE_EXECUTETIMEOUT=300s
+      - CORE_CHAINCODE_EXECUTETIMEOUT=500s
     command: peer node start
     ports:
       - 9051:9051

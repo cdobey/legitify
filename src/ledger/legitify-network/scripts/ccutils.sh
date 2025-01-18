@@ -7,7 +7,14 @@ function installChaincode() {
   set -x
   peer lifecycle chaincode queryinstalled --output json | jq -r 'try (.installed_chaincodes[].package_id)' | grep ^${PACKAGE_ID}$ >&log.txt
   if test $? -ne 0; then
-    peer lifecycle chaincode install ${CC_NAME}.tar.gz >&log.txt
+    MAX_ATTEMPTS=3
+    DELAY=30
+    for i in $(seq 1 $MAX_ATTEMPTS); do
+      echo "Attempt $i to install chaincode on peer0.org${ORG}..."
+      peer lifecycle chaincode install ${CC_NAME}.tar.gz && break
+      echo "Install failed; retry in $DELAY seconds..."
+      sleep $DELAY
+    done
     res=$?
   fi
   { set +x; } 2>/dev/null
