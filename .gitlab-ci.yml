@@ -7,17 +7,25 @@ before_script:
   - echo "Runner is on x86_64 (Intel/AMD)."
   - cd $CI_PROJECT_DIR
   - git clean -fdx
+  - sudo chown -R gitlab-runner:gitlab-runner .
+
+after_script:
+  - cd $CI_PROJECT_DIR
+  - sudo chown -R gitlab-runner:gitlab-runner .
+  - sudo find . -type d -exec chmod 755 {} +
+  - sudo find . -type f -exec chmod 644 {} +
 
 deploy_network:
   stage: deploy
   tags:
     - docker
   script:
+    - set -e
     - docker --version
     - echo "Runner is on x86_64 (Intel/AMD)."
     - cd $CI_PROJECT_DIR
 
-    # Install Fabric binaries...
+    # Install Fabric binaries
     - echo "Copying AMD-based Fabric binaries into src/ledger/bin..."
     - cd src/ledger
     - export ARCH=amd64
@@ -41,11 +49,13 @@ deploy_network:
     - bash scripts/invokeDegree.sh
     - bash scripts/queryDegree.sh
     - bash scripts/validateDegree.sh
+
+    # Cleanup before teardown
+    - sudo rm -rf organizations/fabric-ca/*
+
     # Tear Down the Network
     - ./network.sh down
-
-    # Final Cleanup: Reset permissions to prevent future conflicts
-    - chmod -R 755 src/ledger/legitify-network/organizations
+    - docker system prune -af --volumes
 
   only:
     - main
