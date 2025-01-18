@@ -196,6 +196,7 @@ checkCommitReadiness 2 "\"Org1MSP\": true" "\"Org2MSP\": false"
 
 ## now approve also for org2
 approveForMyOrg 2
+approveForMyOrg 3
 
 ## check whether the chaincode definition is ready to be committed
 ## expect them both to have approved
