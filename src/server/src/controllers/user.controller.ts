@@ -1,10 +1,12 @@
+// src/controllers/user.controller.ts
+
 import FabricCAServices from "fabric-ca-client";
 import { RequestHandler } from "express";
-import User from "../database/models/user.model";
 import { Wallets } from "fabric-network";
 import bcrypt from "bcrypt";
 import fs from "fs";
 import path from "path";
+import prisma from "../prisma/client";
 
 interface OrganizationConfig {
   connectionPath: string;
@@ -34,9 +36,14 @@ const organizationConfigs: Record<string, OrganizationConfig> = {
   },
 };
 
-export const registerUser: RequestHandler = async (req, res) => {
+/**
+ * Registers a new user and enrolls them with Fabric CA.
+ */
+export const registerUser: RequestHandler = async (req, res): Promise<void> => {
   try {
     const { username, password, role, orgName } = req.body;
+
+    // Validate input
     if (!username || !password || !role || !orgName) {
       res.status(400).json({
         error: "username, password, role, orgName are required",
@@ -53,18 +60,26 @@ export const registerUser: RequestHandler = async (req, res) => {
       return;
     }
 
-    const existing = await User.findOne({ where: { username } });
-    if (existing) {
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { username },
+    });
+    if (existingUser) {
       res.status(400).json({ error: "User already exists" });
       return;
     }
 
+    // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
-    const newUser = await User.create({
-      username,
-      passwordHash,
-      role,
-      orgName,
+
+    // Create user in the database
+    const newUser = await prisma.user.create({
+      data: {
+        username,
+        passwordHash,
+        role,
+        orgName,
+      },
     });
 
     // Register/Enroll with Fabric CA
@@ -88,14 +103,14 @@ export const registerUser: RequestHandler = async (req, res) => {
       throw new Error(`Admin identity for ${orgName} not found in wallet`);
     }
 
-    const userExists = await wallet.get(username);
-    if (userExists) {
-      // Already enrolled
+    const userExistsInWallet = await wallet.get(username);
+    if (userExistsInWallet) {
+      // User is already enrolled in the wallet
       res.status(201).json(newUser);
       return;
     }
 
-    // Register + enroll the user
+    // Get admin user context
     const provider = wallet
       .getProviderRegistry()
       .getProvider(adminIdentity.type);
@@ -112,6 +127,7 @@ export const registerUser: RequestHandler = async (req, res) => {
       affiliation = `${orgName.toLowerCase()}.company`;
     }
 
+    // Register the user with Fabric CA
     const secret = await ca.register(
       {
         enrollmentID: username,
@@ -122,10 +138,12 @@ export const registerUser: RequestHandler = async (req, res) => {
       adminUser
     );
 
+    // Enroll the user and get certificates
     const enrollment = await ca.enroll({
       enrollmentID: username,
       enrollmentSecret: secret,
     });
+
     const x509Identity = {
       credentials: {
         certificate: enrollment.certificate,
@@ -135,11 +153,14 @@ export const registerUser: RequestHandler = async (req, res) => {
       type: "X.509",
     };
 
+    // Put the new identity into the wallet
     await wallet.put(username, x509Identity);
 
     console.log(
       `Registered & enrolled user ${username} on Fabric CA for ${orgName}`
     );
+
+    // Send response
     res.status(201).json(newUser);
   } catch (error: any) {
     console.error("Error registering user:", error);
@@ -150,15 +171,24 @@ export const registerUser: RequestHandler = async (req, res) => {
 export const getUser: RequestHandler = async (req, res) => {
   try {
     const { username } = req.user!;
-    const user = await User.findOne({ where: { username } });
+
+    if (!username) {
+      res.status(400).json({ error: "Username is required." });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { username },
+    });
+
     if (!user) {
-      res.status(404).json({ error: "User not found" });
+      res.status(404).json({ error: "User not found." });
       return;
     }
 
     res.json(user);
-  } catch (error: any) {
-    console.error("Error getting user:", error);
-    res.status(500).json({ error: error.message });
+  } catch (error) {
+    console.error("Get user error:", error);
+    res.status(500).json({ error: "Internal server error." });
   }
 };

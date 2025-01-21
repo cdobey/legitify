@@ -46,7 +46,7 @@ Navigate to the `server` directory and start the API server.
 ```sh
 cd /path/to/server
 npm install
-npx ts-node src/server.ts // need to setup an npm start script for this
+npx ts-node src/app.ts // need to setup an npm start script for this
 ```
 
 ### 5. Test Authentication Using Swagger

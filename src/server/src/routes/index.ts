@@ -1,9 +1,7 @@
-import { authMiddleware } from "../middleware/auth";
 import express from "express";
-import { login } from "../controllers/auth.controller";
-import { registerUser } from "../controllers/user.controller";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
+import userRoutes from "./user.routes";
 
 const router = express.Router();
 
@@ -14,72 +12,30 @@ const swaggerOptions = {
       title: "Fabric Degree API - TypeScript",
       version: "1.0.0",
     },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
   },
-  apis: [__filename], // We'll parse this file for @openapi
+  apis: ["./src/routes/*.ts"], // Adjust the path as necessary
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
-/**
- * @openapi
- * /auth/login:
- *   post:
- *     summary: User login
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               username:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: Returns a JWT token
- */
-router.post("/auth/login", login);
-
-/**
- * @openapi
- * /users:
- *   post:
- *     summary: Register a new user
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               username: { type: string }
- *               password: { type: string }
- *               role: { type: string }
- *               orgName: { type: string }
- *     responses:
- *       201:
- *         description: Created user
- */
-router.post("/users", registerUser);
-
-/**
- * @openapi
- * /secured:
- *   get:
- *     summary: Example secured endpoint
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: success
- */
-router.get("/secured", authMiddleware, (req, res) => {
-  res.json({ message: "Secured endpoint reached", user: req.user });
-});
-
-// swagger
+// Swagger Documentation Route
 router.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Use other route files
+router.use(userRoutes);
 
 export default router;

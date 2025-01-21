@@ -1,0 +1,54 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String     @id @default(uuid())
+  username     String     @unique
+  passwordHash String
+  role         String
+  orgName      String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  issuedDocuments   Document[] @relation("Issuer")
+  receivedDocuments Document[] @relation("IssuedTo")
+  requests          Request[]  @relation("Requester")
+}
+
+model Document {
+  id         String   @id @default(uuid())
+  issuedTo   String
+  issuer     String
+  docHash    String
+  fileData   Bytes?   // Store as binary
+  status     String   @default("issued")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  issuerUser   User @relation("Issuer", fields: [issuer], references: [id])
+  issuedToUser User @relation("IssuedTo", fields: [issuedTo], references: [id])
+  requests     Request[] @relation("Document")
+}
+
+model Request {
+  id          String   @id @default(uuid())
+  requesterId String
+  documentId  String
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  requester User    @relation("Requester", fields: [requesterId], references: [id])
+  document  Document @relation("Document", fields: [documentId], references: [id])
+}

@@ -1,45 +1,18 @@
 import express, { Request, Response } from "express";
 
 import cors from "cors";
+import dotenv from "dotenv";
 import indexRoutes from "./routes/index";
-import swaggerJsDoc from "swagger-jsdoc";
-import swaggerUi from "swagger-ui-express";
-import userRoutes from "./routes/user.routes";
+import prisma from "./prisma/client";
+
+dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 3001;
 
+// Middleware
 app.use(cors());
 app.use(express.json());
-
-// Swagger setup
-const swaggerOptions = {
-  swaggerDefinition: {
-    openapi: "3.0.0",
-    info: {
-      title: "Fabric Degree API - TypeScript",
-      version: "1.0.0",
-      description: "API Documentation",
-    },
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: "http",
-          scheme: "bearer",
-          bearerFormat: "JWT",
-        },
-      },
-    },
-    security: [
-      {
-        bearerAuth: [],
-      },
-    ],
-  },
-  apis: ["./src/routes/*.ts"], // Adjust the path to your route files
-};
-
-const swaggerDocs = swaggerJsDoc(swaggerOptions);
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Basic test route
 app.get("/", (req: Request, res: Response) => {
@@ -48,6 +21,24 @@ app.get("/", (req: Request, res: Response) => {
 
 // Add routes
 app.use("/", indexRoutes);
-app.use("/", userRoutes);
+
+// Start Server
+const server = app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+  console.log(`Swagger docs available at http://localhost:${PORT}/docs`);
+});
+
+// Graceful Shutdown
+const shutdown = async () => {
+  console.log("Shutting down server...");
+  await prisma.$disconnect();
+  server.close(() => {
+    console.log("Server closed.");
+    process.exit(0);
+  });
+};
+
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
 
 export default app;
