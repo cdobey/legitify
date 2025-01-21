@@ -45,7 +45,7 @@ export const issueDegree: RequestHandler = async (
     // Interact with ledger first
     const gateway = await getGateway(req.user.sub, req.user.orgName);
     const network = await gateway.getNetwork("mychannel");
-    const contract = network.getContract("degreechain"); // Chaincode name
+    const contract = network.getContract("degreeCC"); // Chaincode name
 
     await contract.submitTransaction(
       "IssueDegree",
@@ -105,7 +105,7 @@ export const acceptDegree: RequestHandler = async (
     // Interact with ledger
     const gateway = await getGateway(req.user.sub, req.user.orgName);
     const network = await gateway.getNetwork("mychannel");
-    const contract = network.getContract("degreechain");
+    const contract = network.getContract("degreeCC");
 
     await contract.submitTransaction("AcceptDegree", docId);
     gateway.disconnect();
@@ -153,7 +153,7 @@ export const denyDegree: RequestHandler = async (
     // Interact with ledger
     const gateway = await getGateway(req.user.sub, req.user.orgName);
     const network = await gateway.getNetwork("mychannel");
-    const contract = network.getContract("degreechain");
+    const contract = network.getContract("degreeCC");
 
     await contract.submitTransaction("DenyDegree", docId);
     gateway.disconnect();
@@ -310,7 +310,7 @@ export const viewDegree: RequestHandler = async (
     // Verify hash with ledger
     const gateway = await getGateway(req.user.sub, req.user.orgName);
     const network = await gateway.getNetwork("mychannel");
-    const contract = network.getContract("degreechain");
+    const contract = network.getContract("degreeCC");
 
     const result = await contract.evaluateTransaction(
       "VerifyHash",
