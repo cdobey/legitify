@@ -1,5 +1,3 @@
-// prisma/schema.prisma
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -10,13 +8,13 @@ generator client {
 }
 
 model User {
-  id           String     @id @default(uuid())
-  username     String     @unique
+  id           String      @id @default(uuid())
+  username     String      @unique
   passwordHash String
-  role         String
-  orgName      String
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  role         Role
+  orgName      OrgName
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
   // Relations
   issuedDocuments   Document[] @relation("Issuer")
@@ -25,30 +23,54 @@ model User {
 }
 
 model Document {
-  id         String   @id @default(uuid())
-  issuedTo   String
-  issuer     String
-  docHash    String
-  fileData   Bytes?   // Store as binary
-  status     String   @default("issued")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           String    @id @default(uuid())
+  issuedTo     String
+  issuer       String
+  docHash      String
+  fileData     Bytes?    // Store as binary
+  status       DocumentStatus @default(issued)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   // Relations
-  issuerUser   User @relation("Issuer", fields: [issuer], references: [id])
-  issuedToUser User @relation("IssuedTo", fields: [issuedTo], references: [id])
-  requests     Request[] @relation("Document")
+  issuerUser    User      @relation("Issuer", fields: [issuer], references: [id])
+  issuedToUser  User      @relation("IssuedTo", fields: [issuedTo], references: [id])
+  requests      Request[] @relation("Document")
 }
 
 model Request {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   requesterId String
   documentId  String
-  status      String   @default("pending")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  status      RequestStatus @default(pending)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   // Relations
-  requester User    @relation("Requester", fields: [requesterId], references: [id])
+  requester User     @relation("Requester", fields: [requesterId], references: [id])
   document  Document @relation("Document", fields: [documentId], references: [id])
+}
+
+enum Role {
+  university
+  individual
+  employer
+}
+
+enum OrgName {
+  orguniversity
+  orgindividual
+  orgemployer
+}
+
+enum DocumentStatus {
+  issued
+  accepted
+  denied
+}
+
+enum RequestStatus {
+  pending
+  granted
+  denied
 }
