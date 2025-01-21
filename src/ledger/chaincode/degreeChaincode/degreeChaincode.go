@@ -7,155 +7,118 @@ import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
-// DegreeContract provides functions for managing degrees
-type DegreeContract struct {
+// DegreeChaincode implements the chaincode logic
+type DegreeChaincode struct {
 	contractapi.Contract
 }
 
-// Degree describes basic details of what makes up a degree
-type Degree struct {
-	DegreeID      string `json:"degreeId"`
-	DegreeHash    string `json:"degreeHash"`
-	OwnerAccepted bool   `json:"ownerAccepted"`
-	Timestamp     string `json:"timestamp"`  // Changed to string to ensure consistency
+// DegreeRecord represents data stored on the ledger
+type DegreeRecord struct {
+	DocID    string `json:"docId"`
+	DocHash  string `json:"docHash"`
+	Owner    string `json:"owner"` // The individual's ID
+	Accepted bool   `json:"accepted"`
+	Denied   bool   `json:"denied"`
 }
 
-// InitLedger adds a base set of degrees to the ledger
-func (s *DegreeContract) InitLedger(ctx contractapi.TransactionContextInterface) error {
-	fmt.Println("Initializing the ledger with test data (optional)")
-	return nil
+// IssueDegree adds a new degree record to the ledger
+func (dc *DegreeChaincode) IssueDegree(ctx contractapi.TransactionContextInterface, docID, docHash, owner string) error {
+	existing, err := ctx.GetStub().GetState(docID)
+	if err != nil {
+		return fmt.Errorf("failed to check ledger: %v", err)
+	}
+	if len(existing) != 0 {
+		return fmt.Errorf("document %s already exists", docID)
+	}
+
+	record := &DegreeRecord{
+		DocID:    docID,
+		DocHash:  docHash,
+		Owner:    owner,
+		Accepted: false,
+		Denied:   false,
+	}
+	data, _ := json.Marshal(record)
+	return ctx.GetStub().PutState(docID, data)
 }
 
-// IssueDegree issues a new degree to the world state with given details
-func (s *DegreeContract) IssueDegree(ctx contractapi.TransactionContextInterface, degreeID string, degreeHash string) error {
-	// Input validation
-	if len(degreeID) == 0 {
-		return fmt.Errorf("degreeID cannot be empty")
-	}
-	if len(degreeHash) == 0 {
-		return fmt.Errorf("degreeHash cannot be empty")
-	}
-
-	// Check if the degree already exists
-	existing, err := ctx.GetStub().GetState(degreeID)
+// AcceptDegree marks the record as accepted by the individual
+func (dc *DegreeChaincode) AcceptDegree(ctx contractapi.TransactionContextInterface, docID string) error {
+	data, err := ctx.GetStub().GetState(docID)
 	if err != nil {
-		return fmt.Errorf("failed to read from world state: %v", err)
+		return fmt.Errorf("failed to read doc %s: %v", docID, err)
 	}
-	if existing != nil {
-		return fmt.Errorf("degree with ID %s already exists", degreeID)
-	}
-
-	// Get transaction timestamp from the header
-	txTimestamp, err := ctx.GetStub().GetTxTimestamp()
-	if err != nil {
-		return fmt.Errorf("failed to get transaction timestamp: %v", err)
+	if len(data) == 0 {
+		return fmt.Errorf("doc %s not found", docID)
 	}
 
-	// Create degree object with deterministic timestamp
-	degree := Degree{
-		DegreeID:      degreeID,
-		DegreeHash:    degreeHash,
-		OwnerAccepted: false,
-		Timestamp:     fmt.Sprintf("%d.%09d", txTimestamp.Seconds, txTimestamp.Nanos),
+	var record DegreeRecord
+	if err := json.Unmarshal(data, &record); err != nil {
+		return fmt.Errorf("unmarshal error: %v", err)
 	}
 
-	// Marshal degree to JSON
-	degreeJSON, err := json.Marshal(degree)
-	if err != nil {
-		return fmt.Errorf("failed to marshal degree: %v", err)
-	}
+	record.Accepted = true
+	record.Denied = false
 
-	// Put the degree in the world state
-	err = ctx.GetStub().PutState(degreeID, degreeJSON)
-	if err != nil {
-		return fmt.Errorf("failed to put degree in world state: %v", err)
-	}
-
-	// Emit an event for the new degree
-	err = ctx.GetStub().SetEvent("DegreeIssued", degreeJSON)
-	if err != nil {
-		return fmt.Errorf("failed to emit DegreeIssued event: %v", err)
-	}
-
-	return nil
+	newData, _ := json.Marshal(record)
+	return ctx.GetStub().PutState(docID, newData)
 }
 
-// AcceptDegree marks a degree as accepted by the individual
-func (s *DegreeContract) AcceptDegree(ctx contractapi.TransactionContextInterface, degreeID string) error {
-	// Input validation
-	if len(degreeID) == 0 {
-		return fmt.Errorf("degreeID cannot be empty")
-	}
-
-	// Get the degree from world state
-	degree, err := s.ReadDegree(ctx, degreeID)
+// DenyDegree marks the record as denied
+func (dc *DegreeChaincode) DenyDegree(ctx contractapi.TransactionContextInterface, docID string) error {
+	data, err := ctx.GetStub().GetState(docID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to read doc %s: %v", docID, err)
+	}
+	if len(data) == 0 {
+		return fmt.Errorf("doc %s not found", docID)
 	}
 
-	// Check if degree is already accepted
-	if degree.OwnerAccepted {
-		return fmt.Errorf("degree %s is already accepted", degreeID)
+	var record DegreeRecord
+	if err := json.Unmarshal(data, &record); err != nil {
+		return fmt.Errorf("unmarshal error: %v", err)
 	}
 
-	// Update acceptance status
-	degree.OwnerAccepted = true
+	record.Denied = true
+	record.Accepted = false
 
-	// Marshal degree to JSON
-	degreeJSON, err := json.Marshal(degree)
-	if err != nil {
-		return fmt.Errorf("failed to marshal degree: %v", err)
-	}
-
-	// Update world state
-	err = ctx.GetStub().PutState(degreeID, degreeJSON)
-	if err != nil {
-		return fmt.Errorf("failed to update degree in world state: %v", err)
-	}
-
-	// Emit an event for degree acceptance
-	err = ctx.GetStub().SetEvent("DegreeAccepted", degreeJSON)
-	if err != nil {
-		return fmt.Errorf("failed to emit DegreeAccepted event: %v", err)
-	}
-
-	return nil
+	newData, _ := json.Marshal(record)
+	return ctx.GetStub().PutState(docID, newData)
 }
 
-// ReadDegree returns the degree stored in the world state with given id
-func (s *DegreeContract) ReadDegree(ctx contractapi.TransactionContextInterface, degreeID string) (*Degree, error) {
-	// Input validation
-	if len(degreeID) == 0 {
-		return nil, fmt.Errorf("degreeID cannot be empty")
-	}
-
-	// Get degree from world state
-	degreeJSON, err := ctx.GetStub().GetState(degreeID)
+// ReadDegree retrieves the record
+func (dc *DegreeChaincode) ReadDegree(ctx contractapi.TransactionContextInterface, docID string) (*DegreeRecord, error) {
+	data, err := ctx.GetStub().GetState(docID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read from world state: %v", err)
+		return nil, fmt.Errorf("failed to read doc: %v", err)
 	}
-	if degreeJSON == nil {
-		return nil, fmt.Errorf("degree %s does not exist", degreeID)
+	if len(data) == 0 {
+		return nil, fmt.Errorf("doc %s not found", docID)
 	}
 
-	// Unmarshal degree
-	var degree Degree
-	err = json.Unmarshal(degreeJSON, &degree)
+	var record DegreeRecord
+	if err := json.Unmarshal(data, &record); err != nil {
+		return nil, fmt.Errorf("unmarshal error: %v", err)
+	}
+	return &record, nil
+}
+
+// VerifyHash checks if the ledger's docHash matches a given hash
+func (dc *DegreeChaincode) VerifyHash(ctx contractapi.TransactionContextInterface, docID, hashToCheck string) (bool, error) {
+	record, err := dc.ReadDegree(ctx, docID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal degree JSON: %v", err)
+		return false, err
 	}
-
-	return &degree, nil
+	return (record.DocHash == hashToCheck), nil
 }
 
 func main() {
-	chaincode, err := contractapi.NewChaincode(&DegreeContract{})
+	chaincode, err := contractapi.NewChaincode(new(DegreeChaincode))
 	if err != nil {
-		fmt.Printf("Error creating degree chaincode: %s", err.Error())
-		return
+		panic(fmt.Sprintf("Error create degree chaincode: %v", err))
 	}
 
 	if err := chaincode.Start(); err != nil {
-		fmt.Printf("Error starting degree chaincode: %s", err.Error())
+		panic(fmt.Sprintf("Error starting degree chaincode: %v", err))
 	}
 }

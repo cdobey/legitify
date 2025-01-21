@@ -62,7 +62,8 @@ echo "Test 1: Issuing new degree..."
 set_university_context
 DEGREE_ID="DEGREE002"  # Changed ID to avoid conflicts
 DEGREE_HASH="abc123hash"
-invoke_chaincode "IssueDegree" "\"$DEGREE_ID\",\"$DEGREE_HASH\""
+OWNER_ID="INDIVIDUAL001"
+invoke_chaincode "IssueDegree" "\"$DEGREE_ID\",\"$DEGREE_HASH\",\"$OWNER_ID\""
 sleep 5  # Wait for transaction to be committed
 
 # Test 2: Query the degree (as University)
@@ -82,5 +83,24 @@ echo "Test 4: Verifying degree acceptance..."
 set_university_context
 RESULT=$(query_chaincode "ReadDegree" "\"$DEGREE_ID\"")
 echo "Updated degree details: $RESULT"
+sleep 2
+
+# Test 5: Deny degree (as Individual with Employer endorsement)
+echo "Test 5: Denying degree..."
+set_individual_context
+invoke_chaincode "DenyDegree" "\"$DEGREE_ID\""
+sleep 5  # Wait for transaction to be committed
+
+# Test 6: Query degree after denial (as University)
+echo "Test 6: Verifying degree denial..."
+set_university_context
+RESULT=$(query_chaincode "ReadDegree" "\"$DEGREE_ID\"")
+echo "Updated degree details: $RESULT"
+sleep 2
+
+# Test 7: Verify hash (as University)
+echo "Test 7: Verifying degree hash..."
+RESULT=$(query_chaincode "VerifyHash" "\"$DEGREE_ID\",\"$DEGREE_HASH\"")
+echo "Hash verification result: $RESULT"
 
 echo "All tests completed!"
