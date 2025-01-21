@@ -31,10 +31,11 @@ docker run --name my-postgres -e POSTGRES_PASSWORD=mysecretpassword -p 5432:5432
 
 ### 3. Register the Admins
 
-Navigate to the `server` directory and run the `enrollAdmin.ts` script to register the admin users.
+Navigate to the `server` directory and run the `enrollAdmin.ts` script to register the admin users. If you encounter issues, you may need to delete the previous `wallet` directory as it could cause conflicts with the new identities.
 
 ```sh
 cd /path/to/server
+rm -rf wallet
 ts-node enrollAdmin.ts
 ```
 

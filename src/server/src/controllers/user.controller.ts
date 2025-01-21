@@ -6,12 +6,49 @@ import bcrypt from "bcrypt";
 import fs from "fs";
 import path from "path";
 
+interface OrganizationConfig {
+  connectionPath: string;
+  caName: string;
+  mspId: string;
+  adminId: string;
+}
+
+const organizationConfigs: Record<string, OrganizationConfig> = {
+  orguniversity: {
+    connectionPath: "orguniversity.com/connection-orguniversity.json",
+    caName: "ca.orguniversity.com",
+    mspId: "OrgUniversityMSP",
+    adminId: "orguniversityadmin",
+  },
+  orgemployer: {
+    connectionPath: "orgemployer.com/connection-orgemployer.json",
+    caName: "ca.orgemployer.com",
+    mspId: "OrgEmployerMSP",
+    adminId: "orgemployeradmin",
+  },
+  orgindividual: {
+    connectionPath: "orgindividual.com/connection-orgindividual.json",
+    caName: "ca.orgindividual.com",
+    mspId: "OrgIndividualMSP",
+    adminId: "orgindividualadmin",
+  },
+};
+
 export const registerUser: RequestHandler = async (req, res) => {
   try {
     const { username, password, role, orgName } = req.body;
     if (!username || !password || !role || !orgName) {
       res.status(400).json({
         error: "username, password, role, orgName are required",
+      });
+      return;
+    }
+
+    // Validate organization
+    const orgConfig = organizationConfigs[orgName.toLowerCase()];
+    if (!orgConfig) {
+      res.status(400).json({
+        error: "Invalid organization name",
       });
       return;
     }
@@ -33,10 +70,10 @@ export const registerUser: RequestHandler = async (req, res) => {
     // Register/Enroll with Fabric CA
     const ccpPath = path.resolve(
       __dirname,
-      "../../../ledger/legitify-network/organizations/peerOrganizations/orguniversity.com/connection-orguniversity.json"
+      `../../../ledger/legitify-network/organizations/peerOrganizations/${orgConfig.connectionPath}`
     );
     const ccp = JSON.parse(fs.readFileSync(ccpPath, "utf8"));
-    const caInfo = ccp.certificateAuthorities["ca.orguniversity.com"];
+    const caInfo = ccp.certificateAuthorities[orgConfig.caName];
     const ca = new FabricCAServices(
       caInfo.url,
       { trustedRoots: caInfo.tlsCACerts.pem, verify: false },
@@ -46,9 +83,9 @@ export const registerUser: RequestHandler = async (req, res) => {
     const walletPath = path.join(__dirname, `../wallet/${orgName}`);
     const wallet = await Wallets.newFileSystemWallet(walletPath);
 
-    const adminIdentity = await wallet.get("orguniversityadmin");
+    const adminIdentity = await wallet.get(orgConfig.adminId);
     if (!adminIdentity) {
-      throw new Error("Admin identity not found in wallet");
+      throw new Error(`Admin identity for ${orgName} not found in wallet`);
     }
 
     const userExists = await wallet.get(username);
@@ -64,13 +101,21 @@ export const registerUser: RequestHandler = async (req, res) => {
       .getProvider(adminIdentity.type);
     const adminUser = await provider.getUserContext(
       adminIdentity,
-      "orguniversityadmin"
+      orgConfig.adminId
     );
+
+    // Determine affiliation based on organization and role
+    let affiliation = `${orgName.toLowerCase()}.department1`;
+    if (orgName === "orgindividual") {
+      affiliation = `${orgName.toLowerCase()}.user`;
+    } else if (orgName === "orgemployer") {
+      affiliation = `${orgName.toLowerCase()}.company`;
+    }
 
     const secret = await ca.register(
       {
         enrollmentID: username,
-        affiliation: `${orgName.toLowerCase()}.department1`,
+        affiliation: affiliation,
         role: "client",
         attrs: [{ name: "role", value: role, ecert: true }],
       },
@@ -86,13 +131,15 @@ export const registerUser: RequestHandler = async (req, res) => {
         certificate: enrollment.certificate,
         privateKey: enrollment.key.toBytes(),
       },
-      mspId: `${orgName}MSP`,
+      mspId: orgConfig.mspId,
       type: "X.509",
     };
 
     await wallet.put(username, x509Identity);
 
-    console.log(`Registered & enrolled user ${username} on Fabric CA`);
+    console.log(
+      `Registered & enrolled user ${username} on Fabric CA for ${orgName}`
+    );
     res.status(201).json(newUser);
   } catch (error: any) {
     console.error("Error registering user:", error);
