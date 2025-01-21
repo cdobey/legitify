@@ -1,5 +1,3 @@
-// src/controllers/degree.controller.ts
-
 import { Request, Response } from "express";
 
 import crypto from "crypto";

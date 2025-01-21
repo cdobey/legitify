@@ -1,5 +1,3 @@
-// src/controllers/user.controller.ts
-
 import FabricCAServices from "fabric-ca-client";
 import { RequestHandler } from "express";
 import { Wallets } from "fabric-network";
@@ -69,19 +67,6 @@ export const registerUser: RequestHandler = async (req, res): Promise<void> => {
       return;
     }
 
-    // Hash password
-    const passwordHash = await bcrypt.hash(password, 10);
-
-    // Create user in the database
-    const newUser = await prisma.user.create({
-      data: {
-        username,
-        passwordHash,
-        role,
-        orgName,
-      },
-    });
-
     // Register/Enroll with Fabric CA
     const ccpPath = path.resolve(
       __dirname,
@@ -105,8 +90,7 @@ export const registerUser: RequestHandler = async (req, res): Promise<void> => {
 
     const userExistsInWallet = await wallet.get(username);
     if (userExistsInWallet) {
-      // User is already enrolled in the wallet
-      res.status(201).json(newUser);
+      res.status(400).json({ error: "User is already enrolled in the wallet" });
       return;
     }
 
@@ -159,6 +143,19 @@ export const registerUser: RequestHandler = async (req, res): Promise<void> => {
     console.log(
       `Registered & enrolled user ${username} on Fabric CA for ${orgName}`
     );
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // Create user in the database
+    const newUser = await prisma.user.create({
+      data: {
+        username,
+        passwordHash,
+        role,
+        orgName,
+      },
+    });
 
     // Send response
     res.status(201).json(newUser);
