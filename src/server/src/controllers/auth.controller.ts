@@ -1,7 +1,7 @@
 import { Request, RequestHandler, Response } from "express";
+import { Wallets, X509Identity } from "fabric-network";
 
 import FabricCAServices from "fabric-ca-client";
-import { Wallets } from "fabric-network";
 import bcrypt from "bcrypt";
 import fs from "fs";
 import jwt from "jsonwebtoken";
@@ -111,7 +111,10 @@ export const register: RequestHandler = async (
       return;
     }
 
-    const userExistsInWallet = await wallet.get(username);
+    // Generate a new user ID
+    const userId = uuidv4();
+
+    const userExistsInWallet = await wallet.get(userId);
     if (userExistsInWallet) {
       res.status(400).json({ error: "User is already enrolled in the wallet" });
       return;
@@ -137,7 +140,7 @@ export const register: RequestHandler = async (
     // Register the user with Fabric CA
     const secret = await ca.register(
       {
-        enrollmentID: username,
+        enrollmentID: userId,
         affiliation: affiliation,
         role: "client",
         attrs: [{ name: "role", value: role, ecert: true }],
@@ -147,11 +150,11 @@ export const register: RequestHandler = async (
 
     // Enroll the user and get certificates
     const enrollment = await ca.enroll({
-      enrollmentID: username,
+      enrollmentID: userId,
       enrollmentSecret: secret,
     });
 
-    const x509Identity = {
+    const x509Identity: X509Identity = {
       credentials: {
         certificate: enrollment.certificate,
         privateKey: enrollment.key.toBytes(),
@@ -160,18 +163,18 @@ export const register: RequestHandler = async (
       type: "X.509",
     };
 
-    // Put the new identity into the wallet
-    await wallet.put(username, x509Identity);
+    // Put the new identity into the wallet using the user ID
+    await wallet.put(userId, x509Identity);
 
     console.log(
-      `Registered & enrolled user ${username} on Fabric CA for ${orgName}`
+      `Registered & enrolled user ${username} with ID ${userId} on Fabric CA for ${orgName}`
     );
 
     // Now, create the user in the database
     const passwordHash = await bcrypt.hash(password, 10);
     newUser = await prisma.user.create({
       data: {
-        id: uuidv4(),
+        id: userId,
         username,
         passwordHash,
         role,
