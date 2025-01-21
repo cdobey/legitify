@@ -1,8 +1,8 @@
 {
-    "name": "legitify-network-org${ORG}",
+    "name": "legitify-network-${ORG}",
     "version": "1.0.0",
     "client": {
-        "organization": "Org${ORG}",
+        "organization": "${ORG}",
         "connection": {
             "timeout": {
                 "peer": {
@@ -12,28 +12,78 @@
         }
     },
     "organizations": {
-        "Org${ORG}": {
-            "mspid": "Org${ORG}MSP",
-            "peers": ["peer0.org${ORG}.example.com"],
-            "certificateAuthorities": ["ca.org${ORG}.example.com"]
+        "OrgUniversity": {
+            "mspid": "OrgUniversityMSP",
+            "peers": ["peer0.orguniversity.com"],
+            "certificateAuthorities": ["ca.orguniversity.com"]
+        },
+        "OrgEmployer": {
+            "mspid": "OrgEmployerMSP",
+            "peers": ["peer0.orgemployer.com"],
+            "certificateAuthorities": ["ca.orgemployer.com"]
+        },
+        "OrgIndividual": {
+            "mspid": "OrgIndividualMSP",
+            "peers": ["peer0.orgindividual.com"],
+            "certificateAuthorities": ["ca.orgindividual.com"]
         }
     },
     "peers": {
-        "peer0.org${ORG}.example.com": {
-            "url": "grpcs://localhost:${P0PORT}",
+        "peer0.orguniversity.com": {
+            "url": "grpcs://localhost:7051",
             "tlsCACerts": {
                 "pem": "${PEERPEM}"
             },
             "grpcOptions": {
-                "ssl-target-name-override": "peer0.org${ORG}.example.com",
-                "hostnameOverride": "peer0.org${ORG}.example.com"
+                "ssl-target-name-override": "peer0.orguniversity.com",
+                "hostnameOverride": "peer0.orguniversity.com"
+            }
+        },
+        "peer0.orgemployer.com": {
+            "url": "grpcs://localhost:8051",
+            "tlsCACerts": {
+                "pem": "${PEERPEM}"
+            },
+            "grpcOptions": {
+                "ssl-target-name-override": "peer0.orgemployer.com",
+                "hostnameOverride": "peer0.orgemployer.com"
+            }
+        },
+        "peer0.orgindividual.com": {
+            "url": "grpcs://localhost:9051",
+            "tlsCACerts": {
+                "pem": "${PEERPEM}"
+            },
+            "grpcOptions": {
+                "ssl-target-name-override": "peer0.orgindividual.com",
+                "hostnameOverride": "peer0.orgindividual.com"
             }
         }
     },
     "certificateAuthorities": {
-        "ca.org${ORG}.example.com": {
-            "url": "https://localhost:${CAPORT}",
-            "caName": "ca-org${ORG}",
+        "ca.orguniversity.com": {
+            "url": "https://localhost:7054",
+            "caName": "ca-orguniversity",
+            "tlsCACerts": {
+                "pem": ["${CAPEM}"]
+            },
+            "httpOptions": {
+                "verify": false
+            }
+        },
+        "ca.orgemployer.com": {
+            "url": "https://localhost:8054",
+            "caName": "ca-orgemployer",
+            "tlsCACerts": {
+                "pem": ["${CAPEM}"]
+            },
+            "httpOptions": {
+                "verify": false
+            }
+        },
+        "ca.orgindividual.com": {
+            "url": "https://localhost:9054",
+            "caName": "ca-orgindividual",
             "tlsCACerts": {
                 "pem": ["${CAPEM}"]
             },

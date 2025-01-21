@@ -1,54 +1,80 @@
 #!/bin/bash
 
+# Function to convert PEM files to a single line
 function one_line_pem {
     echo "`awk 'NF {sub(/\\n/, ""); printf "%s\\\\\\\n",$0;}' $1`"
 }
 
+# Generate JSON connection profile from the template
 function json_ccp {
-    local PP=$(one_line_pem $4)
-    local CP=$(one_line_pem $5)
-    sed -e "s/\${ORG}/$1/" \
-        -e "s/\${P0PORT}/$2/" \
-        -e "s/\${CAPORT}/$3/" \
+    local ORG=$1
+    local P0PORT=$2
+    local CAPORT=$3
+    local PEERPEM=$4
+    local CAPEM=$5
+
+    local PP=$(one_line_pem "$PEERPEM")
+    local CP=$(one_line_pem "$CAPEM")
+
+    sed -e "s/\${ORG}/$ORG/" \
+        -e "s/\${P0PORT}/$P0PORT/" \
+        -e "s/\${CAPORT}/$CAPORT/" \
         -e "s#\${PEERPEM}#$PP#" \
         -e "s#\${CAPEM}#$CP#" \
         organizations/ccp-template.json
 }
 
+# Generate YAML connection profile from the template
 function yaml_ccp {
-    local PP=$(one_line_pem $4)
-    local CP=$(one_line_pem $5)
-    sed -e "s/\${ORG}/$1/" \
-        -e "s/\${P0PORT}/$2/" \
-        -e "s/\${CAPORT}/$3/" \
+    local ORG=$1
+    local P0PORT=$2
+    local CAPORT=$3
+    local PEERPEM=$4
+    local CAPEM=$5
+
+    local PP=$(one_line_pem "$PEERPEM")
+    local CP=$(one_line_pem "$CAPEM")
+
+    sed -e "s/\${ORG}/$ORG/" \
+        -e "s/\${P0PORT}/$P0PORT/" \
+        -e "s/\${CAPORT}/$CAPORT/" \
         -e "s#\${PEERPEM}#$PP#" \
         -e "s#\${CAPEM}#$CP#" \
         organizations/ccp-template.yaml | sed -e $'s/\\\\n/\\\n          /g'
 }
 
-ORG=1
-P0PORT=7051
-CAPORT=7054
-PEERPEM=organizations/peerOrganizations/orguniversity.com/tlsca/tlsca.orguniversity.com-cert.pem
-CAPEM=organizations/peerOrganizations/orguniversity.com/ca/ca.orguniversity.com-cert.pem
+# Generates connection profiles (JSON & YAML) for each organization
+function generate_ccp {
+    local ORG_NAME=$1
+    local P0PORT=$2
+    local CAPORT=$3
+    local DOMAIN=$4
 
-echo "$(json_ccp $ORG $P0PORT $CAPORT $PEERPEM $CAPEM)" > organizations/peerOrganizations/orguniversity.com/connection-orguniversity.json
-echo "$(yaml_ccp $ORG $P0PORT $CAPORT $PEERPEM $CAPEM)" > organizations/peerOrganizations/orguniversity.com/connection-orguniversity.yaml
+    # Construct paths to the CA certs and TLS CA certs
+    local PEERPEM=organizations/peerOrganizations/${DOMAIN}/tlsca/tlsca.${DOMAIN}-cert.pem
+    local CAPEM=organizations/peerOrganizations/${DOMAIN}/ca/ca.${DOMAIN}-cert.pem
 
-ORG=2
-P0PORT=8051
-CAPORT=8054
-PEERPEM=organizations/peerOrganizations/orgemployer.com/tlsca/tlsca.orgemployer.com-cert.pem
-CAPEM=organizations/peerOrganizations/orgemployer.com/ca/ca.orgemployer.com-cert.pem
+    # Remove ".com" from the filename only
+    local FILENAME_BASE=$(echo "${DOMAIN}" | sed 's/\.com//')
 
-echo "$(json_ccp $ORG $P0PORT $CAPORT $PEERPEM $CAPEM)" > organizations/peerOrganizations/orgemployer.com/connection-orgemployer.json
-echo "$(yaml_ccp $ORG $P0PORT $CAPORT $PEERPEM $CAPEM)" > organizations/peerOrganizations/orgemployer.com/connection-orgemployer.yaml
+    echo "$(json_ccp "$ORG_NAME" "$P0PORT" "$CAPORT" "$PEERPEM" "$CAPEM")" \
+        > organizations/peerOrganizations/${DOMAIN}/connection-${FILENAME_BASE}.json
 
-ORG=3
-P0PORT=9051
-CAPORT=9054
-PEERPEM=organizations/peerOrganizations/orgindividual.com/tlsca/tlsca.orgindividual.com-cert.pem
-CAPEM=organizations/peerOrganizations/orgindividual.com/ca/ca.orgindividual.com-cert.pem
+    echo "$(yaml_ccp "$ORG_NAME" "$P0PORT" "$CAPORT" "$PEERPEM" "$CAPEM")" \
+        > organizations/peerOrganizations/${DOMAIN}/connection-${FILENAME_BASE}.yaml
+}
 
-echo "$(json_ccp $ORG $P0PORT $CAPORT $PEERPEM $CAPEM)" > organizations/peerOrganizations/orgindividual.com/connection-orgindividual.json
-echo "$(yaml_ccp $ORG $P0PORT $CAPORT $PEERPEM $CAPEM)" > organizations/peerOrganizations/orgindividual.com/connection-orgindividual.yaml
+# --------------------------------------------------------------------
+# Generate CCPs for the three organizations
+# --------------------------------------------------------------------
+
+# OrgUniversity
+generate_ccp "OrgUniversity" 7051 7054 "orguniversity.com"
+
+# OrgEmployer
+generate_ccp "OrgEmployer" 8051 8054 "orgemployer.com"
+
+# OrgIndividual
+generate_ccp "OrgIndividual" 9051 9054 "orgindividual.com"
+
+echo "Connection profiles generated successfully."

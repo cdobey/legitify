@@ -1,25 +1,53 @@
 import express, { Request, Response } from "express";
 
-import bodyParser from "body-parser";
 import cors from "cors";
-import testRoutes from "./routes/testRoute";
+import indexRoutes from "./routes/index";
+import swaggerJsDoc from "swagger-jsdoc";
+import swaggerUi from "swagger-ui-express";
+import userRoutes from "./routes/user.routes";
 
 const app = express();
-const port = process.env.PORT || 3001;
 
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
+
+// Swagger setup
+const swaggerOptions = {
+  swaggerDefinition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Fabric Degree API - TypeScript",
+      version: "1.0.0",
+      description: "API Documentation",
+    },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+  },
+  apis: ["./src/routes/*.ts"], // Adjust the path to your route files
+};
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Basic test route
 app.get("/", (req: Request, res: Response) => {
-  res.send("Hello from the Hyperledger Fabric Express server!");
+  res.send("TypeScript Fabric Degree API Running...");
 });
 
-// Add test routes
-app.use("/", testRoutes);
-
-app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
-});
+// Add routes
+app.use("/", indexRoutes);
+app.use("/", userRoutes);
 
 export default app;
