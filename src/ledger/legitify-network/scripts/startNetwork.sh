@@ -7,9 +7,13 @@ source .env
 echo "Shutting down existing network..."
 ./network.sh down
 
-# Start the network with certificate authorities
-echo "Starting network..."
-./network.sh up createChannel -ca
+# Start the network with certificate authorities and CouchDB
+echo "Starting network with CouchDB..."
+./network.sh up -s couchdb -ca
+
+# Create the channel
+echo "Creating channel..."
+./network.sh createChannel -ca
 
 # Deploy the chaincode
 echo "Deploying chaincode..."
