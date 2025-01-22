@@ -1,2 +1,79 @@
+# Operating System Files
 .DS_Store
-.block
+.project
+
+# Editor Files
+## Emacs
+*~
+*#
+.#*
+
+## Vim
+.*.sw*
+
+## VS Code
+.vscode
+
+## IntelliJ
+.idea
+
+## Eclipse
+.classpath
+.settings
+
+# Dependencies and Build Directories
+## Node.js
+node_modules/
+package-lock.json
+
+## Go
+src/ledger/chaincode/degreeChaincode/vendor/
+
+## Gradle
+.gradle
+src/ledger/build
+
+## Maven
+src/ledger/target
+
+# Hyperledger Fabric Specific
+## Binary and Configuration Files
+src/ledger/bin/
+src/ledger/builders/
+src/ledger/config/
+src/ledger/external-chaincode/
+src/ledger/legitify-network/builders/
+
+## Network Artifacts
+src/ledger/legitify-network/channel-artifacts/*.tx
+src/ledger/legitify-network/channel-artifacts/*.block
+src/ledger/legitify-network/channel-artifacts/*.json
+src/ledger/legitify-network/channel-artifacts/*.pb
+src/ledger/legitify-network/ledgers
+src/ledger/legitify-network/ledgers-backup
+src/ledger/legitify-network/system-genesis-block/*
+src/ledger/legitify-network/*.tar.gz
+src/ledger/legitify-network/log.txt
+
+## Organization Artifacts
+src/ledger/legitify-network/org3-artifacts/crypto-config/*
+src/ledger/legitify-network/organizations/ordererOrganizations/*
+src/ledger/legitify-network/organizations/peerOrganizations/*
+
+## Fabric CA Directories
+src/ledger/legitify-network/organizations/fabric-ca/ordererOrg/*
+src/ledger/legitify-network/organizations/fabric-ca/orguniversity/*
+src/ledger/legitify-network/organizations/fabric-ca/orgemployer/*
+src/ledger/legitify-network/organizations/fabric-ca/orgindividual/*
+
+# Keep specific config files
+!src/ledger/full-stack-asset-transfer-guide/infrastructure/sample-network/config
+!src/ledger/legitify-network/organizations/fabric-ca/orguniversity/fabric-ca-server-config.yaml
+!src/ledger/legitify-network/organizations/fabric-ca/orgemployer/fabric-ca-server-config.yaml
+!src/ledger/legitify-network/organizations/fabric-ca/orgindividual/fabric-ca-server-config.yaml
+!src/ledger/legitify-network/organizations/fabric-ca/ordererorg/fabric-ca-server-config.yaml
+
+# Server Specific
+src/server/.env
+src/server/pgdata/
+src/server/src/wallet/
