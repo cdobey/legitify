@@ -9,6 +9,10 @@ organizations/fabric-ca/ordererOrg/*
 organizations/fabric-ca/orguniversity/*
 organizations/fabric-ca/orgemployer/*
 organizations/fabric-ca/orgindividual/*
+!organizations/fabric-ca/orguniversity/fabric-ca-server-config.yaml
+!organizations/fabric-ca/orgemployer/fabric-ca-server-config.yaml
+!organizations/fabric-ca/orgindividual/fabric-ca-server-config.yaml
+!organizations/fabric-ca/ordererorg/fabric-ca-server-config.yaml
 organizations/ordererOrganizations/*
 organizations/peerOrganizations/*
 system-genesis-block/*
