@@ -1,312 +1,339 @@
-# **Step-by-Step Guide to Recreate Hyperledger Fabric Network**
+# **Project Setup & Usage Guide**
 
-This guide provides the steps and necessary shell scripts to recreate the Hyperledger Fabric network and test the degree issuance workflow with endorsements from two organizations.
+Welcome! This README will walk you through:
 
----
+1. [Setting up the Hyperledger Fabric Ledger](#1-setting-up-the-hyperledger-fabric-ledger)
+2. [Starting the Backend Server (TypeScript + PostgreSQL + Prisma)](#2-setting-up-the-backend-server)
 
-## **1. Prerequisites**
-
-Ensure the following tools are installed:
-
-- Docker and Docker Compose
-- Node.js and npm
-- jq and curl
-- Go (1.17 or later)
+By the end, you’ll be able to issue and manage degrees on the Fabric ledger and test the APIs via Swagger UI.
 
 ---
 
-## **2. Directory Structure**
+## **Prerequisites**
 
-All files and directories should be organized as follows:
+1. **Docker & Docker Compose**
 
-```
-project-root/
-├── chaincode/
-│   └── degreeChaincode/
-│       ├── go.mod
-│       ├── go.sum
-│       ├── degreeChaincode.go
-├── organizations/
-│   ├── peerOrganizations/
-│   └── ordererOrganizations/
-├── scripts/
-│   ├── startNetwork.sh
-│   ├── invokeDegree.sh
-│   ├── queryDegree.sh
-│   ├── validateDegree.sh
-├── .env
-└── network.sh
-```
+   - [Docker Installation Guide](https://docs.docker.com/engine/install/)
+   - Make sure Docker is **running** before starting any Fabric containers.
 
----
+2. **Go (Golang) v1.17+** (For chaincode compilation)
 
-## **3. Setup Scripts**
+   - [Go Download](https://go.dev/dl/)
 
-### **3.1 Initialize Go Project**
+3. **Node.js v14+ & npm** (For the backend server)
 
-Before deploying the chaincode, ensure the Go project is properly initialized:
+   - [Node.js Download](https://nodejs.org/)
 
-1. Navigate to the chaincode directory:
+4. **PostgreSQL**
 
-```bash
-cd chaincode/degreeChaincode/
-```
+   - Either install locally ([instructions](https://www.postgresql.org/download/))
+   - **OR** run via Docker (see [PostgreSQL Docker Image](https://hub.docker.com/_/postgres))
 
-2. Initialize the Go module:
-
-```bash
-go mod init degreeChaincode
-```
-
-3. Tidy dependencies:
-
-```bash
-go mod tidy
-```
-
-4. Verify dependencies are installed:
-
-```bash
-go build
-```
+5. **Hyperledger Fabric Binaries**
+   - Place Fabric CLI binaries (`peer`, `orderer`, `configtxgen`, etc.) into `src/ledger/bin/` so that our scripts can access them.
 
 ---
 
-### **3.2 Environment Variables File: `.env`**
+## **Repository Structure**
 
-```bash
-# General Settings
-FABRIC_CFG_PATH=$(pwd)/../config/
+A high-level look at the relevant folders:
 
-# Org1 Variables
-ORG1_MSPID="Org1MSP"
-ORG1_TLS_ENABLED=true
-ORG1_TLS_CERT=$(pwd)/organizations/peerOrganizations/org1.example.com/tlsca/tlsca.org1.example.com-cert.pem
-ORG1_MSP_PATH=$(pwd)/organizations/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
-ORG1_ADDRESS=localhost:7051
-
-# Org2 Variables
-ORG2_MSPID="Org2MSP"
-ORG2_TLS_ENABLED=true
-ORG2_TLS_CERT=$(pwd)/organizations/peerOrganizations/org2.example.com/tlsca/tlsca.org2.example.com-cert.pem
-ORG2_MSP_PATH=$(pwd)/organizations/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp
-ORG2_ADDRESS=localhost:9051
-
-# Orderer Settings
-ORDERER_CA=$(pwd)/organizations/ordererOrganizations/example.com/tlsca/tlsca.example.com-cert.pem
 ```
+my-project/
+├── src/
+│   ├── ledger/
+│   │   ├── bin/               <- Fabric binaries go here
+│   │   ├── chaincode/
+│   │   │   └── degreeChaincode.go
+│   │   ├── legitify-network/
+│   │   │   ├── scripts/
+│   │   │   │   ├── startNetwork.sh
+│   │   │   │   ├── stopNetwork.sh
+│   │   │   │   └── testDegreeChaincode.sh
+│   │   │   ├── network.sh
+│   │   │   ├── .env
+│   │   │   └── ...
+│   │   └── install-fabric.sh
+│   └── server/                <- Our TypeScript/Node.js backend
+│       ├── .env
+│       ├── prisma/
+│       ├── package.json
+│       ├── tsconfig.json
+│       ├── src/
+│       │   ├── app.ts
+│       │   ├── server.ts
+│       │   ├── controllers/
+│       │   ├── config/
+│       │   ├── middleware/
+│       │   ├── prisma/
+│       │   └── routes/
+│       └── ...
+└── README.md (this file)
+```
+
+> **Note:** Exact filenames may vary; the above is a typical structure.
 
 ---
 
-### **3.3 Script: `startNetwork.sh`**
+# **1. Setting up the Hyperledger Fabric Ledger**
 
-```bash
-#!/bin/bash
+## **1.1 Install Fabric Binaries**
 
-# Load environment variables
-set -o allexport
-source .env
-set +o allexport
-
-# Bring down any existing network
-echo "Shutting down existing network..."
-./network.sh down
-
-# Start the network with certificate authorities
-echo "Starting network..."
-./network.sh up createChannel -ca
-
-# Deploy the chaincode
-echo "Deploying chaincode..."
-./network.sh deployCC -ccn degreeCC -ccp ../chaincode/degreeChaincode/ -ccl go
-
-# Confirm setup success
-echo "Network setup complete."
-```
+1. **Navigate to** `src/ledger`:
+   ```bash
+   cd src/ledger
+   ```
+2. **Run** `install-fabric.sh` (if using x86_64):
+   ```bash
+   bash install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
+   ```
+3. **Verify** the `bin/` folder contains the Fabric CLI tools (`peer`, `orderer`, etc.).
+4. **Set Executable Permissions** (if needed):
+   ```bash
+   chmod +x bin/*
+   ```
 
 ---
 
-### **3.4 Script: `invokeDegree.sh`**
+## **1.2 Start the Fabric Network**
 
-```bash
-#!/bin/bash
+1. **Go to** `legitify-network`:
+   ```bash
+   cd legitify-network
+   ```
+2. **Start the Network**:
 
-# Load environment variables
-set -o allexport
-source .env
-set +o allexport
+   ```bash
+   bash scripts/startNetwork.sh
+   ```
 
-peer chaincode invoke -o localhost:7050 --tls --cafile $ORDERER_CA \
--C mychannel -n degreeCC \
---peerAddresses $ORG1_ADDRESS --tlsRootCertFiles $ORG1_TLS_CERT \
---peerAddresses $ORG2_ADDRESS --tlsRootCertFiles $ORG2_TLS_CERT \
--c '{"Args":["IssueDegree","1","UniversityXYZ","John Doe","Bachelor of Science","2024-01-01"]}'
+   - **What happens**:
+     1. Shuts down any existing Fabric network.
+     2. Spins up the new network with CouchDB.
+     3. Creates a channel (`mychannel`).
+     4. Deploys the chaincode (`degreeChaincode.go`).
+   - **Duration**: Can take a few minutes, especially on first run.
 
-echo "Degree issued successfully."
-```
-
----
-
-### **3.5 Script: `queryDegree.sh`**
-
-```bash
-#!/bin/bash
-
-# Load environment variables
-set -o allexport
-source .env
-set +o allexport
-
-peer chaincode query -C mychannel -n degreeCC -c '{"Args":["ReadDegree","1"]}'
-```
+3. **Confirm** the network is running:
+   ```bash
+   docker ps
+   ```
+   You should see containers for peers, orderers, and CAs for **OrgUniversity**, **OrgEmployer**, and **OrgIndividual**.
 
 ---
 
-### **3.6 Script: `validateDegree.sh`**
+## **1.3 Test the Chaincode**
 
-```bash
-#!/bin/bash
+1. **Optional**: Once the network is up, run:
+   ```bash
+   bash scripts/testDegreeChaincode.sh
+   ```
+   - This script **issues a degree**, **accepts it**, **denies it**, and **verifies** the document hash.
+   - If successful, you’ll see output ending with:
+     ```
+     All tests completed!
+     ```
 
-# Load environment variables
-set -o allexport
-source .env
-set +o allexport
-
-peer chaincode query -C mychannel -n degreeCC -c '{"Args":["ValidateDegree","1"]}'
-```
-
----
-
-## **4. Chaincode: `degreeChaincode.go`**
-
-### **4.1 Chaincode File Location:**
-
-```
-project-root/chaincode/degreeChaincode/degreeChaincode.go
-```
-
-### **4.2 Required Go Files**
-
-- `go.mod`
-
-```go
-module degreeChaincode
-
-go 1.17
-
-require github.com/hyperledger/fabric-contract-api-go v1.1.0
-```
-
-- `go.sum` will be generated automatically when running `go mod tidy`.
-
-### **4.3 Chaincode Implementation:**
-
-```go
-package main
-
-import (
-	"encoding/json"
-	"fmt"
-	"github.com/hyperledger/fabric-contract-api-go/contractapi"
-)
-
-// Degree structure
-type Degree struct {
-	ID         string `json:"ID"`
-	University string `json:"University"`
-	Recipient  string `json:"Recipient"`
-	Title      string `json:"Title"`
-	IssueDate  string `json:"IssueDate"`
-}
-
-// SmartContract for managing degrees
-type SmartContract struct {
-	contractapi.Contract
-}
-
-// IssueDegree issues a degree
-func (s *SmartContract) IssueDegree(ctx contractapi.TransactionContextInterface, id string, university string, recipient string, title string, issueDate string) error {
-	degree := Degree{
-		ID:         id,
-		University: university,
-		Recipient:  recipient,
-		Title:      title,
-		IssueDate:  issueDate,
-	}
-
-	degreeJSON, err := json.Marshal(degree)
-	if err != nil {
-		return err
-	}
-
-	return ctx.GetStub().PutState(id, degreeJSON)
-}
-
-// ReadDegree retrieves a degree
-func (s *SmartContract) ReadDegree(ctx contractapi.TransactionContextInterface, id string) (*Degree, error) {
-	degreeJSON, err := ctx.GetStub().GetState(id)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read from world state: %v", err)
-	}
-	if degreeJSON == nil {
-		return nil, fmt.Errorf("degree not found")
-	}
-
-	var degree Degree
-	err = json.Unmarshal(degreeJSON, &degree)
-	if err != nil {
-		return nil, err
-	}
-
-	return &degree, nil
-}
-
-// ValidateDegree checks the existence of a degree
-func (s *SmartContract) ValidateDegree(ctx contractapi.TransactionContextInterface, id string) (bool, error) {
-	degreeJSON, err := ctx.GetStub().GetState(id)
-	if err != nil {
-		return false, err
-	}
-	return degreeJSON != nil, nil
-}
-
-func main() {
-	chaincode, err := contractapi.NewChaincode(&SmartContract{})
-	if err != nil {
-		fmt.Printf("Error creating chaincode: %v", err)
-		return
-	}
-
-	if err := chaincode.Start(); err != nil {
-		fmt.Printf("Error starting chaincode: %v", err)
-	}
-}
-```
+Congrats! Your Fabric ledger is up and working.
 
 ---
 
-## **5. Usage Instructions**
+# **2. Setting up the Backend Server**
 
-### **5.1 Start the Network**
+Our backend is a **TypeScript** + **Express** app that uses **Prisma** (PostgreSQL ORM) and integrates with **Fabric CA** to handle registration, login, and degree management transactions on the Fabric network.
+
+## **2.1 Prerequisites**
+
+1. **PostgreSQL**:
+
+   - Run via Docker using Docker Compose:
+     ```bash
+     docker-compose up -d
+     ```
+
+2. **Database Configuration**:
+   - Make sure you **update** the `.env` file in `src/server/` with your PostgreSQL connection details.
+
+---
+
+## **2.2 Environment Variables**
+
+In `src/server/.env`, you’ll typically have:
 
 ```bash
-bash scripts/startNetwork.sh
+# Example .env
+FABRIC_CONNECTION=../ledger/legitify-network/organizations/peerOrganizations/orguniversity.com/connection-orguniversity.json
+FABRIC_WALLET=./src/wallet
+FABRIC_CHANNEL=mychannel
+FABRIC_CHAINCODE=degreeCC
+FABRIC_USER=appUser
+DB_HOST=localhost
+DB_NAME=my_fabric_db
+DB_USER=postgres
+DB_PASS=postgrespw
+PORT=3001
+JWT_SECRET=MySuperSecretJWTKey
+
+# Environment variables declared in this file are automatically made available to Prisma.
+# See the documentation for more detail: https://pris.ly/d/prisma-schema#accessing-environment-variables-from-the-schema
+
+# Prisma supports the native connection string format for PostgreSQL, MySQL, SQLite, SQL Server, MongoDB and CockroachDB.
+# See the documentation for all the connection string options: https://pris.ly/d/connection-strings
+
+DATABASE_URL="postgresql://postgres:postgrespw@127.0.0.1:5432/my_fabric_db?schema=public"
+
 ```
 
-### **5.2 Issue a Degree**
+> **Important**: Keep your `.env` **private** and **never** commit secrets to version control.
+
+---
+
+## **2.3 Install Dependencies**
+
+From the **`src/server`** directory:
 
 ```bash
-bash scripts/invokeDegree.sh
+cd ../server
+npm install
 ```
 
-### **5.3 Query the Degree**
+This installs all required packages, including Prisma, Fabric CA Client, Express, etc.
+
+---
+
+## **2.4 Run Database Migrations**
+
+Prisma uses **migrations** to sync your database schema:
 
 ```bash
-bash scripts/queryDegree.sh
+npx prisma migrate dev --name init
 ```
-
-### **5.4 Validate the Degree**
 
 ```bash
-bash scripts/validateDegree.sh
+npx prisma generate
 ```
+
+- **`migrate dev`** creates tables in your database.
+- **`prisma generate`** regenerates the Prisma Client based on your schema.
+
+> **Tip**: You can also run `npx prisma studio` to view your database data in a web UI.
+
+---
+
+## **2.5 Start the Server**
+
+1. **Development Mode** (live reload with `ts-node-dev`):
+   ```bash
+   npm run dev
+   ```
+   - Server logs will appear in your console.
+2. **Production Build**:
+   ```bash
+   npm run build
+   npm start
+   ```
+
+**Default Port**: `3001` (see your `.env` for `PORT`).
+
+---
+
+## **2.6 Swagger API Documentation**
+
+Our backend exposes a **Swagger UI** at:
+
+```
+http://localhost:3001/docs
+```
+
+- **Register** users: `POST /auth/register`
+- **Login** (JWT): `POST /auth/login`
+- **Degree Management**: `POST /degree/issue`, `POST /degree/accept`, etc.
+
+Each endpoint’s parameters and expected responses are documented in Swagger.
+
+---
+
+# **Usage Flow Example**
+
+1. **Start Fabric Network**
+   - `cd src/ledger/legitify-network && bash scripts/startNetwork.sh`
+2. **Start Backend**
+   - `cd src/server && npm run dev`
+3. **Navigate to Swagger**
+   - Visit `http://localhost:3001/docs` in your browser.
+4. **Register a New User**
+   - **POST** `/auth/register`
+   - Sample JSON body:
+     ```json
+     {
+       "username": "alice",
+       "password": "alicepw",
+       "role": "individual",
+       "orgName": "orgindividual"
+     }
+     ```
+   - This enrolls the user in **Fabric CA** and creates a record in **PostgreSQL**.
+5. **Login**
+   - **POST** `/auth/login`
+   - Use the same credentials (`alice`, `alicepw`).
+   - **Response**: Returns a JWT token. Copy it.
+6. **Test an Endpoint**
+   - For example, if you have a user with role `"university"`, you can **issue a degree**:
+     ```json
+     {
+       "individualId": "uuid-of-user",
+       "base64File": "base64-encoded-document"
+     }
+     ```
+   - Add `Authorization: Bearer <token>` to the request headers.
+
+---
+
+# **Troubleshooting Tips**
+
+1. **Port Conflicts**
+
+   - If 5432 (PostgreSQL), 7051/8051/9051 (Fabric peers), or 3001 (Node server) are in use, update your `.env` or Docker Compose files with alternative ports.
+
+2. **Docker Resource Limits**
+
+   - Allocate at least **4GB** of RAM to Docker for Fabric.
+
+3. **Fabric Binaries**
+
+   - Ensure you have the correct Fabric binaries for your OS/architecture in `src/ledger/bin/`.
+
+4. **Clearing State**
+
+   - If you run into issues, stop the network:
+     ```bash
+     bash scripts/stopNetwork.sh
+     docker system prune -af --volumes
+     ```
+   - Then start fresh:
+     ```bash
+     bash scripts/startNetwork.sh
+     ```
+
+5. **Database Connection**
+
+   - Confirm `DATABASE_URL` is correct in `src/server/.env` and that PostgreSQL is accessible.
+
+6. **Node/TypeScript Issues**
+   - Check `npm install` for dependency errors.
+   - Make sure to run `npx prisma migrate dev && npx prisma generate` after any schema changes.
+
+---
+
+# **Summary**
+
+1. **Ledger Setup**:
+
+   - Install Fabric binaries, run `startNetwork.sh`, confirm chaincode deployed.
+
+2. **Backend Setup**:
+   - Ensure PostgreSQL is running.
+   - `npm install`, migrate with Prisma.
+   - Start the server, visit **Swagger** at `/docs`.
+
+With both components running, you can **create users**, **issue degrees**, and **interact** with the chaincode via the **TypeScript** backend and **PostgreSQL** database.
