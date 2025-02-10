@@ -1,51 +1,28 @@
-import { getUser, registerUser } from "../controllers/user.controller";
-
 import { Router } from "express";
+import { register } from "../controllers/auth.controller";
+import { getProfile } from "../controllers/user.controller";
 import { authMiddleware } from "../middleware/auth";
-import { login } from "../controllers/auth.controller";
 
 const router = Router();
 
 /**
  * @swagger
- * /user:
+ * /user/profile:
  *   get:
- *     summary: Get user information
+ *     summary: Get user profile
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: User information
+ *         description: User profile information
  *       401:
  *         description: Unauthorized
  */
-router.get("/user", authMiddleware, getUser);
+router.get("/profile", authMiddleware, getProfile);
 
 /**
  * @swagger
- * /auth/login:
- *   post:
- *     summary: User login
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               username:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: Returns a JWT token
- */
-router.post("/auth/login", login);
-
-/**
- * @swagger
- * /users:
+ * /user/register:
  *   post:
  *     summary: Register a new user
  *     requestBody:
@@ -54,15 +31,31 @@ router.post("/auth/login", login);
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - username
+ *               - role
+ *               - orgName
  *             properties:
- *               username: { type: string }
- *               password: { type: string }
- *               role: { type: string }
- *               orgName: { type: string }
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               username:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 enum: [university, individual, employer]
+ *               orgName:
+ *                 type: string
+ *                 enum: [orguniversity, orgindividual, orgemployer]
  *     responses:
  *       201:
- *         description: Created user
+ *         description: User created successfully
+ *       400:
+ *         description: Bad request
  */
-router.post("/users", registerUser);
+router.post("/register", register);
 
 export default router;

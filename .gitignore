@@ -77,3 +77,4 @@ src/ledger/legitify-network/organizations/fabric-ca/orgindividual/*
 src/server/.env
 src/server/pgdata/
 src/server/src/wallet/
+src/server/src/config/serviceAccountKey.json

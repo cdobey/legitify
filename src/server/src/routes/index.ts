@@ -1,3 +1,4 @@
+import { register } from "../controllers/auth.controller";
 import {
   acceptDegree,
   denyDegree,
@@ -6,13 +7,13 @@ import {
   requestAccess,
   viewDegree,
 } from "../controllers/degree.controller";
-import { login, register } from "../controllers/auth.controller";
 
 import { Router } from "express";
-import { authMiddleware } from "../middleware/auth";
-import { getProfile } from "../controllers/user.controller";
+import admin from "firebase-admin";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
+import { getProfile } from "../controllers/user.controller";
+import { authMiddleware } from "../middleware/auth";
 
 const router = Router();
 
@@ -20,21 +21,45 @@ const router = Router();
 const swaggerOptions = {
   definition: {
     openapi: "3.0.0",
-    info: { title: "Fabric Degree API (Go chaincode)", version: "1.0.0" },
+    info: { title: "Legitify API", version: "1.0.0" },
     components: {
       securitySchemes: {
         bearerAuth: {
           type: "http",
           scheme: "bearer",
-          bearerFormat: "JWT",
+          bearerFormat: "Firebase ID Token",
+        },
+      },
+      schemas: {
+        LoginResponse: {
+          type: "object",
+          properties: {
+            token: {
+              type: "string",
+              description: "Firebase ID token",
+            },
+          },
+        },
+        AuthTestResponse: {
+          type: "object",
+          properties: {
+            message: {
+              type: "string",
+              description: "Success message",
+            },
+            user: {
+              type: "object",
+              properties: {
+                uid: { type: "string" },
+                role: { type: "string" },
+                orgName: { type: "string" },
+              },
+            },
+          },
         },
       },
     },
-    security: [
-      {
-        bearerAuth: [],
-      },
-    ],
+    security: [{ bearerAuth: [] }],
   },
   apis: ["./src/routes/*.ts"],
 };
@@ -57,14 +82,17 @@ const swaggerSpec = swaggerJsdoc(swaggerOptions);
  *           schema:
  *             type: object
  *             required:
- *               - username
+ *               - email
  *               - password
+ *               - username
  *               - role
  *               - orgName
  *             properties:
- *               username:
+ *               email:
  *                 type: string
  *               password:
+ *                 type: string
+ *               username:
  *                 type: string
  *               role:
  *                 type: string
@@ -84,34 +112,113 @@ router.post("/auth/register", register);
 
 /**
  * @openapi
- * /auth/login:
+ * /auth/test-login:
  *   post:
- *     summary: User login
- *     tags:
- *       - Auth
+ *     summary: Test endpoint to get a Firebase token
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - username
- *               - password
+ *             required: [email, password]
  *             properties:
- *               username:
+ *               email:
  *                 type: string
+ *                 example: "test@example.com"
  *               password:
  *                 type: string
+ *                 example: "password123"
  *     responses:
  *       200:
- *         description: Returns a JWT token
- *       400:
- *         description: Bad request
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LoginResponse'
+ */
+router.post("/auth/test-login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    console.log("Login attempt for email:", email);
+
+    // Directly sign in with Firebase Admin SDK
+    const signInURL = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${process.env.FIREBASE_API_KEY}`;
+
+    const response = await fetch(signInURL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        password,
+        returnSecureToken: true,
+      }),
+    });
+
+    const data = await response.json();
+    console.log("Sign in response:", {
+      status: response.status,
+      ok: response.ok,
+      error: data.error,
+    });
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || "Failed to sign in");
+    }
+
+    if (!data.idToken) {
+      throw new Error("No ID token received");
+    }
+
+    // Verify the token to make sure it works
+    const decodedToken = await admin.auth().verifyIdToken(data.idToken);
+    console.log("Token verified for user:", decodedToken.uid);
+
+    res.json({
+      token: data.idToken,
+      expiresIn: data.expiresIn,
+      refreshToken: data.refreshToken,
+      uid: decodedToken.uid,
+    });
+  } catch (error: any) {
+    console.error("Login error:", {
+      message: error.message,
+      stack: error.stack,
+    });
+    res.status(401).json({
+      error: "Authentication failed",
+      details: error.message,
+    });
+  }
+});
+
+/**
+ * @openapi
+ * /auth/test-authenticated:
+ *   get:
+ *     summary: Test endpoint for authenticated requests
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Authentication successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthTestResponse'
  *       401:
  *         description: Unauthorized
  */
-router.post("/auth/login", login);
+router.get("/auth/test-authenticated", authMiddleware, (req, res) => {
+  res.json({
+    message: "Authentication successful",
+    user: req.user,
+  });
+});
 
 // User Profile Route
 

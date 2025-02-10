@@ -1,9 +1,9 @@
 import { Request, RequestHandler, Response } from "express";
 
 import crypto from "crypto";
+import { v4 as uuidv4 } from "uuid";
 import { getGateway } from "../config/gateway";
 import prisma from "../prisma/client";
-import { v4 as uuidv4 } from "uuid";
 
 // Helper to compute SHA256
 function sha256(buffer: Buffer): string {
@@ -42,10 +42,17 @@ export const issueDegree: RequestHandler = async (
     const docHash = sha256(fileData);
     const docId = uuidv4();
 
-    // Interact with ledger first
-    const gateway = await getGateway(req.user.sub, req.user.orgName);
-    const network = await gateway.getNetwork("mychannel");
-    const contract = network.getContract("degreeCC"); // Chaincode name
+    // Connect to Fabric using user's organization
+    const gateway = await getGateway(
+      req.user.uid,
+      req.user.orgName?.toLowerCase() || ""
+    );
+    const network = await gateway.getNetwork(
+      process.env.FABRIC_CHANNEL || "mychannel"
+    );
+    const contract = network.getContract(
+      process.env.FABRIC_CHAINCODE || "degreeCC"
+    );
 
     await contract.submitTransaction(
       "IssueDegree",
@@ -60,7 +67,7 @@ export const issueDegree: RequestHandler = async (
       data: {
         id: docId,
         issuedTo: individualId,
-        issuer: req.user.sub,
+        issuer: req.user.uid,
         docHash,
         fileData,
         status: "issued",
@@ -97,20 +104,25 @@ export const acceptDegree: RequestHandler = async (
     const doc = await prisma.document.findUnique({
       where: { id: docId },
     });
-    if (!doc || doc.issuedTo !== req.user.sub) {
+    if (!doc || doc.issuedTo !== req.user.uid) {
       res.status(404).json({ error: "Document not found or not owned by you" });
       return;
     }
 
-    // Interact with ledger
-    const gateway = await getGateway(req.user.sub, req.user.orgName);
-    const network = await gateway.getNetwork("mychannel");
-    const contract = network.getContract("degreeCC");
+    const gateway = await getGateway(
+      req.user.uid,
+      req.user.orgName?.toLowerCase() || ""
+    );
+    const network = await gateway.getNetwork(
+      process.env.FABRIC_CHANNEL || "mychannel"
+    );
+    const contract = network.getContract(
+      process.env.FABRIC_CHAINCODE || "degreeCC"
+    );
 
     await contract.submitTransaction("AcceptDegree", docId);
     gateway.disconnect();
 
-    // Update DB status
     await prisma.document.update({
       where: { id: docId },
       data: { status: "accepted" },
@@ -145,15 +157,22 @@ export const denyDegree: RequestHandler = async (
     const doc = await prisma.document.findUnique({
       where: { id: docId },
     });
-    if (!doc || doc.issuedTo !== req.user.sub) {
+    if (!doc || doc.issuedTo !== req.user.uid) {
       res.status(404).json({ error: "Document not found or not owned by you" });
       return;
     }
 
     // Interact with ledger
-    const gateway = await getGateway(req.user.sub, req.user.orgName);
-    const network = await gateway.getNetwork("mychannel");
-    const contract = network.getContract("degreeCC");
+    const gateway = await getGateway(
+      req.user.uid,
+      req.user.orgName?.toLowerCase() || ""
+    );
+    const network = await gateway.getNetwork(
+      process.env.FABRIC_CHANNEL || "mychannel"
+    );
+    const contract = network.getContract(
+      process.env.FABRIC_CHAINCODE || "degreeCC"
+    );
 
     await contract.submitTransaction("DenyDegree", docId);
     gateway.disconnect();
@@ -203,7 +222,7 @@ export const requestAccess: RequestHandler = async (
     await prisma.request.create({
       data: {
         id: requestId,
-        requesterId: req.user.sub,
+        requesterId: req.user.uid,
         documentId: docId,
         status: "pending",
       },
@@ -245,7 +264,7 @@ export const grantAccess: RequestHandler = async (
     }
 
     // Check if user owns the document
-    if (accessRequest.document.issuedTo !== req.user.sub) {
+    if (accessRequest.document.issuedTo !== req.user.uid) {
       res.status(403).json({ error: "You do not own this document" });
       return;
     }
@@ -290,7 +309,7 @@ export const viewDegree: RequestHandler = async (
     const grantedRequest = await prisma.request.findFirst({
       where: {
         documentId: docId,
-        requesterId: req.user.sub,
+        requesterId: req.user.uid,
         status: "granted",
       },
     });
@@ -308,9 +327,16 @@ export const viewDegree: RequestHandler = async (
     }
 
     // Verify hash with ledger
-    const gateway = await getGateway(req.user.sub, req.user.orgName);
-    const network = await gateway.getNetwork("mychannel");
-    const contract = network.getContract("degreeCC");
+    const gateway = await getGateway(
+      req.user.uid,
+      req.user.orgName?.toLowerCase() || ""
+    );
+    const network = await gateway.getNetwork(
+      process.env.FABRIC_CHANNEL || "mychannel"
+    );
+    const contract = network.getContract(
+      process.env.FABRIC_CHAINCODE || "degreeCC"
+    );
 
     const result = await contract.evaluateTransaction(
       "VerifyHash",

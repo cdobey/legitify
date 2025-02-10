@@ -1,255 +1,125 @@
 import { Request, RequestHandler, Response } from "express";
-import { Wallets, X509Identity } from "fabric-network";
-
-import FabricCAServices from "fabric-ca-client";
-import bcrypt from "bcrypt";
-import fs from "fs";
-import jwt from "jsonwebtoken";
-import path from "path";
+import admin from "../config/firebase";
 import prisma from "../prisma/client";
-import { v4 as uuidv4 } from "uuid";
+import { enrollUser } from "../utils/fabric-helpers";
 
-// Organization Configuration Interface
-interface OrganizationConfig {
-  connectionPath: string;
-  caName: string;
-  mspId: string;
-  adminId: string;
-}
-
-// Organization Configurations
-const organizationConfigs: Record<string, OrganizationConfig> = {
-  orguniversity: {
-    connectionPath: "orguniversity.com/connection-orguniversity.json",
-    caName: "ca.orguniversity.com",
-    mspId: "OrgUniversityMSP",
-    adminId: "orguniversityadmin",
-  },
-  orgemployer: {
-    connectionPath: "orgemployer.com/connection-orgemployer.json",
-    caName: "ca.orgemployer.com",
-    mspId: "OrgEmployerMSP",
-    adminId: "orgemployeradmin",
-  },
-  orgindividual: {
-    connectionPath: "orgindividual.com/connection-orgindividual.json",
-    caName: "ca.orgindividual.com",
-    mspId: "OrgIndividualMSP",
-    adminId: "orgindividualadmin",
-  },
-};
-
-/**
- * Registers a new user and enrolls them with Fabric CA.
- */
 export const register: RequestHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  let newUser: any; // To track if the user was created in DB
   try {
-    const { username, password, role, orgName } = req.body;
+    const { email, password, username, role, orgName } = req.body;
 
     // Validate input
-    if (!username || !password || !role || !orgName) {
+    if (!email || !password || !username || !role || !orgName) {
       res.status(400).json({
-        error: "username, password, role, orgName are required",
+        error: "email, password, username, role, and orgName are required",
       });
       return;
     }
 
-    // Validate organization
-    const orgConfig = organizationConfigs[orgName.toLowerCase()];
-    if (!orgConfig) {
-      res.status(400).json({
-        error: "Invalid organization name",
-      });
-      return;
-    }
-
-    // Check if user already exists in the database
-    const existingUser = await prisma.user.findUnique({
-      where: { username },
+    // Check if user already exists
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [{ email }, { username }],
+      },
     });
+
     if (existingUser) {
-      res.status(400).json({ error: "User already exists" });
+      res.status(400).json({
+        error:
+          existingUser.email === email
+            ? "Email already registered"
+            : "Username already taken",
+      });
       return;
     }
 
-    // Register/Enroll with Fabric CA first
-    const ccpPath = path.resolve(
-      __dirname,
-      `../../../ledger/legitify-network/organizations/peerOrganizations/${orgConfig.connectionPath}`
-    );
-    if (!fs.existsSync(ccpPath)) {
-      res.status(500).json({ error: "Connection profile not found" });
-      return;
-    }
-    const ccp = JSON.parse(fs.readFileSync(ccpPath, "utf8"));
-    const caInfo = ccp.certificateAuthorities[orgConfig.caName];
-    if (!caInfo) {
-      res
-        .status(500)
-        .json({ error: "CA information not found in connection profile" });
-      return;
-    }
-
-    const ca = new FabricCAServices(
-      caInfo.url,
-      { trustedRoots: caInfo.tlsCACerts.pem, verify: false },
-      caInfo.caName
-    );
-
-    const walletPath = path.join(__dirname, `../wallet/${orgName}`);
-    const wallet = await Wallets.newFileSystemWallet(walletPath);
-
-    const adminIdentity = await wallet.get(orgConfig.adminId);
-    if (!adminIdentity) {
-      res
-        .status(500)
-        .json({ error: `Admin identity for ${orgName} not found in wallet` });
-      return;
-    }
-
-    // Generate a new user ID
-    const userId = uuidv4();
-
-    const userExistsInWallet = await wallet.get(userId);
-    if (userExistsInWallet) {
-      res.status(400).json({ error: "User is already enrolled in the wallet" });
-      return;
-    }
-
-    // Get admin user context
-    const provider = wallet
-      .getProviderRegistry()
-      .getProvider(adminIdentity.type);
-    const adminUser = await provider.getUserContext(
-      adminIdentity,
-      orgConfig.adminId
-    );
-
-    // Determine affiliation based on organization and role
-    let affiliation = `${orgName.toLowerCase()}.department1`;
-    if (orgName.toLowerCase() === "orgindividual") {
-      affiliation = `${orgName.toLowerCase()}.user`;
-    } else if (orgName.toLowerCase() === "orgemployer") {
-      affiliation = `${orgName.toLowerCase()}.company`;
-    }
-
-    // Register the user with Fabric CA
-    const secret = await ca.register(
-      {
-        enrollmentID: userId,
-        affiliation: affiliation,
-        role: "client",
-        attrs: [{ name: "role", value: role, ecert: true }],
-      },
-      adminUser
-    );
-
-    // Enroll the user and get certificates
-    const enrollment = await ca.enroll({
-      enrollmentID: userId,
-      enrollmentSecret: secret,
+    // Create user in Firebase
+    const userRecord = await admin.auth().createUser({
+      email,
+      password,
+      displayName: username,
     });
 
-    const x509Identity: X509Identity = {
-      credentials: {
-        certificate: enrollment.certificate,
-        privateKey: enrollment.key.toBytes(),
-      },
-      mspId: orgConfig.mspId,
-      type: "X.509",
-    };
+    // Set custom claims
+    await admin.auth().setCustomUserClaims(userRecord.uid, { role, orgName });
 
-    // Put the new identity into the wallet using the user ID
-    await wallet.put(userId, x509Identity);
+    // Wait a moment for claims to propagate
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    console.log(
-      `Registered & enrolled user ${username} with ID ${userId} on Fabric CA for ${orgName}`
-    );
+    // Verify claims were set
+    const updatedUser = await admin.auth().getUser(userRecord.uid);
+    if (!updatedUser.customClaims?.role || !updatedUser.customClaims?.orgName) {
+      throw new Error("Failed to set custom claims");
+    }
 
-    // Now, create the user in the database
-    const passwordHash = await bcrypt.hash(password, 10);
-    newUser = await prisma.user.create({
+    // Enroll user with Hyperledger Fabric
+    await enrollUser(userRecord.uid, orgName);
+
+    // Create user in database
+    const user = await prisma.user.create({
       data: {
-        id: userId,
+        id: userRecord.uid,
         username,
-        passwordHash,
         role,
         orgName,
+        email,
       },
     });
 
-    // Send response
-    res.status(201).json(newUser);
+    res.status(201).json({
+      message: "User created successfully",
+      uid: userRecord.uid,
+      customClaims: updatedUser.customClaims,
+    });
   } catch (error: any) {
-    console.error("Error registering user:", error);
+    console.error("Registration error:", error);
 
-    // If user was created in the database but Fabric CA enrollment failed, delete the user from the DB
-    if (newUser) {
+    // If Firebase user was created but database creation failed
+    if (error.code === "P2002" && error.meta?.target) {
+      // Prisma unique constraint error
       try {
-        await prisma.user.delete({
-          where: { username: newUser.username },
-        });
-        console.log(
-          `Rolled back user ${newUser.username} from the database due to Fabric CA error.`
-        );
-      } catch (rollbackError) {
-        console.error(
-          `Failed to rollback user ${newUser.username} from the database:`,
-          rollbackError
-        );
+        // Clean up Firebase user
+        const existingFirebaseUser = await admin
+          .auth()
+          .getUserByEmail(req.body.email);
+        await admin.auth().deleteUser(existingFirebaseUser.uid);
+      } catch (cleanupError) {
+        console.error("Failed to cleanup Firebase user:", cleanupError);
       }
+      res.status(400).json({
+        error: `${error.meta.target.join(", ")} already exists`,
+      });
+      return;
     }
 
     res.status(500).json({ error: error.message });
   }
 };
 
-/**
- * Handles user login and JWT issuance.
- */
-export const login: RequestHandler = async (
+export const deleteAccount: RequestHandler = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    const { username, password } = req.body;
-    if (!username || !password) {
-      res.status(400).json({ error: "Username and password are required" });
+    const uid = req.user?.uid;
+    if (!uid) {
+      res.status(401).json({ error: "Not authenticated" });
       return;
     }
 
-    const user = await prisma.user.findUnique({
-      where: { username },
+    // Delete from Firebase
+    await admin.auth().deleteUser(uid);
+
+    // Delete from database
+    await prisma.user.delete({
+      where: { id: uid },
     });
-    if (!user) {
-      res.status(401).json({ error: "Invalid credentials" });
-      return;
-    }
 
-    const match = await bcrypt.compare(password, user.passwordHash);
-    if (!match) {
-      res.status(401).json({ error: "Invalid credentials" });
-      return;
-    }
-
-    // Create JWT
-    const token = jwt.sign(
-      {
-        sub: user.id,
-        role: user.role,
-        orgName: user.orgName,
-      },
-      process.env.JWT_SECRET || "fallbacksecret",
-      { expiresIn: "1h" }
-    );
-
-    res.json({ token });
+    res.json({ message: "Account deleted successfully" });
   } catch (error: any) {
-    console.error("Login error:", error);
+    console.error("Delete account error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
