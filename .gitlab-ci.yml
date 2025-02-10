@@ -1,5 +1,6 @@
 stages:
   - deploy
+  - test
 
 before_script:
   - echo $(whoami)
@@ -54,6 +55,40 @@ deploy_network:
     # Tear Down the Network
     - ./network.sh down
     - docker system prune -af --volumes
+
+    # Start the backend server
+    - cd $CI_PROJECT_DIR/src/server
+    - npm install
+    - chmod +x src/scripts/start-fresh-db.sh
+    - bash src/scripts/start-fresh-db.sh &
+
+    # Wait for the server to be ready
+    - |
+      timeout=60
+      while ! curl -s http://localhost:3001/docs > /dev/null; do
+        if [ "$timeout" -le "0" ]; then
+          echo "Server failed to start"
+          exit 1
+        fi
+        echo "Waiting for server to start... ($timeout seconds remaining)"
+        timeout=$((timeout-1))
+        sleep 1
+      done
+    - echo "Server is up and running!"
+  artifacts:
+    reports:
+      dotenv: server.env
+
+run_tests:
+  stage: test
+  tags:
+    - docker
+  script:
+    - cd $CI_PROJECT_DIR/src/server
+    - chmod +x scripts/test-flow.sh
+    - bash scripts/test-flow.sh
+  dependencies:
+    - deploy_network
 
   only:
     - main

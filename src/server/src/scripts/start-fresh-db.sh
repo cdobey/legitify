@@ -30,7 +30,14 @@ ts-node ../enrollAdmin.ts
 
 echo "🚀 Starting the server..."
 # Start the server
-npm run dev
+npm run dev &
+
+# Store the PID
+echo $! > server.pid
+
+# Create environment file for GitLab CI
+echo "SERVER_STARTED=true" > server.env
+echo "SERVER_URL=http://localhost:3001" >> server.env
 
 echo "✅ Setup complete!"
 echo "Connection details:"
