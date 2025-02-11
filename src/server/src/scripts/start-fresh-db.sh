@@ -30,8 +30,8 @@ ts-node ./enrollAdmin.ts
 
 echo "🚀 Starting the server..."
 
-# Start the server with proper logging and process management
-ts-node ../index.ts > server.log 2>&1 &
+# Start the server with npm run dev instead of direct ts-node
+npm run dev > server.log 2>&1 &
 SERVER_PID=$!
 
 # Store the PID
@@ -43,20 +43,21 @@ RETRY_COUNT=0
 echo "⏳ Waiting for server to be ready..."
 
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-    if curl -s http://localhost:3001/health > /dev/null; then
+    if curl -s http://localhost:3001/docs > /dev/null; then
         echo "✅ Server is up and running!"
         break
     fi
     
-    # Check if process is still running
+    # Check if process is still running and show logs if it died
     if ! ps -p $SERVER_PID > /dev/null; then
-        echo "❌ Server process died. Check server.log for details"
+        echo "❌ Server process died. Check server.log for details:"
         cat server.log
         exit 1
     fi
     
     RETRY_COUNT=$((RETRY_COUNT + 1))
     sleep 1
+    echo -n "." # Show progress
 done
 
 if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
