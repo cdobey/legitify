@@ -21,14 +21,37 @@ TESTS_PASSED=0
 TESTS_FAILED=0
 CONTINUE_ON_ERROR=true  # Set to true to continue after test failures
 
+# Modify run_test function to preserve environment variables
 run_test() {
     local test_name=$1
     local command=$2
 
     echo -e "\n${BLUE}Running test: ${test_name}${NC}"
-    if eval "$command"; then
+    
+    # Create a temporary file to store the results
+    local temp_file=$(mktemp)
+    
+    # Run the command in a subshell that can modify our environment
+    (
+        eval "$command" > "$temp_file"
+        echo $? > "${temp_file}.exit"
+    )
+    
+    # Get the exit code
+    local exit_code=$(cat "${temp_file}.exit")
+    # Get the output
+    local output=$(cat "$temp_file")
+    
+    # Clean up temp files
+    rm -f "$temp_file" "${temp_file}.exit"
+    
+    # Show the output
+    echo "$output"
+    
+    if [ $exit_code -eq 0 ]; then
         echo -e "${GREEN}✓ Test passed: ${test_name}${NC}"
         ((TESTS_PASSED++))
+        eval "$output" # This preserves any variable assignments from the output
         return 0
     else
         echo -e "${RED}✗ Test failed: ${test_name}${NC}"
@@ -71,12 +94,16 @@ register_university() {
         "role": "university",
         "orgName": "orguniversity"
     }')
-    UNIVERSITY_ID=$(extract_data "$response" "uid")
-    if [ -z "$UNIVERSITY_ID" ]; then
-        echo "Failed to extract university ID from response: $response"
+    
+    # Extract and echo the ID for capture
+    local id=$(echo "$response" | grep -o '"uid":"[^"]*"' | cut -d'"' -f4)
+    if [ -z "$id" ]; then
+        echo "Failed to extract university ID from response: $response" >&2
         return 1
     fi
-    echo "University registered with ID: $UNIVERSITY_ID"
+    # Echo as a variable assignment that will be evaluated
+    echo "UNIVERSITY_ID='$id'"
+    echo "University registered with ID: $id" >&2
     return 0
 }
 
@@ -90,12 +117,16 @@ register_individual() {
         "role": "individual",
         "orgName": "orgindividual"
     }')
-    INDIVIDUAL_ID=$(extract_data "$response" "uid")
-    if [ -z "$INDIVIDUAL_ID" ]; then
-        echo "Failed to extract individual ID from response: $response"
+    
+    # Extract and echo the ID for capture
+    local id=$(echo "$response" | grep -o '"uid":"[^"]*"' | cut -d'"' -f4)
+    if [ -z "$id" ]; then
+        echo "Failed to extract individual ID from response: $response" >&2
         return 1
     fi
-    echo "Individual registered with ID: $INDIVIDUAL_ID"
+    # Echo as a variable assignment that will be evaluated
+    echo "INDIVIDUAL_ID='$id'"
+    echo "Individual registered with ID: $id" >&2
     return 0
 }
 
@@ -109,19 +140,28 @@ register_employer() {
         "role": "employer",
         "orgName": "orgemployer"
     }')
-    EMPLOYER_ID=$(extract_data "$response" "uid")
-    if [ -z "$EMPLOYER_ID" ]; then
-        echo "Failed to extract employer ID from response: $response"
+    
+    # Extract and echo the ID for capture
+    local id=$(echo "$response" | grep -o '"uid":"[^"]*"' | cut -d'"' -f4)
+    if [ -z "$id" ]; then
+        echo "Failed to extract employer ID from response: $response" >&2
         return 1
     fi
-    echo "Employer registered with ID: $EMPLOYER_ID"
+    # Echo as a variable assignment that will be evaluated
+    echo "EMPLOYER_ID='$id'"
+    echo "Employer registered with ID: $id" >&2
     return 0
 }
 
 # Run registration tests
-run_test "Registering university" register_university
-run_test "Registering individual" register_individual
-run_test "Registering employer" register_employer
+run_test "Registering university" register_university || exit 1
+echo "University ID: $UNIVERSITY_ID" # Debug output
+
+run_test "Registering individual" register_individual || exit 1
+echo "Individual ID: $INDIVIDUAL_ID" # Debug output
+
+run_test "Registering employer" register_employer || exit 1
+echo "Employer ID: $EMPLOYER_ID" # Debug output
 
 echo -e "\n${BLUE}2. Logging in users...${NC}"
 
