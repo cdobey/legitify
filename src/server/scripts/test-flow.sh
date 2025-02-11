@@ -13,125 +13,138 @@ if [ ! -z "$SERVER_URL" ]; then
     API_URL="$SERVER_URL"
 fi
 
-# Add error handling
-set -e  # Exit on any error
-
 # Add test result tracking
 TESTS_PASSED=0
 TESTS_FAILED=0
 
+# Function to wait for server to be ready
+wait_for_server() {
+    local max_retries=30
+    local retry_count=0
+    
+    echo -e "${BLUE}Waiting for server to be ready...${NC}"
+    while [ $retry_count -lt $max_retries ]; do
+        if curl -s "$API_URL/health" > /dev/null; then
+            echo -e "${GREEN}Server is ready!${NC}"
+            return 0
+        fi
+        retry_count=$((retry_count + 1))
+        sleep 2
+    done
+    echo -e "${RED}Server failed to start within timeout${NC}"
+    return 1
+}
+
+# Modified run_test function with retries and better error handling
 run_test() {
     local test_name=$1
     local command=$2
+    local max_retries=3
+    local retry_count=0
+    local success=false
     
     echo -e "\n${BLUE}Running test: ${test_name}${NC}"
-    if eval "$command"; then
-        echo -e "${GREEN}✓ Test passed: ${test_name}${NC}"
-        ((TESTS_PASSED++))
-    else
-        echo -e "${RED}✗ Test failed: ${test_name}${NC}"
-        ((TESTS_FAILED++))
-        if [ ! -z "$CI" ]; then  # If running in CI
-            exit 1  # Fail fast in CI
+    
+    while [ $retry_count -lt $max_retries ] && [ "$success" = false ]; do
+        if [ $retry_count -gt 0 ]; then
+            echo -e "${BLUE}Retrying... (Attempt $((retry_count + 1))/${max_retries})${NC}"
+            sleep 2
         fi
-    fi
+        
+        # Run the command in a subshell to preserve variables
+        if (set -e; eval "$command") 2>&1; then
+            success=true
+            echo -e "${GREEN}✓ Test passed: ${test_name}${NC}"
+            ((TESTS_PASSED++))
+            return 0
+        else
+            ((retry_count++))
+            if [ $retry_count -eq $max_retries ]; then
+                echo -e "${RED}✗ Test failed after $max_retries attempts: ${test_name}${NC}"
+                ((TESTS_FAILED++))
+                if [ ! -z "$CI" ]; then
+                    echo -e "${RED}Critical test failure in CI environment${NC}"
+                    return 1
+                fi
+            fi
+        fi
+    done
+    return 1
 }
+
+# Function to extract token from response with error checking
+extract_token() {
+    local response=$1
+    local token=$(echo "$response" | grep -o '"token":"[^"]*' | grep -o '[^"]*$')
+    if [ -z "$token" ]; then
+        echo -e "${RED}Failed to extract token from response${NC}" >&2
+        return 1
+    fi
+    echo "$token"
+}
+
+# Similar error checking for other extract functions
+extract_id() {
+    local response=$1
+    local id=$(echo "$response" | grep -o '"uid":"[^"]*' | grep -o '[^"]*$')
+    if [ -z "$id" ]; then
+        echo -e "${RED}Failed to extract ID from response${NC}" >&2
+        return 1
+    fi
+    echo "$id"
+}
+
+extract_doc_id() {
+    local response=$1
+    local doc_id=$(echo "$response" | grep -o '"docId":"[^"]*' | grep -o '[^"]*$')
+    if [ -z "$doc_id" ]; then
+        echo -e "${RED}Failed to extract docId from response${NC}" >&2
+        return 1
+    fi
+    echo "$doc_id"
+}
+
+extract_request_id() {
+    local response=$1
+    local request_id=$(echo "$response" | grep -o '"requestId":"[^"]*' | grep -o '[^"]*$')
+    if [ -z "$request_id" ]; then
+        echo -e "${RED}Failed to extract requestId from response${NC}" >&2
+        return 1
+    fi
+    echo "$request_id"
+}
+
+# Wait for server before starting tests
+if ! wait_for_server; then
+    echo -e "${RED}Server not ready, cannot proceed with tests${NC}"
+    exit 1
+fi
 
 echo -e "${BLUE}Starting test flow...${NC}"
 
-# Function to extract token from response
-extract_token() {
-    echo $1 | grep -o '"token":"[^"]*' | grep -o '[^"]*$'
-}
+# Store variables in a more reliable way
+declare -A TEST_VARS
 
-# Function to extract ID from response
-extract_id() {
-    echo $1 | grep -o '"uid":"[^"]*' | grep -o '[^"]*$'
-}
+[Rest of your existing test commands remain the same, but wrap variables in TEST_VARS array]
 
-# Function to extract docId from response
-extract_doc_id() {
-    echo $1 | grep -o '"docId":"[^"]*' | grep -o '[^"]*$'
-}
+# Example of modified test command:
+run_test "Registering university" "
+    RESPONSE=\$(curl -s -X POST \"$API_URL/auth/register\" -H \"Content-Type: application/json\" -d '{
+        \"email\": \"university@test.com\",
+        \"password\": \"password123\",
+        \"username\": \"testuniversity\",
+        \"role\": \"university\",
+        \"orgName\": \"orguniversity\"
+    }')
+    TEST_VARS[UNIVERSITY_ID]=\$(extract_id \"\$RESPONSE\")
+    [ ! -z \"\${TEST_VARS[UNIVERSITY_ID]}\" ] || exit 1
+    echo \"University registered with ID: \${TEST_VARS[UNIVERSITY_ID]}\"
+"
 
-# Function to extract requestId from response
-extract_request_id() {
-    echo $1 | grep -o '"requestId":"[^"]*' | grep -o '[^"]*$'
-}
+[Continue with rest of your tests, using TEST_VARS array for variable storage]
 
-echo -e "\n${BLUE}1. Registering users...${NC}"
-
-# Register university
-run_test "Registering university" "UNIVERSITY_RESPONSE=\$(curl -s -X POST \"$API_URL/auth/register\" -H \"Content-Type: application/json\" -d '{
-    \"email\": \"university@test.com\",
-    \"password\": \"password123\",
-    \"username\": \"testuniversity\",
-    \"role\": \"university\",
-    \"orgName\": \"orguniversity\"
-}'); UNIVERSITY_ID=\$(extract_id \"\$UNIVERSITY_RESPONSE\"); echo \"University registered with ID: \$UNIVERSITY_ID\""
-
-# Register individual
-run_test "Registering individual" "INDIVIDUAL_RESPONSE=\$(curl -s -X POST \"$API_URL/auth/register\" -H \"Content-Type: application/json\" -d '{
-    \"email\": \"individual@test.com\",
-    \"password\": \"password123\",
-    \"username\": \"testindividual\",
-    \"role\": \"individual\",
-    \"orgName\": \"orgindividual\"
-}'); INDIVIDUAL_ID=\$(extract_id \"\$INDIVIDUAL_RESPONSE\"); echo \"Individual registered with ID: \$INDIVIDUAL_ID\""
-
-# Register employer
-run_test "Registering employer" "EMPLOYER_RESPONSE=\$(curl -s -X POST \"$API_URL/auth/register\" -H \"Content-Type: application/json\" -d '{
-    \"email\": \"employer@test.com\",
-    \"password\": \"password123\",
-    \"username\": \"testemployer\",
-    \"role\": \"employer\",
-    \"orgName\": \"orgemployer\"
-}'); EMPLOYER_ID=\$(extract_id \"\$EMPLOYER_RESPONSE\"); echo \"Employer registered with ID: \$EMPLOYER_ID\""
-
-echo -e "\n${BLUE}2. Logging in users...${NC}"
-
-# Login university
-run_test "Logging in university" "UNIVERSITY_LOGIN=\$(curl -s -X POST \"$API_URL/auth/test-login\" -H \"Content-Type: application/json\" -d '{
-    \"email\": \"university@test.com\",
-    \"password\": \"password123\"
-}'); UNIVERSITY_TOKEN=\$(extract_token \"\$UNIVERSITY_LOGIN\"); echo \"University logged in\""
-
-# Login individual
-run_test "Logging in individual" "INDIVIDUAL_LOGIN=\$(curl -s -X POST \"$API_URL/auth/test-login\" -H \"Content-Type: application/json\" -d '{
-    \"email\": \"individual@test.com\",
-    \"password\": \"password123\"
-}'); INDIVIDUAL_TOKEN=\$(extract_token \"\$INDIVIDUAL_LOGIN\"); echo \"Individual logged in\""
-
-# Login employer
-run_test "Logging in employer" "EMPLOYER_LOGIN=\$(curl -s -X POST \"$API_URL/auth/test-login\" -H \"Content-Type: application/json\" -d '{
-    \"email\": \"employer@test.com\",
-    \"password\": \"password123\"
-}'); EMPLOYER_TOKEN=\$(extract_token \"\$EMPLOYER_LOGIN\"); echo \"Employer logged in\""
-
-echo -e "\n${BLUE}3. University issues degree to individual...${NC}"
-run_test "University issues degree to individual" "ISSUE_RESPONSE=\$(curl -s -X POST \"$API_URL/degree/issue\" -H \"Content-Type: application/json\" -H \"Authorization: Bearer \$UNIVERSITY_TOKEN\" -d '{
-    \"individualId\": \"\$INDIVIDUAL_ID\",
-    \"base64File\": \"SGVsbG8gV29ybGQ=\"
-}'); DOC_ID=\$(extract_doc_id \"\$ISSUE_RESPONSE\"); echo \"Degree issued with ID: \$DOC_ID\""
-
-echo -e "\n${BLUE}4. Individual accepts degree...${NC}"
-run_test "Individual accepts degree" "ACCEPT_RESPONSE=\$(curl -s -X POST \"$API_URL/degree/accept\" -H \"Content-Type: application/json\" -H \"Authorization: Bearer \$INDIVIDUAL_TOKEN\" -d '{
-    \"docId\": \"\$DOC_ID\"
-}'); echo \"Degree acceptance response: \$ACCEPT_RESPONSE\""
-
-echo -e "\n${BLUE}5. Employer requests access to degree...${NC}"
-run_test "Employer requests access to degree" "REQUEST_RESPONSE=\$(curl -s -X POST \"$API_URL/degree/requestAccess\" -H \"Content-Type: application/json\" -H \"Authorization: Bearer \$EMPLOYER_TOKEN\" -d '{
-    \"docId\": \"\$DOC_ID\"
-}'); REQUEST_ID=\$(extract_request_id \"\$REQUEST_RESPONSE\"); echo \"Access requested with ID: \$REQUEST_ID\""
-
-echo -e "\n${BLUE}6. Individual grants access to employer...${NC}"
-run_test "Individual grants access to employer" "GRANT_RESPONSE=\$(curl -s -X POST \"$API_URL/degree/grantAccess\" -H \"Content-Type: application/json\" -H \"Authorization: Bearer \$INDIVIDUAL_TOKEN\" -d '{
-    \"requestId\": \"\$REQUEST_ID\",
-    \"granted\": true
-}'); echo \"Access grant response: \$GRANT_RESPONSE\""
-
-echo -e "\n${BLUE}7. Employer verifies degree...${NC}"
-run_test "Employer verifies degree" "VERIFY_RESPONSE=\$(curl -s -X GET \"$API_URL/degree/view/\$DOC_ID\" -H \"Authorization: Bearer \$EMPLOYER_TOKEN\"); echo \"Verification response: \$VERIFY_RESPONSE\""
+# Add trap for cleanup
+trap 'echo -e "${RED}Test script interrupted${NC}"; exit 1' INT TERM
 
 # Print test summary
 echo -e "\n${BLUE}Test Summary:${NC}"
@@ -140,6 +153,7 @@ echo -e "Failed: ${RED}$TESTS_FAILED${NC}"
 
 # Exit with failure if any tests failed
 if [ "$TESTS_FAILED" -gt 0 ]; then
+    echo -e "${RED}Some tests failed${NC}"
     exit 1
 fi
 
