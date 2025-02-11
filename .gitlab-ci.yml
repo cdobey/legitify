@@ -1,6 +1,13 @@
+image: node:18
+
+variables:
+  NETWORK_STATUS_FILE: "network_status.env"
+
 stages:
+  - setup
   - deploy
   - test
+  - cleanup
 
 before_script:
   - echo $(whoami)
@@ -10,11 +17,18 @@ before_script:
   - git clean -fdx
   - sudo chown -R gitlab-runner:gitlab-runner .
 
-after_script:
-  - cd $CI_PROJECT_DIR
-  - sudo chown -R gitlab-runner:gitlab-runner .
-  - sudo find . -type d -exec chmod 755 {} +
-  - sudo find . -type f -exec chmod 644 {} +
+setup_environment:
+  stage: setup
+  tags:
+    - docker
+  script:
+    - cd $CI_PROJECT_DIR/src/server
+    - npm install
+    - echo "NODE_SETUP=true" > $NETWORK_STATUS_FILE
+  artifacts:
+    paths:
+      - src/server/node_modules
+      - $NETWORK_STATUS_FILE
 
 deploy_network:
   stage: deploy
@@ -56,7 +70,19 @@ deploy_network:
     - ./network.sh down
     - docker system prune -af --volumes
 
-    # Start the backend server
+    # Store network status
+    - echo "NETWORK_RUNNING=true" >> $NETWORK_STATUS_FILE
+    - echo "NETWORK_DIR=$CI_PROJECT_DIR/src/ledger/legitify-network" >> $NETWORK_STATUS_FILE
+  artifacts:
+    paths:
+      - src/ledger/legitify-network
+      - $NETWORK_STATUS_FILE
+
+deploy_backend:
+  stage: deploy
+  tags:
+    - docker
+  script:
     - cd $CI_PROJECT_DIR/src/server
     - npm install
     - chmod +x src/scripts/start-fresh-db.sh
@@ -75,9 +101,17 @@ deploy_network:
         sleep 1
       done
     - echo "Server is up and running!"
+    - echo "BACKEND_RUNNING=true" >> $NETWORK_STATUS_FILE
+    - echo "BACKEND_PID=$(cat src/server.pid)" >> $NETWORK_STATUS_FILE
+  dependencies:
+    - setup_environment
+    - deploy_network
   artifacts:
-    reports:
-      dotenv: server.env
+    paths:
+      - $NETWORK_STATUS_FILE
+      - src/server/src/wallet
+      - src/server/pgdata
+      - src/server/server.pid
 
 run_tests:
   stage: test
@@ -88,9 +122,57 @@ run_tests:
     - chmod +x scripts/test-flow.sh
     - bash scripts/test-flow.sh
   dependencies:
+    - setup_environment
     - deploy_network
+    - deploy_backend
 
-  only:
-    - main
-    - master
-    - merge_requests
+cleanup:
+  stage: cleanup
+  tags:
+    - docker
+  script:
+    - |
+      if [ -f "$NETWORK_STATUS_FILE" ]; then
+        source $NETWORK_STATUS_FILE
+        
+        # Stop the backend server
+        if [ "$BACKEND_RUNNING" = "true" ] && [ ! -z "$BACKEND_PID" ]; then
+          kill $BACKEND_PID || true
+          echo "Backend server stopped"
+        fi
+
+        # Clean up database
+        cd $CI_PROJECT_DIR/src/server
+        docker-compose down -v
+        rm -rf pgdata
+
+        # Clean up wallet
+        rm -rf src/wallet/*
+
+        # Tear down the Fabric network
+        if [ "$NETWORK_RUNNING" = "true" ] && [ ! -z "$NETWORK_DIR" ]; then
+          cd $NETWORK_DIR
+          ./network.sh down
+          docker system prune -af --volumes
+          echo "Network torn down"
+        fi
+      fi
+  dependencies:
+    - deploy_network
+    - deploy_backend
+  when: always # Run cleanup even if previous stages fail
+
+after_script:
+  - cd $CI_PROJECT_DIR
+  - sudo chown -R gitlab-runner:gitlab-runner .
+  - sudo find . -type d -exec chmod 755 {} +
+  - sudo find . -type f -exec chmod 644 {} +
+
+cache:
+  paths:
+    - src/server/node_modules/
+
+only:
+  - main
+  - master
+  - merge_requests
