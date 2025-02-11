@@ -26,7 +26,11 @@ npx prisma generate
 
 echo "🔑 Running enrollment script..."
 
-ts-node ../enrollAdmin.ts
+# Use npx to ensure ts-node is available
+npx ts-node ../enrollAdmin.ts || {
+    echo "Failed to run enrollment script"
+    exit 1
+}
 
 echo "🚀 Starting the server..."
 # Start the server

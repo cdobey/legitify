@@ -22,13 +22,14 @@ test_flow:
         docker-compose \
         golang-go
 
-    # Setup Node.js using NVM
+    # Setup Node.js using NVM and global dependencies
     - |
       curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
       export NVM_DIR="$HOME/.nvm"
       [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
       nvm install 18
       nvm use 18
+      npm install -g typescript ts-node
 
     # Verify installations
     - node --version
@@ -45,6 +46,7 @@ test_flow:
     # 1. Setup Node environment
     - cd $CI_PROJECT_DIR/src/server
     - npm ci # Use ci instead of install for cleaner, more reliable builds
+    - npm install -g ts-node typescript # Ensure ts-node is available globally
 
     # 2. Install and setup Fabric
     - cd $CI_PROJECT_DIR/src/ledger
