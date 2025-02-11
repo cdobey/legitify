@@ -26,7 +26,7 @@ npx prisma generate
 
 echo "🔑 Running enrollment script..."
 
-ts-node ../../enrollAdmin.ts
+ts-node ../enrollAdmin.ts
 
 echo "🚀 Starting the server..."
 # Start the server
