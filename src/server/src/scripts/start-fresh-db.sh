@@ -26,7 +26,7 @@ npx prisma migrate dev --name init
 npx prisma generate
 
 echo "🔑 Running enrollment script..."
-ts-node ./enrollAdmin.ts
+npx ts-node ./enrollAdmin.ts
 
 echo "🚀 Starting the server..."
 
