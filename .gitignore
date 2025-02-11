@@ -74,7 +74,5 @@ src/ledger/legitify-network/organizations/fabric-ca/orgindividual/*
 !src/ledger/legitify-network/organizations/fabric-ca/ordererorg/fabric-ca-server-config.yaml
 
 # Server Specific
-src/server/.env
 src/server/pgdata/
 src/server/src/wallet/
-src/server/src/config/serviceAccountKey.json
