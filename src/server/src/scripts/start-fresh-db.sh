@@ -26,22 +26,7 @@ npx prisma generate
 
 echo "🔑 Running enrollment script..."
 
-# Use absolute path to enrollAdmin.ts
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-PROJECT_ROOT="$SCRIPT_DIR/../../.."
-
-# Create wallet directories for each org
-mkdir -p "$PROJECT_ROOT/src/wallet/orguniversity"
-mkdir -p "$PROJECT_ROOT/src/wallet/orgemployer"
-mkdir -p "$PROJECT_ROOT/src/wallet/orgindividual"
-
-# Run enrollment script with proper path
-npx ts-node "$PROJECT_ROOT/enrollAdmin.ts" || {
-    echo "Failed to run enrollment script"
-    echo "Current directory: $(pwd)"
-    echo "Looking for: $PROJECT_ROOT/enrollAdmin.ts"
-    exit 1
-}
+ts-node ../../enrollAdmin.ts
 
 echo "🚀 Starting the server..."
 # Start the server
