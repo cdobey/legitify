@@ -1,4 +1,4 @@
-# CA400 template repo .
+# CA400 template repo
 
 This is a template for CA400 projects.
 
