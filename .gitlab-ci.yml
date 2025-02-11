@@ -14,7 +14,6 @@ test_flow:
   tags:
     - shell
   before_script:
-    # [Previous before_script section remains the same]
     - |
       sudo apt-get update && sudo apt-get install -y \
         curl \
@@ -42,7 +41,7 @@ test_flow:
     - sudo chown -R gitlab-runner:gitlab-runner .
 
   script:
-    # [Previous setup steps remain the same until test flow]
+    # Install and build steps for your server and ledger
     - cd $CI_PROJECT_DIR/src/server
     - npm ci
     - npm install -g ts-node typescript
@@ -61,7 +60,7 @@ test_flow:
     - bash scripts/startNetwork.sh
     - bash scripts/testDegreeChaincode.sh
 
-    # Start backend server with improved logging
+    # Start backend server with proper waiting
     - |
       cd $CI_PROJECT_DIR/src/server
       chmod +x src/scripts/start-fresh-db.sh
@@ -70,9 +69,9 @@ test_flow:
       echo "Waiting for server to be fully ready..."
       TIMEOUT=$SERVER_STARTUP_TIMEOUT
       while [ $TIMEOUT -gt 0 ]; do
-        if curl -s http://localhost:3001/docs > /dev/null; then
+        if curl --max-time 5 -s http://localhost:3001/docs > /dev/null; then
           echo "Server is responding to requests"
-          sleep 10  # Increased wait time to ensure full readiness
+          sleep 10  # Extra wait time for full initialization
           break
         fi
         echo "Waiting... ($TIMEOUT seconds remaining)"
@@ -85,66 +84,89 @@ test_flow:
         exit 1
       fi
 
-    # Run test flow with improved error handling
+    # Run test flow with proper completion checking
     - |
       cd $CI_PROJECT_DIR/src/server
 
-      # Modify test-flow.sh to continue on test failures
-      sed -i 's/exit 1  # Fail fast in CI/continue  # Continue despite test failure/' scripts/test-flow.sh
+      # Use an absolute path for the marker file
+      MARKER_FILE="$CI_PROJECT_DIR/src/server/test_flow_running"
+      touch "$MARKER_FILE"
 
-      # Run the test flow with detailed logging
+      # Run test flow in the foreground with output captured to a log file
       chmod +x scripts/test-flow.sh
-      ./scripts/test-flow.sh 2>&1 | tee test_output.log
+      ./scripts/test-flow.sh > test_output.log 2>&1
+      TEST_EXIT_CODE=$?
 
-      # Check if the test completed successfully
-      if ! grep -q "Test flow completed successfully!" test_output.log; then
-        echo "Test flow did not complete successfully. Full test output:"
-        cat test_output.log
+      # Remove the marker file to indicate that test flow has finished
+      rm -f "$MARKER_FILE"
+
+      # Display the complete output
+      cat test_output.log
+
+      # Verify that the test-flow script exited with success and printed the unique final message
+      if [ $TEST_EXIT_CODE -ne 0 ] || ! grep -q "### ALL_TEST_FLOW_OPERATIONS_COMPLETED ###" test_output.log; then
+        echo "Test flow failed or did not complete successfully"
         exit 1
       fi
 
+      # Additional verification that all expected operations completed
+      expected_patterns=(
+        "University registered with ID:"
+        "Individual registered with ID:"
+        "Employer registered with ID:"
+        "University logged in"
+        "Individual logged in"
+        "Employer logged in"
+        "Degree issued with ID:"
+        "Degree acceptance response:"
+        "Access requested with ID:"
+        "Access grant response:"
+        "Verification response:"
+      )
+
+      echo "Verifying all operations completed..."
+      for pattern in "${expected_patterns[@]}"; do
+        if ! grep -q "$pattern" test_output.log; then
+          echo "Missing expected operation: $pattern"
+          exit 1
+        fi
+      done
+
+      echo "All test flow operations completed successfully"
+
   after_script:
     - |
-      echo "Starting cleanup..."
-      set +e  # Continue on errors during cleanup
-
-      # Function to kill process and its children
-      kill_process_tree() {
-        local pid=$1
-        if [ -n "$pid" ]; then
-          children=$(pgrep -P $pid)
-          for child in $children; do
-            kill_process_tree $child
-          done
-          kill -9 $pid 2>/dev/null || true
+      if [ ! -f "$CI_PROJECT_DIR/src/server/test_flow_running" ]; then
+        echo "Starting cleanup..."
+        set +e
+        
+        # Kill server process if it exists
+        if [ -f "$SERVER_PID_FILE" ]; then
+          kill -9 $(cat "$SERVER_PID_FILE") 2>/dev/null || true
+          rm -f "$SERVER_PID_FILE"
         fi
-      }
 
-      # Stop backend server
-      if [ -f "$SERVER_PID_FILE" ]; then
-        SERVER_PID=$(cat "$SERVER_PID_FILE")
-        echo "Stopping server with PID $SERVER_PID"
-        kill_process_tree $SERVER_PID
-        rm -f "$SERVER_PID_FILE"
+        # Clean up database and wallet
+        cd $CI_PROJECT_DIR/src/server || true
+        docker-compose down -v || true
+        sudo rm -rf pgdata src/wallet/* || true
+
+        # Tear down Fabric network
+        cd $CI_PROJECT_DIR/src/ledger/legitify-network || true
+        ./network.sh down || true
+        docker system prune -af --volumes || true
+
+        # Reset permissions
+        cd $CI_PROJECT_DIR || true
+        sudo chown -R gitlab-runner:gitlab-runner . || true
+        sudo find . -type d -exec chmod 755 {} + || true
+        sudo find . -type f -exec chmod 644 {} + || true
+
+        echo "Cleanup completed"
+      else
+        echo "Test flow is still running, skipping cleanup"
+        exit 1
       fi
-
-      # Clean up database and wallet
-      cd $CI_PROJECT_DIR/src/server || true
-      docker-compose down -v || true
-      sudo rm -rf pgdata src/wallet/* || true
-
-      # Tear down Fabric network
-      cd $CI_PROJECT_DIR/src/ledger/legitify-network || true
-      ./network.sh down || true
-      docker system prune -af --volumes || true
-
-      # Reset permissions
-      cd $CI_PROJECT_DIR || true
-      sudo chown -R gitlab-runner:gitlab-runner . || true
-      sudo find . -type d -exec chmod 755 {} + || true
-      sudo find . -type f -exec chmod 644 {} + || true
-
-      echo "Cleanup completed"
 
   cache:
     key: ${CI_COMMIT_REF_SLUG}
