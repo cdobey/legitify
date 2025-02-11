@@ -7,14 +7,10 @@ NC='\033[0m' # No Color
 BLUE='\033[0;34m'
 
 API_URL="http://localhost:3001"
-
-# Use CI environment URL if available
-if [ ! -z "$SERVER_URL" ]; then
-    API_URL="$SERVER_URL"
-fi
+[ ! -z "$SERVER_URL" ] && API_URL="$SERVER_URL"
 
 # Add error handling
-set -e  # Exit on any error
+# set -e  # Exit on any error
 
 # Add test result tracking
 TESTS_PASSED=0
@@ -33,7 +29,8 @@ run_test() {
     
     # Run the command in a subshell that can modify our environment
     (
-        eval "$command" > "$temp_file"
+        set +e  # disable error-exit in subshell
+        eval "$command" > "$temp_file" 2>&1
         echo $? > "${temp_file}.exit"
     )
     
