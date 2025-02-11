@@ -1,94 +1,49 @@
 image: node:18
 
 variables:
-  NETWORK_STATUS_FILE: "network_status.env"
+  SERVER_PID_FILE: "/tmp/server.pid"
 
-stages:
-  - setup
-  - deploy
-  - test
-  - cleanup
-
-before_script:
-  - echo $(whoami)
-  - docker --version
-  - echo "Runner is on x86_64 (Intel/AMD)."
-  - cd $CI_PROJECT_DIR
-  - git clean -fdx
-  - sudo chown -R gitlab-runner:gitlab-runner .
-
-setup_environment:
-  stage: setup
+test_flow:
+  stage: test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "master"
   tags:
     - docker
-  script:
-    - cd $CI_PROJECT_DIR/src/server
-    - npm install
-    - echo "NODE_SETUP=true" > $NETWORK_STATUS_FILE
-  artifacts:
-    paths:
-      - src/server/node_modules
-      - $NETWORK_STATUS_FILE
-
-deploy_network:
-  stage: deploy
-  tags:
-    - docker
-  script:
-    - set -e
+  before_script:
+    - echo $(whoami)
     - docker --version
     - echo "Runner is on x86_64 (Intel/AMD)."
     - cd $CI_PROJECT_DIR
+    - git clean -fdx
+    - sudo chown -R gitlab-runner:gitlab-runner .
+  script:
+    # 1. Setup Node environment
+    - cd $CI_PROJECT_DIR/src/server
+    - npm install
 
-    # Install Fabric binaries
-    - echo "Copying AMD-based Fabric binaries into src/ledger/bin..."
-    - cd src/ledger
+    # 2. Install and setup Fabric
+    - cd $CI_PROJECT_DIR/src/ledger
     - export ARCH=amd64
     - export FABRIC_PATH=$PWD
     - bash ./install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
-    # Set executable permissions for all binaries
     - chmod +x bin/*
 
-    # Build Chaincode
+    # 3. Build and deploy network
     - cd chaincode/degreeChaincode
     - go mod tidy
-    - echo "Chaincode build step complete."
-
-    # Deploy Network
     - cd $CI_PROJECT_DIR/src/ledger/legitify-network
     - bash scripts/stopNetwork.sh || true
     - bash scripts/startNetwork.sh
-    - echo "Network deployment step complete."
-
-    # Test the Chaincode
     - bash scripts/testDegreeChaincode.sh
 
-    # Cleanup before teardown
-    - sudo rm -rf organizations/fabric-ca/*
-
-    # Tear Down the Network
-    - ./network.sh down
-    - docker system prune -af --volumes
-
-    # Store network status
-    - echo "NETWORK_RUNNING=true" >> $NETWORK_STATUS_FILE
-    - echo "NETWORK_DIR=$CI_PROJECT_DIR/src/ledger/legitify-network" >> $NETWORK_STATUS_FILE
-  artifacts:
-    paths:
-      - src/ledger/legitify-network
-      - $NETWORK_STATUS_FILE
-
-deploy_backend:
-  stage: deploy
-  tags:
-    - docker
-  script:
+    # 4. Start backend server
     - cd $CI_PROJECT_DIR/src/server
-    - npm install
     - chmod +x src/scripts/start-fresh-db.sh
     - bash src/scripts/start-fresh-db.sh &
 
-    # Wait for the server to be ready
+    # Wait for server to be ready
     - |
       timeout=60
       while ! curl -s http://localhost:3001/docs > /dev/null; do
@@ -101,78 +56,36 @@ deploy_backend:
         sleep 1
       done
     - echo "Server is up and running!"
-    - echo "BACKEND_RUNNING=true" >> $NETWORK_STATUS_FILE
-    - echo "BACKEND_PID=$(cat src/server.pid)" >> $NETWORK_STATUS_FILE
-  dependencies:
-    - setup_environment
-    - deploy_network
-  artifacts:
-    paths:
-      - $NETWORK_STATUS_FILE
-      - src/server/src/wallet
-      - src/server/pgdata
-      - src/server/server.pid
-
-run_tests:
-  stage: test
-  tags:
-    - docker
-  script:
-    - cd $CI_PROJECT_DIR/src/server
+    # 5. Run test flow
     - chmod +x scripts/test-flow.sh
     - bash scripts/test-flow.sh
-  dependencies:
-    - setup_environment
-    - deploy_network
-    - deploy_backend
 
-cleanup:
-  stage: cleanup
-  tags:
-    - docker
-  script:
+  after_script:
+    # Cleanup everything
     - |
-      if [ -f "$NETWORK_STATUS_FILE" ]; then
-        source $NETWORK_STATUS_FILE
-        
-        # Stop the backend server
-        if [ "$BACKEND_RUNNING" = "true" ] && [ ! -z "$BACKEND_PID" ]; then
-          kill $BACKEND_PID || true
-          echo "Backend server stopped"
-        fi
-
-        # Clean up database
-        cd $CI_PROJECT_DIR/src/server
-        docker-compose down -v
-        rm -rf pgdata
-
-        # Clean up wallet
-        rm -rf src/wallet/*
-
-        # Tear down the Fabric network
-        if [ "$NETWORK_RUNNING" = "true" ] && [ ! -z "$NETWORK_DIR" ]; then
-          cd $NETWORK_DIR
-          ./network.sh down
-          docker system prune -af --volumes
-          echo "Network torn down"
-        fi
+      # Stop backend server if running
+      if [ -f "src/server/server.pid" ]; then
+        kill $(cat src/server/server.pid) || true
+        rm src/server/server.pid
       fi
-  dependencies:
-    - deploy_network
-    - deploy_backend
-  when: always # Run cleanup even if previous stages fail
 
-after_script:
-  - cd $CI_PROJECT_DIR
-  - sudo chown -R gitlab-runner:gitlab-runner .
-  - sudo find . -type d -exec chmod 755 {} +
-  - sudo find . -type f -exec chmod 644 {} +
+      # Clean up database
+      cd $CI_PROJECT_DIR/src/server
+      docker-compose down -v
+      rm -rf pgdata
+      rm -rf src/wallet/*
 
-cache:
-  paths:
-    - src/server/node_modules/
+      # Tear down Fabric network
+      cd $CI_PROJECT_DIR/src/ledger/legitify-network
+      ./network.sh down
+      docker system prune -af --volumes
 
-only:
-  - main
-  - master
-  - merge_requests
+      # Cleanup files
+      cd $CI_PROJECT_DIR
+      sudo chown -R gitlab-runner:gitlab-runner .
+      sudo find . -type d -exec chmod 755 {} +
+      sudo find . -type f -exec chmod 644 {} +
+
+  cache:
+    paths:
+      - src/server/node_modules/
