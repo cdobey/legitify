@@ -151,13 +151,13 @@ register_employer() {
 }
 
 # Run registration tests
-run_test "Registering university" register_university || exit 1
+run_test "Registering university" register_university
 echo "University ID: $UNIVERSITY_ID" # Debug output
 
-run_test "Registering individual" register_individual || exit 1
+run_test "Registering individual" register_individual
 echo "Individual ID: $INDIVIDUAL_ID" # Debug output
 
-run_test "Registering employer" register_employer || exit 1
+run_test "Registering employer" register_employer
 echo "Employer ID: $EMPLOYER_ID" # Debug output
 
 echo -e "\n${BLUE}2. Logging in users...${NC}"
@@ -326,7 +326,7 @@ echo -e "Passed: ${GREEN}$TESTS_PASSED${NC}"
 echo -e "Failed: ${RED}$TESTS_FAILED${NC}"
 
 # Mark as complete if we got here
-echo -e "\n${GREEN}Test flow completed successfully!${NC}"
+echo -e "\n${GREEN}Test flow completed!${NC}"
 
 # Exit with success only if all tests passed
 if [ "$TESTS_FAILED" -eq 0 ]; then
