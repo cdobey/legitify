@@ -65,25 +65,73 @@ test_flow:
     - bash scripts/testDegreeChaincode.sh
 
     # 4. Start backend server
-    - cd $CI_PROJECT_DIR/src/server
-    - chmod +x src/scripts/start-fresh-db.sh
-    - source src/scripts/start-fresh-db.sh
+    - |
+      cd $CI_PROJECT_DIR/src/server
+      chmod +x src/scripts/start-fresh-db.sh
+      # Start the server and save its PID
+      source src/scripts/start-fresh-db.sh
+      if [ ! -f "server.pid" ]; then
+        echo "Server failed to start"
+        exit 1
+      fi
+      SERVER_PID=$(cat server.pid)
+      echo "Server started with PID: $SERVER_PID"
 
-    # 5. Run test flow
-    - chmod +x scripts/test-flow.sh
-    - bash scripts/test-flow.sh
+    # 5. Run test flow with proper process management
+    - |
+      chmod +x scripts/test-flow.sh
+      # Run tests in background and save its PID
+      bash scripts/test-flow.sh &
+      TEST_PID=$!
+
+      # Wait for test completion with timeout
+      TIMEOUT=300
+      while [ $TIMEOUT -gt 0 ]; do
+        if ! kill -0 $TEST_PID 2>/dev/null; then
+          # Test process has finished
+          wait $TEST_PID
+          TEST_EXIT_CODE=$?
+          if [ $TEST_EXIT_CODE -ne 0 ]; then
+            echo "Tests failed with exit code $TEST_EXIT_CODE"
+            exit $TEST_EXIT_CODE
+          fi
+          echo "Tests completed successfully"
+          break
+        fi
+        sleep 1
+        TIMEOUT=$((TIMEOUT - 1))
+      done
+
+      if [ $TIMEOUT -eq 0 ]; then
+        echo "Tests timed out after 5 minutes"
+        kill $TEST_PID
+        exit 1
+      fi
 
   after_script:
-    # Cleanup everything
+    # Cleanup everything with proper process management
     - |
       set +e  # Continue on errors during cleanup
+      echo "Starting cleanup..."
 
-      echo "Cleaning up resources..."
+      # Function to kill process and its children
+      kill_process_tree() {
+        local pid=$1
+        if [ -n "$pid" ]; then
+          children=$(pgrep -P $pid)
+          for child in $children; do
+            kill_process_tree $child
+          done
+          kill -9 $pid 2>/dev/null || true
+        fi
+      }
 
       # Stop backend server
-      if [ -f "src/server/server.pid" ]; then
-        sudo kill $(cat src/server/server.pid) || true
-        rm -f src/server/server.pid
+      if [ -f "$CI_PROJECT_DIR/src/server/server.pid" ]; then
+        SERVER_PID=$(cat "$CI_PROJECT_DIR/src/server/server.pid")
+        echo "Stopping server with PID $SERVER_PID"
+        kill_process_tree $SERVER_PID
+        rm -f "$CI_PROJECT_DIR/src/server/server.pid"
       fi
 
       # Clean up database and wallet
