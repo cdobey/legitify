@@ -2,6 +2,9 @@ image: node:18-bullseye
 
 variables:
   SERVER_PID_FILE: "/tmp/server.pid"
+  # Add timeout variables for better control
+  SERVER_STARTUP_TIMEOUT: 120
+  TEST_FLOW_TIMEOUT: 300
 
 test_flow:
   stage: test
@@ -45,8 +48,8 @@ test_flow:
   script:
     # 1. Setup Node environment
     - cd $CI_PROJECT_DIR/src/server
-    - npm ci # Use ci instead of install for cleaner, more reliable builds
-    - npm install -g ts-node typescript # Ensure ts-node is available globally
+    - npm ci
+    - npm install -g ts-node typescript
 
     # 2. Install and setup Fabric
     - cd $CI_PROJECT_DIR/src/ledger
@@ -64,18 +67,18 @@ test_flow:
     - bash scripts/startNetwork.sh
     - bash scripts/testDegreeChaincode.sh
 
-    # 4. Start backend server and wait for it
+    # 4. Start backend server with improved waiting mechanism
     - |
       cd $CI_PROJECT_DIR/src/server
       chmod +x src/scripts/start-fresh-db.sh
       source src/scripts/start-fresh-db.sh
 
-      # Wait for server to be fully ready
       echo "Waiting for server to be fully ready..."
-      TIMEOUT=60
+      TIMEOUT=$SERVER_STARTUP_TIMEOUT
       while [ $TIMEOUT -gt 0 ]; do
         if curl -s http://localhost:3001/docs > /dev/null; then
           echo "Server is responding to requests"
+          sleep 5  # Additional wait to ensure full readiness
           break
         fi
         echo "Waiting... ($TIMEOUT seconds remaining)"
@@ -84,73 +87,101 @@ test_flow:
       done
 
       if [ $TIMEOUT -eq 0 ]; then
-        echo "Server failed to start properly"
+        echo "Server failed to start within timeout period"
         exit 1
       fi
 
-    # 5. Run test flow with proper synchronous execution
+    # 5. Run test flow with improved error handling and timeout
     - |
+      cd $CI_PROJECT_DIR/src/server
       chmod +x scripts/test-flow.sh
-      # Run tests in foreground and capture output
-      TEST_OUTPUT_FILE="test_output.log"
-      if ! bash scripts/test-flow.sh 2>&1 | tee $TEST_OUTPUT_FILE; then
+
+      # Create a wrapper script to handle timeout
+      cat > test-flow-wrapper.sh << 'EOF'
+      #!/bin/bash
+      # Start the test flow in background
+      ./scripts/test-flow.sh > test_output.log 2>&1 &
+      test_pid=$!
+
+      # Wait for completion or timeout
+      timeout=$TEST_FLOW_TIMEOUT
+      while [ $timeout -gt 0 ]; do
+        if ! kill -0 $test_pid 2>/dev/null; then
+          # Process has finished
+          break
+        fi
+        sleep 1
+        timeout=$((timeout - 1))
+      done
+
+      if [ $timeout -eq 0 ]; then
+        echo "Test flow timed out after $TEST_FLOW_TIMEOUT seconds"
+        kill -9 $test_pid
+        exit 1
+      fi
+
+      # Check the output for success
+      if grep -q "Test flow completed successfully!" test_output.log; then
+        cat test_output.log
+        echo "Test flow completed successfully"
+        exit 0
+      else
+        cat test_output.log
         echo "Test flow failed"
-        cat $TEST_OUTPUT_FILE
         exit 1
       fi
+      EOF
 
-      # Verify test completion
-      if ! grep -q "Test flow completed successfully!" $TEST_OUTPUT_FILE; then
-        echo "Test flow did not complete successfully"
-        cat $TEST_OUTPUT_FILE
-        exit 1
-      fi
-
-      echo "All tests completed successfully"
+      chmod +x test-flow-wrapper.sh
+      ./test-flow-wrapper.sh
 
   after_script:
-    # Cleanup everything with proper process management
+    # Only run cleanup if main script has completed
     - |
-      set +e  # Continue on errors during cleanup
-      echo "Starting cleanup..."
+      if [ -f "test_output.log" ] && grep -q "Test flow completed successfully!" test_output.log; then
+        echo "Starting cleanup after successful test completion..."
+        set +e  # Continue on errors during cleanup
 
-      # Function to kill process and its children
-      kill_process_tree() {
-        local pid=$1
-        if [ -n "$pid" ]; then
-          children=$(pgrep -P $pid)
-          for child in $children; do
-            kill_process_tree $child
-          done
-          kill -9 $pid 2>/dev/null || true
+        # Function to kill process and its children
+        kill_process_tree() {
+          local pid=$1
+          if [ -n "$pid" ]; then
+            children=$(pgrep -P $pid)
+            for child in $children; do
+              kill_process_tree $child
+            done
+            kill -9 $pid 2>/dev/null || true
+          fi
+        }
+
+        # Stop backend server
+        if [ -f "$SERVER_PID_FILE" ]; then
+          SERVER_PID=$(cat "$SERVER_PID_FILE")
+          echo "Stopping server with PID $SERVER_PID"
+          kill_process_tree $SERVER_PID
+          rm -f "$SERVER_PID_FILE"
         fi
-      }
 
-      # Stop backend server
-      if [ -f "$CI_PROJECT_DIR/src/server/server.pid" ]; then
-        SERVER_PID=$(cat "$CI_PROJECT_DIR/src/server/server.pid")
-        echo "Stopping server with PID $SERVER_PID"
-        kill_process_tree $SERVER_PID
-        rm -f "$CI_PROJECT_DIR/src/server/server.pid"
+        # Clean up database and wallet
+        cd $CI_PROJECT_DIR/src/server || true
+        docker-compose down -v || true
+        sudo rm -rf pgdata src/wallet/* || true
+
+        # Tear down Fabric network
+        cd $CI_PROJECT_DIR/src/ledger/legitify-network || true
+        ./network.sh down || true
+        docker system prune -af --volumes || true
+
+        # Reset permissions
+        cd $CI_PROJECT_DIR || true
+        sudo chown -R gitlab-runner:gitlab-runner . || true
+        sudo find . -type d -exec chmod 755 {} + || true
+        sudo find . -type f -exec chmod 644 {} + || true
+
+        echo "Cleanup completed"
+      else
+        echo "Skipping cleanup as test flow did not complete successfully"
       fi
-
-      # Clean up database and wallet
-      cd $CI_PROJECT_DIR/src/server || true
-      docker-compose down -v || true
-      sudo rm -rf pgdata src/wallet/* || true
-
-      # Tear down Fabric network
-      cd $CI_PROJECT_DIR/src/ledger/legitify-network || true
-      ./network.sh down || true
-      docker system prune -af --volumes || true
-
-      # Reset permissions
-      cd $CI_PROJECT_DIR || true
-      sudo chown -R gitlab-runner:gitlab-runner . || true
-      sudo find . -type d -exec chmod 755 {} + || true
-      sudo find . -type f -exec chmod 644 {} + || true
-
-      echo "Cleanup completed"
 
   cache:
     key: ${CI_COMMIT_REF_SLUG}
