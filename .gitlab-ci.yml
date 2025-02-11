@@ -1,4 +1,4 @@
-image: node:18
+image: node:18-bullseye
 
 variables:
   SERVER_PID_FILE: "/tmp/server.pid"
@@ -10,29 +10,53 @@ test_flow:
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_BRANCH == "master"
   tags:
-    - docker
+    - shell
   before_script:
-    - echo $(whoami)
+    # Install system dependencies
+    - |
+      sudo apt-get update && sudo apt-get install -y \
+        curl \
+        git \
+        jq \
+        docker.io \
+        docker-compose \
+        golang-go
+
+    # Setup Node.js using NVM
+    - |
+      curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+      export NVM_DIR="$HOME/.nvm"
+      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      nvm install 18
+      nvm use 18
+
+    # Verify installations
+    - node --version
+    - npm --version
     - docker --version
-    - echo "Runner is on x86_64 (Intel/AMD)."
+    - go version
+
+    # Prepare workspace
     - cd $CI_PROJECT_DIR
     - git clean -fdx
     - sudo chown -R gitlab-runner:gitlab-runner .
+
   script:
     # 1. Setup Node environment
     - cd $CI_PROJECT_DIR/src/server
-    - npm install
+    - npm ci # Use ci instead of install for cleaner, more reliable builds
 
     # 2. Install and setup Fabric
     - cd $CI_PROJECT_DIR/src/ledger
     - export ARCH=amd64
     - export FABRIC_PATH=$PWD
+    - export PATH=$PATH:$FABRIC_PATH/bin
     - bash ./install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
     - chmod +x bin/*
 
     # 3. Build and deploy network
     - cd chaincode/degreeChaincode
-    - go mod tidy
+    - GO111MODULE=on go mod vendor
     - cd $CI_PROJECT_DIR/src/ledger/legitify-network
     - bash scripts/stopNetwork.sh || true
     - bash scripts/startNetwork.sh
@@ -41,21 +65,8 @@ test_flow:
     # 4. Start backend server
     - cd $CI_PROJECT_DIR/src/server
     - chmod +x src/scripts/start-fresh-db.sh
-    - bash src/scripts/start-fresh-db.sh &
+    - source src/scripts/start-fresh-db.sh
 
-    # Wait for server to be ready
-    - |
-      timeout=60
-      while ! curl -s http://localhost:3001/docs > /dev/null; do
-        if [ "$timeout" -le "0" ]; then
-          echo "Server failed to start"
-          exit 1
-        fi
-        echo "Waiting for server to start... ($timeout seconds remaining)"
-        timeout=$((timeout-1))
-        sleep 1
-      done
-    - echo "Server is up and running!"
     # 5. Run test flow
     - chmod +x scripts/test-flow.sh
     - bash scripts/test-flow.sh
@@ -63,29 +74,37 @@ test_flow:
   after_script:
     # Cleanup everything
     - |
-      # Stop backend server if running
+      set +e  # Continue on errors during cleanup
+
+      echo "Cleaning up resources..."
+
+      # Stop backend server
       if [ -f "src/server/server.pid" ]; then
-        kill $(cat src/server/server.pid) || true
-        rm src/server/server.pid
+        sudo kill $(cat src/server/server.pid) || true
+        rm -f src/server/server.pid
       fi
 
-      # Clean up database
-      cd $CI_PROJECT_DIR/src/server
-      docker-compose down -v
-      rm -rf pgdata
-      rm -rf src/wallet/*
+      # Clean up database and wallet
+      cd $CI_PROJECT_DIR/src/server || true
+      docker-compose down -v || true
+      sudo rm -rf pgdata src/wallet/* || true
 
       # Tear down Fabric network
-      cd $CI_PROJECT_DIR/src/ledger/legitify-network
-      ./network.sh down
-      docker system prune -af --volumes
+      cd $CI_PROJECT_DIR/src/ledger/legitify-network || true
+      ./network.sh down || true
+      docker system prune -af --volumes || true
 
-      # Cleanup files
-      cd $CI_PROJECT_DIR
-      sudo chown -R gitlab-runner:gitlab-runner .
-      sudo find . -type d -exec chmod 755 {} +
-      sudo find . -type f -exec chmod 644 {} +
+      # Reset permissions
+      cd $CI_PROJECT_DIR || true
+      sudo chown -R gitlab-runner:gitlab-runner . || true
+      sudo find . -type d -exec chmod 755 {} + || true
+      sudo find . -type f -exec chmod 644 {} + || true
+
+      echo "Cleanup completed"
 
   cache:
+    key: ${CI_COMMIT_REF_SLUG}
     paths:
       - src/server/node_modules/
+      - ~/.npm/
+    policy: pull-push
