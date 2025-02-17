@@ -71,7 +71,7 @@ my-project/
 └── README.md (this file)
 ```
 
-> **Note:** Exact filenames may vary; the above is a typical structure.
+> **Note:** Exact filenames may vary; the above is a doctypical structure.
 
 ---
 
