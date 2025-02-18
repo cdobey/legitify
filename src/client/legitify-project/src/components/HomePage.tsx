@@ -13,8 +13,90 @@ import {
 } from "@mantine/core";
 import { IconCertificate, IconCheck, IconFileText } from "@tabler/icons-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function HomePage() {
+  const { user } = useAuth();
+
+  const renderActionButtons = () => {
+    if (!user) {
+      return (
+        <Group mt="xl">
+          <Button
+            component={Link}
+            to="/register"
+            size="xl"
+            variant="white"
+            color="blue"
+          >
+            Get Started
+          </Button>
+          <Button
+            component={Link}
+            to="/login"
+            size="xl"
+            variant="outline"
+            color="white"
+          >
+            Login
+          </Button>
+        </Group>
+      );
+    }
+
+    switch (user.role) {
+      case "university":
+        return (
+          <Button
+            component={Link}
+            to="/degree/issue"
+            size="xl"
+            variant="white"
+            color="blue"
+          >
+            Issue New Degree
+          </Button>
+        );
+      case "individual":
+        return (
+          <Group mt="xl">
+            <Button
+              component={Link}
+              to="/degree/manage"
+              size="xl"
+              variant="white"
+              color="blue"
+            >
+              Manage Degrees
+            </Button>
+            <Button
+              component={Link}
+              to="/degree/requests"
+              size="xl"
+              variant="outline"
+              color="white"
+            >
+              View Access Requests
+            </Button>
+          </Group>
+        );
+      case "employer":
+        return (
+          <Button
+            component={Link}
+            to="/degree/verify"
+            size="xl"
+            variant="white"
+            color="blue"
+          >
+            Verify Degrees
+          </Button>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <Box>
       <Paper
@@ -37,40 +119,23 @@ export default function HomePage() {
                 marginBottom: "2rem",
               }}
             >
-              Secure Degree Verification{" "}
+              {user ? `Welcome, ${user.orgName}` : "Secure Degree Verification"}
               <Text
                 component="span"
                 inherit
                 variant="gradient"
                 gradient={{ from: "yellow", to: "white" }}
               >
+                {" "}
                 Using Blockchain
               </Text>
             </Title>
             <Text size="xl" style={{ maxWidth: "600px" }}>
-              Transform the way academic credentials are issued, shared, and
-              verified with our cutting-edge blockchain solution.
+              {user
+                ? `You are logged in as a ${user.role}`
+                : "Transform the way academic credentials are issued, shared, and verified with our cutting-edge blockchain solution."}
             </Text>
-            <Group mt="xl">
-              <Button
-                component={Link}
-                to="/register"
-                size="xl"
-                variant="white"
-                color="blue"
-              >
-                Get Started
-              </Button>
-              <Button
-                component={Link}
-                to="/about"
-                size="xl"
-                variant="outline"
-                color="white"
-              >
-                Learn More
-              </Button>
-            </Group>
+            {renderActionButtons()}
           </Stack>
         </Container>
       </Paper>

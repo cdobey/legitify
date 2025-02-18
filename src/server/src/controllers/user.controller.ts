@@ -39,3 +39,43 @@ export const getProfile: RequestHandler = async (
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const searchUsers: RequestHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { email } = req.query;
+    if (!email) {
+      res.status(400).json({ error: "Email query parameter is required" });
+      return;
+    }
+
+    const user = await prisma.user.findFirst({
+      where: {
+        email: email.toString(),
+        role: "individual", // Only search for individuals
+      },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        role: true,
+      },
+    });
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    res.json({
+      uid: user.id,
+      email: user.email,
+      username: user.username,
+    });
+  } catch (error: any) {
+    console.error("searchUsers error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};

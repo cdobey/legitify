@@ -1,5 +1,6 @@
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import React, { createContext, useContext, useEffect, useState } from "react";
+import api from "../utils/api";
 
 interface User {
   uid: string;
@@ -28,24 +29,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const token = await firebaseUser.getIdToken();
-        // Fetch user data from your backend
+        localStorage.setItem("token", token);
+
         try {
-          const response = await fetch("/api/me", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          if (response.ok) {
-            const userData = await response.json();
-            setUser(userData);
-          } else {
-            setUser(null);
-          }
+          const response = await api.get("/me");
+          setUser(response.data);
         } catch (error) {
           console.error("Failed to fetch user data:", error);
           setUser(null);
         }
       } else {
+        localStorage.removeItem("token");
         setUser(null);
       }
       setLoading(false);

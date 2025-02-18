@@ -1,0 +1,504 @@
+
+> server@1.0.0 dev
+> ts-node src/app.ts
+
+Server is running on port 3001
+Swagger docs available at http://localhost:3001/docs
+[0mGET /docs [36m301[0m 3.145 ms - 154[0m
+Failed to enroll user ta5gAtJmkfQWAl1S9h9HjTHFi7h1: Error: fabric-ca request register failed with errors [[ { code: 20, message: 'Authentication failure' } ]]
+Registration error: Error: fabric-ca request register failed with errors [[ { code: 20, message: 'Authentication failure' } ]]
+    at IncomingMessage.<anonymous> (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/fabric-ca-client/lib/FabricCAClient.js:298:19)
+    at IncomingMessage.emit (node:events:530:35)
+    at IncomingMessage.emit (node:domain:489:12)
+    at endReadableNT (node:internal/streams/readable:1698:12)
+    at processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  result: '',
+  errors: [ { code: 20, message: 'Authentication failure' } ],
+  messages: [],
+  success: false
+}
+[0mPOST /auth/register [31m500[0m 4208.419 ms - 111[0m
+Registration error: FirebaseAuthError: The email address is already in use by another account.
+    at Function.fromServerError (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/utils/error.js:148:16)
+    at /Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/auth/auth-api-request.js:1629:49
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async register (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/src/controllers/auth.controller.ts:39:24) {
+  errorInfo: {
+    code: 'auth/email-already-exists',
+    message: 'The email address is already in use by another account.'
+  },
+  codePrefix: 'auth'
+}
+[0mPOST /auth/register [31m500[0m 344.398 ms - 67[0m
+[0mGET /docs/ [36m304[0m 2.144 ms - -[0m
+[0mGET /docs/swagger-ui-init.js [32m200[0m 0.153 ms - 16302[0m
+[0mGET /docs/swagger-ui.css [32m200[0m 7.614 ms - 152072[0m
+[0mGET /docs/swagger-ui-standalone-preset.js [32m200[0m 36.281 ms - 230007[0m
+[0mGET /docs/swagger-ui-bundle.js [32m200[0m 86.630 ms - 1426050[0m
+[0mGET /docs/favicon-32x32.png [36m304[0m 1.633 ms - -[0m
+Registration error: FirebaseAuthError: The email address is already in use by another account.
+    at Function.fromServerError (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/utils/error.js:148:16)
+    at /Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/auth/auth-api-request.js:1629:49
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async register (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/src/controllers/auth.controller.ts:39:24) {
+  errorInfo: {
+    code: 'auth/email-already-exists',
+    message: 'The email address is already in use by another account.'
+  },
+  codePrefix: 'auth'
+}
+[0mPOST /auth/register [31m500[0m 528.443 ms - 67[0m
+Failed to enroll user c8siVKP4WhUAqob7bdvbHqSa5Ll1: Error: fabric-ca request register failed with errors [[ { code: 20, message: 'Authentication failure' } ]]
+Registration error: Error: fabric-ca request register failed with errors [[ { code: 20, message: 'Authentication failure' } ]]
+    at IncomingMessage.<anonymous> (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/fabric-ca-client/lib/FabricCAClient.js:298:19)
+    at IncomingMessage.emit (node:events:530:35)
+    at IncomingMessage.emit (node:domain:489:12)
+    at endReadableNT (node:internal/streams/readable:1698:12)
+    at processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  result: '',
+  errors: [ { code: 20, message: 'Authentication failure' } ],
+  messages: [],
+  success: false
+}
+[0mPOST /auth/register [31m500[0m 2359.102 ms - 111[0m
+[0mGET /docs [36m301[0m 0.251 ms - 154[0m
+Registration error: FirebaseAuthError: The email address is already in use by another account.
+    at Function.fromServerError (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/utils/error.js:148:16)
+    at /Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/auth/auth-api-request.js:1629:49
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async register (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/src/controllers/auth.controller.ts:39:24) {
+  errorInfo: {
+    code: 'auth/email-already-exists',
+    message: 'The email address is already in use by another account.'
+  },
+  codePrefix: 'auth'
+}
+[0mPOST /auth/register [31m500[0m 742.732 ms - 67[0m
+Failed to enroll user uJCcKFa8QGUNdsmgkr0k33hRnyV2: Error: fabric-ca request register failed with errors [[ { code: 20, message: 'Authentication failure' } ]]
+Registration error: Error: fabric-ca request register failed with errors [[ { code: 20, message: 'Authentication failure' } ]]
+    at IncomingMessage.<anonymous> (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/fabric-ca-client/lib/FabricCAClient.js:298:19)
+    at IncomingMessage.emit (node:events:530:35)
+    at IncomingMessage.emit (node:domain:489:12)
+    at endReadableNT (node:internal/streams/readable:1698:12)
+    at processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  result: '',
+  errors: [ { code: 20, message: 'Authentication failure' } ],
+  messages: [],
+  success: false
+}
+[0mPOST /auth/register [31m500[0m 2857.346 ms - 111[0m
+[0mGET /docs [36m301[0m 0.302 ms - 154[0m
+Registration error: FirebaseAuthError: The email address is already in use by another account.
+    at Function.fromServerError (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/utils/error.js:148:16)
+    at /Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/auth/auth-api-request.js:1629:49
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async register (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/src/controllers/auth.controller.ts:39:24) {
+  errorInfo: {
+    code: 'auth/email-already-exists',
+    message: 'The email address is already in use by another account.'
+  },
+  codePrefix: 'auth'
+}
+[0mPOST /auth/register [31m500[0m 510.525 ms - 67[0m
+Successfully enrolled user 54vPN8e7J3QMywsmBslBgRj2RFs2 with orguniversity and imported into wallet
+[0mPOST /auth/register [32m201[0m 2693.679 ms - 139[0m
+Authenticated user: {
+  uid: '54vPN8e7J3QMywsmBslBgRj2RFs2',
+  role: 'university',
+  orgName: 'orguniversity',
+  tokenIssued: '2025-02-18T02:44:43.000Z',
+  tokenExpires: '2025-02-18T03:44:43.000Z'
+}
+[0mGET /me [32m200[0m 566.285 ms - 209[0m
+Authenticated user: {
+  uid: '54vPN8e7J3QMywsmBslBgRj2RFs2',
+  role: 'university',
+  orgName: 'orguniversity',
+  tokenIssued: '2025-02-18T02:44:43.000Z',
+  tokenExpires: '2025-02-18T03:44:43.000Z'
+}
+[0mGET /me [36m304[0m 334.489 ms - -[0m
+Registration error: FirebaseAuthError: The email address is already in use by another account.
+    at Function.fromServerError (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/utils/error.js:148:16)
+    at /Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/auth/auth-api-request.js:1629:49
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async register (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/src/controllers/auth.controller.ts:39:24) {
+  errorInfo: {
+    code: 'auth/email-already-exists',
+    message: 'The email address is already in use by another account.'
+  },
+  codePrefix: 'auth'
+}
+[0mPOST /auth/register [31m500[0m 565.662 ms - 67[0m
+Registration error: FirebaseAuthError: The email address is already in use by another account.
+    at Function.fromServerError (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/utils/error.js:148:16)
+    at /Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/auth/auth-api-request.js:1629:49
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async register (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/src/controllers/auth.controller.ts:39:24) {
+  errorInfo: {
+    code: 'auth/email-already-exists',
+    message: 'The email address is already in use by another account.'
+  },
+  codePrefix: 'auth'
+}
+[0mPOST /auth/register [31m500[0m 479.698 ms - 67[0m
+Registration error: FirebaseAuthError: The email address is already in use by another account.
+    at Function.fromServerError (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/utils/error.js:148:16)
+    at /Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/auth/auth-api-request.js:1629:49
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async register (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/src/controllers/auth.controller.ts:39:24) {
+  errorInfo: {
+    code: 'auth/email-already-exists',
+    message: 'The email address is already in use by another account.'
+  },
+  codePrefix: 'auth'
+}
+[0mPOST /auth/register [31m500[0m 310.956 ms - 67[0m
+Login attempt for email: university@test.com
+Sign in response: { status: 200, ok: true, error: undefined }
+Token verified for user: fPkXPF6i5nMddmB8PgRsbjFaoBt1
+[0mPOST /auth/test-login [32m200[0m 383.189 ms - 1353[0m
+Login attempt for email: individual@test.com
+Sign in response: { status: 200, ok: true, error: undefined }
+Token verified for user: GgihivcXlUXJUyjF0HqtS1xweo02
+[0mPOST /auth/test-login [32m200[0m 258.193 ms - 1353[0m
+Login attempt for email: employer@test.com
+Sign in response: { status: 200, ok: true, error: undefined }
+Token verified for user: Z6yTRIplJ3OSlpgHGqe3DuKtAXU2
+[0mPOST /auth/test-login [32m200[0m 196.921 ms - 1339[0m
+Authenticated user: {
+  uid: 'fPkXPF6i5nMddmB8PgRsbjFaoBt1',
+  role: 'university',
+  orgName: 'orguniversity',
+  tokenIssued: '2025-02-18T02:45:44.000Z',
+  tokenExpires: '2025-02-18T03:45:44.000Z'
+}
+[0mPOST /degree/issue [33m400[0m 347.810 ms - 32[0m
+Authenticated user: {
+  uid: 'GgihivcXlUXJUyjF0HqtS1xweo02',
+  role: 'individual',
+  orgName: 'orgindividual',
+  tokenIssued: '2025-02-18T02:45:44.000Z',
+  tokenExpires: '2025-02-18T03:45:44.000Z'
+}
+[0mPOST /degree/accept [33m400[0m 342.018 ms - 25[0m
+Authenticated user: {
+  uid: 'Z6yTRIplJ3OSlpgHGqe3DuKtAXU2',
+  role: 'employer',
+  orgName: 'orgemployer',
+  tokenIssued: '2025-02-18T02:45:45.000Z',
+  tokenExpires: '2025-02-18T03:45:45.000Z'
+}
+[0mPOST /degree/requestAccess [33m400[0m 335.242 ms - 25[0m
+Authenticated user: {
+  uid: 'GgihivcXlUXJUyjF0HqtS1xweo02',
+  role: 'individual',
+  orgName: 'orgindividual',
+  tokenIssued: '2025-02-18T02:45:44.000Z',
+  tokenExpires: '2025-02-18T03:45:44.000Z'
+}
+[0mPOST /degree/grantAccess [33m400[0m 357.736 ms - 45[0m
+[0mGET /degree/view/ [33m404[0m 0.681 ms - 151[0m
+Registration error: FirebaseAuthError: The email address is already in use by another account.
+    at Function.fromServerError (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/utils/error.js:148:16)
+    at /Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/auth/auth-api-request.js:1629:49
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async register (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/src/controllers/auth.controller.ts:39:24) {
+  errorInfo: {
+    code: 'auth/email-already-exists',
+    message: 'The email address is already in use by another account.'
+  },
+  codePrefix: 'auth'
+}
+[0mPOST /auth/register [31m500[0m 514.809 ms - 67[0m
+Registration error: FirebaseAuthError: The email address is already in use by another account.
+    at Function.fromServerError (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/utils/error.js:148:16)
+    at /Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/auth/auth-api-request.js:1629:49
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async register (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/src/controllers/auth.controller.ts:39:24) {
+  errorInfo: {
+    code: 'auth/email-already-exists',
+    message: 'The email address is already in use by another account.'
+  },
+  codePrefix: 'auth'
+}
+[0mPOST /auth/register [31m500[0m 479.357 ms - 67[0m
+Registration error: FirebaseAuthError: The email address is already in use by another account.
+    at Function.fromServerError (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/utils/error.js:148:16)
+    at /Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/auth/auth-api-request.js:1629:49
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async register (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/src/controllers/auth.controller.ts:39:24) {
+  errorInfo: {
+    code: 'auth/email-already-exists',
+    message: 'The email address is already in use by another account.'
+  },
+  codePrefix: 'auth'
+}
+[0mPOST /auth/register [31m500[0m 392.608 ms - 67[0m
+Login attempt for email: university@test.com
+Sign in response: { status: 200, ok: true, error: undefined }
+Token verified for user: fPkXPF6i5nMddmB8PgRsbjFaoBt1
+[0mPOST /auth/test-login [32m200[0m 386.913 ms - 1353[0m
+Login attempt for email: individual@test.com
+Sign in response: { status: 200, ok: true, error: undefined }
+Token verified for user: GgihivcXlUXJUyjF0HqtS1xweo02
+[0mPOST /auth/test-login [32m200[0m 190.493 ms - 1353[0m
+Login attempt for email: employer@test.com
+Sign in response: { status: 200, ok: true, error: undefined }
+Token verified for user: Z6yTRIplJ3OSlpgHGqe3DuKtAXU2
+[0mPOST /auth/test-login [32m200[0m 185.951 ms - 1339[0m
+Authenticated user: {
+  uid: 'fPkXPF6i5nMddmB8PgRsbjFaoBt1',
+  role: 'university',
+  orgName: 'orguniversity',
+  tokenIssued: '2025-02-18T02:46:20.000Z',
+  tokenExpires: '2025-02-18T03:46:20.000Z'
+}
+[0mPOST /degree/issue [33m400[0m 601.193 ms - 32[0m
+Authenticated user: {
+  uid: 'GgihivcXlUXJUyjF0HqtS1xweo02',
+  role: 'individual',
+  orgName: 'orgindividual',
+  tokenIssued: '2025-02-18T02:46:20.000Z',
+  tokenExpires: '2025-02-18T03:46:20.000Z'
+}
+[0mPOST /degree/accept [33m400[0m 329.633 ms - 25[0m
+Authenticated user: {
+  uid: 'Z6yTRIplJ3OSlpgHGqe3DuKtAXU2',
+  role: 'employer',
+  orgName: 'orgemployer',
+  tokenIssued: '2025-02-18T02:46:21.000Z',
+  tokenExpires: '2025-02-18T03:46:21.000Z'
+}
+[0mPOST /degree/requestAccess [33m400[0m 484.733 ms - 25[0m
+Authenticated user: {
+  uid: 'GgihivcXlUXJUyjF0HqtS1xweo02',
+  role: 'individual',
+  orgName: 'orgindividual',
+  tokenIssued: '2025-02-18T02:46:20.000Z',
+  tokenExpires: '2025-02-18T03:46:20.000Z'
+}
+[0mPOST /degree/grantAccess [33m400[0m 470.570 ms - 45[0m
+[0mGET /degree/view/ [33m404[0m 0.320 ms - 151[0m
+PayloadTooLargeError: request entity too large
+    at readStream (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/raw-body/index.js:163:17)
+    at getRawBody (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/raw-body/index.js:116:12)
+    at read (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/body-parser/lib/read.js:79:3)
+    at jsonParser (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/body-parser/lib/types/json.js:138:5)
+    at Layer.handle [as handle_request] (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/express/lib/router/layer.js:95:5)
+    at trim_prefix (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/express/lib/router/index.js:328:13)
+    at /Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/express/lib/router/index.js:286:9
+    at Function.process_params (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/express/lib/router/index.js:346:12)
+    at next (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/express/lib/router/index.js:280:10)
+    at cors (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/cors/lib/index.js:188:7)
+Authenticated user: {
+  uid: '54vPN8e7J3QMywsmBslBgRj2RFs2',
+  role: 'university',
+  orgName: 'orguniversity',
+  tokenIssued: '2025-02-18T02:44:43.000Z',
+  tokenExpires: '2025-02-18T03:44:43.000Z'
+}
+[0mPOST /degree/issue [33m400[0m 378.911 ms - 32[0m
+Authenticated user: {
+  uid: '54vPN8e7J3QMywsmBslBgRj2RFs2',
+  role: 'university',
+  orgName: 'orguniversity',
+  tokenIssued: '2025-02-18T02:44:43.000Z',
+  tokenExpires: '2025-02-18T03:44:43.000Z'
+}
+[0mGET /me [36m304[0m 412.495 ms - -[0m
+Authenticated user: {
+  uid: '54vPN8e7J3QMywsmBslBgRj2RFs2',
+  role: 'university',
+  orgName: 'orguniversity',
+  tokenIssued: '2025-02-18T02:44:43.000Z',
+  tokenExpires: '2025-02-18T03:44:43.000Z'
+}
+[0mPOST /degree/issue [33m400[0m 401.104 ms - 32[0m
+Successfully enrolled user d5pWhNPpWXcImPgREaW0SWFTBfD3 with orguniversity and imported into wallet
+[0mPOST /auth/register [32m201[0m 2630.234 ms - 139[0m
+Successfully enrolled user FYUVqMlYwvgVoEnZ9qCPmciRjcy1 with orgindividual and imported into wallet
+[0mPOST /auth/register [32m201[0m 2334.774 ms - 139[0m
+Successfully enrolled user DBr6eT123HfZswp6fTTiWf3uLKt2 with orgemployer and imported into wallet
+[0mPOST /auth/register [32m201[0m 2570.754 ms - 135[0m
+Login attempt for email: university@test.com
+Sign in response: { status: 200, ok: true, error: undefined }
+Token verified for user: d5pWhNPpWXcImPgREaW0SWFTBfD3
+[0mPOST /auth/test-login [32m200[0m 222.055 ms - 1353[0m
+Login attempt for email: individual@test.com
+Sign in response: { status: 200, ok: true, error: undefined }
+Token verified for user: FYUVqMlYwvgVoEnZ9qCPmciRjcy1
+[0mPOST /auth/test-login [32m200[0m 175.164 ms - 1353[0m
+Login attempt for email: employer@test.com
+Sign in response: { status: 200, ok: true, error: undefined }
+Token verified for user: DBr6eT123HfZswp6fTTiWf3uLKt2
+[0mPOST /auth/test-login [32m200[0m 297.351 ms - 1339[0m
+Authenticated user: {
+  uid: 'd5pWhNPpWXcImPgREaW0SWFTBfD3',
+  role: 'university',
+  orgName: 'orguniversity',
+  tokenIssued: '2025-02-18T02:50:49.000Z',
+  tokenExpires: '2025-02-18T03:50:49.000Z'
+}
+2025-02-18T02:50:54.146Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+2025-02-18T02:50:54.148Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgemployer.com url:grpcs://localhost:8051 timeout:3000
+2025-02-18T02:50:54.149Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgemployer.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+    at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
+    at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at processTimers (node:internal/timers:529:7) {
+  connectFailed: true
+}
+2025-02-18T02:50:57.155Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+2025-02-18T02:50:57.156Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgindividual.com url:grpcs://localhost:9051 timeout:3000
+2025-02-18T02:50:57.157Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgindividual.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+    at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
+    at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at processTimers (node:internal/timers:529:7) {
+  connectFailed: true
+}
+[0mPOST /degree/issue [32m201[0m 8879.862 ms - 74[0m
+Authenticated user: {
+  uid: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
+  role: 'individual',
+  orgName: 'orgindividual',
+  tokenIssued: '2025-02-18T02:50:50.000Z',
+  tokenExpires: '2025-02-18T03:50:50.000Z'
+}
+2025-02-18T02:51:03.349Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+2025-02-18T02:51:03.350Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orguniversity.com url:grpcs://localhost:7051 timeout:3000
+2025-02-18T02:51:03.351Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orguniversity.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+    at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
+    at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at processTimers (node:internal/timers:529:7) {
+  connectFailed: true
+}
+2025-02-18T02:51:06.359Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+2025-02-18T02:51:06.359Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgemployer.com url:grpcs://localhost:8051 timeout:3000
+2025-02-18T02:51:06.361Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgemployer.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+    at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
+    at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at processTimers (node:internal/timers:529:7) {
+  connectFailed: true
+}
+Authenticated user: {
+  uid: '54vPN8e7J3QMywsmBslBgRj2RFs2',
+  role: 'university',
+  orgName: 'orguniversity',
+  tokenIssued: '2025-02-18T02:44:43.000Z',
+  tokenExpires: '2025-02-18T03:44:43.000Z'
+}
+[0mPOST /degree/accept [32m200[0m 8956.516 ms - 63[0m
+Authenticated user: {
+  uid: 'DBr6eT123HfZswp6fTTiWf3uLKt2',
+  role: 'employer',
+  orgName: 'orgemployer',
+  tokenIssued: '2025-02-18T02:50:50.000Z',
+  tokenExpires: '2025-02-18T03:50:50.000Z'
+}
+[0mPOST /degree/requestAccess [32m201[0m 343.857 ms - 81[0m
+Authenticated user: {
+  uid: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
+  role: 'individual',
+  orgName: 'orgindividual',
+  tokenIssued: '2025-02-18T02:50:50.000Z',
+  tokenExpires: '2025-02-18T03:50:50.000Z'
+}
+[0mPOST /degree/grantAccess [32m200[0m 340.414 ms - 77[0m
+Authenticated user: {
+  uid: 'DBr6eT123HfZswp6fTTiWf3uLKt2',
+  role: 'employer',
+  orgName: 'orgemployer',
+  tokenIssued: '2025-02-18T02:50:50.000Z',
+  tokenExpires: '2025-02-18T03:50:50.000Z'
+}
+2025-02-18T02:51:10.620Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+2025-02-18T02:51:10.620Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgemployer.com url:grpcs://localhost:8051 timeout:3000
+2025-02-18T02:51:10.620Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgemployer.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+    at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
+    at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at processTimers (node:internal/timers:529:7) {
+  connectFailed: true
+}
+2025-02-18T02:51:12.668Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+2025-02-18T02:51:12.668Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orguniversity.com url:grpcs://localhost:7051 timeout:3000
+2025-02-18T02:51:12.669Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orguniversity.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+    at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
+    at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at processTimers (node:internal/timers:529:7) {
+  connectFailed: true
+}
+2025-02-18T02:51:13.623Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+2025-02-18T02:51:13.626Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgindividual.com url:grpcs://localhost:9051 timeout:3000
+2025-02-18T02:51:13.627Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgindividual.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+    at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
+    at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at processTimers (node:internal/timers:529:7) {
+  connectFailed: true
+}
+2025-02-18T02:51:15.685Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+2025-02-18T02:51:15.685Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgindividual.com url:grpcs://localhost:9051 timeout:3000
+2025-02-18T02:51:15.686Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgindividual.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+    at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
+    at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at processTimers (node:internal/timers:529:7) {
+  connectFailed: true
+}
+[0mPOST /degree/issue [32m201[0m 8614.755 ms - 74[0m
+[0mGET /degree/view/b99afd66-e238-4572-88fa-043cdf150ee2 [32m200[0m 6495.287 ms - 215[0m
+Authenticated user: {
+  uid: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
+  role: 'individual',
+  orgName: 'orgindividual',
+  tokenIssued: '2025-02-18T02:52:06.000Z',
+  tokenExpires: '2025-02-18T03:52:06.000Z'
+}
+[0mGET /me [32m200[0m 413.205 ms - 219[0m
+Authenticated user: {
+  uid: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
+  role: 'individual',
+  orgName: 'orgindividual',
+  tokenIssued: '2025-02-18T02:52:06.000Z',
+  tokenExpires: '2025-02-18T03:52:06.000Z'
+}
+[0mGET /me [36m304[0m 353.953 ms - -[0m
+[0mGET /degree/requests [33m404[0m 0.214 ms - 154[0m
+[0mGET /degree/requests [33m404[0m 0.439 ms - 154[0m
+[0mGET /degree/requests [33m404[0m 0.220 ms - 154[0m
+[0mGET /degree/requests [33m404[0m 0.208 ms - 154[0m
+Authenticated user: {
+  uid: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
+  role: 'individual',
+  orgName: 'orgindividual',
+  tokenIssued: '2025-02-18T02:52:06.000Z',
+  tokenExpires: '2025-02-18T03:52:06.000Z'
+}
+[0mGET /me [36m304[0m 392.972 ms - -[0m
+[0mGET /degree/requests [33m404[0m 0.815 ms - 154[0m
+[0mGET /degree/requests [33m404[0m 0.396 ms - 154[0m
+Authenticated user: {
+  uid: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
+  role: 'individual',
+  orgName: 'orgindividual',
+  tokenIssued: '2025-02-18T02:52:06.000Z',
+  tokenExpires: '2025-02-18T03:52:06.000Z'
+}
+[0mGET /me [36m304[0m 439.691 ms - -[0m
+[0mGET /degree/requests [33m404[0m 0.220 ms - 154[0m
+[0mGET /degree/requests [33m404[0m 0.497 ms - 154[0m
+[0mGET /docs/ [36m304[0m 1.443 ms - -[0m
+[0mGET /docs/swagger-ui-init.js [36m304[0m 0.491 ms - -[0m
+[0mGET /docs/swagger-ui.css [36m304[0m 0.492 ms - -[0m
+[0mGET /docs/swagger-ui-standalone-preset.js [36m304[0m 0.591 ms - -[0m
+[0mGET /docs/swagger-ui-bundle.js [36m304[0m 0.415 ms - -[0m
+[0mGET /docs/favicon-32x32.png [36m304[0m 0.575 ms - -[0m
+[0mGET / [36m304[0m 0.349 ms - -[0m
+[0mGET /favicon.ico [33m404[0m 0.512 ms - 150[0m
+Shutting down server...

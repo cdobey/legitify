@@ -2,11 +2,15 @@ import { register } from "../controllers/auth.controller";
 import {
   acceptDegree,
   denyDegree,
+  getAccessRequests,
+  getMyDegrees,
   grantAccess,
   issueDegree,
   requestAccess,
+  verifyDegreeDocument,
   viewDegree,
 } from "../controllers/degree.controller";
+import { searchUsers } from "../controllers/user.controller";
 
 import { Router } from "express";
 import admin from "firebase-admin";
@@ -241,6 +245,29 @@ router.get("/auth/test-authenticated", authMiddleware, (req, res) => {
  */
 router.get("/me", authMiddleware, getProfile);
 
+/**
+ * @openapi
+ * /user/search:
+ *   get:
+ *     summary: Search for a user by email
+ *     tags:
+ *       - User
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: email
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User found
+ *       404:
+ *         description: User not found
+ */
+router.get("/user/search", authMiddleware, searchUsers);
+
 // Degree Management Routes
 
 /**
@@ -446,6 +473,88 @@ router.post("/degree/grantAccess", authMiddleware, grantAccess);
  *         description: Internal server error
  */
 router.get("/degree/view/:docId", authMiddleware, viewDegree);
+
+/**
+ * @openapi
+ * /degree/requests:
+ *   get:
+ *     summary: Get all access requests for a user's degrees
+ *     tags:
+ *       - Degree
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of access requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   requestId:
+ *                     type: string
+ *                   docId:
+ *                     type: string
+ *                   employerName:
+ *                     type: string
+ *                   requestDate:
+ *                     type: string
+ *                     format: date-time
+ *                   status:
+ *                     type: string
+ *       403:
+ *         description: Forbidden
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/degree/requests", authMiddleware, getAccessRequests);
+
+/**
+ * @openapi
+ * /degree/list:
+ *   get:
+ *     summary: Get all degrees for the current user
+ *     tags:
+ *       - Degree
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of degrees
+ *       403:
+ *         description: Forbidden
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/degree/list", authMiddleware, getMyDegrees);
+
+/**
+ * @openapi
+ * /degree/verify:
+ *   post:
+ *     summary: Verify a degree document
+ *     tags:
+ *       - Degree
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - individualId
+ *               - base64File
+ *     responses:
+ *       200:
+ *         description: Verification result
+ *       403:
+ *         description: Forbidden
+ */
+router.post("/degree/verify", authMiddleware, verifyDegreeDocument);
 
 // Swagger Documentation Route
 router.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
