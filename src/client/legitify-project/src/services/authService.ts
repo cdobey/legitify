@@ -3,7 +3,7 @@ import {
   getAuth,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-import { API_BASE_URL } from "../config";
+import api from "../utils/api";
 
 export interface RegisterData {
   email: string;
@@ -14,20 +14,8 @@ export interface RegisterData {
 }
 
 export const register = async (data: RegisterData) => {
-  const response = await fetch(`${API_BASE_URL}/auth/register`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Registration failed");
-  }
-
-  return response.json();
+  const response = await api.post("/auth/register", data);
+  return response.data;
 };
 
 export const login = async (email: string, password: string) => {
@@ -41,20 +29,13 @@ export const login = async (email: string, password: string) => {
   );
   const token = await userCredential.user.getIdToken();
 
-  // Then verify the token with your backend
-  const response = await fetch(`${API_BASE_URL}/auth/test-authenticated`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  // Store the token
+  localStorage.setItem("token", token);
 
-  if (!response.ok) {
-    throw new Error("Authentication failed");
-  }
-
-  const data = await response.json();
+  // Verify with backend
+  const response = await api.get("/me");
   return {
-    user: data.user,
+    user: response.data,
     token,
   };
 };
@@ -62,4 +43,5 @@ export const login = async (email: string, password: string) => {
 export const signOut = async () => {
   const auth = getAuth();
   await firebaseSignOut(auth);
+  localStorage.removeItem("token");
 };

@@ -358,3 +358,189 @@ export const viewDegree: RequestHandler = async (
     res.status(500).json({ error: error.message });
   }
 };
+
+/**
+ * Get all access requests for a user's degrees
+ */
+export const getAccessRequests: RequestHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    if (req.user?.role !== "individual") {
+      res
+        .status(403)
+        .json({ error: "Only individuals can view access requests" });
+      return;
+    }
+
+    console.log("Fetching requests for user:", req.user.uid);
+
+    // First, get all documents for debugging
+    const allDocs = await prisma.document.findMany({
+      where: {
+        issuedTo: req.user.uid,
+      },
+    });
+    console.log("All user documents:", allDocs);
+
+    // Get all requests, with less restrictive filtering
+    const userDocuments = await prisma.document.findMany({
+      where: {
+        issuedTo: req.user.uid,
+        // Remove status filter temporarily to see all documents
+      },
+      select: {
+        id: true,
+        status: true, // Add status to debug output
+        requests: {
+          include: {
+            requester: {
+              select: {
+                username: true,
+                orgName: true,
+              },
+            },
+          },
+          // Remove status filter temporarily
+        },
+      },
+    });
+
+    console.log(
+      "User documents with requests:",
+      JSON.stringify(userDocuments, null, 2)
+    );
+
+    // Flatten and format the requests, but include more info for debugging
+    const requests = userDocuments.flatMap((doc) =>
+      doc.requests.map((request) => ({
+        requestId: request.id,
+        docId: doc.id,
+        docStatus: doc.status, // Add document status
+        employerName: request.requester.orgName,
+        requestDate: request.createdAt,
+        status: request.status,
+      }))
+    );
+
+    console.log("Formatted requests:", requests);
+
+    res.json(requests);
+  } catch (error: any) {
+    console.error("getAccessRequests error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Get all degrees issued to the logged-in user
+ */
+export const getMyDegrees: RequestHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const documents = await prisma.document.findMany({
+      where: {
+        issuedTo: req.user!.uid,
+      },
+      include: {
+        issuerUser: {
+          select: {
+            orgName: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    const formattedDocs = documents.map((doc) => ({
+      docId: doc.id,
+      issuer: doc.issuerUser.orgName,
+      status: doc.status,
+      issueDate: doc.createdAt,
+    }));
+
+    res.json(formattedDocs);
+  } catch (error: any) {
+    console.error("getMyDegrees error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Verify a degree document. Only accessible by users with role 'employer'.
+ */
+export const verifyDegreeDocument: RequestHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    if (req.user?.role !== "employer") {
+      res.status(403).json({ error: "Only employers can verify documents" });
+      return;
+    }
+
+    const { individualId, base64File } = req.body;
+    if (!individualId || !base64File) {
+      res.status(400).json({ error: "Missing individualId or base64File" });
+      return;
+    }
+
+    // Calculate hash of uploaded document
+    const fileData = Buffer.from(base64File, "base64");
+    const uploadedHash = sha256(fileData);
+
+    // Find matching document in database
+    const doc = await prisma.document.findFirst({
+      where: {
+        issuedTo: individualId,
+        docHash: uploadedHash,
+        status: "accepted",
+      },
+    });
+
+    if (!doc) {
+      res.json({
+        verified: false,
+        message: "No matching verified document found",
+      });
+      return;
+    }
+
+    // Verify hash on blockchain
+    const gateway = await getGateway(
+      req.user.uid,
+      req.user.orgName?.toLowerCase() || ""
+    );
+    const network = await gateway.getNetwork(
+      process.env.FABRIC_CHANNEL || "mychannel"
+    );
+    const contract = network.getContract(
+      process.env.FABRIC_CHAINCODE || "degreeCC"
+    );
+
+    const result = await contract.evaluateTransaction(
+      "VerifyHash",
+      doc.id,
+      uploadedHash
+    );
+    gateway.disconnect();
+
+    const isVerified = result.toString() === "true";
+
+    res.json({
+      verified: isVerified,
+      message: isVerified
+        ? "Document verified successfully"
+        : "Document verification failed",
+      docId: doc.id,
+    });
+  } catch (error: any) {
+    console.error("verifyDegreeDocument error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
