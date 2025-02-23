@@ -26,35 +26,20 @@ export const issueDegree: RequestHandler = async (
     const { individualId, base64File } = req.body;
     console.log("Received payload:", {
       individualId: individualId ? "present" : "missing",
-      base64File: base64File
-        ? "present (length: " + base64File.length + ")"
-        : "missing",
+      base64File: base64File ? "present" : "missing",
     });
 
     if (!individualId || !base64File) {
-      res.status(400).json({
-        error: "Missing individualId or base64File",
-      });
+      res.status(400).json({ error: "Missing individualId or base64File" });
       return;
     }
 
-    // Verify that the individual exists
-    const individual = await prisma.user.findUnique({
-      where: { id: individualId },
-    });
-    if (!individual || individual.role !== "individual") {
-      res.status(400).json({ error: "Invalid individualId" });
-      return;
-    }
-
-    // Convert base64 to buffer and calculate hash
+    // Calculate hash and prepare data
     const fileData = Buffer.from(base64File, "base64");
     const docHash = sha256(fileData);
-    console.log("Calculated hash:", docHash);
-
     const docId = uuidv4();
 
-    // Connect to Fabric and store hash
+    // Store hash in Fabric
     const gateway = await getGateway(
       req.user.uid,
       req.user.orgName?.toLowerCase() || ""
@@ -70,17 +55,17 @@ export const issueDegree: RequestHandler = async (
       "IssueDegree",
       docId,
       docHash,
-      individualId
+      individualId,
+      req.user.uid
     );
     gateway.disconnect();
 
-    // Store document and hash in DB
+    // Store document in DB (without hash)
     const newDocument = await prisma.document.create({
       data: {
         id: docId,
         issuedTo: individualId,
         issuer: req.user.uid,
-        docHash,
         fileData,
         status: "issued",
       },
@@ -89,7 +74,7 @@ export const issueDegree: RequestHandler = async (
     res.status(201).json({
       message: "Degree issued",
       docId: newDocument.id,
-      docHash,
+      docHash, // Include hash in response for verification
     });
   } catch (error: any) {
     console.error("issueDegree error:", error);
@@ -342,7 +327,7 @@ export const viewDegree: RequestHandler = async (
       return;
     }
 
-    // Verify hash with ledger
+    // Get hash from Fabric
     const gateway = await getGateway(
       req.user.uid,
       req.user.orgName?.toLowerCase() || ""
@@ -354,19 +339,21 @@ export const viewDegree: RequestHandler = async (
       process.env.FABRIC_CHAINCODE || "degreeCC"
     );
 
-    const result = await contract.evaluateTransaction(
-      "VerifyHash",
-      docId,
-      doc.docHash
-    );
-    const isVerified = result.toString() === "true";
-    gateway.disconnect();
+    const record = await contract.evaluateTransaction("ReadDegree", docId);
+    const degreeRecord = JSON.parse(record.toString());
+
+    // Verify hash matches current file
+    const currentHash = sha256(Buffer.from(doc.fileData!));
+    const isVerified = currentHash === degreeRecord.docHash;
 
     res.json({
       docId: doc.id,
       verified: isVerified,
-      docHash: doc.docHash,
-      fileData: doc.fileData ? doc.fileData.toString() : null,
+      issuer: degreeRecord.issuer,
+      issuedAt: degreeRecord.issuedAt,
+      fileData: doc.fileData
+        ? Buffer.from(doc.fileData).toString("base64")
+        : null,
       status: doc.status,
     });
   } catch (error: any) {
@@ -510,11 +497,10 @@ export const verifyDegreeDocument: RequestHandler = async (
     const fileData = Buffer.from(base64File, "base64");
     const uploadedHash = sha256(fileData);
 
-    // Find matching document in database
+    // Find document in database by individualId
     const doc = await prisma.document.findFirst({
       where: {
         issuedTo: individualId,
-        docHash: uploadedHash,
         status: "accepted",
       },
     });
@@ -539,14 +525,12 @@ export const verifyDegreeDocument: RequestHandler = async (
       process.env.FABRIC_CHAINCODE || "degreeCC"
     );
 
-    const result = await contract.evaluateTransaction(
-      "VerifyHash",
-      doc.id,
-      uploadedHash
-    );
-    gateway.disconnect();
+    // Read the record from blockchain to get stored hash
+    const record = await contract.evaluateTransaction("ReadDegree", doc.id);
+    const degreeRecord = JSON.parse(record.toString());
 
-    const isVerified = result.toString() === "true";
+    const isVerified = degreeRecord.docHash === uploadedHash;
+    gateway.disconnect();
 
     res.json({
       verified: isVerified,
@@ -557,6 +541,41 @@ export const verifyDegreeDocument: RequestHandler = async (
     });
   } catch (error: any) {
     console.error("verifyDegreeDocument error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Get all records from the blockchain ledger
+ */
+export const getAllLedgerRecords: RequestHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    if (req.user?.role !== "university") {
+      res.status(403).json({ error: "Only university can view all records" });
+      return;
+    }
+
+    const gateway = await getGateway(
+      req.user.uid,
+      req.user.orgName?.toLowerCase() || ""
+    );
+    const network = await gateway.getNetwork(
+      process.env.FABRIC_CHANNEL || "mychannel"
+    );
+    const contract = network.getContract(
+      process.env.FABRIC_CHAINCODE || "degreeCC"
+    );
+
+    const result = await contract.evaluateTransaction("GetAllRecords");
+    const records = JSON.parse(result.toString());
+    gateway.disconnect();
+
+    res.json(records);
+  } catch (error: any) {
+    console.error("getAllLedgerRecords error:", error);
     res.status(500).json({ error: error.message });
   }
 };

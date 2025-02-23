@@ -26,7 +26,6 @@ model Document {
   id           String    @id @default(uuid())
   issuedTo     String
   issuer       String
-  docHash      String
   fileData     Bytes?    // Store as binary
   status       DocumentStatus @default(issued)
   createdAt    DateTime  @default(now())

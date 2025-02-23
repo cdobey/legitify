@@ -3,6 +3,7 @@ import {
   acceptDegree,
   denyDegree,
   getAccessRequests,
+  getAllLedgerRecords, // Add this import
   getMyDegrees,
   grantAccess,
   issueDegree,
@@ -555,6 +556,25 @@ router.get("/degree/list", authMiddleware, getMyDegrees);
  *         description: Forbidden
  */
 router.post("/degree/verify", authMiddleware, verifyDegreeDocument);
+
+/**
+ * @openapi
+ * /degree/ledger/all:
+ *   get:
+ *     summary: Get all records from the blockchain ledger
+ *     tags:
+ *       - Degree
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of all degree records from the ledger
+ *       403:
+ *         description: Forbidden - only university role can access
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/degree/ledger/all", authMiddleware, getAllLedgerRecords);
 
 // Swagger Documentation Route
 router.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
