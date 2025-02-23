@@ -24,8 +24,17 @@ export const issueDegree: RequestHandler = async (
     }
 
     const { individualId, base64File } = req.body;
+    console.log("Received payload:", {
+      individualId: individualId ? "present" : "missing",
+      base64File: base64File
+        ? "present (length: " + base64File.length + ")"
+        : "missing",
+    });
+
     if (!individualId || !base64File) {
-      res.status(400).json({ error: "Missing individualId or base64File" });
+      res.status(400).json({
+        error: "Missing individualId or base64File",
+      });
       return;
     }
 
@@ -38,11 +47,14 @@ export const issueDegree: RequestHandler = async (
       return;
     }
 
+    // Convert base64 to buffer and calculate hash
     const fileData = Buffer.from(base64File, "base64");
     const docHash = sha256(fileData);
+    console.log("Calculated hash:", docHash);
+
     const docId = uuidv4();
 
-    // Connect to Fabric using user's organization
+    // Connect to Fabric and store hash
     const gateway = await getGateway(
       req.user.uid,
       req.user.orgName?.toLowerCase() || ""
@@ -62,7 +74,7 @@ export const issueDegree: RequestHandler = async (
     );
     gateway.disconnect();
 
-    // Store doc in DB
+    // Store document and hash in DB
     const newDocument = await prisma.document.create({
       data: {
         id: docId,
@@ -74,7 +86,11 @@ export const issueDegree: RequestHandler = async (
       },
     });
 
-    res.status(201).json({ message: "Degree issued", docId: newDocument.id });
+    res.status(201).json({
+      message: "Degree issued",
+      docId: newDocument.id,
+      docHash,
+    });
   } catch (error: any) {
     console.error("issueDegree error:", error);
     res.status(500).json({ error: error.message });
