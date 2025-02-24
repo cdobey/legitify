@@ -4,50 +4,29 @@ import {
   Card,
   Container,
   Group,
-  Loader,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
-import { useEffect, useState } from "react";
-import { getAccessRequests, grantAccess } from "../../services/degreeService";
+import { AccessRequest } from "../../api/degrees/degree.models";
+import {
+  useAccessRequests,
+  useGrantAccess,
+} from "../../api/degrees/degree.queries";
 
 export default function AccessRequests() {
-  const [requests, setRequests] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const fetchRequests = async () => {
-    try {
-      setLoading(true);
-      const data = await getAccessRequests();
-      setRequests(data);
-      setError("");
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch access requests");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchRequests();
-  }, []);
+  const { data: requests, isLoading, error, refetch } = useAccessRequests();
+  const grantMutation = useGrantAccess();
 
   const handleGrantAccess = async (requestId: string, granted: boolean) => {
-    try {
-      await grantAccess(requestId, granted);
-      // Refresh the requests list after granting/denying access
-      await fetchRequests();
-    } catch (err: any) {
-      setError(err.message || "Failed to update access request");
-    }
+    await grantMutation.mutateAsync({ requestId, granted });
+    refetch();
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Container size="md" style={{ textAlign: "center", padding: "2rem" }}>
-        <Loader />
+        <Text>Loading...</Text>
       </Container>
     );
   }
@@ -60,17 +39,17 @@ export default function AccessRequests() {
 
       {error && (
         <Alert color="red" mb="lg">
-          {error}
+          {(error as Error).message}
         </Alert>
       )}
 
-      {requests.length === 0 ? (
+      {!requests?.length ? (
         <Text c="dimmed" ta="center">
           No pending access requests
         </Text>
       ) : (
         <Stack>
-          {requests.map((request) => (
+          {requests.map((request: AccessRequest) => (
             <Card key={request.requestId} shadow="sm" p="lg">
               <Text fw={500} mb="xs">
                 Request from {request.employerName}
@@ -85,12 +64,14 @@ export default function AccessRequests() {
               <Group mt="md">
                 <Button
                   onClick={() => handleGrantAccess(request.requestId, true)}
+                  loading={grantMutation.isPending}
                   color="green"
                 >
                   Grant Access
                 </Button>
                 <Button
                   onClick={() => handleGrantAccess(request.requestId, false)}
+                  loading={grantMutation.isPending}
                   color="red"
                   variant="light"
                 >

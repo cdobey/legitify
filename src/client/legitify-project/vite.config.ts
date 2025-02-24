@@ -8,5 +8,12 @@ export default defineConfig({
     host: true,
     cors: false,
     origin: "http://localhost:3001",
+    proxy: {
+      "/api": {
+        target: "http://localhost:3001",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ""),
+      },
+    },
   },
 });

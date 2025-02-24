@@ -4,72 +4,33 @@ import {
   Card,
   Container,
   Group,
-  Loader,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
-import { useEffect, useState } from "react";
+import { DegreeDocument } from "../../api/degrees/degree.models";
 import {
-  acceptDegree,
-  denyDegree,
-  getMyDegrees,
-} from "../../services/degreeService";
-
-interface Degree {
-  docId: string;
-  issuer: string;
-  status: string;
-  issueDate: string;
-}
+  useAcceptDegree,
+  useDenyDegree,
+  useMyDegrees,
+} from "../../api/degrees/degree.queries";
 
 export default function ManageDegrees() {
-  const [degrees, setDegrees] = useState<Degree[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const fetchDegrees = async () => {
-    try {
-      setLoading(true);
-      const data = await getMyDegrees();
-      setDegrees(data);
-      setError("");
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch degrees");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDegrees();
-  }, []);
+  const { data: degrees, isLoading, error, refetch } = useMyDegrees();
+  const acceptMutation = useAcceptDegree();
+  const denyMutation = useDenyDegree();
 
   const handleAccept = async (docId: string) => {
-    try {
-      await acceptDegree(docId);
-      await fetchDegrees(); // Refresh the list
-    } catch (err: any) {
-      setError(err.message || "Failed to accept degree");
-    }
+    await acceptMutation.mutateAsync(docId);
+    refetch();
   };
 
   const handleDeny = async (docId: string) => {
-    try {
-      await denyDegree(docId);
-      await fetchDegrees(); // Refresh the list
-    } catch (err: any) {
-      setError(err.message || "Failed to deny degree");
-    }
+    await denyMutation.mutateAsync(docId);
+    refetch();
   };
 
-  if (loading) {
-    return (
-      <Container size="md" style={{ textAlign: "center", padding: "2rem" }}>
-        <Loader />
-      </Container>
-    );
-  }
+  if (isLoading) return <Text>Loading...</Text>;
 
   return (
     <Container size="md">
@@ -79,17 +40,17 @@ export default function ManageDegrees() {
 
       {error && (
         <Alert color="red" mb="lg">
-          {error}
+          {(error as Error).message}
         </Alert>
       )}
 
-      {degrees.length === 0 ? (
+      {!degrees?.length ? (
         <Text c="dimmed" ta="center">
           No degrees available
         </Text>
       ) : (
         <Stack>
-          {degrees.map((degree) => (
+          {degrees.map((degree: DegreeDocument) => (
             <Card key={degree.docId} shadow="sm" p="lg">
               <Text fw={500} mb="xs">
                 Degree ID: {degree.docId}

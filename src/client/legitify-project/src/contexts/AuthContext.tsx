@@ -1,58 +1,45 @@
-import { getAuth, onAuthStateChanged } from "firebase/auth";
-import React, { createContext, useContext, useEffect, useState } from "react";
-import api from "../utils/api";
-
-interface User {
-  uid: string;
-  role?: string;
-  orgName?: string;
-}
+import { createContext, useContext, useEffect, useState } from "react";
+import { UserProfile } from "../api/auth/auth.models";
+import { useProfile } from "../api/auth/auth.queries";
 
 interface AuthContextType {
-  user: User | null;
-  setUser: (user: User | null) => void;
+  user: UserProfile | null;
+  setUser: (user: UserProfile | null) => void;
   loading: boolean;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  setUser: () => {},
-  loading: true,
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<UserProfile | null>(() => {
+    const savedUser = sessionStorage.getItem("user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+
+  const { data: profile, isLoading } = useProfile(
+    !!sessionStorage.getItem("token")
+  );
 
   useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const token = await firebaseUser.getIdToken();
-        localStorage.setItem("token", token);
+    if (profile) {
+      setUser(profile);
+      sessionStorage.setItem("user", JSON.stringify(profile));
+    }
+  }, [profile]);
 
-        try {
-          const response = await api.get("/me");
-          setUser(response.data);
-        } catch (error) {
-          console.error("Failed to fetch user data:", error);
-          setUser(null);
-        }
-      } else {
-        localStorage.removeItem("token");
-        setUser(null);
-      }
-      setLoading(false);
-    });
+  const value = {
+    user,
+    setUser,
+    loading: isLoading && !!sessionStorage.getItem("token"),
+  };
 
-    return unsubscribe;
-  }, []);
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
 
-  return (
-    <AuthContext.Provider value={{ user, setUser, loading }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-export const useAuth = () => useContext(AuthContext);
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+}

@@ -10,6 +10,8 @@ function sha256(buffer: Buffer): string {
   return crypto.createHash("sha256").update(buffer).digest("hex");
 }
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+
 /**
  * Issues a degree to an individual. Only accessible by users with role 'university'.
  */
@@ -32,6 +34,13 @@ export const issueDegree: RequestHandler = async (
     // For file-based request, if base64File is not provided, you might throw an error.
     if (!individualId || !base64File) {
       res.status(400).json({ error: "Missing individualId or base64File" });
+      return;
+    }
+
+    // Add file size validation
+    const decodedFile = Buffer.from(base64File, "base64");
+    if (decodedFile.length > MAX_FILE_SIZE) {
+      res.status(400).json({ error: "File size must be less than 5MB" });
       return;
     }
 

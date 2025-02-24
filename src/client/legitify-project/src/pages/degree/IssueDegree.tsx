@@ -7,32 +7,40 @@ import {
   Title,
 } from "@mantine/core";
 import { useState } from "react";
-import { issueDegree } from "../../services/degreeService";
-import { hashFile } from "../../utils/fileUtils";
+import { useIssueDegree } from "../../api/degrees/degree.queries";
+import { fileToBase64 } from "../../utils/fileUtils";
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
 export default function IssueDegree() {
   const [individualId, setIndividualId] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  const issueMutation = useIssueDegree();
+
+  const handleFileChange = (file: File | null) => {
+    if (file && file.size > MAX_FILE_SIZE) {
+      issueMutation.error = new Error("File size must be less than 5MB");
+      setFile(null);
+      return;
+    }
+    setFile(file);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || !individualId) return;
 
-    setLoading(true);
-    setError("");
-    setSuccess("");
-
     try {
-      const fileHash = await hashFile(file);
-      const result = await issueDegree(individualId, fileHash);
+      const base64File = await fileToBase64(file);
+      const result = await issueMutation.mutateAsync({
+        individualId,
+        base64File,
+      });
       setSuccess(`Degree issued successfully! Document ID: ${result.docId}`);
-    } catch (err: any) {
-      setError(err.message || "Failed to issue degree");
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      // Error handling is handled by the mutation
     }
   };
 
@@ -54,12 +62,12 @@ export default function IssueDegree() {
           required
           accept="application/pdf"
           value={file}
-          onChange={setFile}
+          onChange={handleFileChange}
           mb="xl"
         />
-        {error && (
+        {issueMutation.error && (
           <Alert color="red" mb="md">
-            {error}
+            {(issueMutation.error as Error).message}
           </Alert>
         )}
         {success && (
@@ -67,7 +75,7 @@ export default function IssueDegree() {
             {success}
           </Alert>
         )}
-        <Button type="submit" loading={loading} fullWidth>
+        <Button type="submit" loading={issueMutation.isPending} fullWidth>
           Issue Degree
         </Button>
       </form>

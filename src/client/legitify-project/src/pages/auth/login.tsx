@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Alert,
   Button,
@@ -12,8 +10,8 @@ import {
 } from "@mantine/core";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLogin } from "../../api/auth/auth.queries";
 import { useAuth } from "../../contexts/AuthContext";
-import { login } from "../../services/authService";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -21,23 +19,30 @@ const Login = () => {
     password: "",
   });
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { setUser } = useAuth();
+  const login = useLogin();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
     try {
-      const { user, token } = await login(formData.email, formData.password);
-      setUser(user);
-      navigate("/");
+      const response = await login.mutateAsync({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (response.user && response.token) {
+        setUser(response.user);
+        sessionStorage.setItem("user", JSON.stringify(response.user));
+        navigate("/");
+      } else {
+        setError("Invalid response from server");
+      }
     } catch (err: any) {
+      console.error("Login error:", err);
       setError(err.message || "Failed to login");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -83,7 +88,7 @@ const Login = () => {
             </Alert>
           )}
 
-          <Button type="submit" fullWidth loading={loading}>
+          <Button type="submit" fullWidth loading={login.isPending}>
             Login
           </Button>
         </form>

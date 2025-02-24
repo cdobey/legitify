@@ -11,61 +11,45 @@ import {
   Title,
 } from "@mantine/core";
 import { useState } from "react";
+import { User, VerificationResult } from "../../api/degrees/degree.models";
 import {
-  getUserDegrees,
-  requestAccess,
-  searchUsers,
-  verifyDocument,
-} from "../../services/degreeService";
-import { hashFile } from "../../utils/fileUtils";
-
-interface User {
-  uid: string;
-  email: string;
-  username: string;
-}
-
-interface Degree {
-  docId: string;
-  status: string;
-  issueDate: string;
-}
+  useRequestAccess,
+  useVerifyDegree,
+} from "../../api/degrees/degree.queries";
+import { useSearchUser, useUserDegrees } from "../../api/users/user.queries";
+import { fileToBase64 } from "../../utils/fileUtils";
 
 export default function VerifyDegree() {
   const [searchEmail, setSearchEmail] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [userDegrees, setUserDegrees] = useState<Degree[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [verificationResult, setVerificationResult] = useState<{
-    verified: boolean;
-    message: string;
-  } | null>(null);
   const [directUserId, setDirectUserId] = useState("");
   const [directFile, setDirectFile] = useState<File | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [verificationResult, setVerificationResult] =
+    useState<VerificationResult | null>(null);
+
+  const verifyMutation = useVerifyDegree();
+  const requestAccessMutation = useRequestAccess();
+  const searchUserMutation = useSearchUser();
+  const { data: userDegrees, refetch: refetchDegrees } = useUserDegrees(
+    selectedUser?.uid ?? "",
+    {
+      enabled: !!selectedUser,
+    }
+  );
 
   const handleVerify = async () => {
     if (!selectedFile || !selectedUser) return;
 
     try {
-      setLoading(true);
-      setError("");
-      setSuccess("");
-
-      const fileHash = await hashFile(selectedFile);
-      const result = await verifyDocument(selectedUser.uid, fileHash);
-      setVerificationResult({
-        verified: result.verified,
-        message: result.verified
-          ? "Document verified successfully!"
-          : "Document verification failed. Hash doesn't match.",
+      const base64File = await fileToBase64(selectedFile);
+      const result = await verifyMutation.mutateAsync({
+        individualId: selectedUser.uid,
+        base64File,
       });
-    } catch (err: any) {
-      setError(err.message || "Verification failed");
-    } finally {
-      setLoading(false);
+      setVerificationResult(result);
+    } catch (error) {
+      // Error handled by mutation
     }
   };
 
@@ -73,51 +57,30 @@ export default function VerifyDegree() {
     if (!directFile || !directUserId) return;
 
     try {
-      setLoading(true);
-      setError("");
-      setSuccess("");
-
-      const fileHash = await hashFile(directFile);
-      const result = await verifyDocument(directUserId, fileHash);
-      setVerificationResult({
-        verified: result.verified,
-        message: result.message,
+      const base64File = await fileToBase64(directFile);
+      const result = await verifyMutation.mutateAsync({
+        individualId: directUserId,
+        base64File,
       });
-    } catch (err: any) {
-      setError(err.message || "Direct verification failed");
-    } finally {
-      setLoading(false);
+      setVerificationResult(result);
+    } catch (error) {
+      // Error handled by mutation
     }
   };
 
   const handleSearch = async () => {
     try {
-      setLoading(true);
-      setError("");
-      const user = await searchUsers(searchEmail);
+      const user = await searchUserMutation.mutateAsync(searchEmail);
       setSelectedUser(user);
-      const degrees = await getUserDegrees(user.uid);
-      setUserDegrees(degrees);
-    } catch (err: any) {
-      setError(err.message || "Failed to find user");
+      refetchDegrees();
+    } catch (error) {
+      // Error handled by mutation
       setSelectedUser(null);
-      setUserDegrees([]);
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleRequestAccess = async (docId: string) => {
-    try {
-      setLoading(true);
-      setError("");
-      await requestAccess(docId);
-      setSuccess(`Access requested for document ${docId}`);
-    } catch (err: any) {
-      setError(err.message || "Failed to request access");
-    } finally {
-      setLoading(false);
-    }
+    await requestAccessMutation.mutateAsync(docId);
   };
 
   return (
@@ -126,6 +89,7 @@ export default function VerifyDegree() {
         Verify Degrees
       </Title>
 
+      {/* Direct Verification Card */}
       <Card shadow="sm" p="lg" mb="xl">
         <Title order={3} size="h4" mb="md">
           Direct Verification
@@ -144,12 +108,16 @@ export default function VerifyDegree() {
             value={directFile}
             onChange={setDirectFile}
           />
-          <Button onClick={handleDirectVerify} loading={loading}>
+          <Button
+            onClick={handleDirectVerify}
+            loading={verifyMutation.isPending} // Changed from isLoading to isPending
+          >
             Verify Document
           </Button>
         </Stack>
       </Card>
 
+      {/* Search Card */}
       <Card shadow="sm" p="lg" mb="xl">
         <Title order={3} size="h4" mb="md">
           Search for Individual
@@ -162,52 +130,36 @@ export default function VerifyDegree() {
             onChange={(e) => setSearchEmail(e.currentTarget.value)}
             style={{ flex: 1 }}
           />
-          <Button onClick={handleSearch} loading={loading}>
+          <Button onClick={handleSearch} loading={searchUserMutation.isPending}>
             Search
           </Button>
         </Group>
       </Card>
 
-      {selectedUser && (
-        <Card shadow="sm" p="lg" mb="xl">
-          <Title order={3} size="h4" mb="md">
-            Verify Document
-          </Title>
-          <Stack>
-            <Text>Selected User: {selectedUser.email}</Text>
-            <FileInput
-              label="Upload Document"
-              placeholder="Choose file"
-              accept="application/pdf"
-              value={selectedFile}
-              onChange={setSelectedFile}
-            />
-            <Button onClick={handleVerify} loading={loading}>
-              Verify Document
-            </Button>
-          </Stack>
-        </Card>
-      )}
-
+      {/* Verification Results */}
       {verificationResult && (
         <Alert color={verificationResult.verified ? "green" : "red"} mb="xl">
           {verificationResult.message}
         </Alert>
       )}
 
-      {error && (
+      {/* Error Messages */}
+      {(verifyMutation.error ||
+        searchUserMutation.error ||
+        requestAccessMutation.error) && (
         <Alert color="red" mb="xl">
-          {error}
+          {
+            (
+              (verifyMutation.error ||
+                searchUserMutation.error ||
+                requestAccessMutation.error) as Error
+            ).message
+          }
         </Alert>
       )}
 
-      {success && (
-        <Alert color="green" mb="xl">
-          {success}
-        </Alert>
-      )}
-
-      {selectedUser && userDegrees.length > 0 && (
+      {/* Available Degrees */}
+      {selectedUser && userDegrees?.length > 0 && (
         <Card shadow="sm" p="lg">
           <Title order={3} size="h4" mb="md">
             Available Degrees
@@ -227,7 +179,7 @@ export default function VerifyDegree() {
                   </div>
                   <Button
                     onClick={() => handleRequestAccess(degree.docId)}
-                    disabled={loading}
+                    disabled={requestAccessMutation.isPending} // Changed from isLoading to isPending
                   >
                     Request Access
                   </Button>

@@ -1,22 +1,20 @@
-export async function hashFile(file: File): Promise<string> {
-  const buffer = await file.arrayBuffer();
-  const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-export async function fileToBase64(file: File): Promise<string> {
+export const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
+    reader.readAsDataURL(file);
     reader.onload = () => {
-      const base64 = reader.result?.toString().split(",")[1];
-      if (base64) {
-        resolve(base64);
-      } else {
-        reject(new Error("Failed to convert file to base64"));
-      }
+      const base64String = (reader.result as string)
+        .replace("data:", "")
+        .replace(/^.+,/, "");
+      resolve(base64String);
     };
     reader.onerror = reject;
-    reader.readAsDataURL(file);
   });
-}
+};
+
+export const hashFile = async (file: File): Promise<string> => {
+  const arrayBuffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+};
