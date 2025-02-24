@@ -18,31 +18,31 @@ export const issueDegree: RequestHandler = async (
   res: Response
 ): Promise<void> => {
   try {
-    if (req.user?.role !== "university") {
+    // Cast req.user to our expected type
+    const user = req.user as { uid: string; role: string; orgName?: string };
+    if (user.role !== "university") {
       res.status(403).json({ error: "Only university can issue degrees" });
       return;
     }
 
-    const { individualId, base64File } = req.body;
-    console.log("Received payload:", {
-      individualId: individualId ? "present" : "missing",
-      base64File: base64File ? "present" : "missing",
-    });
-
+    const { individualId, base64File } = req.body as {
+      individualId: string;
+      base64File?: string;
+    };
+    // For file-based request, if base64File is not provided, you might throw an error.
     if (!individualId || !base64File) {
       res.status(400).json({ error: "Missing individualId or base64File" });
       return;
     }
 
-    // Calculate hash and prepare data
     const fileData = Buffer.from(base64File, "base64");
     const docHash = sha256(fileData);
     const docId = uuidv4();
 
     // Store hash in Fabric first
     const gateway = await getGateway(
-      req.user.uid,
-      req.user.orgName?.toLowerCase() || ""
+      user.uid,
+      user.orgName?.toLowerCase() || ""
     );
     const network = await gateway.getNetwork(
       process.env.FABRIC_CHANNEL || "mychannel"
@@ -56,7 +56,7 @@ export const issueDegree: RequestHandler = async (
       docId,
       docHash,
       individualId,
-      req.user.uid
+      user.uid
     );
     gateway.disconnect();
 
@@ -65,7 +65,7 @@ export const issueDegree: RequestHandler = async (
       data: {
         id: docId,
         issuedTo: individualId,
-        issuer: req.user.uid,
+        issuer: user.uid,
         fileData,
         status: "issued",
       },
@@ -76,9 +76,12 @@ export const issueDegree: RequestHandler = async (
       docId: newDocument.id,
       docHash, // Include hash in response for verification
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("issueDegree error:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
+    });
   }
 };
 
@@ -482,18 +485,21 @@ export const verifyDegreeDocument: RequestHandler = async (
   res: Response
 ): Promise<void> => {
   try {
-    if (req.user?.role !== "employer") {
+    const user = req.user as { uid: string; role: string; orgName?: string };
+    if (user.role !== "employer") {
       res.status(403).json({ error: "Only employers can verify documents" });
       return;
     }
 
-    const { individualId, base64File } = req.body;
+    const { individualId, base64File } = req.body as {
+      individualId: string;
+      base64File: string;
+    };
     if (!individualId || !base64File) {
       res.status(400).json({ error: "Missing individualId or base64File" });
       return;
     }
 
-    // Calculate hash of uploaded document
     const fileData = Buffer.from(base64File, "base64");
     const uploadedHash = sha256(fileData);
 
@@ -515,8 +521,8 @@ export const verifyDegreeDocument: RequestHandler = async (
 
     // Verify hash from blockchain
     const gateway = await getGateway(
-      req.user.uid,
-      req.user.orgName?.toLowerCase() || ""
+      user.uid,
+      user.orgName?.toLowerCase() || ""
     );
     const network = await gateway.getNetwork(
       process.env.FABRIC_CHANNEL || "mychannel"
@@ -525,13 +531,14 @@ export const verifyDegreeDocument: RequestHandler = async (
       process.env.FABRIC_CHAINCODE || "degreeCC"
     );
 
-    // Use the VerifyHash chaincode function to compare hashes
+    // Cast result to Buffer then to string.
     const result = await contract.evaluateTransaction(
       "VerifyHash",
       doc.id,
       uploadedHash
     );
-    const isVerified = result.toString() === "true";
+    const resultString = (result as Buffer).toString();
+    const isVerified = resultString === "true";
     gateway.disconnect();
 
     res.json({

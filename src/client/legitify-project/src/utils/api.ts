@@ -3,21 +3,29 @@ import { API_BASE_URL } from "../config";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { "Content-Type": "application/json" },
 });
 
-// Add request interceptor to inject auth token
-api.interceptors.request.use(async (config) => {
+// Request interceptor
+api.interceptors.request.use((config) => {
+  if (!config.headers) config.headers = {};
   const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+
+  if (config.data instanceof FormData) {
+    delete config.headers["Content-Type"];
   }
+
+  console.log("Request details:", {
+    url: config.url,
+    method: config.method,
+    isFormData: config.data instanceof FormData,
+    headers: config.headers,
+  });
   return config;
 });
 
-// Add error interceptor to handle unauthorized responses
+// Response interceptor
 api.interceptors.response.use(
   (response) => response,
   (error) => {
