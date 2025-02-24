@@ -512,23 +512,23 @@ export const verifyDegreeDocument: RequestHandler = async (
     const fileData = Buffer.from(base64File, "base64");
     const uploadedHash = sha256(fileData);
 
-    // Find document in database by individualId
-    const doc = await prisma.document.findFirst({
+    // Find all accepted documents for this individual
+    const docs = await prisma.document.findMany({
       where: {
         issuedTo: individualId,
         status: "accepted",
       },
     });
 
-    if (!doc) {
+    if (!docs.length) {
       res.json({
         verified: false,
-        message: "No matching verified document found",
+        message: "No accepted documents found for this individual",
       });
       return;
     }
 
-    // Verify hash from blockchain
+    // Get gateway connection
     const gateway = await getGateway(
       user.uid,
       user.orgName?.toLowerCase() || ""
@@ -540,22 +540,35 @@ export const verifyDegreeDocument: RequestHandler = async (
       process.env.FABRIC_CHAINCODE || "degreeCC"
     );
 
-    // Cast result to Buffer then to string.
-    const result = await contract.evaluateTransaction(
-      "VerifyHash",
-      doc.id,
-      uploadedHash
-    );
-    const resultString = (result as Buffer).toString();
-    const isVerified = resultString === "true";
-    gateway.disconnect();
+    // Check each document's hash
+    for (const doc of docs) {
+      try {
+        const result = await contract.evaluateTransaction(
+          "VerifyHash",
+          doc.id,
+          uploadedHash
+        );
+        const isVerified = (result as Buffer).toString() === "true";
 
+        if (isVerified) {
+          gateway.disconnect();
+          res.json({
+            verified: true,
+            message: "Document verified successfully",
+            docId: doc.id,
+          });
+          return;
+        }
+      } catch (error) {
+        console.error(`Error verifying doc ${doc.id}:`, error);
+        continue;
+      }
+    }
+
+    gateway.disconnect();
     res.json({
-      verified: isVerified,
-      message: isVerified
-        ? "Document verified successfully"
-        : "Document verification failed",
-      docId: doc.id,
+      verified: false,
+      message: "No matching document found",
     });
   } catch (error: any) {
     console.error("verifyDegreeDocument error:", error);
