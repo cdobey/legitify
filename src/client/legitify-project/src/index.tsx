@@ -15,6 +15,12 @@ const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
 
+// Remove the initial loader
+const initialLoader = document.getElementById("initial-loader");
+if (initialLoader) {
+  initialLoader.remove();
+}
+
 root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>

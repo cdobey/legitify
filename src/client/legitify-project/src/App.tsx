@@ -23,7 +23,7 @@ export default function App() {
   const { loading, user } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return null; // Return nothing during loading
   }
 
   return (
