@@ -39,7 +39,7 @@ export const issueDegree: RequestHandler = async (
     const docHash = sha256(fileData);
     const docId = uuidv4();
 
-    // Store hash in Fabric
+    // Store hash in Fabric first
     const gateway = await getGateway(
       req.user.uid,
       req.user.orgName?.toLowerCase() || ""
@@ -513,7 +513,7 @@ export const verifyDegreeDocument: RequestHandler = async (
       return;
     }
 
-    // Verify hash on blockchain
+    // Verify hash from blockchain
     const gateway = await getGateway(
       req.user.uid,
       req.user.orgName?.toLowerCase() || ""
@@ -525,11 +525,13 @@ export const verifyDegreeDocument: RequestHandler = async (
       process.env.FABRIC_CHAINCODE || "degreeCC"
     );
 
-    // Read the record from blockchain to get stored hash
-    const record = await contract.evaluateTransaction("ReadDegree", doc.id);
-    const degreeRecord = JSON.parse(record.toString());
-
-    const isVerified = degreeRecord.docHash === uploadedHash;
+    // Use the VerifyHash chaincode function to compare hashes
+    const result = await contract.evaluateTransaction(
+      "VerifyHash",
+      doc.id,
+      uploadedHash
+    );
+    const isVerified = result.toString() === "true";
     gateway.disconnect();
 
     res.json({
