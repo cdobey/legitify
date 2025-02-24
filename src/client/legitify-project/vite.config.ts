@@ -16,4 +16,38 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    // Optimize chunk splitting
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "react-vendor": ["react", "react-dom", "react-router-dom"],
+          mantine: ["@mantine/core", "@mantine/hooks"],
+          query: ["@tanstack/react-query"],
+          firebase: ["firebase/app", "firebase/auth"],
+        },
+      },
+    },
+    // Improve chunk size optimization
+    chunkSizeWarningLimit: 1000,
+    minify: "terser",
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
+  },
+  optimizeDeps: {
+    include: [
+      "react",
+      "react-dom",
+      "react-router-dom",
+      "@mantine/core",
+      "@mantine/hooks",
+      "@tanstack/react-query",
+      "firebase/app",
+      "firebase/auth",
+    ],
+  },
 });
