@@ -1,6 +1,5 @@
 import { Box, Container, Text, Title } from "@mantine/core";
 import { Navigate, Route, Routes } from "react-router-dom";
-import HomePage from "./components/HomePage";
 import { useAuth } from "./contexts/AuthContext";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
@@ -9,6 +8,7 @@ import IssueDegree from "./pages/degree/IssueDegree";
 import ManageDegrees from "./pages/degree/ManageDegrees";
 import VerifyDegree from "./pages/degree/VerifyDegree";
 import ViewDegree from "./pages/degree/ViewDegree";
+import HomePage from "./pages/HomePage";
 
 function About() {
   return (

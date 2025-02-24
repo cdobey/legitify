@@ -1,12 +1,11 @@
 import { initializeApp } from "firebase/app";
-import { FIREBASE_CONFIG } from "../config";
 
 // Initialize Firebase
 const firebaseApp = initializeApp({
-  apiKey: FIREBASE_CONFIG.apiKey,
-  projectId: FIREBASE_CONFIG.projectId,
-  authDomain: `${FIREBASE_CONFIG.projectId}.firebaseapp.com`,
-  storageBucket: `${FIREBASE_CONFIG.projectId}.appspot.com`,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
+  storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
 });
 
 export default firebaseApp;

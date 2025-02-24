@@ -1,5 +1,4 @@
 import axios, { AxiosInstance, AxiosResponse, CancelToken } from "axios";
-import { API_BASE_URL } from "../config";
 
 export type ApiCallParams<T> = {
   method: "get" | "post" | "put" | "delete";
@@ -20,7 +19,7 @@ export type ApiResponse<T> = {
 };
 
 const axiosInstance = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: import.meta.env.VITE_API_URL,
   headers: {
     "Content-Type": "application/json",
   },
