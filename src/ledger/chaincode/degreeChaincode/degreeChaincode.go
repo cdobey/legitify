@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
@@ -14,15 +15,17 @@ type DegreeChaincode struct {
 
 // DegreeRecord represents data stored on the ledger
 type DegreeRecord struct {
-	DocID    string `json:"docId"`
-	DocHash  string `json:"docHash"`
-	Owner    string `json:"owner"` // The individual's ID
-	Accepted bool   `json:"accepted"`
-	Denied   bool   `json:"denied"`
+	DocID       string    `json:"docId"`
+	DocHash     string    `json:"docHash"`
+	Owner       string    `json:"owner"` // The individual's ID
+	Issuer      string    `json:"issuer"`
+	IssuedAt    string    `json:"issuedAt"`
+	Accepted    bool      `json:"accepted"`
+	Denied      bool      `json:"denied"`
 }
 
 // IssueDegree adds a new degree record to the ledger
-func (dc *DegreeChaincode) IssueDegree(ctx contractapi.TransactionContextInterface, docID, docHash, owner string) error {
+func (dc *DegreeChaincode) IssueDegree(ctx contractapi.TransactionContextInterface, docID, docHash, owner, issuer string) error {
 	existing, err := ctx.GetStub().GetState(docID)
 	if err != nil {
 		return fmt.Errorf("failed to check ledger: %v", err)
@@ -35,6 +38,8 @@ func (dc *DegreeChaincode) IssueDegree(ctx contractapi.TransactionContextInterfa
 		DocID:    docID,
 		DocHash:  docHash,
 		Owner:    owner,
+		Issuer:   issuer,
+		IssuedAt: time.Now().UTC().Format(time.RFC3339),
 		Accepted: false,
 		Denied:   false,
 	}
@@ -110,6 +115,31 @@ func (dc *DegreeChaincode) VerifyHash(ctx contractapi.TransactionContextInterfac
 		return false, err
 	}
 	return (record.DocHash == hashToCheck), nil
+}
+
+// GetAllRecords retrieves all degree records from the ledger
+func (dc *DegreeChaincode) GetAllRecords(ctx contractapi.TransactionContextInterface) ([]*DegreeRecord, error) {
+    resultsIterator, err := ctx.GetStub().GetStateByRange("", "")
+    if err != nil {
+        return nil, fmt.Errorf("failed to get all records: %v", err)
+    }
+    defer resultsIterator.Close()
+
+    var records []*DegreeRecord
+    for resultsIterator.HasNext() {
+        queryResult, err := resultsIterator.Next()
+        if err != nil {
+            return nil, fmt.Errorf("failed to get next record: %v", err)
+        }
+
+        var record DegreeRecord
+        if err := json.Unmarshal(queryResult.Value, &record); err != nil {
+            return nil, fmt.Errorf("failed to unmarshal record: %v", err)
+        }
+        records = append(records, &record)
+    }
+
+    return records, nil
 }
 
 func main() {

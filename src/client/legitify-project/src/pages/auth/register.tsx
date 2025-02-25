@@ -11,35 +11,32 @@ import {
 } from "@mantine/core";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { RegisterData } from "../../api/auth/auth.models";
+import { useRegister } from "../../api/auth/auth.queries";
 import { useAuth } from "../../contexts/AuthContext";
-import { register } from "../../services/authService";
 
 const Register = () => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<RegisterData>({
     email: "",
     password: "",
     username: "",
-    role: "" as "university" | "individual" | "employer",
+    role: "individual",
     orgName: "",
   });
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { setUser } = useAuth();
+  const register = useRegister();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
     try {
-      const response = await register(formData);
-      setUser(response.user);
-      navigate("/");
+      await register.mutateAsync(formData);
+      navigate("/login"); // Redirect to login after successful registration
     } catch (err: any) {
       setError(err.message || "Failed to register");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -127,7 +124,7 @@ const Register = () => {
             </Alert>
           )}
 
-          <Button type="submit" fullWidth loading={loading}>
+          <Button type="submit" fullWidth loading={register.isPending}>
             Register
           </Button>
         </form>

@@ -10,6 +10,8 @@ function sha256(buffer: Buffer): string {
   return crypto.createHash("sha256").update(buffer).digest("hex");
 }
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+
 /**
  * Issues a degree to an individual. Only accessible by users with role 'university'.
  */
@@ -18,23 +20,27 @@ export const issueDegree: RequestHandler = async (
   res: Response
 ): Promise<void> => {
   try {
-    if (req.user?.role !== "university") {
+    // Cast req.user to our expected type
+    const user = req.user as { uid: string; role: string; orgName?: string };
+    if (user.role !== "university") {
       res.status(403).json({ error: "Only university can issue degrees" });
       return;
     }
 
-    const { individualId, base64File } = req.body;
+    const { individualId, base64File } = req.body as {
+      individualId: string;
+      base64File?: string;
+    };
+    // For file-based request, if base64File is not provided, you might throw an error.
     if (!individualId || !base64File) {
       res.status(400).json({ error: "Missing individualId or base64File" });
       return;
     }
 
-    // Verify that the individual exists
-    const individual = await prisma.user.findUnique({
-      where: { id: individualId },
-    });
-    if (!individual || individual.role !== "individual") {
-      res.status(400).json({ error: "Invalid individualId" });
+    // Add file size validation
+    const decodedFile = Buffer.from(base64File, "base64");
+    if (decodedFile.length > MAX_FILE_SIZE) {
+      res.status(400).json({ error: "File size must be less than 5MB" });
       return;
     }
 
@@ -42,10 +48,10 @@ export const issueDegree: RequestHandler = async (
     const docHash = sha256(fileData);
     const docId = uuidv4();
 
-    // Connect to Fabric using user's organization
+    // Store hash in Fabric first
     const gateway = await getGateway(
-      req.user.uid,
-      req.user.orgName?.toLowerCase() || ""
+      user.uid,
+      user.orgName?.toLowerCase() || ""
     );
     const network = await gateway.getNetwork(
       process.env.FABRIC_CHANNEL || "mychannel"
@@ -58,26 +64,33 @@ export const issueDegree: RequestHandler = async (
       "IssueDegree",
       docId,
       docHash,
-      individualId
+      individualId,
+      user.uid
     );
     gateway.disconnect();
 
-    // Store doc in DB
+    // Store document in DB (without hash)
     const newDocument = await prisma.document.create({
       data: {
         id: docId,
         issuedTo: individualId,
-        issuer: req.user.uid,
-        docHash,
+        issuer: user.uid,
         fileData,
         status: "issued",
       },
     });
 
-    res.status(201).json({ message: "Degree issued", docId: newDocument.id });
-  } catch (error: any) {
+    res.status(201).json({
+      message: "Degree issued",
+      docId: newDocument.id,
+      docHash, // Include hash in response for verification
+    });
+  } catch (error: unknown) {
     console.error("issueDegree error:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error:
+        error instanceof Error ? error.message : "An unknown error occurred",
+    });
   }
 };
 
@@ -326,7 +339,7 @@ export const viewDegree: RequestHandler = async (
       return;
     }
 
-    // Verify hash with ledger
+    // Get hash from Fabric
     const gateway = await getGateway(
       req.user.uid,
       req.user.orgName?.toLowerCase() || ""
@@ -338,19 +351,21 @@ export const viewDegree: RequestHandler = async (
       process.env.FABRIC_CHAINCODE || "degreeCC"
     );
 
-    const result = await contract.evaluateTransaction(
-      "VerifyHash",
-      docId,
-      doc.docHash
-    );
-    const isVerified = result.toString() === "true";
-    gateway.disconnect();
+    const record = await contract.evaluateTransaction("ReadDegree", docId);
+    const degreeRecord = JSON.parse(record.toString());
+
+    // Verify hash matches current file
+    const currentHash = sha256(Buffer.from(doc.fileData!));
+    const isVerified = currentHash === degreeRecord.docHash;
 
     res.json({
       docId: doc.id,
       verified: isVerified,
-      docHash: doc.docHash,
-      fileData: doc.fileData ? doc.fileData.toString() : null,
+      issuer: degreeRecord.issuer,
+      issuedAt: degreeRecord.issuedAt,
+      fileData: doc.fileData
+        ? Buffer.from(doc.fileData).toString("base64")
+        : null,
       status: doc.status,
     });
   } catch (error: any) {
@@ -479,39 +494,101 @@ export const verifyDegreeDocument: RequestHandler = async (
   res: Response
 ): Promise<void> => {
   try {
-    if (req.user?.role !== "employer") {
+    const user = req.user as { uid: string; role: string; orgName?: string };
+    if (user.role !== "employer") {
       res.status(403).json({ error: "Only employers can verify documents" });
       return;
     }
 
-    const { individualId, base64File } = req.body;
+    const { individualId, base64File } = req.body as {
+      individualId: string;
+      base64File: string;
+    };
     if (!individualId || !base64File) {
       res.status(400).json({ error: "Missing individualId or base64File" });
       return;
     }
 
-    // Calculate hash of uploaded document
     const fileData = Buffer.from(base64File, "base64");
     const uploadedHash = sha256(fileData);
 
-    // Find matching document in database
-    const doc = await prisma.document.findFirst({
+    // Find all accepted documents for this individual
+    const docs = await prisma.document.findMany({
       where: {
         issuedTo: individualId,
-        docHash: uploadedHash,
         status: "accepted",
       },
     });
 
-    if (!doc) {
+    if (!docs.length) {
       res.json({
         verified: false,
-        message: "No matching verified document found",
+        message: "No accepted documents found for this individual",
       });
       return;
     }
 
-    // Verify hash on blockchain
+    // Get gateway connection
+    const gateway = await getGateway(
+      user.uid,
+      user.orgName?.toLowerCase() || ""
+    );
+    const network = await gateway.getNetwork(
+      process.env.FABRIC_CHANNEL || "mychannel"
+    );
+    const contract = network.getContract(
+      process.env.FABRIC_CHAINCODE || "degreeCC"
+    );
+
+    // Check each document's hash
+    for (const doc of docs) {
+      try {
+        const result = await contract.evaluateTransaction(
+          "VerifyHash",
+          doc.id,
+          uploadedHash
+        );
+        const isVerified = (result as Buffer).toString() === "true";
+
+        if (isVerified) {
+          gateway.disconnect();
+          res.json({
+            verified: true,
+            message: "Document verified successfully",
+            docId: doc.id,
+          });
+          return;
+        }
+      } catch (error) {
+        console.error(`Error verifying doc ${doc.id}:`, error);
+        continue;
+      }
+    }
+
+    gateway.disconnect();
+    res.json({
+      verified: false,
+      message: "No matching document found",
+    });
+  } catch (error: any) {
+    console.error("verifyDegreeDocument error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Get all records from the blockchain ledger
+ */
+export const getAllLedgerRecords: RequestHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    if (req.user?.role !== "university") {
+      res.status(403).json({ error: "Only university can view all records" });
+      return;
+    }
+
     const gateway = await getGateway(
       req.user.uid,
       req.user.orgName?.toLowerCase() || ""
@@ -523,24 +600,13 @@ export const verifyDegreeDocument: RequestHandler = async (
       process.env.FABRIC_CHAINCODE || "degreeCC"
     );
 
-    const result = await contract.evaluateTransaction(
-      "VerifyHash",
-      doc.id,
-      uploadedHash
-    );
+    const result = await contract.evaluateTransaction("GetAllRecords");
+    const records = JSON.parse(result.toString());
     gateway.disconnect();
 
-    const isVerified = result.toString() === "true";
-
-    res.json({
-      verified: isVerified,
-      message: isVerified
-        ? "Document verified successfully"
-        : "Document verification failed",
-      docId: doc.id,
-    });
+    res.json(records);
   } catch (error: any) {
-    console.error("verifyDegreeDocument error:", error);
+    console.error("getAllLedgerRecords error:", error);
     res.status(500).json({ error: error.message });
   }
 };

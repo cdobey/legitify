@@ -1,0 +1,59 @@
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+#initial-loader {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #f8f9fa;
+}
+
+#initial-loader .content {
+  animation: pulse 2s infinite ease-in-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+#initial-loader .title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #228be6;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+#initial-loader .subtitle {
+  font-size: 0.875rem;
+  color: #868e96;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.loader {
+  width: 48px;
+  height: 48px;
+  border: 5px solid #228be6;
+  border-bottom-color: transparent;
+  border-radius: 50%;
+  animation: rotation 1s linear infinite;
+}

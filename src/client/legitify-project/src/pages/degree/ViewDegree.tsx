@@ -1,31 +1,27 @@
 import { Alert, Container, Text, Title } from "@mantine/core";
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
-import { viewDegree } from "../../services/degreeService";
+import { degreeApi } from "../../api/degrees/degree.api";
+import { DegreeDocument } from "../../api/degrees/degree.models";
 
 export default function ViewDegree() {
-  const { docId } = useParams();
-  const [degree, setDegree] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { docId } = useParams<{ docId: string }>();
 
-  useEffect(() => {
-    const loadDegree = async () => {
-      try {
-        const data = await viewDegree(docId!);
-        setDegree(data);
-      } catch (err: any) {
-        setError(err.message || "Failed to load degree");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const {
+    data: degree,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["degree", docId],
+    queryFn: async () => {
+      const result = await degreeApi.viewDegree(docId!);
+      return result as DegreeDocument;
+    },
+    enabled: !!docId,
+  });
 
-    loadDegree();
-  }, [docId]);
-
-  if (loading) return <Text>Loading...</Text>;
-  if (error) return <Alert color="red">{error}</Alert>;
+  if (isLoading) return <Text>Loading...</Text>;
+  if (error) return <Alert color="red">{(error as Error).message}</Alert>;
 
   return (
     <Container size="md">
@@ -35,14 +31,14 @@ export default function ViewDegree() {
       {degree && (
         <>
           <Text>Document ID: {degree.docId}</Text>
-          <Text>Issued By: {degree.issuedBy}</Text>
-          <Text>Issued To: {degree.issuedTo}</Text>
+          <Text>Issued By: {degree.issuer}</Text>
+          <Text>Status: {degree.status}</Text>
           <Text>
             Issue Date: {new Date(degree.issueDate).toLocaleDateString()}
           </Text>
-          {degree.base64File && (
+          {degree.fileData && (
             <embed
-              src={`data:application/pdf;base64,${degree.base64File}`}
+              src={`data:application/pdf;base64,${degree.fileData}`}
               type="application/pdf"
               width="100%"
               height="600px"
