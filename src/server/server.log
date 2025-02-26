@@ -4,364 +4,237 @@
 
 Server is running on port 3001
 Swagger docs available at http://localhost:3001/docs
-[0mGET /docs [36m301[0m 2.593 ms - 154[0m
-Successfully enrolled user g17gUq1aFpQGC24z0cdnXUqozSi2 with orguniversity and imported into database wallet
-[0mPOST /auth/register [32m201[0m 3779.477 ms - 139[0m
-Successfully enrolled user xD9IFtOW4FOKfMCCzC7osaVZ8cF3 with orgindividual and imported into database wallet
-[0mPOST /auth/register [32m201[0m 2278.049 ms - 139[0m
-Successfully enrolled user IK5rlsaesoUkKc30wepNt7gI8u82 with orgemployer and imported into database wallet
-[0mPOST /auth/register [32m201[0m 2512.013 ms - 135[0m
+[0mGET /docs [36m301[0m 2.005 ms - 154[0m
+Successfully enrolled user bdafbd19-6d15-475c-9f06-490d99ff32a0 with orguniversity and imported into database wallet
+[0mPOST /auth/register [32m201[0m 847.378 ms - 193[0m
+Successfully enrolled user 9f33757a-d861-45a8-b777-ccb5afa29b22 with orgindividual and imported into database wallet
+[0mPOST /auth/register [32m201[0m 367.024 ms - 193[0m
+Successfully enrolled user 15db32fc-c219-4401-84b7-7e6d51e78cf5 with orgemployer and imported into database wallet
+[0mPOST /auth/register [32m201[0m 535.525 ms - 187[0m
 Login attempt for email: university@test.com
-Sign in response: { status: 200, ok: true, error: undefined }
-Token verified for user: g17gUq1aFpQGC24z0cdnXUqozSi2
-[0mPOST /auth/test-login [32m200[0m 317.171 ms - 1353[0m
+Token generated for user: bdafbd19-6d15-475c-9f06-490d99ff32a0
+[0mPOST /auth/test-login [32m200[0m 156.529 ms - 947[0m
 Login attempt for email: individual@test.com
-Sign in response: { status: 200, ok: true, error: undefined }
-Token verified for user: xD9IFtOW4FOKfMCCzC7osaVZ8cF3
-[0mPOST /auth/test-login [32m200[0m 193.587 ms - 1353[0m
+Token generated for user: 9f33757a-d861-45a8-b777-ccb5afa29b22
+[0mPOST /auth/test-login [32m200[0m 127.535 ms - 947[0m
 Login attempt for email: employer@test.com
-Sign in response: { status: 200, ok: true, error: undefined }
-Token verified for user: IK5rlsaesoUkKc30wepNt7gI8u82
-[0mPOST /auth/test-login [32m200[0m 182.065 ms - 1339[0m
+Token generated for user: 15db32fc-c219-4401-84b7-7e6d51e78cf5
+[0mPOST /auth/test-login [32m200[0m 135.536 ms - 937[0m
 Authenticated user: {
-  uid: 'g17gUq1aFpQGC24z0cdnXUqozSi2',
+  uid: 'bdafbd19-6d15-475c-9f06-490d99ff32a0',
   role: 'university',
-  orgName: 'orguniversity',
-  tokenIssued: '2025-02-26T00:50:34.000Z',
-  tokenExpires: '2025-02-26T01:50:34.000Z'
+  orgName: 'orguniversity'
 }
-2025-02-26T00:50:38.542Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
-2025-02-26T00:50:38.542Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgemployer.com url:grpcs://localhost:8051 timeout:3000
-2025-02-26T00:50:38.543Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgemployer.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+2025-02-26T02:12:04.249Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+2025-02-26T02:12:04.250Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgemployer.com url:grpcs://localhost:8051 timeout:3000
+2025-02-26T02:12:04.252Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgemployer.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
     at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
     at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
     at listOnTimeout (node:internal/timers:594:17)
     at processTimers (node:internal/timers:529:7) {
   connectFailed: true
 }
-2025-02-26T00:50:41.548Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
-2025-02-26T00:50:41.548Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgindividual.com url:grpcs://localhost:9051 timeout:3000
-2025-02-26T00:50:41.550Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgindividual.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+2025-02-26T02:12:07.258Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+2025-02-26T02:12:07.259Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgindividual.com url:grpcs://localhost:9051 timeout:3000
+2025-02-26T02:12:07.260Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgindividual.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
     at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
     at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
     at listOnTimeout (node:internal/timers:594:17)
     at processTimers (node:internal/timers:529:7) {
   connectFailed: true
 }
-[0mPOST /degree/issue [32m201[0m 8728.324 ms - 151[0m
+[0mPOST /degree/issue [32m201[0m 8404.196 ms - 151[0m
 Authenticated user: {
-  uid: 'xD9IFtOW4FOKfMCCzC7osaVZ8cF3',
+  uid: '9f33757a-d861-45a8-b777-ccb5afa29b22',
   role: 'individual',
-  orgName: 'orgindividual',
-  tokenIssued: '2025-02-26T00:50:34.000Z',
-  tokenExpires: '2025-02-26T01:50:34.000Z'
+  orgName: 'orgindividual'
 }
-2025-02-26T00:50:47.246Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
-2025-02-26T00:50:47.246Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orguniversity.com url:grpcs://localhost:7051 timeout:3000
-2025-02-26T00:50:47.247Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orguniversity.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+2025-02-26T02:12:12.705Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+2025-02-26T02:12:12.706Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orguniversity.com url:grpcs://localhost:7051 timeout:3000
+2025-02-26T02:12:12.707Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orguniversity.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
     at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
     at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
     at listOnTimeout (node:internal/timers:594:17)
     at processTimers (node:internal/timers:529:7) {
   connectFailed: true
 }
-2025-02-26T00:50:50.252Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
-2025-02-26T00:50:50.252Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgemployer.com url:grpcs://localhost:8051 timeout:3000
-2025-02-26T00:50:50.252Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgemployer.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+2025-02-26T02:12:15.713Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+2025-02-26T02:12:15.713Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgemployer.com url:grpcs://localhost:8051 timeout:3000
+2025-02-26T02:12:15.713Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgemployer.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
     at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
     at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
     at listOnTimeout (node:internal/timers:594:17)
     at processTimers (node:internal/timers:529:7) {
   connectFailed: true
 }
-[0mPOST /degree/accept [32m200[0m 8564.319 ms - 63[0m
+[0mPOST /degree/accept [32m200[0m 8297.623 ms - 63[0m
 Authenticated user: {
-  uid: 'IK5rlsaesoUkKc30wepNt7gI8u82',
+  uid: '15db32fc-c219-4401-84b7-7e6d51e78cf5',
   role: 'employer',
-  orgName: 'orgemployer',
-  tokenIssued: '2025-02-26T00:50:34.000Z',
-  tokenExpires: '2025-02-26T01:50:34.000Z'
+  orgName: 'orgemployer'
 }
-[0mPOST /degree/requestAccess [32m201[0m 388.483 ms - 81[0m
+[0mPOST /degree/requestAccess [32m201[0m 99.448 ms - 81[0m
 Authenticated user: {
-  uid: 'xD9IFtOW4FOKfMCCzC7osaVZ8cF3',
+  uid: '9f33757a-d861-45a8-b777-ccb5afa29b22',
   role: 'individual',
-  orgName: 'orgindividual',
-  tokenIssued: '2025-02-26T00:50:34.000Z',
-  tokenExpires: '2025-02-26T01:50:34.000Z'
+  orgName: 'orgindividual'
 }
-[0mPOST /degree/grantAccess [32m200[0m 348.010 ms - 77[0m
+[0mPOST /degree/grantAccess [32m200[0m 66.661 ms - 77[0m
 Authenticated user: {
-  uid: 'IK5rlsaesoUkKc30wepNt7gI8u82',
+  uid: '15db32fc-c219-4401-84b7-7e6d51e78cf5',
   role: 'employer',
-  orgName: 'orgemployer',
-  tokenIssued: '2025-02-26T00:50:34.000Z',
-  tokenExpires: '2025-02-26T01:50:34.000Z'
+  orgName: 'orgemployer'
 }
-2025-02-26T00:50:56.555Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
-2025-02-26T00:50:56.555Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orguniversity.com url:grpcs://localhost:7051 timeout:3000
-2025-02-26T00:50:56.555Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orguniversity.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+2025-02-26T02:12:21.130Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+2025-02-26T02:12:21.131Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orguniversity.com url:grpcs://localhost:7051 timeout:3000
+2025-02-26T02:12:21.132Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orguniversity.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
     at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
     at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
     at listOnTimeout (node:internal/timers:594:17)
     at processTimers (node:internal/timers:529:7) {
   connectFailed: true
 }
-2025-02-26T00:50:59.566Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
-2025-02-26T00:50:59.566Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgindividual.com url:grpcs://localhost:9051 timeout:3000
-2025-02-26T00:50:59.568Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgindividual.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+2025-02-26T02:12:24.150Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+2025-02-26T02:12:24.150Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgindividual.com url:grpcs://localhost:9051 timeout:3000
+2025-02-26T02:12:24.152Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgindividual.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
     at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
     at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
     at listOnTimeout (node:internal/timers:594:17)
     at processTimers (node:internal/timers:529:7) {
   connectFailed: true
 }
-[0mGET /degree/view/0423cd18-327a-4b68-8a85-95f4a7dabd01 [32m200[0m 6466.198 ms - 1076[0m
-Auth middleware error: {
-  message: 'There is no user record corresponding to the provided identifier.',
-  code: 'auth/user-not-found',
-  stack: 'Error: There is no user record corresponding to the provided identifier.\n' +
-    '    at /Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/auth/auth-api-request.js:552:15\n' +
-    '    at /Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/auth/auth-api-request.js:1616:13\n' +
-    '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
-    '    at async authMiddleware (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/src/middleware/auth.ts:34:26)'
-}
-[0mGET /me [33m401[0m 210.201 ms - 140[0m
+[0mGET /degree/view/a8f021ad-f590-4411-9714-c19bcb93f3db [32m200[0m 6181.469 ms - 1084[0m
 Authenticated user: {
-  uid: 'g17gUq1aFpQGC24z0cdnXUqozSi2',
+  uid: 'bdafbd19-6d15-475c-9f06-490d99ff32a0',
   role: 'university',
-  orgName: 'orguniversity',
-  tokenIssued: '2025-02-26T00:53:27.000Z',
-  tokenExpires: '2025-02-26T01:53:27.000Z'
+  orgName: 'orguniversity'
 }
-[0mGET /me [32m200[0m 406.886 ms - 219[0m
+[0mGET /me [32m200[0m 167.478 ms - 227[0m
 Authenticated user: {
-  uid: 'g17gUq1aFpQGC24z0cdnXUqozSi2',
+  uid: 'bdafbd19-6d15-475c-9f06-490d99ff32a0',
   role: 'university',
-  orgName: 'orguniversity',
-  tokenIssued: '2025-02-26T00:53:27.000Z',
-  tokenExpires: '2025-02-26T01:53:27.000Z'
+  orgName: 'orguniversity'
 }
-[0mGET /me [36m304[0m 366.974 ms - -[0m
+[0mGET /me [36m304[0m 57.061 ms - -[0m
 Authenticated user: {
-  uid: 'g17gUq1aFpQGC24z0cdnXUqozSi2',
+  uid: 'bdafbd19-6d15-475c-9f06-490d99ff32a0',
   role: 'university',
-  orgName: 'orguniversity',
-  tokenIssued: '2025-02-26T00:53:27.000Z',
-  tokenExpires: '2025-02-26T01:53:27.000Z'
+  orgName: 'orguniversity'
 }
-2025-02-26T00:54:07.194Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
-2025-02-26T00:54:07.195Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgemployer.com url:grpcs://localhost:8051 timeout:3000
-2025-02-26T00:54:07.196Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgemployer.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+2025-02-26T02:14:13.472Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+2025-02-26T02:14:13.473Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgemployer.com url:grpcs://localhost:8051 timeout:3000
+2025-02-26T02:14:13.474Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgemployer.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
     at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
     at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
     at listOnTimeout (node:internal/timers:594:17)
     at processTimers (node:internal/timers:529:7) {
   connectFailed: true
 }
-2025-02-26T00:54:10.201Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
-2025-02-26T00:54:10.203Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgindividual.com url:grpcs://localhost:9051 timeout:3000
-2025-02-26T00:54:10.204Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgindividual.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+2025-02-26T02:14:16.480Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+2025-02-26T02:14:16.481Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgindividual.com url:grpcs://localhost:9051 timeout:3000
+2025-02-26T02:14:16.482Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgindividual.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
     at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
     at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
     at listOnTimeout (node:internal/timers:594:17)
     at processTimers (node:internal/timers:529:7) {
   connectFailed: true
 }
-[0mPOST /degree/issue [32m201[0m 8643.604 ms - 151[0m
+[0mPOST /degree/issue [32m201[0m 8330.003 ms - 151[0m
 Authenticated user: {
-  uid: 'xD9IFtOW4FOKfMCCzC7osaVZ8cF3',
+  uid: '9f33757a-d861-45a8-b777-ccb5afa29b22',
   role: 'individual',
-  orgName: 'orgindividual',
-  tokenIssued: '2025-02-26T00:54:44.000Z',
-  tokenExpires: '2025-02-26T01:54:44.000Z'
+  orgName: 'orgindividual'
 }
-[0mGET /me [32m200[0m 438.342 ms - 219[0m
+[0mGET /me [32m200[0m 99.153 ms - 227[0m
 Authenticated user: {
-  uid: 'xD9IFtOW4FOKfMCCzC7osaVZ8cF3',
+  uid: '9f33757a-d861-45a8-b777-ccb5afa29b22',
   role: 'individual',
-  orgName: 'orgindividual',
-  tokenIssued: '2025-02-26T00:54:44.000Z',
-  tokenExpires: '2025-02-26T01:54:44.000Z'
+  orgName: 'orgindividual'
 }
-[0mGET /degree/list [32m200[0m 358.936 ms - 265[0m
+[0mGET /degree/list [32m200[0m 65.179 ms - 265[0m
 Authenticated user: {
-  uid: 'xD9IFtOW4FOKfMCCzC7osaVZ8cF3',
+  uid: '9f33757a-d861-45a8-b777-ccb5afa29b22',
   role: 'individual',
-  orgName: 'orgindividual',
-  tokenIssued: '2025-02-26T00:54:44.000Z',
-  tokenExpires: '2025-02-26T01:54:44.000Z'
+  orgName: 'orgindividual'
 }
-2025-02-26T00:54:53.312Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
-2025-02-26T00:54:53.313Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orguniversity.com url:grpcs://localhost:7051 timeout:3000
-2025-02-26T00:54:53.316Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orguniversity.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+2025-02-26T02:14:52.015Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+2025-02-26T02:14:52.016Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orguniversity.com url:grpcs://localhost:7051 timeout:3000
+2025-02-26T02:14:52.018Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orguniversity.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
     at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
     at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
     at listOnTimeout (node:internal/timers:594:17)
     at processTimers (node:internal/timers:529:7) {
   connectFailed: true
 }
-2025-02-26T00:54:56.321Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
-2025-02-26T00:54:56.321Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgemployer.com url:grpcs://localhost:8051 timeout:3000
-2025-02-26T00:54:56.322Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgemployer.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+2025-02-26T02:14:55.026Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+2025-02-26T02:14:55.027Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgemployer.com url:grpcs://localhost:8051 timeout:3000
+2025-02-26T02:14:55.028Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgemployer.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
     at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
     at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
     at listOnTimeout (node:internal/timers:594:17)
     at processTimers (node:internal/timers:529:7) {
   connectFailed: true
 }
-[0mPOST /degree/accept [32m200[0m 8578.275 ms - 63[0m
+[0mPOST /degree/accept [32m200[0m 8248.942 ms - 63[0m
 Authenticated user: {
-  uid: 'xD9IFtOW4FOKfMCCzC7osaVZ8cF3',
+  uid: '9f33757a-d861-45a8-b777-ccb5afa29b22',
   role: 'individual',
-  orgName: 'orgindividual',
-  tokenIssued: '2025-02-26T00:54:44.000Z',
-  tokenExpires: '2025-02-26T01:54:44.000Z'
+  orgName: 'orgindividual'
 }
-[0mGET /degree/list [32m200[0m 387.923 ms - 267[0m
+[0mGET /degree/list [32m200[0m 99.766 ms - 267[0m
 Authenticated user: {
-  uid: 'xD9IFtOW4FOKfMCCzC7osaVZ8cF3',
-  role: 'individual',
-  orgName: 'orgindividual',
-  tokenIssued: '2025-02-26T00:54:44.000Z',
-  tokenExpires: '2025-02-26T01:54:44.000Z'
-}
-Fetching requests for user: xD9IFtOW4FOKfMCCzC7osaVZ8cF3
-All user documents: [
-  {
-    id: '0423cd18-327a-4b68-8a85-95f4a7dabd01',
-    issuedTo: 'xD9IFtOW4FOKfMCCzC7osaVZ8cF3',
-    issuer: 'g17gUq1aFpQGC24z0cdnXUqozSi2',
-    fileData: Uint8Array(678) [
-       37,  80,  68,  70,  45,  49,  46,  55, 10,  10,  49,  32,
-       48,  32, 111,  98, 106,  32,  32,  37, 32, 101, 110, 116,
-      114, 121,  32, 112, 111, 105, 110, 116, 10,  60,  60,  10,
-       32,  32,  47,  84, 121, 112, 101,  32, 47,  67,  97, 116,
-       97, 108, 111, 103,  10,  32,  32,  47, 80,  97, 103, 101,
-      115,  32,  50,  32,  48,  32,  82,  10, 62,  62,  10, 101,
-      110, 100, 111,  98, 106,  10,  10,  50, 32,  48,  32, 111,
-       98, 106,  10,  60,  60,  10,  32,  32, 47,  84, 121, 112,
-      101,  32,  47,  80,
-      ... 578 more items
-    ],
-    status: 'accepted',
-    createdAt: 2025-02-26T00:50:43.749Z,
-    updatedAt: 2025-02-26T00:50:52.358Z
-  },
-  {
-    id: 'aecceaa2-ebe3-4d07-bc97-02e239690878',
-    issuedTo: 'xD9IFtOW4FOKfMCCzC7osaVZ8cF3',
-    issuer: 'g17gUq1aFpQGC24z0cdnXUqozSi2',
-    fileData: Uint8Array(222076) [
-       37,  80,  68,  70,  45,  49,  46,  55,  13,  10,  37, 181,
-      181, 181, 181,  13,  10,  49,  32,  48,  32, 111,  98, 106,
-       13,  10,  60,  60,  47,  84, 121, 112, 101,  47,  67,  97,
-      116,  97, 108, 111, 103,  47,  80,  97, 103, 101, 115,  32,
-       50,  32,  48,  32,  82,  47,  76,  97, 110, 103,  40, 101,
-      110,  41,  32,  47,  83, 116, 114, 117,  99, 116,  84, 114,
-      101, 101,  82, 111, 111, 116,  32,  49,  50,  54,  32,  48,
-       32,  82,  47,  79, 117, 116, 108, 105, 110, 101, 115,  32,
-       49,  48,  52,  32,
-      ... 221976 more items
-    ],
-    status: 'accepted',
-    createdAt: 2025-02-26T00:54:12.333Z,
-    updatedAt: 2025-02-26T00:54:58.412Z
-  }
-]
-User documents with requests: [
-  {
-    "id": "0423cd18-327a-4b68-8a85-95f4a7dabd01",
-    "status": "accepted",
-    "requests": [
-      {
-        "id": "3b1dd37d-2c1e-490a-b2e2-cbc693250f16",
-        "requesterId": "IK5rlsaesoUkKc30wepNt7gI8u82",
-        "documentId": "0423cd18-327a-4b68-8a85-95f4a7dabd01",
-        "status": "granted",
-        "createdAt": "2025-02-26T00:50:52.758Z",
-        "updatedAt": "2025-02-26T00:50:53.132Z",
-        "requester": {
-          "username": "testemployer",
-          "orgName": "orgemployer"
-        }
-      }
-    ]
-  },
-  {
-    "id": "aecceaa2-ebe3-4d07-bc97-02e239690878",
-    "status": "accepted",
-    "requests": []
-  }
-]
-Formatted requests: [
-  {
-    requestId: '3b1dd37d-2c1e-490a-b2e2-cbc693250f16',
-    docId: '0423cd18-327a-4b68-8a85-95f4a7dabd01',
-    docStatus: 'accepted',
-    employerName: 'orgemployer',
-    requestDate: 2025-02-26T00:50:52.758Z,
-    status: 'granted'
-  }
-]
-[0mGET /degree/requests [32m200[0m 413.902 ms - 213[0m
-Authenticated user: {
-  uid: 'IK5rlsaesoUkKc30wepNt7gI8u82',
+  uid: '15db32fc-c219-4401-84b7-7e6d51e78cf5',
   role: 'employer',
-  orgName: 'orgemployer',
-  tokenIssued: '2025-02-26T00:55:49.000Z',
-  tokenExpires: '2025-02-26T01:55:49.000Z'
+  orgName: 'orgemployer'
 }
-[0mGET /me [32m200[0m 396.492 ms - 211[0m
+[0mGET /me [32m200[0m 136.710 ms - 219[0m
 Authenticated user: {
-  uid: 'IK5rlsaesoUkKc30wepNt7gI8u82',
+  uid: '15db32fc-c219-4401-84b7-7e6d51e78cf5',
   role: 'employer',
-  orgName: 'orgemployer',
-  tokenIssued: '2025-02-26T00:55:49.000Z',
-  tokenExpires: '2025-02-26T01:55:49.000Z'
+  orgName: 'orgemployer'
 }
-2025-02-26T00:56:03.841Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
-2025-02-26T00:56:03.841Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orguniversity.com url:grpcs://localhost:7051 timeout:3000
-2025-02-26T00:56:03.843Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orguniversity.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+2025-02-26T02:15:28.094Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+2025-02-26T02:15:28.095Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orguniversity.com url:grpcs://localhost:7051 timeout:3000
+2025-02-26T02:15:28.096Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orguniversity.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
     at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
     at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
     at listOnTimeout (node:internal/timers:594:17)
     at processTimers (node:internal/timers:529:7) {
   connectFailed: true
 }
-2025-02-26T00:56:06.867Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
-2025-02-26T00:56:06.867Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgindividual.com url:grpcs://localhost:9051 timeout:3000
-2025-02-26T00:56:06.868Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgindividual.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+2025-02-26T02:15:31.117Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+2025-02-26T02:15:31.117Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgindividual.com url:grpcs://localhost:9051 timeout:3000
+2025-02-26T02:15:31.118Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgindividual.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
     at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
     at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
     at listOnTimeout (node:internal/timers:594:17)
     at processTimers (node:internal/timers:529:7) {
   connectFailed: true
 }
-[0mPOST /degree/verify [32m200[0m 6811.679 ms - 57[0m
+[0mPOST /degree/verify [32m200[0m 6276.764 ms - 57[0m
 Authenticated user: {
-  uid: 'IK5rlsaesoUkKc30wepNt7gI8u82',
+  uid: '15db32fc-c219-4401-84b7-7e6d51e78cf5',
   role: 'employer',
-  orgName: 'orgemployer',
-  tokenIssued: '2025-02-26T00:55:49.000Z',
-  tokenExpires: '2025-02-26T01:55:49.000Z'
+  orgName: 'orgemployer'
 }
-2025-02-26T00:56:16.449Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
-2025-02-26T00:56:16.449Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orguniversity.com url:grpcs://localhost:7051 timeout:3000
-2025-02-26T00:56:16.450Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orguniversity.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+2025-02-26T02:15:39.456Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+2025-02-26T02:15:39.456Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orguniversity.com url:grpcs://localhost:7051 timeout:3000
+2025-02-26T02:15:39.457Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orguniversity.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
     at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
     at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
     at listOnTimeout (node:internal/timers:594:17)
     at processTimers (node:internal/timers:529:7) {
   connectFailed: true
 }
-2025-02-26T00:56:19.462Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
-2025-02-26T00:56:19.463Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgindividual.com url:grpcs://localhost:9051 timeout:3000
-2025-02-26T00:56:19.464Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgindividual.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+2025-02-26T02:15:42.474Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+2025-02-26T02:15:42.475Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgindividual.com url:grpcs://localhost:9051 timeout:3000
+2025-02-26T02:15:42.477Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgindividual.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
     at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
     at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
     at listOnTimeout (node:internal/timers:594:17)
     at processTimers (node:internal/timers:529:7) {
   connectFailed: true
 }
-[0mPOST /degree/verify [32m200[0m 6556.057 ms - 107[0m
+[0mPOST /degree/verify [32m200[0m 6278.116 ms - 107[0m
+[0mGET /users/search?email=individual [33m404[0m 1.598 ms - 151[0m
+[0mGET /users/search?email=individual%40test.com [33m404[0m 0.678 ms - 151[0m

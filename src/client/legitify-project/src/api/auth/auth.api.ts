@@ -1,8 +1,4 @@
-import {
-  signOut as firebaseSignOut,
-  getAuth,
-  signInWithEmailAndPassword,
-} from "firebase/auth";
+import supabase from "../../config/supabase";
 import apiCall from "../apiCall";
 import { LoginResponse, RegisterData, UserProfile } from "./auth.models";
 
@@ -16,16 +12,20 @@ export const authApi = {
 
   login: async (email: string, password: string) => {
     try {
-      // First try direct Firebase authentication
-      const auth = getAuth();
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
+      // Use Supabase authentication
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
         email,
-        password
-      );
-      const token = await userCredential.user.getIdToken();
+        password,
+      });
 
-      // Change to sessionStorage
+      if (error) throw error;
+
+      const { session } = authData;
+      if (!session) throw new Error("No session returned from Supabase");
+
+      const token = session.access_token;
+
+      // Store the token in sessionStorage
       sessionStorage.setItem("token", token);
 
       // Get full user profile from our backend
@@ -45,7 +45,7 @@ export const authApi = {
       } as LoginResponse;
     } catch (error: any) {
       console.error("Login error:", error);
-      if (error.code === "auth/invalid-login-credentials") {
+      if (error.message === "Invalid login credentials") {
         throw new Error("Invalid email or password");
       }
       throw new Error(error.message || "Failed to login");
@@ -53,8 +53,8 @@ export const authApi = {
   },
 
   logout: async () => {
-    const auth = getAuth();
-    await firebaseSignOut(auth);
+    // Sign out from Supabase
+    await supabase.auth.signOut();
     sessionStorage.removeItem("token");
   },
 

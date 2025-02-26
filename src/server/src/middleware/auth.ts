@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from "express";
-import admin from "../config/firebase";
+import supabase from "../config/supabase";
+import prisma from "../prisma/client";
 
-// Define the shape of the Firebase auth payload
+// Define the shape of the Supabase auth payload
 interface AuthUser {
   uid: string;
   role?: string;
@@ -28,32 +29,41 @@ export const authMiddleware = async (
       return;
     }
 
-    const idToken = authHeader.split("Bearer ")[1];
+    const token = authHeader.split("Bearer ")[1];
 
-    // Verify the Firebase token
-    const decodedToken = await admin.auth().verifyIdToken(idToken, true);
+    // Verify the Supabase token
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(token);
 
-    // Get fresh user record to ensure we have latest claims
-    const userRecord = await admin.auth().getUser(decodedToken.uid);
+    if (error || !user) {
+      console.error("Token verification error:", error);
+      res.status(401).json({ error: "Invalid token" });
+      return;
+    }
 
-    if (!userRecord.customClaims?.role || !userRecord.customClaims?.orgName) {
-      console.error("Missing claims for user:", userRecord.uid);
+    // Get user from our database to get role and organization
+    const dbUser = await prisma.user.findUnique({
+      where: { id: user.id },
+    });
+
+    if (!dbUser?.role || !dbUser?.orgName) {
+      console.error("Missing role or orgName for user:", user.id);
       res.status(403).json({ error: "User missing required claims" });
       return;
     }
 
     req.user = {
-      uid: decodedToken.uid,
-      role: userRecord.customClaims.role,
-      orgName: userRecord.customClaims.orgName,
+      uid: user.id,
+      role: dbUser.role,
+      orgName: dbUser.orgName,
     };
 
     console.log("Authenticated user:", {
       uid: req.user.uid,
       role: req.user.role,
       orgName: req.user.orgName,
-      tokenIssued: new Date(decodedToken.iat * 1000).toISOString(),
-      tokenExpires: new Date(decodedToken.exp * 1000).toISOString(),
     });
 
     next();

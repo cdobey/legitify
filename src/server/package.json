@@ -23,6 +23,7 @@
   "description": "",
   "dependencies": {
     "@prisma/client": "^6.3.1",
+    "@supabase/supabase-js": "^2.49.1",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
@@ -30,8 +31,6 @@
     "express": "^4.21.2",
     "fabric-ca-client": "^2.2.20",
     "fabric-network": "^2.2.20",
-    "firebase": "^11.3.0",
-    "firebase-admin": "^13.1.0",
     "jsonwebtoken": "^9.0.2",
     "logger": "^0.0.1",
     "morgan": "^1.10.0",

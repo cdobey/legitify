@@ -14,9 +14,9 @@ import {
 import { searchUsers } from "../controllers/user.controller";
 
 import { Router } from "express";
-import admin from "firebase-admin";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
+import supabase from "../config/supabase";
 import { getProfile } from "../controllers/user.controller";
 import { authMiddleware } from "../middleware/auth";
 
@@ -32,7 +32,7 @@ const swaggerOptions = {
         bearerAuth: {
           type: "http",
           scheme: "bearer",
-          bearerFormat: "Firebase ID Token",
+          bearerFormat: "Supabase JWT Token",
         },
       },
       schemas: {
@@ -41,7 +41,7 @@ const swaggerOptions = {
           properties: {
             token: {
               type: "string",
-              description: "Firebase ID token",
+              description: "Supabase access token",
             },
           },
         },
@@ -119,7 +119,7 @@ router.post("/auth/register", register);
  * @openapi
  * /auth/test-login:
  *   post:
- *     summary: Test endpoint to get a Firebase token
+ *     summary: Test endpoint to get a Supabase token
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -148,45 +148,28 @@ router.post("/auth/test-login", async (req, res) => {
     const { email, password } = req.body;
     console.log("Login attempt for email:", email);
 
-    // Directly sign in with Firebase Admin SDK
-    const signInURL = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${process.env.FIREBASE_API_KEY}`;
-
-    const response = await fetch(signInURL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email,
-        password,
-        returnSecureToken: true,
-      }),
+    // Sign in with Supabase
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
 
-    const data = await response.json();
-    console.log("Sign in response:", {
-      status: response.status,
-      ok: response.ok,
-      error: data.error,
-    });
-
-    if (!response.ok) {
-      throw new Error(data.error?.message || "Failed to sign in");
+    if (error) {
+      console.error("Sign in error:", error);
+      throw error;
     }
 
-    if (!data.idToken) {
-      throw new Error("No ID token received");
+    if (!data.session) {
+      throw new Error("No session returned from Supabase");
     }
 
-    // Verify the token to make sure it works
-    const decodedToken = await admin.auth().verifyIdToken(data.idToken);
-    console.log("Token verified for user:", decodedToken.uid);
+    console.log("Token generated for user:", data.user?.id);
 
     res.json({
-      token: data.idToken,
-      expiresIn: data.expiresIn,
-      refreshToken: data.refreshToken,
-      uid: decodedToken.uid,
+      token: data.session.access_token,
+      expiresIn: data.session.expires_at,
+      refreshToken: data.session.refresh_token,
+      uid: data.user?.id,
     });
   } catch (error: any) {
     console.error("Login error:", {

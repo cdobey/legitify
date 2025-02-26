@@ -24,7 +24,7 @@ export default defineConfig({
           "react-vendor": ["react", "react-dom", "react-router-dom"],
           mantine: ["@mantine/core", "@mantine/hooks"],
           query: ["@tanstack/react-query"],
-          firebase: ["firebase/app", "firebase/auth"],
+          supabase: ["@supabase/supabase-js"],
         },
       },
     },
@@ -46,8 +46,7 @@ export default defineConfig({
       "@mantine/core",
       "@mantine/hooks",
       "@tanstack/react-query",
-      "firebase/app",
-      "firebase/auth",
+      "@supabase/supabase-js",
     ],
   },
 });
