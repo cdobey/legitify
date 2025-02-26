@@ -1,5 +1,9 @@
 image: node:18-bullseye
 
+stages:
+  - test
+  - deploy
+
 variables:
   SERVER_PID_FILE: "/tmp/server.pid"
   SERVER_STARTUP_TIMEOUT: 120
@@ -14,7 +18,6 @@ test_flow:
   tags:
     - shell
   before_script:
-    # [Previous before_script section remains the same]
     - |
       sudo apt-get update && sudo apt-get install -y \
         curl \
@@ -23,7 +26,6 @@ test_flow:
         docker.io \
         docker-compose \
         golang-go
-
     - |
       curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
       export NVM_DIR="$HOME/.nvm"
@@ -31,7 +33,6 @@ test_flow:
       nvm install 18
       nvm use 18
       npm install -g typescript ts-node
-
     - node --version
     - npm --version
     - docker --version
@@ -42,7 +43,6 @@ test_flow:
     - sudo chown -R gitlab-runner:gitlab-runner .
 
   script:
-    # [Previous setup steps remain the same until test flow]
     - cd $CI_PROJECT_DIR/src/server
     - npm ci
     - npm install -g ts-node typescript
@@ -72,7 +72,7 @@ test_flow:
       while [ $TIMEOUT -gt 0 ]; do
         if curl -s http://localhost:3001/docs > /dev/null; then
           echo "Server is responding to requests"
-          sleep 10  # Increased wait time to ensure full readiness
+          sleep 10
           break
         fi
         echo "Waiting... ($TIMEOUT seconds remaining)"
@@ -88,15 +88,9 @@ test_flow:
     # Run test flow with improved error handling
     - |
       cd $CI_PROJECT_DIR/src/server
-
-      # Modify test-flow.sh to continue on test failures
       sed -i 's/exit 1  # Fail fast in CI/continue  # Continue despite test failure/' scripts/test-flow.sh
-
-      # Run the test flow with detailed logging
       chmod +x scripts/test-flow.sh
       ./scripts/test-flow.sh 2>&1 | tee test_output.log
-
-      # Check if the test completed successfully
       if ! grep -q "Test flow completed successfully!" test_output.log; then
         echo "Test flow did not complete successfully. Full test output:"
         cat test_output.log
@@ -108,7 +102,6 @@ test_flow:
       echo "Starting cleanup..."
       set +e  # Continue on errors during cleanup
 
-      # Function to kill process and its children
       kill_process_tree() {
         local pid=$1
         if [ -n "$pid" ]; then
@@ -152,3 +145,24 @@ test_flow:
       - src/server/node_modules/
       - ~/.npm/
     policy: pull-push
+
+deploy_to_render:
+  image: docker:20.10.16
+  stage: deploy
+  needs: ["test_flow"]
+  when: manual
+  only:
+    - main
+    - master
+  services:
+    - docker:dind
+  variables:
+    IMAGE_NAME: "dobeyc3/legitify-project"
+    IMAGE_TAG: "backend"
+  before_script:
+    - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+  script:
+    - docker build --platform linux/amd64 -t $IMAGE_NAME:$IMAGE_TAG .
+    - docker push $IMAGE_NAME:$IMAGE_TAG
+    - echo "Triggering Render deployment via webhook..."
+    - curl -X POST "$RENDER_DEPLOY_HOOK"
