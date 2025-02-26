@@ -1,13 +1,6 @@
 #!/bin/bash
 
-echo "🧹 Cleaning up old data..."
-
-# Remove old wallet directory if needed
-rm -rf src/wallet/*
-
 echo "🔄 Setting up for Supabase database..."
-
-echo "✅ Supabase connection validated"
 
 # Ask for confirmation before deleting remote data
 echo "⚠️  WARNING: This will DELETE ALL DATA in your Supabase database!"
@@ -36,12 +29,12 @@ echo "📝 Running Prisma migrations..."
 npx prisma migrate deploy
 
 echo "🔑 Running enrollment script..."
-npx ts-node ./enrollAdmin.ts
+npx ts-node ./scripts/enrollAdmin.ts
 
 echo "🚀 Starting the server..."
 
-# Start the server with npm run dev
-npm run dev > server.log 2>&1 &
+# Start the server
+npm run dev &
 SERVER_PID=$!
 
 # Store the PID
@@ -76,10 +69,6 @@ if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
     kill $SERVER_PID
     exit 1
 fi
-
-# Create environment file for GitLab CI
-echo "SERVER_STARTED=true" > server.env
-echo "SERVER_URL=http://localhost:3001" >> server.env
 
 echo "✅ Setup complete!"
 echo "Connection details:"

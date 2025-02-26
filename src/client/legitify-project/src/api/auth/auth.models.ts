@@ -7,7 +7,7 @@ export interface RegisterData {
 }
 
 export interface LoginResponse {
-  user: UserProfile; // Changed to use UserProfile directly
+  user: UserProfile;
   token: string;
 }
 

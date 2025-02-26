@@ -1,7 +1,7 @@
 import FabricCAServices from "fabric-ca-client";
 import fs from "fs";
 import path from "path";
-import { DatabaseWallet } from "./src/utils/db-wallet";
+import { DatabaseWallet } from "../src/utils/db-wallet";
 
 interface Organization {
   name: string;

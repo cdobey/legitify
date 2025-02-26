@@ -9,8 +9,8 @@ import App from "./App";
 import { queryClient } from "./config/queryClient";
 import "./config/supabase";
 import { AuthProvider } from "./contexts/AuthContext";
-import "./index.css";
-
+import "./styles/index.css";
+import { theme } from "./styles/theme";
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
@@ -24,7 +24,7 @@ if (initialLoader) {
 root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <MantineProvider defaultColorScheme="light">
+      <MantineProvider theme={theme}>
         <BrowserRouter>
           <AuthProvider>
             <App />
