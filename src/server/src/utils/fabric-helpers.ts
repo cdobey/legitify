@@ -1,7 +1,8 @@
 import FabricCAServices from "fabric-ca-client";
-import { Wallets, X509Identity } from "fabric-network";
+import { X509Identity } from "fabric-network";
 import fs from "fs";
 import path from "path";
+import { DatabaseWallet } from "./db-wallet";
 
 interface OrgConfig {
   name: string;
@@ -48,9 +49,8 @@ export async function enrollUser(
     const caURL = ccp.certificateAuthorities[org.caName].url;
     const ca = new FabricCAServices(caURL);
 
-    // Create a new file system based wallet for managing identities
-    const walletPath = path.join(__dirname, `../wallet/${org.name}`);
-    const wallet = await Wallets.newFileSystemWallet(walletPath);
+    // Create a wallet using the database
+    const wallet = await DatabaseWallet.createInstance(org.name);
 
     // Check if user already exists in wallet
     const userIdentity = await wallet.get(userId);
@@ -108,7 +108,7 @@ export async function enrollUser(
     await wallet.put(userId, x509Identity);
 
     console.log(
-      `Successfully enrolled user ${userId} with ${org.name} and imported into wallet`
+      `Successfully enrolled user ${userId} with ${org.name} and imported into database wallet`
     );
   } catch (error) {
     console.error(`Failed to enroll user ${userId}: ${error}`);

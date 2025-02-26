@@ -50,6 +50,19 @@ model Request {
   document  Document @relation("Document", fields: [documentId], references: [id])
 }
 
+model WalletIdentity {
+  label       String   @id
+  orgName     OrgName
+  type        String   // e.g., "X.509"
+  certificate String   @db.Text
+  privateKey  String   @db.Text
+  mspId       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([label, orgName])
+}
+
 enum Role {
   university
   individual
