@@ -147,17 +147,16 @@ test_flow:
     policy: pull-push
 
 deploy_to_render:
-  image: docker:20.10.16
   stage: deploy
+  tags:
+    - shell
   needs: ["test_flow"]
   when: manual
   only:
     - main
     - master
-  services:
-    - docker:dind
   variables:
-    IMAGE_NAME: "dobeyc3/legitify-project"
+    IMAGE_NAME: "legitify-project"
     IMAGE_TAG: "backend"
   before_script:
     - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
