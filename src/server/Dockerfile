@@ -13,14 +13,12 @@ RUN npm install
 # Copy the entire project (except ignored files)
 COPY . .
 
+# Generate Prisma client without accessing the database
+# This uses the schema but doesn't need DATABASE_URL at build time
+RUN npx prisma generate
+
 # Expose the port that Swagger UI will run on
 EXPOSE 3001
 
-# Set environment variables (modify if needed)
-ENV NODE_ENV=production
-
-# Generate Prisma client (even if DB is not needed now)
-RUN npx prisma generate
-
-# Start the server
-CMD ["npm", "run", "start"]
+# Start the server with migration at runtime
+CMD npx prisma migrate deploy && npm run start
