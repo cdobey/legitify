@@ -65,6 +65,7 @@ test_flow:
     - |
       cd $CI_PROJECT_DIR/src/server
       chmod +x scripts/start-fresh-db.sh
+      sed -i 's/read -p "Are you sure you want to continue? (y\/n): " -n 1 -r/REPLY="y"/' scripts/start-fresh-db.sh
       source scripts/start-fresh-db.sh
 
       echo "Waiting for server to be fully ready..."
