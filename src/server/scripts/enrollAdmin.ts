@@ -1,7 +1,7 @@
 import FabricCAServices from "fabric-ca-client";
 import fs from "fs";
 import path from "path";
-import { DatabaseWallet } from "./src/utils/db-wallet";
+import { DatabaseWallet } from "../src/utils/db-wallet";
 
 interface Organization {
   name: string;
@@ -15,7 +15,7 @@ async function enrollAdmin(orgName: string, mspId: string): Promise<void> {
     // Construct paths based on organization
     const ccpPath = path.resolve(
       rootDir,
-      `../ledger/legitify-network/organizations/peerOrganizations/${orgName}.com/connection-${orgName}.json`
+      `../../ledger/legitify-network/organizations/peerOrganizations/${orgName}.com/connection-${orgName}.json`
     );
 
     if (!fs.existsSync(ccpPath)) {

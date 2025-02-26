@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(
   cors({
-    origin: "http://localhost:5173", // Your Vite dev server
+    origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
@@ -30,7 +30,6 @@ app.get("/", (req: Request, res: Response) => {
   res.send("TypeScript + Go Chaincode Degree API with Prisma");
 });
 
-// Add routes
 app.use("/", indexRoutes);
 
 // Start Server

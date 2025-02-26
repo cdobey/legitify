@@ -1,37 +1,40 @@
 #!/bin/bash
 
-echo "🧹 Cleaning up old data..."
+echo "🔄 Setting up for Supabase database..."
 
-# Remove old wallet directory
-rm -rf ../../wallet/*
+# Ask for confirmation before deleting remote data
+echo "⚠️  WARNING: This will DELETE ALL DATA in your Supabase database!"
+echo "⚠️  All tables will be cleared and recreated. This action cannot be undone."
+read -p "Are you sure you want to continue? (y/n): " -n 1 -r
+echo
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+  echo "Operation cancelled"
+  exit 1
+fi
 
-# Remove old pgdata directory if it exists
-rm -rf pgdata
+echo "🗑️  Clearing all data from Supabase database..."
 
-echo "🔄 Stopping any existing PostgreSQL container..."
-docker-compose down
-
-echo "🚀 Starting new PostgreSQL container..."
-docker-compose up -d
-
-echo "⏳ Waiting for database to start..."
-sleep 5
+# Use Prisma to reset the database (drops all tables and recreates them)
+echo "🔄 Resetting database schema..."
+npx prisma migrate reset --force
 
 echo "🔧 Running Prisma migrations and generation..."
 
-# Run Prisma migrations
-npx prisma migrate dev --name init
-
 # Generate Prisma client
+echo "📦 Generating Prisma client..."
 npx prisma generate
 
+# Run Prisma migrations (with --force for non-interactive mode)
+echo "📝 Running Prisma migrations..."
+npx prisma migrate deploy
+
 echo "🔑 Running enrollment script..."
-npx ts-node ./enrollAdmin.ts
+npx ts-node ./scripts/enrollAdmin.ts
 
 echo "🚀 Starting the server..."
 
-# Start the server with npm run dev instead of direct ts-node
-npm run dev > server.log 2>&1 &
+# Start the server
+npm run dev &
 SERVER_PID=$!
 
 # Store the PID
@@ -67,15 +70,8 @@ if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
     exit 1
 fi
 
-# Create environment file for GitLab CI
-echo "SERVER_STARTED=true" > server.env
-echo "SERVER_URL=http://localhost:3001" >> server.env
-
 echo "✅ Setup complete!"
 echo "Connection details:"
-echo "  Host: localhost"
-echo "  Port: 5432"
-echo "  Database: my_fabric_db"
-echo "  Username: postgres"
-echo "  Password: postgrespw"
-echo "Server is running"
+echo "  Using Supabase database: postgres.japzugjgdlvqkmytralh"
+echo "Server is running at http://localhost:3001"
+echo "Swagger documentation available at http://localhost:3001/docs" 
