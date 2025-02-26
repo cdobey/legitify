@@ -161,6 +161,7 @@ deploy_to_render:
   before_script:
     - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
   script:
+    - cd src/server
     - docker build --platform linux/amd64 -t $IMAGE_NAME:$IMAGE_TAG .
     - docker push $IMAGE_NAME:$IMAGE_TAG
     - echo "Triggering Render deployment via webhook..."
