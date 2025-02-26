@@ -64,8 +64,8 @@ test_flow:
     # Start backend server with improved logging
     - |
       cd $CI_PROJECT_DIR/src/server
-      chmod +x src/scripts/start-fresh-db.sh
-      source src/scripts/start-fresh-db.sh
+      chmod +x scripts/start-fresh-db.sh
+      source scripts/start-fresh-db.sh
 
       echo "Waiting for server to be fully ready..."
       TIMEOUT=$SERVER_STARTUP_TIMEOUT
