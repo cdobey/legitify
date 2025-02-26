@@ -1,7 +1,8 @@
-import { Gateway, Wallets } from "fabric-network";
+import { Gateway } from "fabric-network";
 
 import fs from "fs";
 import path from "path";
+import { DatabaseWallet } from "../utils/db-wallet";
 
 /**
  * Establishes a connection to the Fabric network using the specified user and organization.
@@ -20,9 +21,8 @@ export async function getGateway(
   );
   const ccp = JSON.parse(fs.readFileSync(ccpPath, "utf8"));
 
-  // Path to the wallet
-  const walletPath = path.join(__dirname, `../wallet/${orgName}`);
-  const wallet = await Wallets.newFileSystemWallet(walletPath);
+  // Use database wallet
+  const wallet = await DatabaseWallet.createInstance(orgName);
 
   const gateway = new Gateway();
   await gateway.connect(ccp, {

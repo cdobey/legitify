@@ -32,7 +32,7 @@ echo -e "\n${BLUE}1. Registering users...${NC}"
 
 # Register university (don't need to capture UID here)
 echo -e "\n${BLUE}Registering university...${NC}"
-curl -s -X POST "$API_URL/auth/register" \
+UNIVERSITY_REGISTER_RESPONSE=$(curl -s -X POST "$API_URL/auth/register" \
 -H "Content-Type: application/json" \
 -d '{
     "email": "university@test.com",
@@ -40,11 +40,12 @@ curl -s -X POST "$API_URL/auth/register" \
     "username": "testuniversity",
     "role": "university",
     "orgName": "orguniversity"
-}' > /dev/null
+}')
+echo "University Register Response: $UNIVERSITY_REGISTER_RESPONSE"
 
 # Register individual
 echo -e "\n${BLUE}Registering individual...${NC}"
-curl -s -X POST "$API_URL/auth/register" \
+INDIVIDUAL_REGISTER_RESPONSE=$(curl -s -X POST "$API_URL/auth/register" \
 -H "Content-Type: application/json" \
 -d '{
     "email": "individual@test.com",
@@ -52,11 +53,12 @@ curl -s -X POST "$API_URL/auth/register" \
     "username": "testindividual",
     "role": "individual",
     "orgName": "orgindividual"
-}' > /dev/null
+}')
+echo "Individual Register Response: $INDIVIDUAL_REGISTER_RESPONSE"
 
 # Register employer
 echo -e "\n${BLUE}Registering employer...${NC}"
-curl -s -X POST "$API_URL/auth/register" \
+EMPLOYER_REGISTER_RESPONSE=$(curl -s -X POST "$API_URL/auth/register" \
 -H "Content-Type: application/json" \
 -d '{
     "email": "employer@test.com",
@@ -64,7 +66,8 @@ curl -s -X POST "$API_URL/auth/register" \
     "username": "testemployer",
     "role": "employer",
     "orgName": "orgemployer"
-}' > /dev/null
+}')
+echo "Employer Register Response: $EMPLOYER_REGISTER_RESPONSE"
 
 echo -e "\n${BLUE}2. Logging in users and extracting UIDs...${NC}"
 

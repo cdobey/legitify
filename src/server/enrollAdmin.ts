@@ -1,7 +1,7 @@
 import FabricCAServices from "fabric-ca-client";
-import { Wallets } from "fabric-network";
 import fs from "fs";
 import path from "path";
+import { DatabaseWallet } from "./src/utils/db-wallet";
 
 interface Organization {
   name: string;
@@ -35,11 +35,9 @@ async function enrollAdmin(orgName: string, mspId: string): Promise<void> {
       caInfo.caName
     );
 
-    // Use src/wallet directory
-    const walletPath = path.join(rootDir, `src/wallet/${orgName}`);
-    console.log(`Using wallet path: ${walletPath}`);
-
-    const wallet = await Wallets.newFileSystemWallet(walletPath);
+    // Use database wallet
+    console.log(`Using database wallet for ${orgName}`);
+    const wallet = await DatabaseWallet.createInstance(orgName);
 
     const adminExists = await wallet.get(`${orgName}admin`);
     if (adminExists) {
@@ -65,7 +63,7 @@ async function enrollAdmin(orgName: string, mspId: string): Promise<void> {
 
     await wallet.put(`${orgName}admin`, x509Identity);
     console.log(
-      `Successfully enrolled admin user for ${orgName} and imported it into the wallet`
+      `Successfully enrolled admin user for ${orgName} and imported it into the database wallet`
     );
   } catch (error) {
     console.error(`Failed to enroll admin user for ${orgName}:`, error);

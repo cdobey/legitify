@@ -4,158 +4,283 @@
 
 Server is running on port 3001
 Swagger docs available at http://localhost:3001/docs
-PayloadTooLargeError: request entity too large
-    at readStream (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/raw-body/index.js:163:17)
-    at getRawBody (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/raw-body/index.js:116:12)
-    at read (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/body-parser/lib/read.js:79:3)
-    at jsonParser (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/body-parser/lib/types/json.js:138:5)
-    at Layer.handle [as handle_request] (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/express/lib/router/layer.js:95:5)
-    at trim_prefix (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/express/lib/router/index.js:328:13)
-    at /Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/express/lib/router/index.js:286:9
-    at Function.process_params (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/express/lib/router/index.js:346:12)
-    at next (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/express/lib/router/index.js:280:10)
-    at cors (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/cors/lib/index.js:188:7)
+[0mGET /docs [36m301[0m 2.593 ms - 154[0m
+Successfully enrolled user g17gUq1aFpQGC24z0cdnXUqozSi2 with orguniversity and imported into database wallet
+[0mPOST /auth/register [32m201[0m 3779.477 ms - 139[0m
+Successfully enrolled user xD9IFtOW4FOKfMCCzC7osaVZ8cF3 with orgindividual and imported into database wallet
+[0mPOST /auth/register [32m201[0m 2278.049 ms - 139[0m
+Successfully enrolled user IK5rlsaesoUkKc30wepNt7gI8u82 with orgemployer and imported into database wallet
+[0mPOST /auth/register [32m201[0m 2512.013 ms - 135[0m
+Login attempt for email: university@test.com
+Sign in response: { status: 200, ok: true, error: undefined }
+Token verified for user: g17gUq1aFpQGC24z0cdnXUqozSi2
+[0mPOST /auth/test-login [32m200[0m 317.171 ms - 1353[0m
+Login attempt for email: individual@test.com
+Sign in response: { status: 200, ok: true, error: undefined }
+Token verified for user: xD9IFtOW4FOKfMCCzC7osaVZ8cF3
+[0mPOST /auth/test-login [32m200[0m 193.587 ms - 1353[0m
+Login attempt for email: employer@test.com
+Sign in response: { status: 200, ok: true, error: undefined }
+Token verified for user: IK5rlsaesoUkKc30wepNt7gI8u82
+[0mPOST /auth/test-login [32m200[0m 182.065 ms - 1339[0m
 Authenticated user: {
-  uid: 'DBr6eT123HfZswp6fTTiWf3uLKt2',
-  role: 'employer',
-  orgName: 'orgemployer',
-  tokenIssued: '2025-02-18T03:13:55.000Z',
-  tokenExpires: '2025-02-18T04:13:55.000Z'
-}
-[0mGET /user/search?email=test4 [33m404[0m 1898.959 ms - 26[0m
-Authenticated user: {
-  uid: 'DBr6eT123HfZswp6fTTiWf3uLKt2',
-  role: 'employer',
-  orgName: 'orgemployer',
-  tokenIssued: '2025-02-18T03:13:55.000Z',
-  tokenExpires: '2025-02-18T04:13:55.000Z'
-}
-[0mGET /user/search?email=test4%40test.com [33m404[0m 394.211 ms - 26[0m
-Authenticated user: {
-  uid: 'DBr6eT123HfZswp6fTTiWf3uLKt2',
-  role: 'employer',
-  orgName: 'orgemployer',
-  tokenIssued: '2025-02-18T03:13:55.000Z',
-  tokenExpires: '2025-02-18T04:13:55.000Z'
-}
-[0mPOST /degree/verify [32m200[0m 398.642 ms - 66[0m
-Authenticated user: {
-  uid: 'DBr6eT123HfZswp6fTTiWf3uLKt2',
-  role: 'employer',
-  orgName: 'orgemployer',
-  tokenIssued: '2025-02-18T03:13:55.000Z',
-  tokenExpires: '2025-02-18T04:13:55.000Z'
-}
-[0mGET /user/search?email=test4%40test.com [33m404[0m 380.407 ms - 26[0m
-Authenticated user: {
-  uid: 'DBr6eT123HfZswp6fTTiWf3uLKt2',
-  role: 'employer',
-  orgName: 'orgemployer',
-  tokenIssued: '2025-02-18T03:13:55.000Z',
-  tokenExpires: '2025-02-18T04:13:55.000Z'
-}
-[0mPOST /degree/verify [32m200[0m 345.165 ms - 66[0m
-Authenticated user: {
-  uid: '54vPN8e7J3QMywsmBslBgRj2RFs2',
+  uid: 'g17gUq1aFpQGC24z0cdnXUqozSi2',
   role: 'university',
   orgName: 'orguniversity',
-  tokenIssued: '2025-02-18T03:28:42.000Z',
-  tokenExpires: '2025-02-18T04:28:42.000Z'
+  tokenIssued: '2025-02-26T00:50:34.000Z',
+  tokenExpires: '2025-02-26T01:50:34.000Z'
 }
-[0mGET /me [32m200[0m 572.465 ms - 209[0m
+2025-02-26T00:50:38.542Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+2025-02-26T00:50:38.542Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgemployer.com url:grpcs://localhost:8051 timeout:3000
+2025-02-26T00:50:38.543Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgemployer.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+    at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
+    at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at processTimers (node:internal/timers:529:7) {
+  connectFailed: true
+}
+2025-02-26T00:50:41.548Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+2025-02-26T00:50:41.548Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgindividual.com url:grpcs://localhost:9051 timeout:3000
+2025-02-26T00:50:41.550Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgindividual.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+    at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
+    at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at processTimers (node:internal/timers:529:7) {
+  connectFailed: true
+}
+[0mPOST /degree/issue [32m201[0m 8728.324 ms - 151[0m
 Authenticated user: {
-  uid: '54vPN8e7J3QMywsmBslBgRj2RFs2',
+  uid: 'xD9IFtOW4FOKfMCCzC7osaVZ8cF3',
+  role: 'individual',
+  orgName: 'orgindividual',
+  tokenIssued: '2025-02-26T00:50:34.000Z',
+  tokenExpires: '2025-02-26T01:50:34.000Z'
+}
+2025-02-26T00:50:47.246Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+2025-02-26T00:50:47.246Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orguniversity.com url:grpcs://localhost:7051 timeout:3000
+2025-02-26T00:50:47.247Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orguniversity.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+    at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
+    at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at processTimers (node:internal/timers:529:7) {
+  connectFailed: true
+}
+2025-02-26T00:50:50.252Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+2025-02-26T00:50:50.252Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgemployer.com url:grpcs://localhost:8051 timeout:3000
+2025-02-26T00:50:50.252Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgemployer.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+    at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
+    at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at processTimers (node:internal/timers:529:7) {
+  connectFailed: true
+}
+[0mPOST /degree/accept [32m200[0m 8564.319 ms - 63[0m
+Authenticated user: {
+  uid: 'IK5rlsaesoUkKc30wepNt7gI8u82',
+  role: 'employer',
+  orgName: 'orgemployer',
+  tokenIssued: '2025-02-26T00:50:34.000Z',
+  tokenExpires: '2025-02-26T01:50:34.000Z'
+}
+[0mPOST /degree/requestAccess [32m201[0m 388.483 ms - 81[0m
+Authenticated user: {
+  uid: 'xD9IFtOW4FOKfMCCzC7osaVZ8cF3',
+  role: 'individual',
+  orgName: 'orgindividual',
+  tokenIssued: '2025-02-26T00:50:34.000Z',
+  tokenExpires: '2025-02-26T01:50:34.000Z'
+}
+[0mPOST /degree/grantAccess [32m200[0m 348.010 ms - 77[0m
+Authenticated user: {
+  uid: 'IK5rlsaesoUkKc30wepNt7gI8u82',
+  role: 'employer',
+  orgName: 'orgemployer',
+  tokenIssued: '2025-02-26T00:50:34.000Z',
+  tokenExpires: '2025-02-26T01:50:34.000Z'
+}
+2025-02-26T00:50:56.555Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+2025-02-26T00:50:56.555Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orguniversity.com url:grpcs://localhost:7051 timeout:3000
+2025-02-26T00:50:56.555Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orguniversity.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+    at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
+    at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at processTimers (node:internal/timers:529:7) {
+  connectFailed: true
+}
+2025-02-26T00:50:59.566Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+2025-02-26T00:50:59.566Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgindividual.com url:grpcs://localhost:9051 timeout:3000
+2025-02-26T00:50:59.568Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgindividual.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+    at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
+    at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at processTimers (node:internal/timers:529:7) {
+  connectFailed: true
+}
+[0mGET /degree/view/0423cd18-327a-4b68-8a85-95f4a7dabd01 [32m200[0m 6466.198 ms - 1076[0m
+Auth middleware error: {
+  message: 'There is no user record corresponding to the provided identifier.',
+  code: 'auth/user-not-found',
+  stack: 'Error: There is no user record corresponding to the provided identifier.\n' +
+    '    at /Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/auth/auth-api-request.js:552:15\n' +
+    '    at /Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/firebase-admin/lib/auth/auth-api-request.js:1616:13\n' +
+    '    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n' +
+    '    at async authMiddleware (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/src/middleware/auth.ts:34:26)'
+}
+[0mGET /me [33m401[0m 210.201 ms - 140[0m
+Authenticated user: {
+  uid: 'g17gUq1aFpQGC24z0cdnXUqozSi2',
   role: 'university',
   orgName: 'orguniversity',
-  tokenIssued: '2025-02-18T03:28:42.000Z',
-  tokenExpires: '2025-02-18T04:28:42.000Z'
+  tokenIssued: '2025-02-26T00:53:27.000Z',
+  tokenExpires: '2025-02-26T01:53:27.000Z'
 }
-[0mGET /me [36m304[0m 510.130 ms - -[0m
+[0mGET /me [32m200[0m 406.886 ms - 219[0m
 Authenticated user: {
-  uid: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
+  uid: 'g17gUq1aFpQGC24z0cdnXUqozSi2',
+  role: 'university',
+  orgName: 'orguniversity',
+  tokenIssued: '2025-02-26T00:53:27.000Z',
+  tokenExpires: '2025-02-26T01:53:27.000Z'
+}
+[0mGET /me [36m304[0m 366.974 ms - -[0m
+Authenticated user: {
+  uid: 'g17gUq1aFpQGC24z0cdnXUqozSi2',
+  role: 'university',
+  orgName: 'orguniversity',
+  tokenIssued: '2025-02-26T00:53:27.000Z',
+  tokenExpires: '2025-02-26T01:53:27.000Z'
+}
+2025-02-26T00:54:07.194Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+2025-02-26T00:54:07.195Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgemployer.com url:grpcs://localhost:8051 timeout:3000
+2025-02-26T00:54:07.196Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgemployer.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+    at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
+    at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at processTimers (node:internal/timers:529:7) {
+  connectFailed: true
+}
+2025-02-26T00:54:10.201Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+2025-02-26T00:54:10.203Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgindividual.com url:grpcs://localhost:9051 timeout:3000
+2025-02-26T00:54:10.204Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgindividual.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+    at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
+    at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at processTimers (node:internal/timers:529:7) {
+  connectFailed: true
+}
+[0mPOST /degree/issue [32m201[0m 8643.604 ms - 151[0m
+Authenticated user: {
+  uid: 'xD9IFtOW4FOKfMCCzC7osaVZ8cF3',
   role: 'individual',
   orgName: 'orgindividual',
-  tokenIssued: '2025-02-18T03:29:02.000Z',
-  tokenExpires: '2025-02-18T04:29:02.000Z'
+  tokenIssued: '2025-02-26T00:54:44.000Z',
+  tokenExpires: '2025-02-26T01:54:44.000Z'
 }
-[0mGET /me [32m200[0m 391.357 ms - 219[0m
+[0mGET /me [32m200[0m 438.342 ms - 219[0m
 Authenticated user: {
-  uid: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
+  uid: 'xD9IFtOW4FOKfMCCzC7osaVZ8cF3',
   role: 'individual',
   orgName: 'orgindividual',
-  tokenIssued: '2025-02-18T03:29:02.000Z',
-  tokenExpires: '2025-02-18T04:29:02.000Z'
+  tokenIssued: '2025-02-26T00:54:44.000Z',
+  tokenExpires: '2025-02-26T01:54:44.000Z'
 }
-[0mGET /me [36m304[0m 327.071 ms - -[0m
+[0mGET /degree/list [32m200[0m 358.936 ms - 265[0m
 Authenticated user: {
-  uid: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
+  uid: 'xD9IFtOW4FOKfMCCzC7osaVZ8cF3',
   role: 'individual',
   orgName: 'orgindividual',
-  tokenIssued: '2025-02-18T03:29:02.000Z',
-  tokenExpires: '2025-02-18T04:29:02.000Z'
+  tokenIssued: '2025-02-26T00:54:44.000Z',
+  tokenExpires: '2025-02-26T01:54:44.000Z'
 }
-[0mGET /degree/list [32m200[0m 504.707 ms - 267[0m
+2025-02-26T00:54:53.312Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+2025-02-26T00:54:53.313Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orguniversity.com url:grpcs://localhost:7051 timeout:3000
+2025-02-26T00:54:53.316Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orguniversity.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+    at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
+    at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at processTimers (node:internal/timers:529:7) {
+  connectFailed: true
+}
+2025-02-26T00:54:56.321Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+2025-02-26T00:54:56.321Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgemployer.com url:grpcs://localhost:8051 timeout:3000
+2025-02-26T00:54:56.322Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgemployer.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+    at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
+    at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
+    at listOnTimeout (node:internal/timers:594:17)
+    at processTimers (node:internal/timers:529:7) {
+  connectFailed: true
+}
+[0mPOST /degree/accept [32m200[0m 8578.275 ms - 63[0m
 Authenticated user: {
-  uid: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
+  uid: 'xD9IFtOW4FOKfMCCzC7osaVZ8cF3',
   role: 'individual',
   orgName: 'orgindividual',
-  tokenIssued: '2025-02-18T03:29:02.000Z',
-  tokenExpires: '2025-02-18T04:29:02.000Z'
+  tokenIssued: '2025-02-26T00:54:44.000Z',
+  tokenExpires: '2025-02-26T01:54:44.000Z'
 }
-[0mGET /degree/list [36m304[0m 488.834 ms - -[0m
+[0mGET /degree/list [32m200[0m 387.923 ms - 267[0m
 Authenticated user: {
-  uid: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
+  uid: 'xD9IFtOW4FOKfMCCzC7osaVZ8cF3',
   role: 'individual',
   orgName: 'orgindividual',
-  tokenIssued: '2025-02-18T03:29:02.000Z',
-  tokenExpires: '2025-02-18T04:29:02.000Z'
+  tokenIssued: '2025-02-26T00:54:44.000Z',
+  tokenExpires: '2025-02-26T01:54:44.000Z'
 }
-Fetching requests for user: FYUVqMlYwvgVoEnZ9qCPmciRjcy1
+Fetching requests for user: xD9IFtOW4FOKfMCCzC7osaVZ8cF3
 All user documents: [
   {
-    id: 'b99afd66-e238-4572-88fa-043cdf150ee2',
-    issuedTo: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
-    issuer: 'd5pWhNPpWXcImPgREaW0SWFTBfD3',
-    docHash: 'a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e',
-    fileData: Uint8Array(11) [
-       72, 101, 108, 108,
-      111,  32,  87, 111,
-      114, 108, 100
+    id: '0423cd18-327a-4b68-8a85-95f4a7dabd01',
+    issuedTo: 'xD9IFtOW4FOKfMCCzC7osaVZ8cF3',
+    issuer: 'g17gUq1aFpQGC24z0cdnXUqozSi2',
+    fileData: Uint8Array(678) [
+       37,  80,  68,  70,  45,  49,  46,  55, 10,  10,  49,  32,
+       48,  32, 111,  98, 106,  32,  32,  37, 32, 101, 110, 116,
+      114, 121,  32, 112, 111, 105, 110, 116, 10,  60,  60,  10,
+       32,  32,  47,  84, 121, 112, 101,  32, 47,  67,  97, 116,
+       97, 108, 111, 103,  10,  32,  32,  47, 80,  97, 103, 101,
+      115,  32,  50,  32,  48,  32,  82,  10, 62,  62,  10, 101,
+      110, 100, 111,  98, 106,  10,  10,  50, 32,  48,  32, 111,
+       98, 106,  10,  60,  60,  10,  32,  32, 47,  84, 121, 112,
+      101,  32,  47,  80,
+      ... 578 more items
     ],
     status: 'accepted',
-    createdAt: 2025-02-18T02:50:59.456Z,
-    updatedAt: 2025-02-18T02:51:08.485Z
+    createdAt: 2025-02-26T00:50:43.749Z,
+    updatedAt: 2025-02-26T00:50:52.358Z
   },
   {
-    id: '492449cd-7957-4da4-8cca-3ec525acf209',
-    issuedTo: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
-    issuer: '54vPN8e7J3QMywsmBslBgRj2RFs2',
-    docHash: 'f16baa10e36aa2854aa742ff535461128b6a3e6a5e9f676cac4848616174f5e5',
-    fileData: Uint8Array(48) [
-      229, 214, 246, 211, 135, 156, 239, 199, 154,
-      229, 222, 154, 233, 198, 159, 123,  87, 183,
-      209, 174, 117, 213, 238,  27, 215,  77,  90,
-      127, 222,  27, 213, 247, 244, 237, 230, 158,
-      111,  71, 159, 223,  70, 181, 115,  93, 120,
-      127,  71, 159
+    id: 'aecceaa2-ebe3-4d07-bc97-02e239690878',
+    issuedTo: 'xD9IFtOW4FOKfMCCzC7osaVZ8cF3',
+    issuer: 'g17gUq1aFpQGC24z0cdnXUqozSi2',
+    fileData: Uint8Array(222076) [
+       37,  80,  68,  70,  45,  49,  46,  55,  13,  10,  37, 181,
+      181, 181, 181,  13,  10,  49,  32,  48,  32, 111,  98, 106,
+       13,  10,  60,  60,  47,  84, 121, 112, 101,  47,  67,  97,
+      116,  97, 108, 111, 103,  47,  80,  97, 103, 101, 115,  32,
+       50,  32,  48,  32,  82,  47,  76,  97, 110, 103,  40, 101,
+      110,  41,  32,  47,  83, 116, 114, 117,  99, 116,  84, 114,
+      101, 101,  82, 111, 111, 116,  32,  49,  50,  54,  32,  48,
+       32,  82,  47,  79, 117, 116, 108, 105, 110, 101, 115,  32,
+       49,  48,  52,  32,
+      ... 221976 more items
     ],
     status: 'accepted',
-    createdAt: 2025-02-18T02:51:15.736Z,
-    updatedAt: 2025-02-18T03:11:55.465Z
+    createdAt: 2025-02-26T00:54:12.333Z,
+    updatedAt: 2025-02-26T00:54:58.412Z
   }
 ]
 User documents with requests: [
   {
-    "id": "b99afd66-e238-4572-88fa-043cdf150ee2",
+    "id": "0423cd18-327a-4b68-8a85-95f4a7dabd01",
     "status": "accepted",
     "requests": [
       {
-        "id": "d80255d7-9832-49a7-9ae5-d9e8bc56dd9c",
-        "requesterId": "DBr6eT123HfZswp6fTTiWf3uLKt2",
-        "documentId": "b99afd66-e238-4572-88fa-043cdf150ee2",
+        "id": "3b1dd37d-2c1e-490a-b2e2-cbc693250f16",
+        "requesterId": "IK5rlsaesoUkKc30wepNt7gI8u82",
+        "documentId": "0423cd18-327a-4b68-8a85-95f4a7dabd01",
         "status": "granted",
-        "createdAt": "2025-02-18T02:51:08.843Z",
-        "updatedAt": "2025-02-18T03:12:07.719Z",
+        "createdAt": "2025-02-26T00:50:52.758Z",
+        "updatedAt": "2025-02-26T00:50:53.132Z",
         "requester": {
           "username": "testemployer",
           "orgName": "orgemployer"
@@ -164,466 +289,79 @@ User documents with requests: [
     ]
   },
   {
-    "id": "492449cd-7957-4da4-8cca-3ec525acf209",
+    "id": "aecceaa2-ebe3-4d07-bc97-02e239690878",
     "status": "accepted",
     "requests": []
   }
 ]
 Formatted requests: [
   {
-    requestId: 'd80255d7-9832-49a7-9ae5-d9e8bc56dd9c',
-    docId: 'b99afd66-e238-4572-88fa-043cdf150ee2',
+    requestId: '3b1dd37d-2c1e-490a-b2e2-cbc693250f16',
+    docId: '0423cd18-327a-4b68-8a85-95f4a7dabd01',
     docStatus: 'accepted',
     employerName: 'orgemployer',
-    requestDate: 2025-02-18T02:51:08.843Z,
+    requestDate: 2025-02-26T00:50:52.758Z,
     status: 'granted'
   }
 ]
-[0mGET /degree/requests [32m200[0m 395.046 ms - 213[0m
+[0mGET /degree/requests [32m200[0m 413.902 ms - 213[0m
 Authenticated user: {
-  uid: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
-  role: 'individual',
-  orgName: 'orgindividual',
-  tokenIssued: '2025-02-18T03:29:02.000Z',
-  tokenExpires: '2025-02-18T04:29:02.000Z'
-}
-Fetching requests for user: FYUVqMlYwvgVoEnZ9qCPmciRjcy1
-All user documents: [
-  {
-    id: 'b99afd66-e238-4572-88fa-043cdf150ee2',
-    issuedTo: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
-    issuer: 'd5pWhNPpWXcImPgREaW0SWFTBfD3',
-    docHash: 'a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e',
-    fileData: Uint8Array(11) [
-       72, 101, 108, 108,
-      111,  32,  87, 111,
-      114, 108, 100
-    ],
-    status: 'accepted',
-    createdAt: 2025-02-18T02:50:59.456Z,
-    updatedAt: 2025-02-18T02:51:08.485Z
-  },
-  {
-    id: '492449cd-7957-4da4-8cca-3ec525acf209',
-    issuedTo: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
-    issuer: '54vPN8e7J3QMywsmBslBgRj2RFs2',
-    docHash: 'f16baa10e36aa2854aa742ff535461128b6a3e6a5e9f676cac4848616174f5e5',
-    fileData: Uint8Array(48) [
-      229, 214, 246, 211, 135, 156, 239, 199, 154,
-      229, 222, 154, 233, 198, 159, 123,  87, 183,
-      209, 174, 117, 213, 238,  27, 215,  77,  90,
-      127, 222,  27, 213, 247, 244, 237, 230, 158,
-      111,  71, 159, 223,  70, 181, 115,  93, 120,
-      127,  71, 159
-    ],
-    status: 'accepted',
-    createdAt: 2025-02-18T02:51:15.736Z,
-    updatedAt: 2025-02-18T03:11:55.465Z
-  }
-]
-User documents with requests: [
-  {
-    "id": "b99afd66-e238-4572-88fa-043cdf150ee2",
-    "status": "accepted",
-    "requests": [
-      {
-        "id": "d80255d7-9832-49a7-9ae5-d9e8bc56dd9c",
-        "requesterId": "DBr6eT123HfZswp6fTTiWf3uLKt2",
-        "documentId": "b99afd66-e238-4572-88fa-043cdf150ee2",
-        "status": "granted",
-        "createdAt": "2025-02-18T02:51:08.843Z",
-        "updatedAt": "2025-02-18T03:12:07.719Z",
-        "requester": {
-          "username": "testemployer",
-          "orgName": "orgemployer"
-        }
-      }
-    ]
-  },
-  {
-    "id": "492449cd-7957-4da4-8cca-3ec525acf209",
-    "status": "accepted",
-    "requests": []
-  }
-]
-Formatted requests: [
-  {
-    requestId: 'd80255d7-9832-49a7-9ae5-d9e8bc56dd9c',
-    docId: 'b99afd66-e238-4572-88fa-043cdf150ee2',
-    docStatus: 'accepted',
-    employerName: 'orgemployer',
-    requestDate: 2025-02-18T02:51:08.843Z,
-    status: 'granted'
-  }
-]
-[0mGET /degree/requests [36m304[0m 379.895 ms - -[0m
-PayloadTooLargeError: request entity too large
-    at readStream (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/raw-body/index.js:163:17)
-    at getRawBody (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/raw-body/index.js:116:12)
-    at read (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/body-parser/lib/read.js:79:3)
-    at jsonParser (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/body-parser/lib/types/json.js:138:5)
-    at Layer.handle [as handle_request] (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/express/lib/router/layer.js:95:5)
-    at trim_prefix (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/express/lib/router/index.js:328:13)
-    at /Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/express/lib/router/index.js:286:9
-    at Function.process_params (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/express/lib/router/index.js:346:12)
-    at next (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/express/lib/router/index.js:280:10)
-    at cors (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/cors/lib/index.js:188:7)
-PayloadTooLargeError: request entity too large
-    at readStream (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/raw-body/index.js:163:17)
-    at getRawBody (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/raw-body/index.js:116:12)
-    at read (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/body-parser/lib/read.js:79:3)
-    at jsonParser (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/body-parser/lib/types/json.js:138:5)
-    at Layer.handle [as handle_request] (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/express/lib/router/layer.js:95:5)
-    at trim_prefix (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/express/lib/router/index.js:328:13)
-    at /Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/express/lib/router/index.js:286:9
-    at Function.process_params (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/express/lib/router/index.js:346:12)
-    at next (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/express/lib/router/index.js:280:10)
-    at cors (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/cors/lib/index.js:188:7)
-Authenticated user: {
-  uid: 'DBr6eT123HfZswp6fTTiWf3uLKt2',
+  uid: 'IK5rlsaesoUkKc30wepNt7gI8u82',
   role: 'employer',
   orgName: 'orgemployer',
-  tokenIssued: '2025-02-18T03:13:55.000Z',
-  tokenExpires: '2025-02-18T04:13:55.000Z'
+  tokenIssued: '2025-02-26T00:55:49.000Z',
+  tokenExpires: '2025-02-26T01:55:49.000Z'
 }
-[0mPOST /degree/verify [33m400[0m 430.889 ms - 46[0m
+[0mGET /me [32m200[0m 396.492 ms - 211[0m
 Authenticated user: {
-  uid: 'DBr6eT123HfZswp6fTTiWf3uLKt2',
+  uid: 'IK5rlsaesoUkKc30wepNt7gI8u82',
   role: 'employer',
   orgName: 'orgemployer',
-  tokenIssued: '2025-02-18T03:13:55.000Z',
-  tokenExpires: '2025-02-18T04:13:55.000Z'
+  tokenIssued: '2025-02-26T00:55:49.000Z',
+  tokenExpires: '2025-02-26T01:55:49.000Z'
 }
-[0mPOST /degree/verify [32m200[0m 399.498 ms - 66[0m
-Authenticated user: {
-  uid: 'd5pWhNPpWXcImPgREaW0SWFTBfD3',
-  role: 'university',
-  orgName: 'orguniversity',
-  tokenIssued: '2025-02-18T03:35:40.000Z',
-  tokenExpires: '2025-02-18T04:35:40.000Z'
-}
-[0mGET /me [32m200[0m 380.595 ms - 219[0m
-Authenticated user: {
-  uid: 'd5pWhNPpWXcImPgREaW0SWFTBfD3',
-  role: 'university',
-  orgName: 'orguniversity',
-  tokenIssued: '2025-02-18T03:35:40.000Z',
-  tokenExpires: '2025-02-18T04:35:40.000Z'
-}
-[0mGET /me [36m304[0m 335.078 ms - -[0m
-Authenticated user: {
-  uid: 'd5pWhNPpWXcImPgREaW0SWFTBfD3',
-  role: 'university',
-  orgName: 'orguniversity',
-  tokenIssued: '2025-02-18T03:35:40.000Z',
-  tokenExpires: '2025-02-18T04:35:40.000Z'
-}
-2025-02-18T03:36:16.647Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
-2025-02-18T03:36:16.647Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgemployer.com url:grpcs://localhost:8051 timeout:3000
-2025-02-18T03:36:16.648Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgemployer.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
+2025-02-26T00:56:03.841Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+2025-02-26T00:56:03.841Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orguniversity.com url:grpcs://localhost:7051 timeout:3000
+2025-02-26T00:56:03.843Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orguniversity.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
     at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
     at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
     at listOnTimeout (node:internal/timers:594:17)
     at processTimers (node:internal/timers:529:7) {
   connectFailed: true
 }
-2025-02-18T03:36:19.651Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
-2025-02-18T03:36:19.652Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgindividual.com url:grpcs://localhost:9051 timeout:3000
-2025-02-18T03:36:19.653Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgindividual.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+2025-02-26T00:56:06.867Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+2025-02-26T00:56:06.867Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgindividual.com url:grpcs://localhost:9051 timeout:3000
+2025-02-26T00:56:06.868Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgindividual.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
     at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
     at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
     at listOnTimeout (node:internal/timers:594:17)
     at processTimers (node:internal/timers:529:7) {
   connectFailed: true
 }
-[0mPOST /degree/issue [32m201[0m 8884.434 ms - 74[0m
+[0mPOST /degree/verify [32m200[0m 6811.679 ms - 57[0m
 Authenticated user: {
-  uid: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
-  role: 'individual',
-  orgName: 'orgindividual',
-  tokenIssued: '2025-02-18T03:29:02.000Z',
-  tokenExpires: '2025-02-18T04:29:02.000Z'
-}
-Fetching requests for user: FYUVqMlYwvgVoEnZ9qCPmciRjcy1
-All user documents: [
-  {
-    id: 'b99afd66-e238-4572-88fa-043cdf150ee2',
-    issuedTo: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
-    issuer: 'd5pWhNPpWXcImPgREaW0SWFTBfD3',
-    docHash: 'a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e',
-    fileData: Uint8Array(11) [
-       72, 101, 108, 108,
-      111,  32,  87, 111,
-      114, 108, 100
-    ],
-    status: 'accepted',
-    createdAt: 2025-02-18T02:50:59.456Z,
-    updatedAt: 2025-02-18T02:51:08.485Z
-  },
-  {
-    id: '492449cd-7957-4da4-8cca-3ec525acf209',
-    issuedTo: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
-    issuer: '54vPN8e7J3QMywsmBslBgRj2RFs2',
-    docHash: 'f16baa10e36aa2854aa742ff535461128b6a3e6a5e9f676cac4848616174f5e5',
-    fileData: Uint8Array(48) [
-      229, 214, 246, 211, 135, 156, 239, 199, 154,
-      229, 222, 154, 233, 198, 159, 123,  87, 183,
-      209, 174, 117, 213, 238,  27, 215,  77,  90,
-      127, 222,  27, 213, 247, 244, 237, 230, 158,
-      111,  71, 159, 223,  70, 181, 115,  93, 120,
-      127,  71, 159
-    ],
-    status: 'accepted',
-    createdAt: 2025-02-18T02:51:15.736Z,
-    updatedAt: 2025-02-18T03:11:55.465Z
-  },
-  {
-    id: '56701ab7-7235-4345-bc0b-6243c6c09d08',
-    issuedTo: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
-    issuer: 'd5pWhNPpWXcImPgREaW0SWFTBfD3',
-    docHash: 'f16baa10e36aa2854aa742ff535461128b6a3e6a5e9f676cac4848616174f5e5',
-    fileData: Uint8Array(48) [
-      229, 214, 246, 211, 135, 156, 239, 199, 154,
-      229, 222, 154, 233, 198, 159, 123,  87, 183,
-      209, 174, 117, 213, 238,  27, 215,  77,  90,
-      127, 222,  27, 213, 247, 244, 237, 230, 158,
-      111,  71, 159, 223,  70, 181, 115,  93, 120,
-      127,  71, 159
-    ],
-    status: 'issued',
-    createdAt: 2025-02-18T03:36:21.879Z,
-    updatedAt: 2025-02-18T03:36:21.879Z
-  }
-]
-User documents with requests: [
-  {
-    "id": "b99afd66-e238-4572-88fa-043cdf150ee2",
-    "status": "accepted",
-    "requests": [
-      {
-        "id": "d80255d7-9832-49a7-9ae5-d9e8bc56dd9c",
-        "requesterId": "DBr6eT123HfZswp6fTTiWf3uLKt2",
-        "documentId": "b99afd66-e238-4572-88fa-043cdf150ee2",
-        "status": "granted",
-        "createdAt": "2025-02-18T02:51:08.843Z",
-        "updatedAt": "2025-02-18T03:12:07.719Z",
-        "requester": {
-          "username": "testemployer",
-          "orgName": "orgemployer"
-        }
-      }
-    ]
-  },
-  {
-    "id": "492449cd-7957-4da4-8cca-3ec525acf209",
-    "status": "accepted",
-    "requests": []
-  },
-  {
-    "id": "56701ab7-7235-4345-bc0b-6243c6c09d08",
-    "status": "issued",
-    "requests": []
-  }
-]
-Formatted requests: [
-  {
-    requestId: 'd80255d7-9832-49a7-9ae5-d9e8bc56dd9c',
-    docId: 'b99afd66-e238-4572-88fa-043cdf150ee2',
-    docStatus: 'accepted',
-    employerName: 'orgemployer',
-    requestDate: 2025-02-18T02:51:08.843Z,
-    status: 'granted'
-  }
-]
-[0mGET /degree/requests [36m304[0m 405.339 ms - -[0m
-Authenticated user: {
-  uid: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
-  role: 'individual',
-  orgName: 'orgindividual',
-  tokenIssued: '2025-02-18T03:29:02.000Z',
-  tokenExpires: '2025-02-18T04:29:02.000Z'
-}
-Fetching requests for user: FYUVqMlYwvgVoEnZ9qCPmciRjcy1
-All user documents: [
-  {
-    id: 'b99afd66-e238-4572-88fa-043cdf150ee2',
-    issuedTo: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
-    issuer: 'd5pWhNPpWXcImPgREaW0SWFTBfD3',
-    docHash: 'a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e',
-    fileData: Uint8Array(11) [
-       72, 101, 108, 108,
-      111,  32,  87, 111,
-      114, 108, 100
-    ],
-    status: 'accepted',
-    createdAt: 2025-02-18T02:50:59.456Z,
-    updatedAt: 2025-02-18T02:51:08.485Z
-  },
-  {
-    id: '492449cd-7957-4da4-8cca-3ec525acf209',
-    issuedTo: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
-    issuer: '54vPN8e7J3QMywsmBslBgRj2RFs2',
-    docHash: 'f16baa10e36aa2854aa742ff535461128b6a3e6a5e9f676cac4848616174f5e5',
-    fileData: Uint8Array(48) [
-      229, 214, 246, 211, 135, 156, 239, 199, 154,
-      229, 222, 154, 233, 198, 159, 123,  87, 183,
-      209, 174, 117, 213, 238,  27, 215,  77,  90,
-      127, 222,  27, 213, 247, 244, 237, 230, 158,
-      111,  71, 159, 223,  70, 181, 115,  93, 120,
-      127,  71, 159
-    ],
-    status: 'accepted',
-    createdAt: 2025-02-18T02:51:15.736Z,
-    updatedAt: 2025-02-18T03:11:55.465Z
-  },
-  {
-    id: '56701ab7-7235-4345-bc0b-6243c6c09d08',
-    issuedTo: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
-    issuer: 'd5pWhNPpWXcImPgREaW0SWFTBfD3',
-    docHash: 'f16baa10e36aa2854aa742ff535461128b6a3e6a5e9f676cac4848616174f5e5',
-    fileData: Uint8Array(48) [
-      229, 214, 246, 211, 135, 156, 239, 199, 154,
-      229, 222, 154, 233, 198, 159, 123,  87, 183,
-      209, 174, 117, 213, 238,  27, 215,  77,  90,
-      127, 222,  27, 213, 247, 244, 237, 230, 158,
-      111,  71, 159, 223,  70, 181, 115,  93, 120,
-      127,  71, 159
-    ],
-    status: 'issued',
-    createdAt: 2025-02-18T03:36:21.879Z,
-    updatedAt: 2025-02-18T03:36:21.879Z
-  }
-]
-User documents with requests: [
-  {
-    "id": "b99afd66-e238-4572-88fa-043cdf150ee2",
-    "status": "accepted",
-    "requests": [
-      {
-        "id": "d80255d7-9832-49a7-9ae5-d9e8bc56dd9c",
-        "requesterId": "DBr6eT123HfZswp6fTTiWf3uLKt2",
-        "documentId": "b99afd66-e238-4572-88fa-043cdf150ee2",
-        "status": "granted",
-        "createdAt": "2025-02-18T02:51:08.843Z",
-        "updatedAt": "2025-02-18T03:12:07.719Z",
-        "requester": {
-          "username": "testemployer",
-          "orgName": "orgemployer"
-        }
-      }
-    ]
-  },
-  {
-    "id": "492449cd-7957-4da4-8cca-3ec525acf209",
-    "status": "accepted",
-    "requests": []
-  },
-  {
-    "id": "56701ab7-7235-4345-bc0b-6243c6c09d08",
-    "status": "issued",
-    "requests": []
-  }
-]
-Formatted requests: [
-  {
-    requestId: 'd80255d7-9832-49a7-9ae5-d9e8bc56dd9c',
-    docId: 'b99afd66-e238-4572-88fa-043cdf150ee2',
-    docStatus: 'accepted',
-    employerName: 'orgemployer',
-    requestDate: 2025-02-18T02:51:08.843Z,
-    status: 'granted'
-  }
-]
-[0mGET /degree/requests [36m304[0m 338.674 ms - -[0m
-Authenticated user: {
-  uid: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
-  role: 'individual',
-  orgName: 'orgindividual',
-  tokenIssued: '2025-02-18T03:29:02.000Z',
-  tokenExpires: '2025-02-18T04:29:02.000Z'
-}
-[0mGET /degree/list [32m200[0m 333.067 ms - 398[0m
-Authenticated user: {
-  uid: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
-  role: 'individual',
-  orgName: 'orgindividual',
-  tokenIssued: '2025-02-18T03:29:02.000Z',
-  tokenExpires: '2025-02-18T04:29:02.000Z'
-}
-[0mGET /degree/list [36m304[0m 341.941 ms - -[0m
-Authenticated user: {
-  uid: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
-  role: 'individual',
-  orgName: 'orgindividual',
-  tokenIssued: '2025-02-18T03:29:02.000Z',
-  tokenExpires: '2025-02-18T04:29:02.000Z'
-}
-2025-02-18T03:36:46.856Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
-2025-02-18T03:36:46.857Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orguniversity.com url:grpcs://localhost:7051 timeout:3000
-2025-02-18T03:36:46.861Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orguniversity.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
-    at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
-    at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
-    at listOnTimeout (node:internal/timers:594:17)
-    at processTimers (node:internal/timers:529:7) {
-  connectFailed: true
-}
-2025-02-18T03:36:49.874Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
-2025-02-18T03:36:49.875Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgemployer.com url:grpcs://localhost:8051 timeout:3000
-2025-02-18T03:36:49.876Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgemployer.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgemployer.com, url:grpcs://localhost:8051, connected:false, connectAttempted:true
-    at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
-    at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
-    at listOnTimeout (node:internal/timers:594:17)
-    at processTimers (node:internal/timers:529:7) {
-  connectFailed: true
-}
-[0mPOST /degree/accept [32m200[0m 8593.485 ms - 63[0m
-Authenticated user: {
-  uid: 'FYUVqMlYwvgVoEnZ9qCPmciRjcy1',
-  role: 'individual',
-  orgName: 'orgindividual',
-  tokenIssued: '2025-02-18T03:29:02.000Z',
-  tokenExpires: '2025-02-18T04:29:02.000Z'
-}
-[0mGET /degree/list [32m200[0m 409.209 ms - 400[0m
-Authenticated user: {
-  uid: 'DBr6eT123HfZswp6fTTiWf3uLKt2',
+  uid: 'IK5rlsaesoUkKc30wepNt7gI8u82',
   role: 'employer',
   orgName: 'orgemployer',
-  tokenIssued: '2025-02-18T03:37:20.000Z',
-  tokenExpires: '2025-02-18T04:37:20.000Z'
+  tokenIssued: '2025-02-26T00:55:49.000Z',
+  tokenExpires: '2025-02-26T01:55:49.000Z'
 }
-[0mGET /me [32m200[0m 1033.357 ms - 211[0m
-Authenticated user: {
-  uid: 'DBr6eT123HfZswp6fTTiWf3uLKt2',
-  role: 'employer',
-  orgName: 'orgemployer',
-  tokenIssued: '2025-02-18T03:37:20.000Z',
-  tokenExpires: '2025-02-18T04:37:20.000Z'
-}
-[0mGET /me [36m304[0m 531.362 ms - -[0m
-Authenticated user: {
-  uid: 'DBr6eT123HfZswp6fTTiWf3uLKt2',
-  role: 'employer',
-  orgName: 'orgemployer',
-  tokenIssued: '2025-02-18T03:37:20.000Z',
-  tokenExpires: '2025-02-18T04:37:20.000Z'
-}
-2025-02-18T03:37:35.910Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
-2025-02-18T03:37:35.910Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orguniversity.com url:grpcs://localhost:7051 timeout:3000
-2025-02-18T03:37:35.913Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orguniversity.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+2025-02-26T00:56:16.449Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
+2025-02-26T00:56:16.449Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orguniversity.com url:grpcs://localhost:7051 timeout:3000
+2025-02-26T00:56:16.450Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orguniversity.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orguniversity.com, url:grpcs://localhost:7051, connected:false, connectAttempted:true
     at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
     at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
     at listOnTimeout (node:internal/timers:594:17)
     at processTimers (node:internal/timers:529:7) {
   connectFailed: true
 }
-2025-02-18T03:37:38.931Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
-2025-02-18T03:37:38.931Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgindividual.com url:grpcs://localhost:9051 timeout:3000
-2025-02-18T03:37:38.932Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgindividual.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+2025-02-26T00:56:19.462Z - [31merror[39m: [ServiceEndpoint]: Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
+2025-02-26T00:56:19.463Z - [31merror[39m: [ServiceEndpoint]: waitForReady - Failed to connect to remote gRPC server peer0.orgindividual.com url:grpcs://localhost:9051 timeout:3000
+2025-02-26T00:56:19.464Z - [32minfo[39m: [NetworkConfig]: buildPeer - Unable to connect to the endorser peer0.orgindividual.com due to Error: Failed to connect before the deadline on Endorser- name: peer0.orgindividual.com, url:grpcs://localhost:9051, connected:false, connectAttempted:true
     at checkState (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/client.ts:177:18)
     at Timeout._onTimeout (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/server/node_modules/@grpc/grpc-js/src/internal-channel.ts:782:9)
     at listOnTimeout (node:internal/timers:594:17)
     at processTimers (node:internal/timers:529:7) {
   connectFailed: true
 }
-[0mPOST /degree/verify [32m200[0m 6573.635 ms - 107[0m
+[0mPOST /degree/verify [32m200[0m 6556.057 ms - 107[0m
