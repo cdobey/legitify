@@ -488,8 +488,8 @@ peer:
 vm:
   # Endpoint of the vm management system.  For docker can be one of the following in general
   # unix:///var/run/docker.sock
-  # http://localhost:2375
-  # https://localhost:2376
+  # http://52.50.172.251:2375
+  # https://52.50.172.251:2376
   # If you utilize external chaincode builders and don't need the default Docker chaincode builder,
   # the endpoint should be unconfigured so that the peer's Docker health checker doesn't get registered.
   endpoint:

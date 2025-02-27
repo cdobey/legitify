@@ -167,7 +167,7 @@ FABRIC_WALLET=./src/wallet
 FABRIC_CHANNEL=mychannel
 FABRIC_CHAINCODE=degreeCC
 FABRIC_USER=appUser
-DB_HOST=localhost
+DB_HOST=52.50.172.251
 DB_NAME=my_fabric_db
 DB_USER=postgres
 DB_PASS=postgrespw
@@ -242,7 +242,7 @@ npx prisma generate
 Our backend exposes a **Swagger UI** at:
 
 ```
-http://localhost:3001/docs
+http://52.50.172.251:3001/docs
 ```
 
 - **Register** users: `POST /auth/register`
@@ -260,7 +260,7 @@ Each endpoint’s parameters and expected responses are documented in Swagger.
 2. **Start Backend**
    - `cd src/server && npm run dev`
 3. **Navigate to Swagger**
-   - Visit `http://localhost:3001/docs` in your browser.
+   - Visit `http://52.50.172.251:3001/docs` in your browser.
 4. **Register a New User**
    - **POST** `/auth/register`
    - Sample JSON body:

@@ -28,7 +28,7 @@ export async function getGateway(
   await gateway.connect(ccp, {
     wallet,
     identity: userId,
-    discovery: { enabled: true, asLocalhost: true }, // Adjust as per your network
+    discovery: { enabled: true, as52.50.172.251: true }, // Adjust as per your network
   });
 
   return gateway;

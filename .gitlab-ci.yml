@@ -71,7 +71,7 @@ test_flow:
       echo "Waiting for server to be fully ready..."
       TIMEOUT=$SERVER_STARTUP_TIMEOUT
       while [ $TIMEOUT -gt 0 ]; do
-        if curl -s http://localhost:3001/docs > /dev/null; then
+        if curl -s http://52.50.172.251:3001/docs > /dev/null; then
           echo "Server is responding to requests"
           sleep 10
           break
