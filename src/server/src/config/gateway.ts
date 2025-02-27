@@ -1,5 +1,4 @@
 import { Gateway } from "fabric-network";
-
 import fs from "fs";
 import path from "path";
 import { DatabaseWallet } from "../utils/db-wallet";
