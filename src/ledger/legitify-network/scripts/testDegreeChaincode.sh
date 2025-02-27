@@ -35,12 +35,12 @@ invoke_chaincode() {
     local func=$1
     local args=$2
     
-    peer chaincode invoke -o 52.50.172.251:7050 \
+    peer chaincode invoke -o localhost:7050 \
         --tls --cafile $ORDERER_CA \
         -C mychannel -n degreeCC \
-        --peerAddresses 52.50.172.251:7051 \
+        --peerAddresses localhost:7051 \
         --tlsRootCertFiles ${ORG_UNIVERSITY_TLS_CERT} \
-        --peerAddresses 52.50.172.251:8051 \
+        --peerAddresses localhost:8051 \
         --tlsRootCertFiles ${ORG_EMPLOYER_TLS_CERT} \
         -c "{\"Args\":[\"$func\",$args]}" \
         --waitForEvent

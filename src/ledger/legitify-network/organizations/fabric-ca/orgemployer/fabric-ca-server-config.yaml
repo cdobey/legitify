@@ -321,7 +321,7 @@ csr:
       OU: Fabric
   hosts:
     - 64b5cd0a6fbb
-    - 52.50.172.251
+    - localhost
   ca:
     expiry: 131400h
     pathlength: 1

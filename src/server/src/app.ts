@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(
   cors({
-    origin: "http://52.50.172.251:5173",
+    origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
@@ -37,9 +37,7 @@ const startServer = async () => {
   try {
     const server = app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
-      console.log(
-        `Swagger docs available at http://52.50.172.251:${PORT}/docs`
-      );
+      console.log(`Swagger docs available at http://localhost:${PORT}/docs`);
     });
   } catch (error) {
     console.error("Failed to start server:", error);

@@ -72,7 +72,7 @@
 │       │   ├── IssuerPublicKey
 │       │   ├── IssuerRevocationPublicKey
 │       │   ├── cacerts
-│       │   │   └── 52.50.172.251-9054-ca-orderer.pem
+│       │   │   └── localhost-9054-ca-orderer.pem
 │       │   ├── config.yaml
 │       │   ├── keystore
 │       │   │   └── 8cc184dc93a20ade57b0b7a1bcc3c157914da992abdbafad6cc02e78d8cb7ba6_sk
@@ -87,7 +87,7 @@
 │       │       │   ├── IssuerPublicKey
 │       │       │   ├── IssuerRevocationPublicKey
 │       │       │   ├── cacerts
-│       │       │   │   └── 52.50.172.251-9054-ca-orderer.pem
+│       │       │   │   └── localhost-9054-ca-orderer.pem
 │       │       │   ├── config.yaml
 │       │       │   ├── keystore
 │       │       │   │   └── d478400c0071b3468957eb9b2c32f975891e6312891d8116096c055a207ec523_sk
@@ -108,7 +108,7 @@
 │       │           ├── signcerts
 │       │           │   └── cert.pem
 │       │           ├── tlscacerts
-│       │           │   └── tls-52.50.172.251-9054-ca-orderer.pem
+│       │           │   └── tls-localhost-9054-ca-orderer.pem
 │       │           └── user
 │       ├── tlsca
 │       │   └── tlsca.example.com-cert.pem
@@ -118,7 +118,7 @@
 │                   ├── IssuerPublicKey
 │                   ├── IssuerRevocationPublicKey
 │                   ├── cacerts
-│                   │   └── 52.50.172.251-9054-ca-orderer.pem
+│                   │   └── localhost-9054-ca-orderer.pem
 │                   ├── config.yaml
 │                   ├── keystore
 │                   │   └── ca5305846031f0b9d0cfb33a1e28551a99db25cba90b5d5df988c4adcf50a23e_sk
@@ -136,7 +136,7 @@
 │   │   │   ├── IssuerPublicKey
 │   │   │   ├── IssuerRevocationPublicKey
 │   │   │   ├── cacerts
-│   │   │   │   └── 52.50.172.251-7054-ca-org1.pem
+│   │   │   │   └── localhost-7054-ca-org1.pem
 │   │   │   ├── config.yaml
 │   │   │   ├── keystore
 │   │   │   │   └── e32023b0b78f720c29020bb5dbcc43b0af34528106daaf5950508c363c97a48c_sk
@@ -151,7 +151,7 @@
 │   │   │       │   ├── IssuerPublicKey
 │   │   │       │   ├── IssuerRevocationPublicKey
 │   │   │       │   ├── cacerts
-│   │   │       │   │   └── 52.50.172.251-7054-ca-org1.pem
+│   │   │       │   │   └── localhost-7054-ca-org1.pem
 │   │   │       │   ├── config.yaml
 │   │   │       │   ├── keystore
 │   │   │       │   │   └── ac6dec424b5292f8f21be2a6e9e332a05beef044412b7f824be3932bf9aa9f0b_sk
@@ -170,7 +170,7 @@
 │   │   │           ├── signcerts
 │   │   │           │   └── cert.pem
 │   │   │           ├── tlscacerts
-│   │   │           │   └── tls-52.50.172.251-7054-ca-org1.pem
+│   │   │           │   └── tls-localhost-7054-ca-org1.pem
 │   │   │           └── user
 │   │   ├── tlsca
 │   │   │   └── tlsca.org1.example.com-cert.pem
@@ -180,7 +180,7 @@
 │   │       │       ├── IssuerPublicKey
 │   │       │       ├── IssuerRevocationPublicKey
 │   │       │       ├── cacerts
-│   │       │       │   └── 52.50.172.251-7054-ca-org1.pem
+│   │       │       │   └── localhost-7054-ca-org1.pem
 │   │       │       ├── config.yaml
 │   │       │       ├── keystore
 │   │       │       │   └── 7e0a1ce5b4619af8c43fefdce23506e82f25fddd5d63673fc605b231fad480d0_sk
@@ -192,7 +192,7 @@
 │   │               ├── IssuerPublicKey
 │   │               ├── IssuerRevocationPublicKey
 │   │               ├── cacerts
-│   │               │   └── 52.50.172.251-7054-ca-org1.pem
+│   │               │   └── localhost-7054-ca-org1.pem
 │   │               ├── config.yaml
 │   │               ├── keystore
 │   │               │   └── 30996a3bb5dd6341c8fc5b71556c9782bce1d670fc37671131d3632ebe6704a9_sk
@@ -209,7 +209,7 @@
 │       │   ├── IssuerPublicKey
 │       │   ├── IssuerRevocationPublicKey
 │       │   ├── cacerts
-│       │   │   └── 52.50.172.251-8054-ca-org2.pem
+│       │   │   └── localhost-8054-ca-org2.pem
 │       │   ├── config.yaml
 │       │   ├── keystore
 │       │   │   └── 78d6e9fc1c77320df670fb0d7e61169b869ce5eb0e5959c1ef7d741fc526560c_sk
@@ -224,7 +224,7 @@
 │       │       │   ├── IssuerPublicKey
 │       │       │   ├── IssuerRevocationPublicKey
 │       │       │   ├── cacerts
-│       │       │   │   └── 52.50.172.251-8054-ca-org2.pem
+│       │       │   │   └── localhost-8054-ca-org2.pem
 │       │       │   ├── config.yaml
 │       │       │   ├── keystore
 │       │       │   │   └── b6d11516e7d0b46e6c65ef2c416113bc8f67acc6dd282327d57fede58d8b8132_sk
@@ -243,7 +243,7 @@
 │       │           ├── signcerts
 │       │           │   └── cert.pem
 │       │           ├── tlscacerts
-│       │           │   └── tls-52.50.172.251-8054-ca-org2.pem
+│       │           │   └── tls-localhost-8054-ca-org2.pem
 │       │           └── user
 │       ├── tlsca
 │       │   └── tlsca.org2.example.com-cert.pem
@@ -253,7 +253,7 @@
 │           │       ├── IssuerPublicKey
 │           │       ├── IssuerRevocationPublicKey
 │           │       ├── cacerts
-│           │       │   └── 52.50.172.251-8054-ca-org2.pem
+│           │       │   └── localhost-8054-ca-org2.pem
 │           │       ├── config.yaml
 │           │       ├── keystore
 │           │       │   └── b90c701685c2e4fc9f05506be24555fff96f150e70b3d679d1d1ebf137a08a5a_sk
@@ -265,7 +265,7 @@
 │                   ├── IssuerPublicKey
 │                   ├── IssuerRevocationPublicKey
 │                   ├── cacerts
-│                   │   └── 52.50.172.251-8054-ca-org2.pem
+│                   │   └── localhost-8054-ca-org2.pem
 │                   ├── config.yaml
 │                   ├── keystore
 │                   │   └── 746f002a3ea4f117dc2777eb54c96e4fa2b3f8dc493650e88e758b1206903a7e_sk

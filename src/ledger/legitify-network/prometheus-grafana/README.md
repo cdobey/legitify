@@ -11,14 +11,14 @@ You will need to have installed **docker-compose with version 1.29 or above** (n
 
 1. Go to the test-network directory and run bring up the test-network **./network.sh up createChannel**
 2. Bring up the Prometheus/Grafana network in the test-network/prometheus-grafana directory and run **docker-compose up -d**
-3. Log in: type "52.50.172.251:3000" on your web browser -> username="admin", password="admin" -> set a new password
+3. Log in: type "localhost:3000" on your web browser -> username="admin", password="admin" -> set a new password
 4. Browse dashboard and analyse results
    - The default dashboard "HLF Performances Review" can be found and displayed by hovering over the dashboard menu and clicking on the browse button.
-     ![picture alt]("https://user-images.githubusercontent.com/86831094/149115445-5e5f6d95-ecc3-4b46-aadb-5c01148770b3.png "Title is optional")
-     Once opened the dashboard, to display the collected metrics and data, adjust the timeframe on the top right to focus on the latest timespan when the network was up.
+   ![picture alt]("https://user-images.githubusercontent.com/86831094/149115445-5e5f6d95-ecc3-4b46-aadb-5c01148770b3.png "Title is optional")
+   Once opened the dashboard, to display the collected metrics and data, adjust the timeframe on the top right to focus on the latest timespan when the network was up.
 5. Deploy a chaincode (i.e. "./network.sh deployCC -ccn basic -ccp ../asset-transfer-basic/chaincode-go -ccl go"), start using the test-network and use the Grafana dashboard to analyse and assess your network performances.
-   Extras: add new queries, modify dashboard & add relevant changes to main repo --> extract json and add it to "Grafana/dashboards/hlf-performances.json".
-   Metrics can also be displayed directly from Prometheus by going to "52.50.172.251:9090".
+Extras: add new queries, modify dashboard & add relevant changes to main repo --> extract json and add it to "Grafana/dashboards/hlf-performances.json".
+Metrics can also be displayed directly from Prometheus by going to "localhost:9090".
 
 ## Docker Compose
 
@@ -44,7 +44,7 @@ System and docker metrics targets:
 - `cadvisor:8080`
 - `node-exporter:9100`
 
-Check the state of the connections with targets on http://52.50.172.251:9090/targets.
+Check the state of the connections with targets on http://localhost:9090/targets.
 
 ## Sources
 

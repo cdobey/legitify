@@ -46,7 +46,7 @@ RETRY_COUNT=0
 echo "⏳ Waiting for server to be ready..."
 
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-    if curl -s http://52.50.172.251:3001/docs > /dev/null; then
+    if curl -s http://localhost:3001/docs > /dev/null; then
         echo "✅ Server is up and running!"
         break
     fi
@@ -73,5 +73,5 @@ fi
 echo "✅ Setup complete!"
 echo "Connection details:"
 echo "  Using Supabase database: postgres.japzugjgdlvqkmytralh"
-echo "Server is running at http://52.50.172.251:3001"
-echo "Swagger documentation available at http://52.50.172.251:3001/docs" 
+echo "Server is running at http://localhost:3001"
+echo "Swagger documentation available at http://localhost:3001/docs" 

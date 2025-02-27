@@ -26,17 +26,17 @@ setGlobals() {
     export CORE_PEER_LOCALMSPID=OrgUniversityMSP
     export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_ORGUNIVERSITY_CA
     export CORE_PEER_MSPCONFIGPATH=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orguniversity.com/users/Admin@orguniversity.com/msp
-    export CORE_PEER_ADDRESS=52.50.172.251:7051
+    export CORE_PEER_ADDRESS=localhost:7051
   elif [ $USING_ORG -eq 2 ]; then
     export CORE_PEER_LOCALMSPID=OrgEmployerMSP
     export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_ORGEMPLOYER_CA
     export CORE_PEER_MSPCONFIGPATH=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orgemployer.com/users/Admin@orgemployer.com/msp
-    export CORE_PEER_ADDRESS=52.50.172.251:8051
+    export CORE_PEER_ADDRESS=localhost:8051
   elif [ $USING_ORG -eq 3 ]; then
     export CORE_PEER_LOCALMSPID=OrgIndividualMSP
     export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_ORGINDIVIDUAL_CA
     export CORE_PEER_MSPCONFIGPATH=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orgindividual.com/users/Admin@orgindividual.com/msp
-    export CORE_PEER_ADDRESS=52.50.172.251:9051
+    export CORE_PEER_ADDRESS=localhost:9051
   else
     errorln "ORG Unknown"
     exit 1

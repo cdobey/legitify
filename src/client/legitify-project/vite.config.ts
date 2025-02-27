@@ -7,10 +7,10 @@ export default defineConfig({
     port: 5173,
     host: true,
     cors: false,
-    origin: "http://52.50.172.251:3001",
+    origin: "http://localhost:3001",
     proxy: {
       "/api": {
-        target: "http://52.50.172.251:3001",
+        target: "http://localhost:3001",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
