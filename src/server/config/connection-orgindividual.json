@@ -30,7 +30,7 @@
   },
   "peers": {
     "peer0.orguniversity.com": {
-      "url": "grpcs://172.31.34.157:7051",
+      "url": "grpcs://176.34.66.195:7051",
       "tlsCACerts": {
         "pem": "-----BEGIN CERTIFICATE-----\nMIICJzCCAc6gAwIBAgIUDXtZdRcXH0+NoW6VH0dmDOH71ocwCgYIKoZIzj0EAwIw\naDELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQK\nEwtIeXBlcmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMt\nY2Etc2VydmVyMB4XDTI1MDIyNzIwNDQwMFoXDTQwMDIyNDIwNDQwMFowaDELMAkG\nA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQKEwtIeXBl\ncmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMtY2Etc2Vy\ndmVyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAElAKNOZqbbU0RbdJ2pLTRzHKz\n+PcV4TEUsbimNeS8EPrcrFYPX9Z5chRePyPqPSa9d3LeK6zNsZE0okKl/I8c+6NW\nMFQwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYE\nFOMOqaIxZyOLDYqWW3ttSuINC7DCMA8GA1UdEQQIMAaHBDQyrPswCgYIKoZIzj0E\nAwIDRwAwRAIgMV/dRT+oaQ0xEh1pQEiVVJXBDOye81hypGLmdjHTwLkCIASYWYNU\nIonlBd7DdeHZp4m8+tN31xPi1c+jZuunMu5c\n-----END CERTIFICATE-----\n"
       },
@@ -40,7 +40,7 @@
       }
     },
     "peer0.orgemployer.com": {
-      "url": "grpcs://172.31.34.157:8051",
+      "url": "grpcs://176.34.66.195:8051",
       "tlsCACerts": {
         "pem": "-----BEGIN CERTIFICATE-----\nMIICJzCCAc6gAwIBAgIUDXtZdRcXH0+NoW6VH0dmDOH71ocwCgYIKoZIzj0EAwIw\naDELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQK\nEwtIeXBlcmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMt\nY2Etc2VydmVyMB4XDTI1MDIyNzIwNDQwMFoXDTQwMDIyNDIwNDQwMFowaDELMAkG\nA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQKEwtIeXBl\ncmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMtY2Etc2Vy\ndmVyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAElAKNOZqbbU0RbdJ2pLTRzHKz\n+PcV4TEUsbimNeS8EPrcrFYPX9Z5chRePyPqPSa9d3LeK6zNsZE0okKl/I8c+6NW\nMFQwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYE\nFOMOqaIxZyOLDYqWW3ttSuINC7DCMA8GA1UdEQQIMAaHBDQyrPswCgYIKoZIzj0E\nAwIDRwAwRAIgMV/dRT+oaQ0xEh1pQEiVVJXBDOye81hypGLmdjHTwLkCIASYWYNU\nIonlBd7DdeHZp4m8+tN31xPi1c+jZuunMu5c\n-----END CERTIFICATE-----\n"
       },
@@ -50,7 +50,7 @@
       }
     },
     "peer0.orgindividual.com": {
-      "url": "grpcs://172.31.34.157:9051",
+      "url": "grpcs://176.34.66.195:9051",
       "tlsCACerts": {
         "pem": "-----BEGIN CERTIFICATE-----\nMIICJzCCAc6gAwIBAgIUDXtZdRcXH0+NoW6VH0dmDOH71ocwCgYIKoZIzj0EAwIw\naDELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQK\nEwtIeXBlcmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMt\nY2Etc2VydmVyMB4XDTI1MDIyNzIwNDQwMFoXDTQwMDIyNDIwNDQwMFowaDELMAkG\nA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQKEwtIeXBl\ncmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMtY2Etc2Vy\ndmVyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAElAKNOZqbbU0RbdJ2pLTRzHKz\n+PcV4TEUsbimNeS8EPrcrFYPX9Z5chRePyPqPSa9d3LeK6zNsZE0okKl/I8c+6NW\nMFQwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYE\nFOMOqaIxZyOLDYqWW3ttSuINC7DCMA8GA1UdEQQIMAaHBDQyrPswCgYIKoZIzj0E\nAwIDRwAwRAIgMV/dRT+oaQ0xEh1pQEiVVJXBDOye81hypGLmdjHTwLkCIASYWYNU\nIonlBd7DdeHZp4m8+tN31xPi1c+jZuunMu5c\n-----END CERTIFICATE-----\n"
       },
@@ -62,7 +62,7 @@
   },
   "certificateAuthorities": {
     "ca.orguniversity.com": {
-      "url": "https://172.31.34.157:7054",
+      "url": "https://176.34.66.195:7054",
       "caName": "ca-orguniversity",
       "tlsCACerts": {
         "pem": [
@@ -74,7 +74,7 @@
       }
     },
     "ca.orgemployer.com": {
-      "url": "https://172.31.34.157:8054",
+      "url": "https://176.34.66.195:8054",
       "caName": "ca-orgemployer",
       "tlsCACerts": {
         "pem": [
@@ -86,7 +86,7 @@
       }
     },
     "ca.orgindividual.com": {
-      "url": "https://172.31.34.157:9054",
+      "url": "https://176.34.66.195:9054",
       "caName": "ca-orgindividual",
       "tlsCACerts": {
         "pem": [
