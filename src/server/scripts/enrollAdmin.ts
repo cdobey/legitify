@@ -15,7 +15,7 @@ async function enrollAdmin(orgName: string, mspId: string): Promise<void> {
     // Construct paths based on organization
     const ccpPath = path.resolve(
       rootDir,
-      `../../ledger/legitify-network/organizations/peerOrganizations/${orgName}.com/connection-${orgName}.json`
+      `../config/connection-${orgName}.json`
     );
 
     if (!fs.existsSync(ccpPath)) {

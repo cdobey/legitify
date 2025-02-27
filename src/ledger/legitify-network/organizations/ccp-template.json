@@ -30,7 +30,7 @@
     },
     "peers": {
         "peer0.orguniversity.com": {
-            "url": "grpcs://52.50.172.251:7051",
+            "url": "grpcs://172.31.34.157:7051",
             "tlsCACerts": {
                 "pem": "${PEERPEM}"
             },
@@ -40,7 +40,7 @@
             }
         },
         "peer0.orgemployer.com": {
-            "url": "grpcs://52.50.172.251:8051",
+            "url": "grpcs://172.31.34.157:8051",
             "tlsCACerts": {
                 "pem": "${PEERPEM}"
             },
@@ -50,7 +50,7 @@
             }
         },
         "peer0.orgindividual.com": {
-            "url": "grpcs://52.50.172.251:9051",
+            "url": "grpcs://172.31.34.157:9051",
             "tlsCACerts": {
                 "pem": "${PEERPEM}"
             },
@@ -62,7 +62,7 @@
     },
     "certificateAuthorities": {
         "ca.orguniversity.com": {
-            "url": "https://52.50.172.251:7054",
+            "url": "https://172.31.34.157:7054",
             "caName": "ca-orguniversity",
             "tlsCACerts": {
                 "pem": ["${CAPEM}"]
@@ -72,7 +72,7 @@
             }
         },
         "ca.orgemployer.com": {
-            "url": "https://52.50.172.251:8054",
+            "url": "https://172.31.34.157:8054",
             "caName": "ca-orgemployer",
             "tlsCACerts": {
                 "pem": ["${CAPEM}"]
@@ -82,7 +82,7 @@
             }
         },
         "ca.orgindividual.com": {
-            "url": "https://52.50.172.251:9054",
+            "url": "https://172.31.34.157:9054",
             "caName": "ca-orgindividual",
             "tlsCACerts": {
                 "pem": ["${CAPEM}"]

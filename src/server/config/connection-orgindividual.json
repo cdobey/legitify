@@ -1,0 +1,101 @@
+{
+  "name": "legitify-network-OrgIndividual",
+  "version": "1.0.0",
+  "client": {
+    "organization": "OrgIndividual",
+    "connection": {
+      "timeout": {
+        "peer": {
+          "endorser": "300"
+        }
+      }
+    }
+  },
+  "organizations": {
+    "OrgUniversity": {
+      "mspid": "OrgUniversityMSP",
+      "peers": ["peer0.orguniversity.com"],
+      "certificateAuthorities": ["ca.orguniversity.com"]
+    },
+    "OrgEmployer": {
+      "mspid": "OrgEmployerMSP",
+      "peers": ["peer0.orgemployer.com"],
+      "certificateAuthorities": ["ca.orgemployer.com"]
+    },
+    "OrgIndividual": {
+      "mspid": "OrgIndividualMSP",
+      "peers": ["peer0.orgindividual.com"],
+      "certificateAuthorities": ["ca.orgindividual.com"]
+    }
+  },
+  "peers": {
+    "peer0.orguniversity.com": {
+      "url": "grpcs://172.31.34.157:7051",
+      "tlsCACerts": {
+        "pem": "-----BEGIN CERTIFICATE-----\nMIICJzCCAc6gAwIBAgIUDXtZdRcXH0+NoW6VH0dmDOH71ocwCgYIKoZIzj0EAwIw\naDELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQK\nEwtIeXBlcmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMt\nY2Etc2VydmVyMB4XDTI1MDIyNzIwNDQwMFoXDTQwMDIyNDIwNDQwMFowaDELMAkG\nA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQKEwtIeXBl\ncmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMtY2Etc2Vy\ndmVyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAElAKNOZqbbU0RbdJ2pLTRzHKz\n+PcV4TEUsbimNeS8EPrcrFYPX9Z5chRePyPqPSa9d3LeK6zNsZE0okKl/I8c+6NW\nMFQwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYE\nFOMOqaIxZyOLDYqWW3ttSuINC7DCMA8GA1UdEQQIMAaHBDQyrPswCgYIKoZIzj0E\nAwIDRwAwRAIgMV/dRT+oaQ0xEh1pQEiVVJXBDOye81hypGLmdjHTwLkCIASYWYNU\nIonlBd7DdeHZp4m8+tN31xPi1c+jZuunMu5c\n-----END CERTIFICATE-----\n"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "peer0.orguniversity.com",
+        "hostnameOverride": "peer0.orguniversity.com"
+      }
+    },
+    "peer0.orgemployer.com": {
+      "url": "grpcs://172.31.34.157:8051",
+      "tlsCACerts": {
+        "pem": "-----BEGIN CERTIFICATE-----\nMIICJzCCAc6gAwIBAgIUDXtZdRcXH0+NoW6VH0dmDOH71ocwCgYIKoZIzj0EAwIw\naDELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQK\nEwtIeXBlcmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMt\nY2Etc2VydmVyMB4XDTI1MDIyNzIwNDQwMFoXDTQwMDIyNDIwNDQwMFowaDELMAkG\nA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQKEwtIeXBl\ncmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMtY2Etc2Vy\ndmVyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAElAKNOZqbbU0RbdJ2pLTRzHKz\n+PcV4TEUsbimNeS8EPrcrFYPX9Z5chRePyPqPSa9d3LeK6zNsZE0okKl/I8c+6NW\nMFQwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYE\nFOMOqaIxZyOLDYqWW3ttSuINC7DCMA8GA1UdEQQIMAaHBDQyrPswCgYIKoZIzj0E\nAwIDRwAwRAIgMV/dRT+oaQ0xEh1pQEiVVJXBDOye81hypGLmdjHTwLkCIASYWYNU\nIonlBd7DdeHZp4m8+tN31xPi1c+jZuunMu5c\n-----END CERTIFICATE-----\n"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "peer0.orgemployer.com",
+        "hostnameOverride": "peer0.orgemployer.com"
+      }
+    },
+    "peer0.orgindividual.com": {
+      "url": "grpcs://172.31.34.157:9051",
+      "tlsCACerts": {
+        "pem": "-----BEGIN CERTIFICATE-----\nMIICJzCCAc6gAwIBAgIUDXtZdRcXH0+NoW6VH0dmDOH71ocwCgYIKoZIzj0EAwIw\naDELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQK\nEwtIeXBlcmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMt\nY2Etc2VydmVyMB4XDTI1MDIyNzIwNDQwMFoXDTQwMDIyNDIwNDQwMFowaDELMAkG\nA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQKEwtIeXBl\ncmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMtY2Etc2Vy\ndmVyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAElAKNOZqbbU0RbdJ2pLTRzHKz\n+PcV4TEUsbimNeS8EPrcrFYPX9Z5chRePyPqPSa9d3LeK6zNsZE0okKl/I8c+6NW\nMFQwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYE\nFOMOqaIxZyOLDYqWW3ttSuINC7DCMA8GA1UdEQQIMAaHBDQyrPswCgYIKoZIzj0E\nAwIDRwAwRAIgMV/dRT+oaQ0xEh1pQEiVVJXBDOye81hypGLmdjHTwLkCIASYWYNU\nIonlBd7DdeHZp4m8+tN31xPi1c+jZuunMu5c\n-----END CERTIFICATE-----\n"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "peer0.orgindividual.com",
+        "hostnameOverride": "peer0.orgindividual.com"
+      }
+    }
+  },
+  "certificateAuthorities": {
+    "ca.orguniversity.com": {
+      "url": "https://172.31.34.157:7054",
+      "caName": "ca-orguniversity",
+      "tlsCACerts": {
+        "pem": [
+          "-----BEGIN CERTIFICATE-----\nMIICJzCCAc6gAwIBAgIUDXtZdRcXH0+NoW6VH0dmDOH71ocwCgYIKoZIzj0EAwIw\naDELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQK\nEwtIeXBlcmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMt\nY2Etc2VydmVyMB4XDTI1MDIyNzIwNDQwMFoXDTQwMDIyNDIwNDQwMFowaDELMAkG\nA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQKEwtIeXBl\ncmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMtY2Etc2Vy\ndmVyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAElAKNOZqbbU0RbdJ2pLTRzHKz\n+PcV4TEUsbimNeS8EPrcrFYPX9Z5chRePyPqPSa9d3LeK6zNsZE0okKl/I8c+6NW\nMFQwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYE\nFOMOqaIxZyOLDYqWW3ttSuINC7DCMA8GA1UdEQQIMAaHBDQyrPswCgYIKoZIzj0E\nAwIDRwAwRAIgMV/dRT+oaQ0xEh1pQEiVVJXBDOye81hypGLmdjHTwLkCIASYWYNU\nIonlBd7DdeHZp4m8+tN31xPi1c+jZuunMu5c\n-----END CERTIFICATE-----\n"
+        ]
+      },
+      "httpOptions": {
+        "verify": false
+      }
+    },
+    "ca.orgemployer.com": {
+      "url": "https://172.31.34.157:8054",
+      "caName": "ca-orgemployer",
+      "tlsCACerts": {
+        "pem": [
+          "-----BEGIN CERTIFICATE-----\nMIICJzCCAc6gAwIBAgIUDXtZdRcXH0+NoW6VH0dmDOH71ocwCgYIKoZIzj0EAwIw\naDELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQK\nEwtIeXBlcmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMt\nY2Etc2VydmVyMB4XDTI1MDIyNzIwNDQwMFoXDTQwMDIyNDIwNDQwMFowaDELMAkG\nA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQKEwtIeXBl\ncmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMtY2Etc2Vy\ndmVyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAElAKNOZqbbU0RbdJ2pLTRzHKz\n+PcV4TEUsbimNeS8EPrcrFYPX9Z5chRePyPqPSa9d3LeK6zNsZE0okKl/I8c+6NW\nMFQwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYE\nFOMOqaIxZyOLDYqWW3ttSuINC7DCMA8GA1UdEQQIMAaHBDQyrPswCgYIKoZIzj0E\nAwIDRwAwRAIgMV/dRT+oaQ0xEh1pQEiVVJXBDOye81hypGLmdjHTwLkCIASYWYNU\nIonlBd7DdeHZp4m8+tN31xPi1c+jZuunMu5c\n-----END CERTIFICATE-----\n"
+        ]
+      },
+      "httpOptions": {
+        "verify": false
+      }
+    },
+    "ca.orgindividual.com": {
+      "url": "https://172.31.34.157:9054",
+      "caName": "ca-orgindividual",
+      "tlsCACerts": {
+        "pem": [
+          "-----BEGIN CERTIFICATE-----\nMIICJzCCAc6gAwIBAgIUDXtZdRcXH0+NoW6VH0dmDOH71ocwCgYIKoZIzj0EAwIw\naDELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQK\nEwtIeXBlcmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMt\nY2Etc2VydmVyMB4XDTI1MDIyNzIwNDQwMFoXDTQwMDIyNDIwNDQwMFowaDELMAkG\nA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQKEwtIeXBl\ncmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMtY2Etc2Vy\ndmVyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAElAKNOZqbbU0RbdJ2pLTRzHKz\n+PcV4TEUsbimNeS8EPrcrFYPX9Z5chRePyPqPSa9d3LeK6zNsZE0okKl/I8c+6NW\nMFQwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYE\nFOMOqaIxZyOLDYqWW3ttSuINC7DCMA8GA1UdEQQIMAaHBDQyrPswCgYIKoZIzj0E\nAwIDRwAwRAIgMV/dRT+oaQ0xEh1pQEiVVJXBDOye81hypGLmdjHTwLkCIASYWYNU\nIonlBd7DdeHZp4m8+tN31xPi1c+jZuunMu5c\n-----END CERTIFICATE-----\n"
+        ]
+      },
+      "httpOptions": {
+        "verify": false
+      }
+    }
+  }
+}

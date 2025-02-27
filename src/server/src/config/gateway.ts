@@ -14,10 +14,10 @@ export async function getGateway(
   userId: string,
   orgName: string
 ): Promise<Gateway> {
-  // Path to the connection profile
+  // Path to the local connection profiles in the server config directory
   const ccpPath = path.resolve(
     __dirname,
-    `../../../ledger/legitify-network/organizations/peerOrganizations/${orgName}.com/connection-${orgName}.json`
+    `../../config/connection-${orgName}.json`
   );
   const ccp = JSON.parse(fs.readFileSync(ccpPath, "utf8"));
 
@@ -28,7 +28,7 @@ export async function getGateway(
   await gateway.connect(ccp, {
     wallet,
     identity: userId,
-    discovery: { enabled: true, asLocalhost: true }, // Adjust as per your network
+    discovery: { enabled: true, asLocalhost: false }, // Set to false for remote network
   });
 
   return gateway;

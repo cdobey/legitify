@@ -41,7 +41,7 @@ export async function enrollUser(
     // Load the network configuration
     const ccpPath = path.resolve(
       __dirname,
-      `../../../ledger/legitify-network/organizations/peerOrganizations/${org.name}.com/connection-${org.name}.json`
+      `../../config/connection-${org.name}.json`
     );
     const ccp = JSON.parse(fs.readFileSync(ccpPath, "utf8"));
 
