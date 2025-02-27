@@ -322,6 +322,7 @@ csr:
   hosts:
     - ad31af7147d6
     - localhost
+    - 52.50.172.251
   ca:
     expiry: 131400h
     pathlength: 1

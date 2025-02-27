@@ -14,7 +14,6 @@ OrdererOrgs:
     Domain: example.com
     EnableNodeOUs: true
 
-
     # ---------------------------------------------------------------------------
     # "Specs" - See PeerOrgs for complete description
     # ---------------------------------------------------------------------------
@@ -22,6 +21,7 @@ OrdererOrgs:
       - Hostname: orderer
         SANS:
           - localhost
+          - 52.50.172.251
       - Hostname: orderer2
         SANS:
           - localhost
