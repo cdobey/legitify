@@ -72,12 +72,12 @@ services:
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
       # Peer specific variables
       - CORE_PEER_ID=peer0.orguniversity.com
-      - CORE_PEER_ADDRESS=peer0.orguniversity.com:7051
+      - CORE_PEER_ADDRESS=176.34.66.195:7051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
-      - CORE_PEER_CHAINCODEADDRESS=peer0.orguniversity.com:7052
+      - CORE_PEER_CHAINCODEADDRESS=176.34.66.195:7052
       - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.orguniversity.com:7051
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orguniversity.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=176.34.66.195:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=176.34.66.195:7051
       - CORE_PEER_LOCALMSPID=OrgUniversityMSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
       - CORE_OPERATIONS_LISTENADDRESS=peer0.orguniversity.com:9444
@@ -111,12 +111,12 @@ services:
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
       # Peer specific variables
       - CORE_PEER_ID=peer0.orgemployer.com
-      - CORE_PEER_ADDRESS=peer0.orgemployer.com:8051
+      - CORE_PEER_ADDRESS=176.34.66.195:8051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:8051
-      - CORE_PEER_CHAINCODEADDRESS=peer0.orgemployer.com:8052
+      - CORE_PEER_CHAINCODEADDRESS=176.34.66.195:8052
       - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:8052
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orgemployer.com:8051
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.orgemployer.com:8051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=176.34.66.195:8051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=176.34.66.195:8051
       - CORE_PEER_LOCALMSPID=OrgEmployerMSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
       - CORE_OPERATIONS_LISTENADDRESS=peer0.orgemployer.com:9445
@@ -150,12 +150,12 @@ services:
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
       # Peer specific variables
       - CORE_PEER_ID=peer0.orgindividual.com
-      - CORE_PEER_ADDRESS=peer0.orgindividual.com:9051
+      - CORE_PEER_ADDRESS=176.34.66.195:9051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
-      - CORE_PEER_CHAINCODEADDRESS=peer0.orgindividual.com:9052
+      - CORE_PEER_CHAINCODEADDRESS=176.34.66.195:9052
       - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orgindividual.com:9051
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.orgindividual.com:9051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=176.34.66.195:9051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=176.34.66.195:9051
       - CORE_PEER_LOCALMSPID=OrgIndividualMSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
       - CORE_OPERATIONS_LISTENADDRESS=peer0.orgindividual.com:9446
