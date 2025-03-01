@@ -1,0 +1,45 @@
+{
+  "name": "legitify-network-orgindividual",
+  "version": "1.0.0",
+  "client": {
+    "organization": "OrgIndividual",
+    "connection": {
+      "timeout": {
+        "peer": {
+          "endorser": "300"
+        }
+      }
+    }
+  },
+  "organizations": {
+    "OrgIndividual": {
+      "mspid": "OrgIndividualMSP",
+      "peers": ["peer0.orgindividual.com"],
+      "certificateAuthorities": ["ca.orgindividual.com"]
+    }
+  },
+  "peers": {
+    "peer0.orgindividual.com": {
+      "url": "grpcs://176.34.66.195:9051",
+      "tlsCACerts": {
+        "path": "../../ledger/legitify-network/organizations/peerOrganizations/orgindividual.com/peers/peer0.orgindividual.com/tls/ca.crt"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "peer0.orgindividual.com",
+        "hostnameOverride": "peer0.orgindividual.com"
+      }
+    }
+  },
+  "certificateAuthorities": {
+    "ca.orgindividual.com": {
+      "url": "https://176.34.66.195:9054",
+      "caName": "ca-orgindividual",
+      "tlsCACerts": {
+        "path": "../../ledger/legitify-network/organizations/peerOrganizations/orgindividual.com/ca/ca.orgindividual.com-cert.pem"
+      },
+      "httpOptions": {
+        "verify": false
+      }
+    }
+  }
+}

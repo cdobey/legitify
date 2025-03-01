@@ -320,6 +320,10 @@ function networkUp() {
   if [ $? -ne 0 ]; then
     fatalln "Unable to start network"
   fi
+
+  # Start the resource server
+  echo "Starting Fabric Resource Server..."
+  ./resource-server/start.sh
 }
 
 # call the script to create the channel, join the peers of org1 and org2,

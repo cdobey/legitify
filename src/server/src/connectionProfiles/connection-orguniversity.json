@@ -1,0 +1,45 @@
+{
+  "name": "legitify-network-orguniversity",
+  "version": "1.0.0",
+  "client": {
+    "organization": "OrgUniversity",
+    "connection": {
+      "timeout": {
+        "peer": {
+          "endorser": "300"
+        }
+      }
+    }
+  },
+  "organizations": {
+    "OrgUniversity": {
+      "mspid": "OrgUniversityMSP",
+      "peers": ["peer0.orguniversity.com"],
+      "certificateAuthorities": ["ca.orguniversity.com"]
+    }
+  },
+  "peers": {
+    "peer0.orguniversity.com": {
+      "url": "grpcs://176.34.66.195:7051",
+      "tlsCACerts": {
+        "path": "../../ledger/legitify-network/organizations/peerOrganizations/orguniversity.com/peers/peer0.orguniversity.com/tls/ca.crt"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "peer0.orguniversity.com",
+        "hostnameOverride": "peer0.orguniversity.com"
+      }
+    }
+  },
+  "certificateAuthorities": {
+    "ca.orguniversity.com": {
+      "url": "https://176.34.66.195:7054",
+      "caName": "ca-orguniversity",
+      "tlsCACerts": {
+        "path": "../../ledger/legitify-network/organizations/peerOrganizations/orguniversity.com/ca/ca.orguniversity.com-cert.pem"
+      },
+      "httpOptions": {
+        "verify": false
+      }
+    }
+  }
+}

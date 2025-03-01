@@ -2,6 +2,76 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+source .env
+
+function setGlobals() {
+  local USING_ORG=""
+  if [ -z "$OVERRIDE_ORG" ]; then
+    USING_ORG=$1
+  else
+    USING_ORG="${OVERRIDE_ORG}"
+  fi
+  echo "Using organization ${USING_ORG}"
+  if [ $USING_ORG = orguniversity ]; then
+    export CORE_PEER_LOCALMSPID="OrgUniversityMSP"
+    export CORE_PEER_TLS_ROOTCERT_FILE=${ORG_UNIVERSITY_TLS_CERT}
+    export CORE_PEER_MSPCONFIGPATH=${ORG_UNIVERSITY_MSP_PATH}
+    export CORE_PEER_ADDRESS=176.34.66.195:7051
+    export FABRIC_CFG_PATH=${PWD}/configtx
+  elif [ $USING_ORG = orgemployer ]; then
+    export CORE_PEER_LOCALMSPID="OrgEmployerMSP"
+    export CORE_PEER_TLS_ROOTCERT_FILE=${ORG_EMPLOYER_TLS_CERT}
+    export CORE_PEER_MSPCONFIGPATH=${ORG_EMPLOYER_MSP_PATH}
+    export CORE_PEER_ADDRESS=176.34.66.195:8051
+    export FABRIC_CFG_PATH=${PWD}/configtx
+  elif [ $USING_ORG = orgindividual ]; then
+    export CORE_PEER_LOCALMSPID="OrgIndividualMSP"
+    export CORE_PEER_TLS_ROOTCERT_FILE=${ORG_INDIVIDUAL_TLS_CERT}
+    export CORE_PEER_MSPCONFIGPATH=${ORG_INDIVIDUAL_MSP_PATH}
+    export CORE_PEER_ADDRESS=176.34.66.195:9051
+    export FABRIC_CFG_PATH=${PWD}/configtx
+  else
+    echo "Unknown organization: $USING_ORG"
+    exit 1
+  fi
+
+  if [ "$VERBOSE" == "true" ]; then
+    env | grep CORE
+  fi
+}
+
+function setOrdererGlobals() {
+  export CORE_PEER_LOCALMSPID="OrdererMSP"
+  export CORE_PEER_TLS_ROOTCERT_FILE=${ORDERER_CA}
+  export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/ordererOrganizations/example.com/users/Admin@example.com/msp
+  export CORE_PEER_ADDRESS=176.34.66.195:7050
+  export FABRIC_CFG_PATH=${PWD}/configtx
+}
+
+# parsePeerConnectionParameters $@
+function parsePeerConnectionParameters() {
+  PEER_CONN_PARMS=()
+  PEERS=""
+  while [ "$#" -gt 0 ]; do
+    setGlobals $1
+    PEER="peer0.$1"
+    ## Set peer addresses
+    if [ -z "$PEERS" ]
+    then
+	PEERS="$PEER"
+    else
+	PEERS="$PEERS $PEER"
+    fi
+    PEER_CONN_PARMS=("${PEER_CONN_PARMS[@]}" --peerAddresses $CORE_PEER_ADDRESS)
+    if [ "$CORE_PEER_TLS_ENABLED" = "true" ]; then
+      TLSINFO=(--tlsRootCertFiles "${CORE_PEER_TLS_ROOTCERT_FILE}")
+      PEER_CONN_PARMS=("${PEER_CONN_PARMS[@]}" "${TLSINFO[@]}")
+    fi
+    # shift by one to get to the next organization
+    shift
+  done
+}
+
 # default to using OrgUniversity
 ORG=${1:-OrgUniversity}
 

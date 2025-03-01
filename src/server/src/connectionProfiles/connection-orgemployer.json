@@ -1,0 +1,45 @@
+{
+  "name": "legitify-network-orgemployer",
+  "version": "1.0.0",
+  "client": {
+    "organization": "OrgEmployer",
+    "connection": {
+      "timeout": {
+        "peer": {
+          "endorser": "300"
+        }
+      }
+    }
+  },
+  "organizations": {
+    "OrgEmployer": {
+      "mspid": "OrgEmployerMSP",
+      "peers": ["peer0.orgemployer.com"],
+      "certificateAuthorities": ["ca.orgemployer.com"]
+    }
+  },
+  "peers": {
+    "peer0.orgemployer.com": {
+      "url": "grpcs://176.34.66.195:8051",
+      "tlsCACerts": {
+        "path": "../../ledger/legitify-network/organizations/peerOrganizations/orgemployer.com/peers/peer0.orgemployer.com/tls/ca.crt"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "peer0.orgemployer.com",
+        "hostnameOverride": "peer0.orgemployer.com"
+      }
+    }
+  },
+  "certificateAuthorities": {
+    "ca.orgemployer.com": {
+      "url": "https://176.34.66.195:8054",
+      "caName": "ca-orgemployer",
+      "tlsCACerts": {
+        "path": "../../ledger/legitify-network/organizations/peerOrganizations/orgemployer.com/ca/ca.orgemployer.com-cert.pem"
+      },
+      "httpOptions": {
+        "verify": false
+      }
+    }
+  }
+}

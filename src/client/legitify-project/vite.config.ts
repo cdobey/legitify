@@ -10,8 +10,10 @@ export default defineConfig({
     origin: "http://localhost:3001",
     proxy: {
       "/api": {
-        target: "http://localhost:3001",
+        origin: "http://176.34.66.195:3001",
         changeOrigin: true,
+        secure: false,
+        target: "http://176.34.66.195:3001",
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
     },

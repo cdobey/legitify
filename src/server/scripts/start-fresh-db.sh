@@ -12,6 +12,21 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
   exit 1
 fi
 
+# Fetch Fabric resources from EC2 instance
+echo "🌐 Fetching Hyperledger Fabric resources from EC2 instance..."
+export EC2_IP=${EC2_IP:-"176.34.66.195"}
+export RESOURCE_SERVER_PORT=${RESOURCE_SERVER_PORT:-"8080"}
+echo "Using EC2 instance at ${EC2_IP}:${RESOURCE_SERVER_PORT}"
+
+# Run the resource fetcher script
+node ./scripts/fetch-fabric-resources.js
+if [ $? -ne 0 ]; then
+  echo "❌ Failed to fetch Fabric resources from EC2 instance"
+  echo "Please make sure the Fabric network and resource server are running on the EC2 instance"
+  exit 1
+fi
+echo "✅ Successfully fetched Fabric resources from EC2 instance"
+
 echo "🗑️  Clearing all data from Supabase database..."
 
 # Use Prisma to reset the database (drops all tables and recreates them)
