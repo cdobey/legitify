@@ -115,3 +115,101 @@ export async function enrollUser(
     throw error;
   }
 }
+
+/**
+ * Validates that all prerequisites for Fabric connectivity are in place
+ * @param orgName The organization name to validate
+ * @returns A validation result with success status and optional error message
+ */
+export function validateFabricPrerequisites(orgName: string): {
+  success: boolean;
+  error?: string;
+} {
+  try {
+    // Check if connection profile exists
+    const connectionProfilePath = path.resolve(
+      __dirname,
+      `../connectionProfiles/connection-${orgName}.json`
+    );
+
+    if (!fs.existsSync(connectionProfilePath)) {
+      return {
+        success: false,
+        error: `Connection profile not found at ${connectionProfilePath}. Run fetch-fabric-resources.js first.`,
+      };
+    }
+
+    // Check if certificates directory exists
+    const certsPath = path.resolve(__dirname, `../certificates/${orgName}`);
+
+    if (!fs.existsSync(certsPath)) {
+      return {
+        success: false,
+        error: `Certificates directory not found at ${certsPath}. Run fetch-fabric-resources.js first.`,
+      };
+    }
+
+    // Parse connection profile to validate content
+    try {
+      const ccp = JSON.parse(fs.readFileSync(connectionProfilePath, "utf8"));
+
+      // Check for required elements
+      if (!ccp.peers || !ccp.orderers || !ccp.certificateAuthorities) {
+        return {
+          success: false,
+          error: `Connection profile is missing required elements. Run fetch-fabric-resources.js to get a complete profile.`,
+        };
+      }
+
+      // Check that EC2 IP is used, not localhost
+      const peerKey = Object.keys(ccp.peers)[0];
+      if (peerKey && ccp.peers[peerKey].url.includes("localhost")) {
+        return {
+          success: false,
+          error: `Connection profile contains localhost URLs. Run fetch-fabric-resources.js with proper EC2_IP environment variable.`,
+        };
+      }
+    } catch (e) {
+      return {
+        success: false,
+        error: `Failed to parse connection profile: ${
+          e instanceof Error ? e.message : String(e)
+        }`,
+      };
+    }
+
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: `Validation failed: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    };
+  }
+}
+
+/**
+ * Gets the file path for the connection profile for a specific organization
+ * @param orgName The organization name
+ * @returns The path to the connection profile
+ */
+export function getConnectionProfilePath(orgName: string): string {
+  return path.resolve(
+    __dirname,
+    `../connectionProfiles/connection-${orgName}.json`
+  );
+}
+
+/**
+ * Gets the certificate path for a specific organization
+ * @param orgName The organization name
+ * @param certType The certificate type (ca or tlsca)
+ * @returns The path to the certificate
+ */
+export function getCertificatePath(
+  orgName: string,
+  certType: "ca" | "tlsca"
+): string {
+  return path.resolve(__dirname, `../certificates/${orgName}/${certType}.pem`);
+}
