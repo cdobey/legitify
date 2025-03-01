@@ -1,7 +1,14 @@
+import dotenv from "dotenv";
 import FabricCAServices from "fabric-ca-client";
 import fs from "fs";
 import path from "path";
 import { DatabaseWallet } from "../src/utils/db-wallet";
+
+// Load environment variables
+dotenv.config();
+
+// Get the Fabric network IP from environment
+const FABRIC_IP = process.env.FABRIC_IP || "localhost";
 
 interface Organization {
   name: string;
@@ -29,6 +36,7 @@ async function enrollAdmin(orgName: string, mspId: string): Promise<void> {
       throw new Error(`CA info not found for ${orgName}`);
     }
 
+    console.log(`Connecting to CA at: ${caInfo.url}`);
     const ca = new FabricCAServices(
       caInfo.url,
       { trustedRoots: caInfo.tlsCACerts.pem, verify: false },

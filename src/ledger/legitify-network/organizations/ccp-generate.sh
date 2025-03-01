@@ -5,6 +5,10 @@ function one_line_pem {
     echo "`awk 'NF {sub(/\\n/, ""); printf "%s\\\\\\\n",$0;}' $1`"
 }
 
+# Get IP address from environment variable or use localhost as default
+IP=${FABRIC_IP:-localhost}
+echo "Using IP address: $IP for connection profiles"
+
 # Generate JSON connection profile from the template
 function json_ccp {
     local ORG=$1
@@ -19,6 +23,7 @@ function json_ccp {
     sed -e "s/\${ORG}/$ORG/" \
         -e "s/\${P0PORT}/$P0PORT/" \
         -e "s/\${CAPORT}/$CAPORT/" \
+        -e "s/\${IP}/$IP/" \
         -e "s#\${PEERPEM}#$PP#" \
         -e "s#\${CAPEM}#$CP#" \
         organizations/ccp-template.json
@@ -38,6 +43,7 @@ function yaml_ccp {
     sed -e "s/\${ORG}/$ORG/" \
         -e "s/\${P0PORT}/$P0PORT/" \
         -e "s/\${CAPORT}/$CAPORT/" \
+        -e "s/\${IP}/$IP/" \
         -e "s#\${PEERPEM}#$PP#" \
         -e "s#\${CAPEM}#$CP#" \
         organizations/ccp-template.yaml | sed -e $'s/\\\\n/\\\n          /g'

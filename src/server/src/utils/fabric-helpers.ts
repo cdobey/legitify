@@ -1,8 +1,15 @@
+import dotenv from "dotenv";
 import FabricCAServices from "fabric-ca-client";
 import { X509Identity } from "fabric-network";
 import fs from "fs";
 import path from "path";
 import { DatabaseWallet } from "./db-wallet";
+
+// Load environment variables
+dotenv.config();
+
+// Get the Fabric network IP from environment
+const FABRIC_IP = process.env.FABRIC_IP || "localhost";
 
 interface OrgConfig {
   name: string;
@@ -46,7 +53,13 @@ export async function enrollUser(
     const ccp = JSON.parse(fs.readFileSync(ccpPath, "utf8"));
 
     // Create a new CA client for interacting with the CA
-    const caURL = ccp.certificateAuthorities[org.caName].url;
+    const caInfo = ccp.certificateAuthorities[org.caName];
+    if (!caInfo) {
+      throw new Error(`CA info not found for ${org.caName}`);
+    }
+
+    const caURL = caInfo.url;
+    console.log(`Connecting to CA at: ${caURL}`);
     const ca = new FabricCAServices(caURL);
 
     // Create a wallet using the database

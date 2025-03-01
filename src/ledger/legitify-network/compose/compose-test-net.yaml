@@ -41,7 +41,7 @@ services:
       - ORDERER_ADMIN_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
       - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
       - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
-      - ORDERER_OPERATIONS_LISTENADDRESS=orderer.example.com:9443
+      - ORDERER_OPERATIONS_LISTENADDRESS=0.0.0.0:9443
       - ORDERER_METRICS_PROVIDER=prometheus
     working_dir: /root
     command: orderer
@@ -50,9 +50,9 @@ services:
       - ../organizations/ordererOrganizations/example.com/orderers/orderer.example.com/tls/:/var/hyperledger/orderer/tls
       - orderer.example.com:/var/hyperledger/production/orderer
     ports:
-      - 7050:7050
-      - 7053:7053
-      - 9443:9443
+      - "0.0.0.0:7050:7050"
+      - "0.0.0.0:7053:7053"
+      - "0.0.0.0:9443:9443"
     networks:
       - test
 
@@ -80,7 +80,7 @@ services:
       - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orguniversity.com:7051
       - CORE_PEER_LOCALMSPID=OrgUniversityMSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
-      - CORE_OPERATIONS_LISTENADDRESS=peer0.orguniversity.com:9444
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9444
       - CORE_METRICS_PROVIDER=prometheus
       - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer0orguniversity"}
       - CORE_CHAINCODE_EXECUTETIMEOUT=300s
@@ -90,8 +90,9 @@ services:
     working_dir: /root
     command: peer node start
     ports:
-      - 7051:7051
-      - 9444:9444
+      - "0.0.0.0:7051:7051"
+      - "0.0.0.0:7052:7052"
+      - "0.0.0.0:9444:9444"
     networks:
       - test
 
@@ -119,7 +120,7 @@ services:
       - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.orgemployer.com:8051
       - CORE_PEER_LOCALMSPID=OrgEmployerMSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
-      - CORE_OPERATIONS_LISTENADDRESS=peer0.orgemployer.com:9445
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9445
       - CORE_METRICS_PROVIDER=prometheus
       - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer0orgemployer"}
       - CORE_CHAINCODE_EXECUTETIMEOUT=300s
@@ -129,8 +130,9 @@ services:
     working_dir: /root
     command: peer node start
     ports:
-      - 8051:8051
-      - 9445:9445
+      - "0.0.0.0:8051:8051"
+      - "0.0.0.0:8052:8052"
+      - "0.0.0.0:9445:9445"
     networks:
       - test
 
@@ -158,14 +160,15 @@ services:
       - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.orgindividual.com:9051
       - CORE_PEER_LOCALMSPID=OrgIndividualMSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
-      - CORE_OPERATIONS_LISTENADDRESS=peer0.orgindividual.com:9446
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9446
       - CORE_METRICS_PROVIDER=prometheus
       - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG={"peername":"peer0orgindividual"}
       - CORE_CHAINCODE_EXECUTETIMEOUT=500s
     command: peer node start
     ports:
-      - 9051:9051
-      - 9052:9052
+      - "0.0.0.0:9051:9051"
+      - "0.0.0.0:9052:9052"
+      - "0.0.0.0:9446:9446"
     volumes:
       - ../organizations/peerOrganizations/orgindividual.com/peers/peer0.orgindividual.com:/etc/hyperledger/fabric
       - peer0.orgindividual.com:/var/hyperledger/production
