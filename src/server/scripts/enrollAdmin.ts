@@ -12,14 +12,16 @@ async function enrollAdmin(orgName: string, mspId: string): Promise<void> {
   try {
     const rootDir = __dirname;
 
-    // Construct paths based on organization
+    // Use the connection profiles fetched from the resource server
     const ccpPath = path.resolve(
       rootDir,
-      `../../ledger/legitify-network/organizations/peerOrganizations/${orgName}.com/connection-${orgName}.json`
+      `../src/connectionProfiles/connection-${orgName}.json`
     );
 
     if (!fs.existsSync(ccpPath)) {
-      throw new Error(`Connection profile not found at ${ccpPath}`);
+      throw new Error(
+        `Connection profile not found at ${ccpPath}. Make sure to run fetch-fabric-resources.js first.`
+      );
     }
 
     const ccp = JSON.parse(fs.readFileSync(ccpPath, "utf8"));
