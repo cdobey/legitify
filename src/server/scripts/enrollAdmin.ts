@@ -10,18 +10,32 @@ interface Organization {
 
 async function enrollAdmin(orgName: string, mspId: string): Promise<void> {
   try {
-    const rootDir = __dirname;
+    // Get the absolute path of the project root directory
+    const serverDir = path.resolve(__dirname, "..");
 
-    // Construct paths based on organization
-    const ccpPath = path.resolve(
-      rootDir,
-      `../../ledger/legitify-network/organizations/peerOrganizations/${orgName}.com/connection-${orgName}.json`
+    // First try to get the connection profile from the server's connectionProfiles directory
+    // which is populated by the fetch-fabric-resources script
+    let ccpPath = path.resolve(
+      serverDir,
+      `src/connectionProfiles/connection-${orgName}.json`
     );
+
+    // If the file doesn't exist, fall back to the ledger directory
+    if (!fs.existsSync(ccpPath)) {
+      console.log(
+        `Connection profile not found at ${ccpPath}, trying ledger directory...`
+      );
+      ccpPath = path.resolve(
+        serverDir,
+        `../ledger/legitify-network/organizations/peerOrganizations/${orgName}.com/connection-${orgName}.json`
+      );
+    }
 
     if (!fs.existsSync(ccpPath)) {
       throw new Error(`Connection profile not found at ${ccpPath}`);
     }
 
+    console.log(`Using connection profile from: ${ccpPath}`);
     const ccp = JSON.parse(fs.readFileSync(ccpPath, "utf8"));
     const caInfo = ccp.certificateAuthorities[`ca.${orgName}.com`];
 
