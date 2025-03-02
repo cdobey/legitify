@@ -209,6 +209,33 @@ app.get('/certs/:orgType/:org/:certType', (req, res) => {
     }
 });
 
+// Get MSP config.yaml for an organization
+app.get('/msp-config/:org', (req, res) => {
+    try {
+        const { org } = req.params;
+
+        const configPath = path.join(
+            ORGANIZATIONS_DIR,
+            `peerOrganizations/${org}.com/msp/config.yaml`
+        );
+
+        if (fs.existsSync(configPath)) {
+            const configContent = fs.readFileSync(configPath, 'utf8');
+            res.set('Content-Type', 'text/yaml');
+            res.send(configContent);
+        } else {
+            console.error(`MSP config not found: ${configPath}`);
+            res.status(404).json({ error: 'MSP config file not found' });
+        }
+    } catch (error) {
+        console.error('Error retrieving MSP config:', error);
+        res.status(500).json({
+            error: 'Failed to retrieve MSP config',
+            details: error.message,
+        });
+    }
+});
+
 // Get network status
 app.get('/status', (req, res) => {
     try {
@@ -284,20 +311,73 @@ app.get('/msp/:org/:mspType', (req, res) => {
             return res.status(400).json({ error: 'Invalid MSP type' });
         }
 
-        const mspPath = path.join(
+        // Base MSP directory path
+        const mspBasePath = path.join(
             ORGANIZATIONS_DIR,
             `peerOrganizations/${org}.com/msp/${mspType}`
         );
-        if (fs.existsSync(mspPath)) {
-            const mspData = fs.readFileSync(mspPath, 'utf8');
-            res.set('Content-Type', 'application/x-pem-file');
-            res.send(mspData);
-        } else {
-            res.status(404).json({ error: 'MSP file not found' });
+
+        // Check if path exists
+        if (!fs.existsSync(mspBasePath)) {
+            console.error(`Path not found: ${mspBasePath}`);
+            return res.status(404).json({ error: 'MSP path not found' });
         }
+
+        // Handle different cases based on whether it's a file or directory
+        const stats = fs.statSync(mspBasePath);
+        let fileContent;
+        let fileName;
+
+        if (stats.isFile()) {
+            // If it's a file, read it directly
+            fileContent = fs.readFileSync(mspBasePath, 'utf8');
+            fileName = path.basename(mspBasePath);
+        } else if (stats.isDirectory()) {
+            // If it's a directory, find and read the first certificate file
+            const files = fs.readdirSync(mspBasePath);
+            if (files.length === 0) {
+                return res
+                    .status(404)
+                    .json({ error: 'No files found in MSP directory' });
+            }
+
+            // Find the first file that looks like a certificate - expanded patterns
+            const certFile = files.find(
+                (file) =>
+                    file.endsWith('.pem') ||
+                    file.endsWith('.crt') || 
+                    file.includes('cert') ||
+                    !file.includes('.')
+            );
+
+            if (!certFile) {
+                return res
+                    .status(404)
+                    .json({ error: 'No certificate found in MSP directory' });
+            }
+
+            const certPath = path.join(mspBasePath, certFile);
+            fileContent = fs.readFileSync(certPath, 'utf8');
+            fileName = certFile;
+        } else {
+            return res
+                .status(404)
+                .json({ error: 'MSP path is neither a file nor a directory' });
+        }
+
+        // Send the certificate content with X-Filename header
+        res.set('Content-Type', 'application/x-pem-file');
+        res.set('X-Filename', fileName);
+        res.send(fileContent);
     } catch (error) {
         console.error('Error retrieving MSP file:', error);
-        res.status(500).json({ error: 'Failed to retrieve MSP file' });
+        res.status(500).json({
+            error: 'Failed to retrieve MSP file',
+            details: error.message,
+            path: req.params
+                ? `${req.params.org}/${req.params.mspType}`
+                : 'unknown',
+        });
     }
 });
 

@@ -41,6 +41,11 @@ function makeRequest(endpoint) {
 
     const req = client.get(url, { rejectUnauthorized: false }, (res) => {
       let data = "";
+      let filename = null;
+
+      if (res.headers["x-filename"]) {
+        filename = res.headers["x-filename"];
+      }
 
       res.on("data", (chunk) => {
         data += chunk;
@@ -50,12 +55,12 @@ function makeRequest(endpoint) {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           try {
             if (res.headers["content-type"] === "application/x-pem-file") {
-              resolve(data);
+              resolve({ data, filename }); // Return both data and filename
             } else {
               resolve(JSON.parse(data));
             }
           } catch (e) {
-            resolve(data);
+            resolve({ data, filename }); // Default to returning both for non-JSON
           }
         } else {
           reject(
@@ -107,7 +112,10 @@ async function fetchConnectionProfile(org) {
 async function fetchCertificate(orgType, org, certType) {
   try {
     console.log(`Fetching ${certType} certificate for ${orgType} ${org}...`);
-    const cert = await makeRequest(`/certs/${orgType}/${org}/${certType}`);
+    const response = await makeRequest(`/certs/${orgType}/${org}/${certType}`);
+
+    // Handle the case where response might be an object with data property
+    const certData = response.data || response;
 
     const orgDir = path.join(CERTS_DIR, org);
     if (!fs.existsSync(orgDir)) {
@@ -116,7 +124,7 @@ async function fetchCertificate(orgType, org, certType) {
 
     const fileName = `${certType}.pem`;
     const filePath = path.join(orgDir, fileName);
-    fs.writeFileSync(filePath, cert);
+    fs.writeFileSync(filePath, certData);
     console.log(`Saved certificate to ${filePath}`);
   } catch (error) {
     console.error(
@@ -133,23 +141,66 @@ async function fetchCertificate(orgType, org, certType) {
  */
 async function fetchMSPFiles(org) {
   const mspTypes = ["signcerts", "keystore", "cacerts", "tlscacerts"];
+
   for (const mspType of mspTypes) {
     try {
       console.log(`Fetching ${mspType} for ${org}...`);
-      const mspData = await makeRequest(`/msp/${org}/${mspType}`);
+      const response = await makeRequest(`/msp/${org}/${mspType}`);
+
+      // Check if we received an object with data and filename
+      if (!response || !response.data) {
+        console.warn(
+          `Warning: No valid data received for ${mspType} for ${org}`
+        );
+        continue;
+      }
 
       const orgDir = path.join(MSP_DIR, org, mspType);
       if (!fs.existsSync(orgDir)) {
         fs.mkdirSync(orgDir, { recursive: true });
       }
 
-      const filePath = path.join(orgDir, `${mspType}.pem`);
-      fs.writeFileSync(filePath, mspData);
-      console.log(`Saved ${mspType} to ${filePath}`);
+      // Use the original filename if provided, otherwise use a default name
+      const filename = response.filename || `${mspType}.pem`;
+      const filePath = path.join(orgDir, filename);
+
+      fs.writeFileSync(filePath, response.data);
+      console.log(`Saved ${mspType} to ${filePath} (as ${filename})`);
     } catch (error) {
       console.error(`Error fetching ${mspType} for ${org}:`, error.message);
-      throw error;
+      console.log(`Skipping ${mspType} for ${org} due to error`);
     }
+  }
+}
+
+/**
+ * Fetch and save an organization's MSP config.yaml
+ * @param {string} org - The organization name
+ */
+async function fetchMSPConfig(org) {
+  try {
+    console.log(`Fetching MSP config for ${org}...`);
+    const response = await makeRequest(`/msp-config/${org}`);
+
+    // Extract the YAML content - handle both object response and direct string response
+    const configYaml = response.data || response;
+
+    if (!configYaml || configYaml.trim() === "") {
+      console.warn(`Warning: Empty config.yaml received for ${org}`);
+      return;
+    }
+
+    const orgMspDir = path.join(MSP_DIR, org);
+    if (!fs.existsSync(orgMspDir)) {
+      fs.mkdirSync(orgMspDir, { recursive: true });
+    }
+
+    const filePath = path.join(orgMspDir, "config.yaml");
+    fs.writeFileSync(filePath, configYaml);
+    console.log(`Saved MSP config to ${filePath}`);
+  } catch (error) {
+    console.error(`Error fetching MSP config for ${org}:`, error.message);
+    console.log(`Skipping MSP config for ${org} due to error`);
   }
 }
 
@@ -187,6 +238,7 @@ async function fetchAllResources() {
       await fetchCertificate("peer", org, "ca");
       await fetchCertificate("peer", org, "tlsca");
       await fetchMSPFiles(org);
+      await fetchMSPConfig(org); // Add this line to fetch the config.yaml
     }
 
     await fetchCertificate("orderer", "example", "tlsca");

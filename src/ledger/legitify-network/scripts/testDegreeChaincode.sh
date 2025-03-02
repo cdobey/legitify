@@ -60,11 +60,12 @@ echo "Starting Degree Chaincode Tests..."
 # Test 1: Issue a new degree (as University with Employer endorsement)
 echo "Test 1: Issuing new degree..."
 set_university_context
-DEGREE_ID="DEGREE002"  # Changed ID to avoid conflicts
+DEGREE_ID="DEGREE002"
 DEGREE_HASH="abc123hash"
 OWNER_ID="INDIVIDUAL001"
-invoke_chaincode "IssueDegree" "\"$DEGREE_ID\",\"$DEGREE_HASH\",\"$OWNER_ID\""
-sleep 5  # Wait for transaction to be committed
+ISSUER_ID="OrgUniversityMSP"
+invoke_chaincode "IssueDegree" "\"$DEGREE_ID\",\"$DEGREE_HASH\",\"$OWNER_ID\",\"$ISSUER_ID\""
+sleep 5
 
 # Test 2: Query the degree (as University)
 echo "Test 2: Reading issued degree..."
