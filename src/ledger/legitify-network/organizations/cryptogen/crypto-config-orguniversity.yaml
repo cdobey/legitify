@@ -49,7 +49,6 @@ PeerOrgs:
       Count: 1
       SANS:
         - localhost
-        - 176.34.66.195
       # Start: 5
       # Hostname: {{.Prefix}}{{.Index}} # default
     # ---------------------------------------------------------------------------
