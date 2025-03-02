@@ -34,13 +34,6 @@ const generateConnectionProfile = (org) => {
         organizations: {},
         peers: {},
         certificateAuthorities: {},
-        orderers: {},
-        channels: {
-            mychannel: {
-                orderers: ['orderer.example.com'],
-                peers: {},
-            },
-        },
     };
 
     // Set organization info
@@ -80,10 +73,6 @@ const generateConnectionProfile = (org) => {
         grpcOptions: {
             'ssl-target-name-override': `peer0.${org}.com`,
             hostnameOverride: `peer0.${org}.com`,
-            'grpc.keepalive_time_ms': 120000,
-            'grpc.keepalive_timeout_ms': 20000,
-            'grpc.http2.min_time_between_pings_ms': 120000,
-            'grpc.http2.max_pings_without_data': 0,
         },
     };
 
@@ -103,36 +92,6 @@ const generateConnectionProfile = (org) => {
         httpOptions: {
             verify: false,
         },
-    };
-
-    // Add orderer configuration
-    template.orderers['orderer.example.com'] = {
-        url: `grpcs://${process.env.EC2_IP || '176.34.66.195'}:7050`,
-        tlsCACerts: {
-            pem: fs.readFileSync(
-                path.join(
-                    ORGANIZATIONS_DIR,
-                    'ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt'
-                ),
-                'utf8'
-            ),
-        },
-        grpcOptions: {
-            'ssl-target-name-override': 'orderer.example.com',
-            hostnameOverride: 'orderer.example.com',
-            'grpc.keepalive_time_ms': 120000,
-            'grpc.keepalive_timeout_ms': 20000,
-            'grpc.http2.min_time_between_pings_ms': 120000,
-            'grpc.http2.max_pings_without_data': 0,
-        },
-    };
-
-    // Add channel peer configuration
-    template.channels.mychannel.peers[`peer0.${org}.com`] = {
-        endorsingPeer: true,
-        chaincodeQuery: true,
-        ledgerQuery: true,
-        eventSource: true,
     };
 
     return template;

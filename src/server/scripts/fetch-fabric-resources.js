@@ -86,76 +86,9 @@ async function fetchConnectionProfile(org) {
   try {
     console.log(`Fetching connection profile for ${org}...`);
     const connectionProfile = await makeRequest(`/connection-profile/${org}`);
-
-    // Ensure the organization name case is consistent in all parts of the connection profile
-    const orgLower = org.toLowerCase();
-    const orgCapitalized = orgLower.charAt(0).toUpperCase() + orgLower.slice(1);
-    const mspId = `${orgCapitalized}MSP`;
-
-    // Ensure specific keys are present
-    if (!connectionProfile.channels) {
-      console.log(
-        `Adding missing channels section to ${org} connection profile`
-      );
-      connectionProfile.channels = {
-        mychannel: {
-          orderers: ["orderer.example.com"],
-          peers: {},
-        },
-      };
-
-      // Add current org's peer to channel
-      connectionProfile.channels.mychannel.peers = {
-        [`peer0.${orgLower}.com`]: {
-          endorsingPeer: true,
-          chaincodeQuery: true,
-          ledgerQuery: true,
-          eventSource: true,
-        },
-      };
-    }
-
-    // Ensure orderers section exists
-    if (!connectionProfile.orderers) {
-      console.log(
-        `Adding missing orderers section to ${org} connection profile`
-      );
-      connectionProfile.orderers = {
-        "orderer.example.com": {
-          url: `grpcs://${EC2_IP}:7050`,
-          tlsCACerts: {
-            pem:
-              "-----BEGIN CERTIFICATE-----\n" +
-              (await makeRequest(`/certs/orderer/example/tlsca`)) +
-              "\n-----END CERTIFICATE-----\n",
-          },
-          grpcOptions: {
-            "ssl-target-name-override": "orderer.example.com",
-            hostnameOverride: "orderer.example.com",
-            "grpc.keepalive_time_ms": 120000,
-            "grpc.keepalive_timeout_ms": 20000,
-            "grpc.http2.min_time_between_pings_ms": 120000,
-            "grpc.http2.max_pings_without_data": 0,
-          },
-        },
-      };
-    }
-
-    // Add additional grpcOptions if they don't exist
-    if (connectionProfile.peers[`peer0.${orgLower}.com`]?.grpcOptions) {
-      const grpcOptions =
-        connectionProfile.peers[`peer0.${orgLower}.com`].grpcOptions;
-      if (!grpcOptions["grpc.keepalive_time_ms"]) {
-        grpcOptions["grpc.keepalive_time_ms"] = 120000;
-        grpcOptions["grpc.keepalive_timeout_ms"] = 20000;
-        grpcOptions["grpc.http2.min_time_between_pings_ms"] = 120000;
-        grpcOptions["grpc.http2.max_pings_without_data"] = 0;
-      }
-    }
-
     const filePath = path.join(
       CONNECTION_PROFILES_DIR,
-      `connection-${orgLower}.json`
+      `connection-${org}.json`
     );
     fs.writeFileSync(filePath, JSON.stringify(connectionProfile, null, 2));
     console.log(`Saved connection profile to ${filePath}`);
