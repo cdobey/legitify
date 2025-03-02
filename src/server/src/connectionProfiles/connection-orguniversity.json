@@ -2,7 +2,7 @@
   "name": "legitify-network-orguniversity",
   "version": "1.0.0",
   "client": {
-    "organization": "OrgUniversity",
+    "organization": "Orguniversity",
     "connection": {
       "timeout": {
         "peer": {
@@ -12,17 +12,21 @@
     }
   },
   "organizations": {
-    "OrgUniversity": {
-      "mspid": "OrgUniversityMSP",
-      "peers": ["peer0.orguniversity.com"],
-      "certificateAuthorities": ["ca.orguniversity.com"]
+    "Orguniversity": {
+      "mspid": "OrguniversityMSP",
+      "peers": [
+        "peer0.orguniversity.com"
+      ],
+      "certificateAuthorities": [
+        "ca.orguniversity.com"
+      ]
     }
   },
   "peers": {
     "peer0.orguniversity.com": {
       "url": "grpcs://176.34.66.195:7051",
       "tlsCACerts": {
-        "path": "../../ledger/legitify-network/organizations/peerOrganizations/orguniversity.com/peers/peer0.orguniversity.com/tls/ca.crt"
+        "pem": "-----BEGIN CERTIFICATE-----\nMIICFzCCAb2gAwIBAgIUeuKZPCN3sYTuoMxEsMWacRT44m8wCgYIKoZIzj0EAwIw\naDELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQK\nEwtIeXBlcmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMt\nY2Etc2VydmVyMB4XDTI1MDMwMTE4MTkwMFoXDTQwMDIyNjE4MTkwMFowaDELMAkG\nA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQKEwtIeXBl\ncmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMtY2Etc2Vy\ndmVyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAESGcJLPECu/WyWt18yMnHt6Fp\nkA80qtfbe3jF1fy1c7DKp+Efnui9XMa3TCu38msV8zstG2E7HF0rU8EHJyvYmKNF\nMEMwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYE\nFKHxzN2P33rN62LI+poPNuR1cMdHMAoGCCqGSM49BAMCA0gAMEUCIQDCpVWyG1Fy\nh3T1BoNeSLdTM3ooDpKMYZG4zEEcNBZBJAIgMrs5UhXE14WTOAFK7qfD7g4chrrk\nj+fj7MdMOPdKTbY=\n-----END CERTIFICATE-----\n"
       },
       "grpcOptions": {
         "ssl-target-name-override": "peer0.orguniversity.com",
@@ -35,7 +39,7 @@
       "url": "https://176.34.66.195:7054",
       "caName": "ca-orguniversity",
       "tlsCACerts": {
-        "path": "../../ledger/legitify-network/organizations/peerOrganizations/orguniversity.com/ca/ca.orguniversity.com-cert.pem"
+        "pem": "-----BEGIN CERTIFICATE-----\nMIICFzCCAb2gAwIBAgIUeuKZPCN3sYTuoMxEsMWacRT44m8wCgYIKoZIzj0EAwIw\naDELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQK\nEwtIeXBlcmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMt\nY2Etc2VydmVyMB4XDTI1MDMwMTE4MTkwMFoXDTQwMDIyNjE4MTkwMFowaDELMAkG\nA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQKEwtIeXBl\ncmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMtY2Etc2Vy\ndmVyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAESGcJLPECu/WyWt18yMnHt6Fp\nkA80qtfbe3jF1fy1c7DKp+Efnui9XMa3TCu38msV8zstG2E7HF0rU8EHJyvYmKNF\nMEMwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYE\nFKHxzN2P33rN62LI+poPNuR1cMdHMAoGCCqGSM49BAMCA0gAMEUCIQDCpVWyG1Fy\nh3T1BoNeSLdTM3ooDpKMYZG4zEEcNBZBJAIgMrs5UhXE14WTOAFK7qfD7g4chrrk\nj+fj7MdMOPdKTbY=\n-----END CERTIFICATE-----\n"
       },
       "httpOptions": {
         "verify": false

@@ -76,3 +76,5 @@ src/ledger/legitify-network/organizations/fabric-ca/orgindividual/*
 # Server Specific
 src/server/pgdata/
 src/server/src/wallet/
+src/server/src/certificates/
+src/server/src/connectionProfiles/

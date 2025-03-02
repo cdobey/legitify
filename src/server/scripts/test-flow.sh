@@ -84,11 +84,28 @@ validate_response() {
 
 # Check if server is running
 echo -e "\n${BLUE}Checking server connection...${NC}"
-SERVER_CHECK_RESPONSE=$(curl -s -X GET "$API_URL/docs" || echo '{"error":"Connection failed"}')
+SERVER_CHECK_RESPONSE=$(curl -s -X GET "$API_URL/docs" -m 5 || echo '{"error":"Connection failed"}')
 
 if [[ "$SERVER_CHECK_RESPONSE" == *"error"* ]]; then
     echo -e "${RED}Server connection failed. Make sure the server is running.${NC}"
-    echo -e "${YELLOW}Try running ./src/scripts/start-fresh-db-supabase.sh first${NC}"
+    echo -e "${YELLOW}Possible issues:${NC}"
+    echo -e "${YELLOW}1. Check if API_URL in .env is correct (currently: $API_URL)${NC}"
+    echo -e "${YELLOW}2. Verify the server is running on the expected port (default: 3001)${NC}"
+    echo -e "${YELLOW}3. Make sure there are no firewall issues blocking the connection${NC}"
+    echo -e "${YELLOW}4. Try running ./src/server/scripts/start-fresh-db.sh first${NC}"
+    
+    # Try to ping the server to check basic connectivity
+    echo -e "\n${BLUE}Attempting to ping server host...${NC}"
+    SERVER_HOST=$(echo $API_URL | sed -E 's|https?://||' | sed -E 's|/.*||' | sed -E 's|:.*||')
+    ping -c 1 $SERVER_HOST > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}Host $SERVER_HOST is reachable.${NC}"
+        echo -e "${YELLOW}The issue might be with the specific API endpoint or port.${NC}"
+    else
+        echo -e "${RED}Host $SERVER_HOST is not reachable.${NC}"
+        echo -e "${YELLOW}Check your network connection or server address.${NC}"
+    fi
+    
     exit 1
 else
     echo -e "${GREEN}Server is running!${NC}"
@@ -341,4 +358,6 @@ echo -e "1. Check server logs: cat server.log"
 echo -e "2. Verify Supabase connection in .env file"
 echo -e "3. Confirm Hyperledger Fabric setup is working"
 echo -e "4. Visit Supabase dashboard to check user creation"
-echo -e "5. Try running ./src/scripts/start-fresh-db-supabase.sh again" 
+echo -e "5. Try running ./src/server/scripts/start-fresh-db.sh again" 
+echo -e "6. Verify API_URL in .env matches the actual server address and port"
+echo -e "7. Check if the server process is still running: ps aux | grep node"

@@ -2,7 +2,7 @@
   "name": "legitify-network-orgemployer",
   "version": "1.0.0",
   "client": {
-    "organization": "OrgEmployer",
+    "organization": "Orgemployer",
     "connection": {
       "timeout": {
         "peer": {
@@ -12,17 +12,21 @@
     }
   },
   "organizations": {
-    "OrgEmployer": {
-      "mspid": "OrgEmployerMSP",
-      "peers": ["peer0.orgemployer.com"],
-      "certificateAuthorities": ["ca.orgemployer.com"]
+    "Orgemployer": {
+      "mspid": "OrgemployerMSP",
+      "peers": [
+        "peer0.orgemployer.com"
+      ],
+      "certificateAuthorities": [
+        "ca.orgemployer.com"
+      ]
     }
   },
   "peers": {
     "peer0.orgemployer.com": {
       "url": "grpcs://176.34.66.195:8051",
       "tlsCACerts": {
-        "path": "../../ledger/legitify-network/organizations/peerOrganizations/orgemployer.com/peers/peer0.orgemployer.com/tls/ca.crt"
+        "pem": "-----BEGIN CERTIFICATE-----\nMIICFzCCAb2gAwIBAgIUV0oGdNhFhea6qIaLqNG2NWH/0LQwCgYIKoZIzj0EAwIw\naDELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQK\nEwtIeXBlcmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMt\nY2Etc2VydmVyMB4XDTI1MDMwMTE4MTkwMFoXDTQwMDIyNjE4MTkwMFowaDELMAkG\nA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQKEwtIeXBl\ncmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMtY2Etc2Vy\ndmVyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE/V/c55hqE9VFZYT01rR7BFs7\n6HpwnINPneOjF2lYs2QFaCFmbI5cLjCa8MU4gF52O8/IXfnyuBP0K5WwV8UGF6NF\nMEMwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYE\nFC4HwnK8PPwY7bTkvTLmAhuhsUvXMAoGCCqGSM49BAMCA0gAMEUCIQCGFTyqMrd0\nc6gNlaqEobg9tADDwhGw6dtHant6f7wrlAIgLKYer5nJYWHaTriGOlvRBC/q4i0N\ntIDId8jRDg0wpQo=\n-----END CERTIFICATE-----\n"
       },
       "grpcOptions": {
         "ssl-target-name-override": "peer0.orgemployer.com",
@@ -35,7 +39,7 @@
       "url": "https://176.34.66.195:8054",
       "caName": "ca-orgemployer",
       "tlsCACerts": {
-        "path": "../../ledger/legitify-network/organizations/peerOrganizations/orgemployer.com/ca/ca.orgemployer.com-cert.pem"
+        "pem": "-----BEGIN CERTIFICATE-----\nMIICFzCCAb2gAwIBAgIUV0oGdNhFhea6qIaLqNG2NWH/0LQwCgYIKoZIzj0EAwIw\naDELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQK\nEwtIeXBlcmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMt\nY2Etc2VydmVyMB4XDTI1MDMwMTE4MTkwMFoXDTQwMDIyNjE4MTkwMFowaDELMAkG\nA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQKEwtIeXBl\ncmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMtY2Etc2Vy\ndmVyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE/V/c55hqE9VFZYT01rR7BFs7\n6HpwnINPneOjF2lYs2QFaCFmbI5cLjCa8MU4gF52O8/IXfnyuBP0K5WwV8UGF6NF\nMEMwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYE\nFC4HwnK8PPwY7bTkvTLmAhuhsUvXMAoGCCqGSM49BAMCA0gAMEUCIQCGFTyqMrd0\nc6gNlaqEobg9tADDwhGw6dtHant6f7wrlAIgLKYer5nJYWHaTriGOlvRBC/q4i0N\ntIDId8jRDg0wpQo=\n-----END CERTIFICATE-----\n"
       },
       "httpOptions": {
         "verify": false
