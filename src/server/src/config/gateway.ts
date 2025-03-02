@@ -44,8 +44,18 @@ export async function getGateway(
       identity: userId,
       discovery: { enabled: true, asLocalhost: false }, // Set to false for remote network
       eventHandlerOptions: {
-        commitTimeout: 300, // 5 minutes
-        endorseTimeout: 120, // 2 minutes
+        commitTimeout: 600, // 10 minutes (increased from 5)
+        endorseTimeout: 300, // 5 minutes (increased from 2)
+      },
+      "connection-options": {
+        grpc: {
+          "grpc.keepalive_timeout_ms": 30000, // 30 seconds
+          "grpc.keepalive_time_ms": 60000, // 60 seconds
+          "grpc.http2.min_time_between_pings_ms": 60000, // 60 seconds
+          "grpc.max_receive_message_length": 100 * 1024 * 1024, // 100MB
+          "grpc.max_send_message_length": 100 * 1024 * 1024, // 100MB
+          "grpc-wait-for-ready": true,
+        },
       },
     });
 

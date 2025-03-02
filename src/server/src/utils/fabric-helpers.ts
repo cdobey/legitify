@@ -190,6 +190,75 @@ export function validateFabricPrerequisites(orgName: string): {
 }
 
 /**
+ * Tests connectivity with the Fabric network
+ * @param orgName Organization name to test
+ * @returns Promise resolving to connection status
+ */
+export async function testFabricConnection(
+  orgName: string
+): Promise<{ connected: boolean; error?: string }> {
+  try {
+    // Validate prerequisites
+    const validation = validateFabricPrerequisites(orgName);
+    if (!validation.success) {
+      return { connected: false, error: validation.error };
+    }
+
+    // First try to ping the organizations's peer
+    let peerPort;
+    if (orgName === "orguniversity") peerPort = 7051;
+    else if (orgName === "orgemployer") peerPort = 8051;
+    else if (orgName === "orgindividual") peerPort = 9051;
+    else return { connected: false, error: "Unknown organization" };
+
+    // Use node's built-in DNS to check hostname resolution
+    const dns = require("dns");
+    try {
+      // Try to resolve peer hostname
+      const peerHostname = `peer0.${orgName}.com`;
+      await new Promise((resolve, reject) => {
+        dns.lookup(peerHostname, (err: Error, address: string) => {
+          if (err)
+            reject(
+              new Error(
+                `Cannot resolve hostname ${peerHostname}: ${err.message}`
+              )
+            );
+          else if (
+            address !== process.env.EC2_IP &&
+            address !== "176.34.66.195"
+          ) {
+            reject(
+              new Error(
+                `Hostname ${peerHostname} resolves to ${address} instead of expected EC2 IP`
+              )
+            );
+          } else resolve(address);
+        });
+      });
+    } catch (dnsErr) {
+      return {
+        connected: false,
+        error:
+          `Hostname resolution issue: ${
+            dnsErr instanceof Error ? dnsErr.message : String(dnsErr)
+          }\n` +
+          `Add entries to /etc/hosts using: node src/server/scripts/update-hosts.js`,
+      };
+    }
+
+    return { connected: true };
+  } catch (error) {
+    return {
+      connected: false,
+      error: `Failed to connect to Fabric network: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    };
+  }
+}
+
+/**
  * Gets the file path for the connection profile for a specific organization
  * @param orgName The organization name
  * @returns The path to the connection profile
