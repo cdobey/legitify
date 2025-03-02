@@ -1,8 +1,3 @@
-/**
- * Fetch Fabric resources from the EC2 resource server
- * This script gets the connection profiles and certificates needed to connect to the Fabric network
- */
-
 const fs = require("fs");
 const path = require("path");
 const https = require("https");
@@ -17,6 +12,7 @@ const CONNECTION_PROFILES_DIR = path.resolve(
   "../src/connectionProfiles"
 );
 const CERTS_DIR = path.resolve(__dirname, "../src/certificates");
+const MSP_DIR = path.resolve(__dirname, "../src/msp");
 
 // Ensure directories exist
 if (!fs.existsSync(CONNECTION_PROFILES_DIR)) {
@@ -25,6 +21,10 @@ if (!fs.existsSync(CONNECTION_PROFILES_DIR)) {
 
 if (!fs.existsSync(CERTS_DIR)) {
   fs.mkdirSync(CERTS_DIR, { recursive: true });
+}
+
+if (!fs.existsSync(MSP_DIR)) {
+  fs.mkdirSync(MSP_DIR, { recursive: true });
 }
 
 /**
@@ -37,7 +37,6 @@ function makeRequest(endpoint) {
     const url = `${RESOURCE_SERVER_URL}${endpoint}`;
     console.log(`Making request to: ${url}`);
 
-    // Choose http or https based on the URL
     const client = url.startsWith("https") ? https : http;
 
     const req = client.get(url, { rejectUnauthorized: false }, (res) => {
@@ -50,14 +49,12 @@ function makeRequest(endpoint) {
       res.on("end", () => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           try {
-            // Try to parse as JSON if it's not a certificate
             if (res.headers["content-type"] === "application/x-pem-file") {
               resolve(data);
             } else {
               resolve(JSON.parse(data));
             }
           } catch (e) {
-            // If parsing fails, return raw data
             resolve(data);
           }
         } else {
@@ -112,7 +109,6 @@ async function fetchCertificate(orgType, org, certType) {
     console.log(`Fetching ${certType} certificate for ${orgType} ${org}...`);
     const cert = await makeRequest(`/certs/${orgType}/${org}/${certType}`);
 
-    // Create org directory if it doesn't exist
     const orgDir = path.join(CERTS_DIR, org);
     if (!fs.existsSync(orgDir)) {
       fs.mkdirSync(orgDir, { recursive: true });
@@ -128,6 +124,32 @@ async function fetchCertificate(orgType, org, certType) {
       error.message
     );
     throw error;
+  }
+}
+
+/**
+ * Fetch and save MSP files
+ * @param {string} org - The organization name
+ */
+async function fetchMSPFiles(org) {
+  const mspTypes = ["signcerts", "keystore", "cacerts", "tlscacerts"];
+  for (const mspType of mspTypes) {
+    try {
+      console.log(`Fetching ${mspType} for ${org}...`);
+      const mspData = await makeRequest(`/msp/${org}/${mspType}`);
+
+      const orgDir = path.join(MSP_DIR, org, mspType);
+      if (!fs.existsSync(orgDir)) {
+        fs.mkdirSync(orgDir, { recursive: true });
+      }
+
+      const filePath = path.join(orgDir, `${mspType}.pem`);
+      fs.writeFileSync(filePath, mspData);
+      console.log(`Saved ${mspType} to ${filePath}`);
+    } catch (error) {
+      console.error(`Error fetching ${mspType} for ${org}:`, error.message);
+      throw error;
+    }
   }
 }
 
@@ -151,28 +173,22 @@ async function fetchNetworkStatus() {
  */
 async function fetchAllResources() {
   try {
-    // First check if network is running
     const status = await fetchNetworkStatus();
     if (!status.running) {
       console.error("Fabric network is not running on the EC2 instance!");
       process.exit(1);
     }
 
-    // Get list of organizations
     const orgsResponse = await makeRequest("/organizations");
     const orgs = orgsResponse.organizations;
 
-    // Fetch resources for each organization
     for (const org of orgs) {
-      // Fetch connection profile
       await fetchConnectionProfile(org);
-
-      // Fetch certificates
       await fetchCertificate("peer", org, "ca");
       await fetchCertificate("peer", org, "tlsca");
+      await fetchMSPFiles(org);
     }
 
-    // Fetch orderer certificate
     await fetchCertificate("orderer", "example", "tlsca");
 
     console.log("\nAll Fabric resources have been successfully fetched!");

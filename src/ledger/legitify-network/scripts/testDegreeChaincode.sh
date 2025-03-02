@@ -68,6 +68,7 @@ sleep 5  # Wait for transaction to be committed
 
 # Test 2: Query the degree (as University)
 echo "Test 2: Reading issued degree..."
+set_university_context
 RESULT=$(query_chaincode "ReadDegree" "\"$DEGREE_ID\"")
 echo "Degree details: $RESULT"
 sleep 2
@@ -100,6 +101,7 @@ sleep 2
 
 # Test 7: Verify hash (as University)
 echo "Test 7: Verifying degree hash..."
+set_university_context
 RESULT=$(query_chaincode "VerifyHash" "\"$DEGREE_ID\",\"$DEGREE_HASH\"")
 echo "Hash verification result: $RESULT"
 

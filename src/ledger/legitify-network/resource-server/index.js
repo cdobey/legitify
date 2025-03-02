@@ -270,6 +270,37 @@ app.get('/organizations', (req, res) => {
     }
 });
 
+// Get MSP files for an organization
+app.get('/msp/:org/:mspType', (req, res) => {
+    try {
+        const { org, mspType } = req.params;
+        const validMspTypes = [
+            'signcerts',
+            'keystore',
+            'cacerts',
+            'tlscacerts',
+        ];
+        if (!validMspTypes.includes(mspType)) {
+            return res.status(400).json({ error: 'Invalid MSP type' });
+        }
+
+        const mspPath = path.join(
+            ORGANIZATIONS_DIR,
+            `peerOrganizations/${org}.com/msp/${mspType}`
+        );
+        if (fs.existsSync(mspPath)) {
+            const mspData = fs.readFileSync(mspPath, 'utf8');
+            res.set('Content-Type', 'application/x-pem-file');
+            res.send(mspData);
+        } else {
+            res.status(404).json({ error: 'MSP file not found' });
+        }
+    } catch (error) {
+        console.error('Error retrieving MSP file:', error);
+        res.status(500).json({ error: 'Failed to retrieve MSP file' });
+    }
+});
+
 // Start the server
 app.listen(PORT, () => {
     console.log(`Fabric Resource Server running on port ${PORT}`);
