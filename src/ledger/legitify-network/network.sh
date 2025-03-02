@@ -377,13 +377,7 @@ function createChannel() {
   # to create the channel creation transaction and the anchor peer updates.
   scripts/createChannel.sh $CHANNEL_NAME $CLI_DELAY $MAX_RETRY $VERBOSE $bft_true
 
-  # Use this newer approach for creating the channel
-  configtxgen -profile TwoOrgsApplicationGenesis -outputBlock ./channel-artifacts/${CHANNEL_NAME}.block -channelID $CHANNEL_NAME
-
-  # Then use osnadmin to join the orderer
-  ./scripts/orderer.sh $CHANNEL_NAME
 }
-
 
 ## Call the script to deploy a chaincode to the channel
 function deployCC() {

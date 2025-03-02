@@ -38,6 +38,7 @@ createChannelGenesisBlock() {
 	if [ $bft_true -eq 1 ]; then
 		configtxgen -profile ChannelUsingBFT -outputBlock ./channel-artifacts/${CHANNEL_NAME}.block -channelID $CHANNEL_NAME
 	else
+		 # Change "ChannelEtcdRaft" to "ChannelUsingRaft" to match your actual configtx.yaml profile
 		configtxgen -profile ChannelUsingRaft -outputBlock ./channel-artifacts/${CHANNEL_NAME}.block -channelID $CHANNEL_NAME
 	fi
 	res=$?
