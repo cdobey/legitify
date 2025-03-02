@@ -90,7 +90,7 @@ updateAnchorPeer() {
   collectSignatures "${TEST_NETWORK_HOME}/channel-artifacts/${CHANNEL_NAME}_anchor_update_envelope.pb"
 
   # Submit the config update
-  peer channel update -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com -c "$CHANNEL_NAME" -f "${TEST_NETWORK_HOME}/channel-artifacts/${CHANNEL_NAME}_anchor_update_envelope.pb" --tls --cafile "$ORDERER_CA" >&log.txt
+  peer channel update -o 176.34.66.195:7050 --ordererTLSHostnameOverride orderer.example.com -c "$CHANNEL_NAME" -f "${TEST_NETWORK_HOME}/channel-artifacts/${CHANNEL_NAME}_anchor_update_envelope.pb" --tls --cafile "$ORDERER_CA" >&log.txt
   res=$?
   cat log.txt
   verifyResult $res "Anchor peer update failed"

@@ -26,17 +26,20 @@ setGlobals() {
     export CORE_PEER_LOCALMSPID=OrgUniversityMSP
     export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_ORGUNIVERSITY_CA
     export CORE_PEER_MSPCONFIGPATH=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orguniversity.com/users/Admin@orguniversity.com/msp
-    export CORE_PEER_ADDRESS=localhost:7051
+    export CORE_PEER_ADDRESS=176.34.66.195:7051
+    export CORE_PEER_TLS_HOSTNAME_OVERRIDE=peer0.orguniversity.com
   elif [ $USING_ORG -eq 2 ]; then
     export CORE_PEER_LOCALMSPID=OrgEmployerMSP
     export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_ORGEMPLOYER_CA
     export CORE_PEER_MSPCONFIGPATH=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orgemployer.com/users/Admin@orgemployer.com/msp
-    export CORE_PEER_ADDRESS=localhost:8051
+    export CORE_PEER_ADDRESS=176.34.66.195:8051
+    export CORE_PEER_TLS_HOSTNAME_OVERRIDE=peer0.orgemployer.com
   elif [ $USING_ORG -eq 3 ]; then
     export CORE_PEER_LOCALMSPID=OrgIndividualMSP
     export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_ORGINDIVIDUAL_CA
     export CORE_PEER_MSPCONFIGPATH=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orgindividual.com/users/Admin@orgindividual.com/msp
-    export CORE_PEER_ADDRESS=localhost:9051
+    export CORE_PEER_ADDRESS=176.34.66.195:9051
+    export CORE_PEER_TLS_HOSTNAME_OVERRIDE=peer0.orgindividual.com
   else
     errorln "ORG Unknown"
     exit 1
