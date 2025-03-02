@@ -1,62 +1,56 @@
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-arm64-openssl-3.0.x"]
 }
 
-model User {
-  id           String      @id @default(uuid())
-  username     String      @unique
-  email        String      @unique
-  role         Role
-  orgName      OrgName
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
-  // Relations
-  issuedDocuments   Document[] @relation("Issuer")
+model User {
+  id                String     @id @default(uuid())
+  username          String     @unique
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  role              Role
+  orgName           OrgName
+  email             String     @unique
   receivedDocuments Document[] @relation("IssuedTo")
+  issuedDocuments   Document[] @relation("Issuer")
   requests          Request[]  @relation("Requester")
 }
 
 model Document {
-  id           String    @id @default(uuid())
+  id           String         @id @default(uuid())
   issuedTo     String
   issuer       String
-  fileData     Bytes?    // Store as binary
+  fileData     Bytes?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
   status       DocumentStatus @default(issued)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
-  // Relations
-  issuerUser    User      @relation("Issuer", fields: [issuer], references: [id])
-  issuedToUser  User      @relation("IssuedTo", fields: [issuedTo], references: [id])
-  requests      Request[] @relation("Document")
+  issuedToUser User           @relation("IssuedTo", fields: [issuedTo], references: [id])
+  issuerUser   User           @relation("Issuer", fields: [issuer], references: [id])
+  requests     Request[]      @relation("Document")
 }
 
 model Request {
-  id          String    @id @default(uuid())
+  id          String        @id @default(uuid())
   requesterId String
   documentId  String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
   status      RequestStatus @default(pending)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  // Relations
-  requester User     @relation("Requester", fields: [requesterId], references: [id])
-  document  Document @relation("Document", fields: [documentId], references: [id])
+  document    Document      @relation("Document", fields: [documentId], references: [id])
+  requester   User          @relation("Requester", fields: [requesterId], references: [id])
 }
 
 model WalletIdentity {
   label       String   @id
   orgName     OrgName
-  type        String   // e.g., "X.509"
-  certificate String   @db.Text
-  privateKey  String   @db.Text
+  type        String
+  certificate String
+  privateKey  String
   mspId       String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

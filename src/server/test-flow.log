@@ -1,0 +1,62 @@
+[0;34mStarting test flow...[0m
+
+[0;34mChecking server connection...[0m
+[0;32mServer is running![0m
+
+[0;34mChecking Supabase connection...[0m
+[0;32mSupabase connection successful![0m
+
+[0;34m1. Registering users...[0m
+
+[0;34mRegistering university...[0m
+University Register Response: {"error":"Email already registered"}
+[0;31mUniversity registration failed: Email already registered[0m
+[0;33mUser already exists, continuing...[0m
+[0;34mWaiting 3 seconds...[0m
+
+[0;34mRegistering individual...[0m
+Individual Register Response: {"error":"Email already registered"}
+[0;31mIndividual registration failed: Email already registered[0m
+[0;33mUser already exists, continuing...[0m
+[0;34mWaiting 3 seconds...[0m
+
+[0;34mRegistering employer...[0m
+Employer Register Response: {"error":"Email already registered"}
+[0;31mEmployer registration failed: Email already registered[0m
+[0;33mUser already exists, continuing...[0m
+[0;34mWaiting 3 seconds...[0m
+
+[0;34m2. Logging in users and extracting UIDs...[0m
+
+[0;34mLogging in university...[0m
+University Login Response: {"token":"eyJhbGciOiJIUzI1NiIsImtpZCI6Im5nY0RpcTVYU0xiMnFOUDMiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2phcHp1Z2pnZGx2cWtteXRyYWxoLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI5MmE2ZWViNS00OTYyLTRmZTktODJiNS04ZTViZGE1NmFiYjQiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzQwODgwNTIwLCJpYXQiOjE3NDA4NzY5MjAsImVtYWlsIjoidW5pdmVyc2l0eUB0ZXN0LmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWxfdmVyaWZpZWQiOnRydWUsIm9yZ05hbWUiOiJvcmd1bml2ZXJzaXR5Iiwicm9sZSI6InVuaXZlcnNpdHkiLCJ1c2VybmFtZSI6InRlc3R1bml2ZXJzaXR5In0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoicGFzc3dvcmQiLCJ0aW1lc3RhbXAiOjE3NDA4NzY5MjB9XSwic2Vzc2lvbl9pZCI6IjM3MzRlMDcyLTMwZDAtNDlhMC1hYjhjLWRkNDg3YmJhNGFkMiIsImlzX2Fub255bW91cyI6ZmFsc2V9.eKd6A37JO9oS8orcALz0e03HnCsnb36QUnKb_oGOrqM","expiresIn":1740880520,"refreshToken":"eBASnxLnVOqIE2H7Nn2lqQ","uid":"92a6eeb5-4962-4fe9-82b5-8e5bda56abb4"}
+University Token: eyJhbGciOiJIUzI1NiIsImtpZCI6Im5nY0RpcTVYU0xiMnFOUDMiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2phcHp1Z2pnZGx2cWtteXRyYWxoLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI5MmE2ZWViNS00OTYyLTRmZTktODJiNS04ZTViZGE1NmFiYjQiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzQwODgwNTIwLCJpYXQiOjE3NDA4NzY5MjAsImVtYWlsIjoidW5pdmVyc2l0eUB0ZXN0LmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWxfdmVyaWZpZWQiOnRydWUsIm9yZ05hbWUiOiJvcmd1bml2ZXJzaXR5Iiwicm9sZSI6InVuaXZlcnNpdHkiLCJ1c2VybmFtZSI6InRlc3R1bml2ZXJzaXR5In0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoicGFzc3dvcmQiLCJ0aW1lc3RhbXAiOjE3NDA4NzY5MjB9XSwic2Vzc2lvbl9pZCI6IjM3MzRlMDcyLTMwZDAtNDlhMC1hYjhjLWRkNDg3YmJhNGFkMiIsImlzX2Fub255bW91cyI6ZmFsc2V9.eKd6A37JO9oS8orcALz0e03HnCsnb36QUnKb_oGOrqM
+University UID: 92a6eeb5-4962-4fe9-82b5-8e5bda56abb4
+[0;34mWaiting 3 seconds...[0m
+
+[0;34mLogging in individual...[0m
+Individual Login Response: {"token":"eyJhbGciOiJIUzI1NiIsImtpZCI6Im5nY0RpcTVYU0xiMnFOUDMiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2phcHp1Z2pnZGx2cWtteXRyYWxoLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI1MzRhNWVjZi0zMjJhLTRlMzctYmUxMy1jZTQ4MWI0Y2Q2NDUiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzQwODgwNTIzLCJpYXQiOjE3NDA4NzY5MjMsImVtYWlsIjoiaW5kaXZpZHVhbEB0ZXN0LmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWxfdmVyaWZpZWQiOnRydWUsIm9yZ05hbWUiOiJvcmdpbmRpdmlkdWFsIiwicm9sZSI6ImluZGl2aWR1YWwiLCJ1c2VybmFtZSI6InRlc3RpbmRpdmlkdWFsIn0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoicGFzc3dvcmQiLCJ0aW1lc3RhbXAiOjE3NDA4NzY5MjN9XSwic2Vzc2lvbl9pZCI6IjkyMDAzMDU3LTcxYjYtNDJjYS1iMzFjLWE0ZTJkODA0OGQyMyIsImlzX2Fub255bW91cyI6ZmFsc2V9.7OJaoxzvR45LDiwTKatUexiFenUW0skyFcZRU7kJwkg","expiresIn":1740880523,"refreshToken":"u7Gf244pn60_0LreSRGVCQ","uid":"534a5ecf-322a-4e37-be13-ce481b4cd645"}
+Individual Token: eyJhbGciOiJIUzI1NiIsImtpZCI6Im5nY0RpcTVYU0xiMnFOUDMiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2phcHp1Z2pnZGx2cWtteXRyYWxoLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI1MzRhNWVjZi0zMjJhLTRlMzctYmUxMy1jZTQ4MWI0Y2Q2NDUiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzQwODgwNTIzLCJpYXQiOjE3NDA4NzY5MjMsImVtYWlsIjoiaW5kaXZpZHVhbEB0ZXN0LmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWxfdmVyaWZpZWQiOnRydWUsIm9yZ05hbWUiOiJvcmdpbmRpdmlkdWFsIiwicm9sZSI6ImluZGl2aWR1YWwiLCJ1c2VybmFtZSI6InRlc3RpbmRpdmlkdWFsIn0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoicGFzc3dvcmQiLCJ0aW1lc3RhbXAiOjE3NDA4NzY5MjN9XSwic2Vzc2lvbl9pZCI6IjkyMDAzMDU3LTcxYjYtNDJjYS1iMzFjLWE0ZTJkODA0OGQyMyIsImlzX2Fub255bW91cyI6ZmFsc2V9.7OJaoxzvR45LDiwTKatUexiFenUW0skyFcZRU7kJwkg
+Individual UID: 534a5ecf-322a-4e37-be13-ce481b4cd645
+[0;34mWaiting 3 seconds...[0m
+
+[0;34mLogging in employer...[0m
+Employer Login Response: {"token":"eyJhbGciOiJIUzI1NiIsImtpZCI6Im5nY0RpcTVYU0xiMnFOUDMiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2phcHp1Z2pnZGx2cWtteXRyYWxoLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiJkYWFkNGE5NS1jNjdiLTRmYmEtYjM1My1mMDFlNDdlYmRlMTYiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzQwODgwNTI2LCJpYXQiOjE3NDA4NzY5MjYsImVtYWlsIjoiZW1wbG95ZXJAdGVzdC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJvcmdOYW1lIjoib3JnZW1wbG95ZXIiLCJyb2xlIjoiZW1wbG95ZXIiLCJ1c2VybmFtZSI6InRlc3RlbXBsb3llciJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzQwODc2OTI2fV0sInNlc3Npb25faWQiOiIxNGRlYjA1Ni1lMjAyLTQwZGQtYmVjZS0xYWQ0NGMzYTFhZDgiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.3sZ-GfBl-ClpC5m5amkcx1rayOa6GTHM6ayu_3wAyDg","expiresIn":1740880526,"refreshToken":"VEfSDsjQyYwdhTDOj1_hZQ","uid":"daad4a95-c67b-4fba-b353-f01e47ebde16"}
+Employer Token: eyJhbGciOiJIUzI1NiIsImtpZCI6Im5nY0RpcTVYU0xiMnFOUDMiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2phcHp1Z2pnZGx2cWtteXRyYWxoLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiJkYWFkNGE5NS1jNjdiLTRmYmEtYjM1My1mMDFlNDdlYmRlMTYiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzQwODgwNTI2LCJpYXQiOjE3NDA4NzY5MjYsImVtYWlsIjoiZW1wbG95ZXJAdGVzdC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJvcmdOYW1lIjoib3JnZW1wbG95ZXIiLCJyb2xlIjoiZW1wbG95ZXIiLCJ1c2VybmFtZSI6InRlc3RlbXBsb3llciJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzQwODc2OTI2fV0sInNlc3Npb25faWQiOiIxNGRlYjA1Ni1lMjAyLTQwZGQtYmVjZS0xYWQ0NGMzYTFhZDgiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.3sZ-GfBl-ClpC5m5amkcx1rayOa6GTHM6ayu_3wAyDg
+Employer UID: daad4a95-c67b-4fba-b353-f01e47ebde16
+[0;34mWaiting 3 seconds...[0m
+
+[0;34mTesting authentication for university...[0m
+Auth test response: {"id":"92a6eeb5-4962-4fe9-82b5-8e5bda56abb4","username":"testuniversity","email":"university@test.com","role":"university","orgName":"orguniversity","createdAt":"2025-03-02T00:45:20.568Z","updatedAt":"2025-03-02T00:45:20.568Z"}
+[0;32mAuthentication test successful![0m
+[0;34mWaiting 3 seconds...[0m
+
+[0;34m3. University issues degree to individual...[0m
+Issue Response: {"error":"No valid responses from any peers. Errors:"}
+Degree issued with DOC_ID: 
+[0;31mFailed to issue degree. Response: {"error":"No valid responses from any peers. Errors:"}[0m
+[0;33mThis could be due to:[0m
+[0;33m1. Database permissions issues[0m
+[0;33m2. Invalid user token[0m
+[0;33m3. Missing wallet identity setup[0m
+[0;33mCheck server logs for details.[0m
