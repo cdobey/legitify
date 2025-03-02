@@ -1,8 +1,8 @@
 import { Box, Container, Text, Title } from "@mantine/core";
-import { Navigate, Route, Routes } from "react-router-dom";
-import { useAuth } from "./contexts/AuthContext";
-import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
+import { Route, Routes } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./pages/auth/login";
+import Register from "./pages/auth/register";
 import AccessRequests from "./pages/degree/AccessRequests";
 import IssueDegree from "./pages/degree/IssueDegree";
 import ManageDegrees from "./pages/degree/ManageDegrees";
@@ -20,12 +20,6 @@ function About() {
 }
 
 export default function App() {
-  const { loading, user } = useAuth();
-
-  if (loading) {
-    return null; // Return nothing during loading
-  }
-
   return (
     <Box>
       <Routes>
@@ -36,39 +30,41 @@ export default function App() {
         <Route
           path="/degree/issue"
           element={
-            user?.role === "university" ? <IssueDegree /> : <Navigate to="/" />
+            <ProtectedRoute requiredRole="university">
+              <IssueDegree />
+            </ProtectedRoute>
           }
         />
         <Route
           path="/degree/manage"
           element={
-            user?.role === "individual" ? (
+            <ProtectedRoute requiredRole="individual">
               <ManageDegrees />
-            ) : (
-              <Navigate to="/" />
-            )
+            </ProtectedRoute>
           }
         />
         <Route
           path="/degree/requests"
           element={
-            user?.role === "individual" ? (
+            <ProtectedRoute requiredRole="individual">
               <AccessRequests />
-            ) : (
-              <Navigate to="/" />
-            )
+            </ProtectedRoute>
           }
         />
         <Route
           path="/degree/view/:docId"
           element={
-            user?.role === "employer" ? <ViewDegree /> : <Navigate to="/" />
+            <ProtectedRoute requiredRole="employer">
+              <ViewDegree />
+            </ProtectedRoute>
           }
         />
         <Route
           path="/degree/verify"
           element={
-            user?.role === "employer" ? <VerifyDegree /> : <Navigate to="/" />
+            <ProtectedRoute requiredRole="employer">
+              <VerifyDegree />
+            </ProtectedRoute>
           }
         />
       </Routes>

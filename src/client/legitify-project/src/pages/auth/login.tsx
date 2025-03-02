@@ -10,39 +10,28 @@ import {
 } from "@mantine/core";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useLogin } from "../../api/auth/auth.queries";
 import { useAuth } from "../../contexts/AuthContext";
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { setUser } = useAuth();
-  const login = useLogin();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
 
     try {
-      const response = await login.mutateAsync({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (response.user && response.token) {
-        setUser(response.user);
-        sessionStorage.setItem("user", JSON.stringify(response.user));
-        navigate("/");
-      } else {
-        setError("Invalid response from server");
-      }
+      await login(email, password);
+      navigate("/");
     } catch (err: any) {
-      console.error("Login error:", err);
       setError(err.message || "Failed to login");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -64,20 +53,16 @@ const Login = () => {
           <TextInput
             label="Email"
             placeholder="your@email.com"
-            value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
             style={{ marginBottom: "1rem" }}
           />
           <PasswordInput
             label="Password"
             placeholder="Your password"
-            value={formData.password}
-            onChange={(e) =>
-              setFormData({ ...formData, password: e.target.value })
-            }
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             required
             style={{ marginBottom: "1rem" }}
           />
@@ -88,7 +73,7 @@ const Login = () => {
             </Alert>
           )}
 
-          <Button type="submit" fullWidth loading={login.isPending}>
+          <Button type="submit" fullWidth loading={isLoading}>
             Login
           </Button>
         </form>

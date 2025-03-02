@@ -11,32 +11,48 @@ import {
 } from "@mantine/core";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { RegisterData } from "../../api/auth/auth.models";
-import { useRegister } from "../../api/auth/auth.queries";
-import { useAuth } from "../../contexts/AuthContext";
+import supabase from "../../config/supabase";
 
 const Register = () => {
-  const [formData, setFormData] = useState<RegisterData>({
+  const [formData, setFormData] = useState({
     email: "",
     password: "",
     username: "",
-    role: "individual",
+    role: "individual" as "individual" | "university" | "employer",
     orgName: "",
   });
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { setUser } = useAuth();
-  const register = useRegister();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
 
     try {
-      await register.mutateAsync(formData);
-      navigate("/login"); // Redirect to login after successful registration
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            username: formData.username,
+            role: formData.role,
+            orgName: formData.orgName,
+          },
+        },
+      });
+
+      if (signUpError) throw new Error(signUpError.message);
+
+      // Registration successful - show success and redirect to login
+      navigate("/login", {
+        state: { message: "Registration successful. Please log in." },
+      });
     } catch (err: any) {
       setError(err.message || "Failed to register");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -96,7 +112,10 @@ const Register = () => {
             onChange={(value) =>
               setFormData({
                 ...formData,
-                role: (value || "") as "university" | "individual" | "employer",
+                role: (value || "individual") as
+                  | "university"
+                  | "individual"
+                  | "employer",
               })
             }
             data={[
@@ -124,7 +143,7 @@ const Register = () => {
             </Alert>
           )}
 
-          <Button type="submit" fullWidth loading={register.isPending}>
+          <Button type="submit" fullWidth loading={isLoading}>
             Register
           </Button>
         </form>
