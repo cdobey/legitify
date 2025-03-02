@@ -30,17 +30,20 @@ set_employer_context() {
     export CORE_PEER_ADDRESS=${ORG_EMPLOYER_ADDRESS}
 }
 
+echo "Contents of employer TLS certificate:"
+cat "${ORG_EMPLOYER_TLS_CERT}"
+
 # Helper function for chaincode invocation with multi-org endorsement
 invoke_chaincode() {
     local func=$1
     local args=$2
     
-    peer chaincode invoke -o localhost:7050 \
+    peer chaincode invoke -o 176.34.66.195:7050 \
         --tls --cafile $ORDERER_CA \
         -C mychannel -n degreeCC \
-        --peerAddresses localhost:7051 \
+        --peerAddresses 176.34.66.195:7051 \
         --tlsRootCertFiles ${ORG_UNIVERSITY_TLS_CERT} \
-        --peerAddresses localhost:8051 \
+        --peerAddresses 176.34.66.195:8051 \
         --tlsRootCertFiles ${ORG_EMPLOYER_TLS_CERT} \
         -c "{\"Args\":[\"$func\",$args]}" \
         --waitForEvent

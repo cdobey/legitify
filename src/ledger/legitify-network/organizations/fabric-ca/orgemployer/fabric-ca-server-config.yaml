@@ -322,6 +322,7 @@ csr:
   hosts:
     - 64b5cd0a6fbb
     - localhost
+    - 176.34.66.195
   ca:
     expiry: 131400h
     pathlength: 1
