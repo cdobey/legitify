@@ -12,34 +12,11 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
   exit 1
 fi
 
-# Check Fabric connectivity
-echo "🔌 Checking connectivity to Hyperledger Fabric network..."
+# Fetch Fabric resources from EC2 instance
+echo "🌐 Fetching Hyperledger Fabric resources from EC2 instance..."
 export EC2_IP=${EC2_IP:-"176.34.66.195"}
 export RESOURCE_SERVER_PORT=${RESOURCE_SERVER_PORT:-"8080"}
 echo "Using EC2 instance at ${EC2_IP}:${RESOURCE_SERVER_PORT}"
-
-node ./scripts/check-fabric-connectivity.js
-if [ $? -ne 0 ]; then
-  echo "❌ Fabric network connectivity check failed"
-  echo "Please ensure that:"
-  echo "  1. The EC2 instance is running"
-  echo "  2. The Fabric network is started on the EC2 instance"
-  echo "  3. All required ports are open in the security group"
-  echo "  4. The resource server is running on the EC2 instance"
-  
-  read -p "Do you want to continue anyway? (y/n): " -n 1 -r
-  echo
-  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Operation cancelled"
-    exit 1
-  fi
-  echo "⚠️ Proceeding despite connectivity issues..."
-else
-  echo "✅ Fabric network connectivity check passed"
-fi
-
-# Fetch Fabric resources from EC2 instance
-echo "🌐 Fetching Hyperledger Fabric resources from EC2 instance..."
 
 # Run the resource fetcher script
 node ./scripts/fetch-fabric-resources.js

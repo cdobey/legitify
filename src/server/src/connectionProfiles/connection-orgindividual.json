@@ -2,7 +2,7 @@
   "name": "legitify-network-orgindividual",
   "version": "1.0.0",
   "client": {
-    "organization": "Orgindividual",
+    "organization": "OrgIndividual",
     "connection": {
       "timeout": {
         "peer": {
@@ -12,21 +12,17 @@
     }
   },
   "organizations": {
-    "Orgindividual": {
-      "mspid": "OrgindividualMSP",
-      "peers": [
-        "peer0.orgindividual.com"
-      ],
-      "certificateAuthorities": [
-        "ca.orgindividual.com"
-      ]
+    "OrgIndividual": {
+      "mspid": "OrgIndividualMSP",
+      "peers": ["peer0.orgindividual.com"],
+      "certificateAuthorities": ["ca.orgindividual.com"]
     }
   },
   "peers": {
     "peer0.orgindividual.com": {
       "url": "grpcs://176.34.66.195:9051",
       "tlsCACerts": {
-        "pem": "-----BEGIN CERTIFICATE-----\nMIICFjCCAb2gAwIBAgIUNOvoDTnhL9nI4AO5TtkfwgbEE9MwCgYIKoZIzj0EAwIw\naDELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQK\nEwtIeXBlcmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMt\nY2Etc2VydmVyMB4XDTI1MDMwMTE4MTkwMFoXDTQwMDIyNjE4MTkwMFowaDELMAkG\nA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQKEwtIeXBl\ncmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMtY2Etc2Vy\ndmVyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEvLJXcE2UQVgAoj9tubYBsMxY\nisaLowcB40VfLZQ5WDCKwZaSQuYsP7jao2jUKpTpVpyZl+SLLBbrXBlyT/azqaNF\nMEMwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYE\nFNr14zbSXtpdCYku47GH/oudkwCKMAoGCCqGSM49BAMCA0cAMEQCIBXOuWmLNOkI\nhZaMTB+bG0VM8dNX7ZV7ZhFh4NDx07ZXAiBzmcqTX+iRSNw0LidvFuQhuhaG+DwD\nJ/WraKS330DEkw==\n-----END CERTIFICATE-----\n"
+        "path": "../../ledger/legitify-network/organizations/peerOrganizations/orgindividual.com/peers/peer0.orgindividual.com/tls/ca.crt"
       },
       "grpcOptions": {
         "ssl-target-name-override": "peer0.orgindividual.com",
@@ -39,7 +35,7 @@
       "url": "https://176.34.66.195:9054",
       "caName": "ca-orgindividual",
       "tlsCACerts": {
-        "pem": "-----BEGIN CERTIFICATE-----\nMIICFjCCAb2gAwIBAgIUNOvoDTnhL9nI4AO5TtkfwgbEE9MwCgYIKoZIzj0EAwIw\naDELMAkGA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQK\nEwtIeXBlcmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMt\nY2Etc2VydmVyMB4XDTI1MDMwMTE4MTkwMFoXDTQwMDIyNjE4MTkwMFowaDELMAkG\nA1UEBhMCVVMxFzAVBgNVBAgTDk5vcnRoIENhcm9saW5hMRQwEgYDVQQKEwtIeXBl\ncmxlZGdlcjEPMA0GA1UECxMGRmFicmljMRkwFwYDVQQDExBmYWJyaWMtY2Etc2Vy\ndmVyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEvLJXcE2UQVgAoj9tubYBsMxY\nisaLowcB40VfLZQ5WDCKwZaSQuYsP7jao2jUKpTpVpyZl+SLLBbrXBlyT/azqaNF\nMEMwDgYDVR0PAQH/BAQDAgEGMBIGA1UdEwEB/wQIMAYBAf8CAQEwHQYDVR0OBBYE\nFNr14zbSXtpdCYku47GH/oudkwCKMAoGCCqGSM49BAMCA0cAMEQCIBXOuWmLNOkI\nhZaMTB+bG0VM8dNX7ZV7ZhFh4NDx07ZXAiBzmcqTX+iRSNw0LidvFuQhuhaG+DwD\nJ/WraKS330DEkw==\n-----END CERTIFICATE-----\n"
+        "path": "../../ledger/legitify-network/organizations/peerOrganizations/orgindividual.com/ca/ca.orgindividual.com-cert.pem"
       },
       "httpOptions": {
         "verify": false
