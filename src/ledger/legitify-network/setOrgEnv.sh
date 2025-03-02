@@ -91,21 +91,21 @@ if [[ ${ORG,,} == "orguniversity" ]]; then
 
    CORE_PEER_LOCALMSPID=OrgUniversityMSP
    CORE_PEER_MSPCONFIGPATH=${DIR}/legitify-network/organizations/peerOrganizations/orguniversity.com/users/Admin@orguniversity.com/msp
-   CORE_PEER_ADDRESS=176.34.66.195:7051
+   CORE_PEER_ADDRESS=localhost:7051
    CORE_PEER_TLS_ROOTCERT_FILE=${DIR}/legitify-network/organizations/peerOrganizations/orguniversity.com/tlsca/tlsca.orguniversity.com-cert.pem
 
 elif [[ ${ORG,,} == "orgemployer" ]]; then
 
    CORE_PEER_LOCALMSPID=OrgEmployerMSP
    CORE_PEER_MSPCONFIGPATH=${DIR}/legitify-network/organizations/peerOrganizations/orgemployer.com/users/Admin@orgemployer.com/msp
-   CORE_PEER_ADDRESS=176.34.66.195:8051
+   CORE_PEER_ADDRESS=localhost:8051
    CORE_PEER_TLS_ROOTCERT_FILE=${DIR}/legitify-network/organizations/peerOrganizations/orgemployer.com/tlsca/tlsca.orgemployer.com-cert.pem
 
 elif [[ ${ORG,,} == "orgindividual" ]]; then
 
    CORE_PEER_LOCALMSPID=OrgIndividualMSP
    CORE_PEER_MSPCONFIGPATH=${DIR}/legitify-network/organizations/peerOrganizations/orgindividual.com/users/Admin@orgindividual.com/msp
-   CORE_PEER_ADDRESS=176.34.66.195:9051
+   CORE_PEER_ADDRESS=localhost:9051
    CORE_PEER_TLS_ROOTCERT_FILE=${DIR}/legitify-network/organizations/peerOrganizations/orgindividual.com/tlsca/tlsca.orgindividual.com-cert.pem
 
 else
