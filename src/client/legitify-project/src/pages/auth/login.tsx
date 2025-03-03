@@ -13,8 +13,10 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -26,9 +28,13 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      await login(formData.email, formData.password);
+
+      // Let the auth context handle setting the token and user info
+      console.log("Login successful");
       navigate("/");
     } catch (err: any) {
+      console.error("Login error:", err);
       setError(err.message || "Failed to login");
     } finally {
       setIsLoading(false);
@@ -53,16 +59,20 @@ const Login = () => {
           <TextInput
             label="Email"
             placeholder="your@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={formData.email}
+            onChange={(e) =>
+              setFormData({ ...formData, email: e.target.value })
+            }
             required
             style={{ marginBottom: "1rem" }}
           />
           <PasswordInput
             label="Password"
             placeholder="Your password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={formData.password}
+            onChange={(e) =>
+              setFormData({ ...formData, password: e.target.value })
+            }
             required
             style={{ marginBottom: "1rem" }}
           />

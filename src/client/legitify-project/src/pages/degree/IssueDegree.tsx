@@ -8,6 +8,7 @@ import {
 } from "@mantine/core";
 import { useState } from "react";
 import { useIssueDegree } from "../../api/degrees/degree.queries";
+import { useAuth } from "../../contexts/AuthContext";
 import { fileToBase64 } from "../../utils/fileUtils";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
@@ -16,12 +17,15 @@ export default function IssueDegree() {
   const [individualId, setIndividualId] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [success, setSuccess] = useState("");
+  const [localError, setLocalError] = useState<string | null>(null);
 
+  const { refreshSession } = useAuth();
   const issueMutation = useIssueDegree();
 
   const handleFileChange = (file: File | null) => {
+    setLocalError(null);
     if (file && file.size > MAX_FILE_SIZE) {
-      issueMutation.error = new Error("File size must be less than 5MB");
+      setLocalError("File size must be less than 5MB");
       setFile(null);
       return;
     }
@@ -30,17 +34,32 @@ export default function IssueDegree() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !individualId) return;
+    setLocalError(null);
+    setSuccess("");
+
+    if (!file || !individualId) {
+      setLocalError("Please provide both Individual ID and a file");
+      return;
+    }
 
     try {
+      // Try refreshing the session token first to ensure it's valid
+      await refreshSession();
+
       const base64File = await fileToBase64(file);
+      console.log("Submitting degree issuance for individual:", individualId);
+
       const result = await issueMutation.mutateAsync({
         individualId,
         base64File,
       });
+
       setSuccess(`Degree issued successfully! Document ID: ${result.docId}`);
-    } catch (error) {
-      // Error handling is handled by the mutation
+      setIndividualId("");
+      setFile(null);
+    } catch (error: any) {
+      console.error("Degree issuance failed:", error);
+      setLocalError(error.message || "Failed to issue degree");
     }
   };
 
@@ -65,9 +84,9 @@ export default function IssueDegree() {
           onChange={handleFileChange}
           mb="xl"
         />
-        {issueMutation.error && (
+        {(issueMutation.error || localError) && (
           <Alert color="red" mb="md">
-            {(issueMutation.error as Error).message}
+            {localError || (issueMutation.error as Error).message}
           </Alert>
         )}
         {success && (

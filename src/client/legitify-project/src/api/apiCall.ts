@@ -36,6 +36,21 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
+// Debug interceptor to log requests
+axiosInstance.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    console.error("API Error:", {
+      url: error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data,
+    });
+    return Promise.reject(error);
+  }
+);
+
 export default async function apiCall<T, U = any>({
   method,
   path,
@@ -57,11 +72,23 @@ export default async function apiCall<T, U = any>({
     const response: AxiosResponse<T> = await axiosInstance(requestConfig);
     return response.data;
   } catch (error: any) {
-    if (error.response?.status === 401) {
-      sessionStorage.removeItem("token");
-      sessionStorage.removeItem("user");
-      window.location.href = "/login";
+    // Only redirect on certain 401 conditions
+    if (error.response?.status === 401 && !path.includes("/auth/")) {
+      // Check if we should redirect or just report the error
+      if (window.location.pathname !== "/login") {
+        console.warn("Authentication failed. Redirecting to login.");
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("user");
+        window.location.href = "/login";
+      }
     }
-    throw new Error(error.response?.data?.error || error.message);
+
+    // Always throw the error for the calling code to handle
+    const errorMessage =
+      error.response?.data?.error ||
+      error.response?.data?.message ||
+      error.message ||
+      "Unknown API error";
+    throw new Error(errorMessage);
   }
 }

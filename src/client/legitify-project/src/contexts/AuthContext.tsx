@@ -10,6 +10,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  refreshSession: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,16 +33,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } as UserProfile;
 
       setUser(userData);
+
+      // Also store in sessionStorage for backup
+      sessionStorage.setItem("user", JSON.stringify(userData));
     } catch (error) {
       console.error("Error fetching user profile:", error);
       // If profile fetch fails, we should still have basic user data
-      setUser({
+      const fallbackUser: UserProfile = {
         id: authUser.id,
         email: authUser.email || "",
         username: "",
-        role: "individual",
+        role: "individual", // This is now explicitly one of the allowed values
         orgName: "",
-      });
+      };
+      setUser(fallbackUser);
+      sessionStorage.setItem("user", JSON.stringify(fallbackUser));
     }
   };
 
@@ -51,30 +57,71 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await fetchUserProfile(session.user);
   };
 
+  // Explicitly refresh the session token
+  const refreshSession = async (): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.auth.refreshSession();
+
+      if (error || !data.session) {
+        console.error("Failed to refresh session:", error);
+        return false;
+      }
+
+      setSession(data.session);
+
+      // Update token in sessionStorage
+      if (data.session?.access_token) {
+        sessionStorage.setItem("token", data.session.access_token);
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Session refresh error:", error);
+      return false;
+    }
+  };
+
   // Initialize auth state
   useEffect(() => {
     const initializeAuth = async () => {
       setIsLoading(true);
+      try {
+        // Get initial session
+        const { data } = await supabase.auth.getSession();
+        setSession(data.session);
 
-      // Get initial session
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session);
-
-      if (data.session?.user) {
-        await fetchUserProfile(data.session.user);
+        if (data.session?.user) {
+          // Store token in sessionStorage
+          sessionStorage.setItem("token", data.session.access_token);
+          await fetchUserProfile(data.session.user);
+        } else {
+          // Try to recover from saved user if possible
+          const savedUser = sessionStorage.getItem("user");
+          if (savedUser) {
+            setUser(JSON.parse(savedUser));
+          }
+        }
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+      } finally {
+        setIsLoading(false);
       }
-
-      setIsLoading(false);
 
       // Setup auth state change listener
       const {
         data: { subscription },
-      } = supabase.auth.onAuthStateChange(async (_, currentSession) => {
+      } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+        console.log("Auth state changed:", event);
         setSession(currentSession);
 
         if (currentSession?.user) {
+          // Update token in sessionStorage
+          sessionStorage.setItem("token", currentSession.access_token);
           await fetchUserProfile(currentSession.user);
-        } else {
+        } else if (event === "SIGNED_OUT") {
+          // Clear everything on sign out
+          sessionStorage.removeItem("token");
+          sessionStorage.removeItem("user");
           setUser(null);
         }
       });
@@ -87,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Login function
   const login = async (email: string, password: string): Promise<void> => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error, data } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -95,11 +142,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) {
       throw new Error(error.message);
     }
+
+    // Explicitly store token after login
+    if (data?.session) {
+      sessionStorage.setItem("token", data.session.access_token);
+    }
   };
 
   // Logout function
   const logout = async (): Promise<void> => {
     await supabase.auth.signOut();
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
     setUser(null);
   };
 
@@ -110,6 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     logout,
     refreshUser,
+    refreshSession,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
