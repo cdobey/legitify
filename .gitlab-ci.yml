@@ -2,16 +2,12 @@ image: node:18-bullseye
 
 stages:
   - test
-  - build
   - deploy
 
 variables:
   SERVER_PID_FILE: "/tmp/server.pid"
   SERVER_STARTUP_TIMEOUT: 120
   TEST_FLOW_TIMEOUT: 300
-  BOOTSTRAP_IMAGE_NAME: "legitify-project"
-  BACKEND_IMAGE_NAME: "legitify-project"
-  BACKEND_IMAGE_TAG: "backend"
 
 test_flow:
   stage: test
@@ -65,7 +61,6 @@ test_flow:
     - bash scripts/startNetwork.sh
     - bash scripts/testDegreeChaincode.sh
 
-    # Start backend server with improved logging
     - |
       cd $CI_PROJECT_DIR/src/server
       chmod +x scripts/start-fresh-db.sh
@@ -90,7 +85,6 @@ test_flow:
         exit 1
       fi
 
-    # Run test flow with improved error handling
     - |
       cd $CI_PROJECT_DIR/src/server
       sed -i 's/exit 1  # Fail fast in CI/continue  # Continue despite test failure/' scripts/test-flow.sh
@@ -151,55 +145,53 @@ test_flow:
       - ~/.npm/
     policy: pull-push
 
-build_images:
-  stage: build
-  tags:
-    - shell
-  needs: ["test_flow"]
-  only:
-    - main
-    - master
-  script:
-    # Build backend image
-    - cd src/server
-    - docker build --platform linux/amd64 -t $DOCKER_USERNAME/$BACKEND_IMAGE_NAME:$BACKEND_IMAGE_TAG .
-
-    # Build bootstrap image
-    - cd $CI_PROJECT_DIR/deployment/hyperledger-bootstrap
-    - docker build --platform linux/amd64 -t $DOCKER_USERNAME/$BOOTSTRAP_IMAGE_NAME:ledger .
-
-    # Login and push images
-    - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
-    - docker push $DOCKER_USERNAME/$BACKEND_IMAGE_NAME:$BACKEND_IMAGE_TAG
-    - docker push $DOCKER_USERNAME/$BOOTSTRAP_IMAGE_NAME:ledger
-
 deploy_to_render:
   stage: deploy
   tags:
     - shell
-  needs: ["build_images"]
+  needs: ["test_flow"]
   when: manual
   only:
     - main
     - master
+  variables:
+    IMAGE_NAME: "legitify-project"
+    IMAGE_TAG: "backend"
+  before_script:
+    - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
   script:
+    - cd src/server
+    - docker build --platform linux/amd64 -t $IMAGE_NAME:$IMAGE_TAG .
+    - docker push $IMAGE_NAME:$IMAGE_TAG
     - echo "Triggering Render deployment via webhook..."
     - curl -X POST "$RENDER_DEPLOY_HOOK"
 
-deploy_to_aws:
+deploy_ledger:
   stage: deploy
   tags:
     - shell
-  needs: ["build_images"]
+  needs: ["test_flow"]
   when: manual
   only:
     - main
     - master
+  variables:
+    EC2_HOST: "3.249.159.32"
+    EC2_USER: "ec2-user"
+    SSH_KEY_FILE: "/tmp/aws_ssh_key"
+  before_script:
+    - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+    # Decode and prepare SSH key
+    - echo "$AWS_PRIVATE_KEY_B64" | base64 -d > $SSH_KEY_FILE
+    - chmod 600 $SSH_KEY_FILE
   script:
-    - echo "Decoding AWS key from base64"
-    - echo "$AWS_PRIVATE_KEY_B64" | base64 -d > /tmp/aws_key.pem
-    - chmod 600 /tmp/aws_key.pem
-    - export AWS_KEY_PATH=/tmp/aws_key.pem
-    - echo "Deploying to AWS EC2 instance..."
-    - ssh -i $AWS_KEY_PATH -o StrictHostKeyChecking=no ec2-user@$AWS_INSTANCE_IP "cd ~/hyperledger-fabric && docker-compose pull && docker-compose up -d"
-    - echo "Deployment to AWS completed"
+    - cd src/ledger
+    - docker build --platform linux/amd64 -t $DOCKER_USERNAME/legitify-project:ledger .
+    - docker push $DOCKER_USERNAME/legitify-project:ledger
+    # Deploy to EC2 using the SSH key
+    - cd scripts
+    - chmod +x deploy-ledger.sh
+    - ./deploy-ledger.sh
+  after_script:
+    # Clean up key after use for security
+    - rm -f $SSH_KEY_FILE
