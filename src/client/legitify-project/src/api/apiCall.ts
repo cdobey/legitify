@@ -23,8 +23,10 @@ const axiosInstance = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  maxContentLength: Infinity,
-  maxBodyLength: Infinity,
+  // Configure axios to handle larger payloads
+  maxContentLength: 10 * 1024 * 1024, // 10MB
+  maxBodyLength: 10 * 1024 * 1024, // 10MB
+  timeout: 60000, // Increase timeout to 60 seconds for larger uploads
 });
 
 axiosInstance.interceptors.request.use((config) => {
@@ -72,7 +74,14 @@ export default async function apiCall<T, U = any>({
     const response: AxiosResponse<T> = await axiosInstance(requestConfig);
     return response.data;
   } catch (error: any) {
-    // Only redirect on certain 401 conditions
+    // Enhanced error handling for payload size issues
+    if (error.response?.status === 413) {
+      throw new Error(
+        "The file is too large for the server to process. Please use a smaller file."
+      );
+    }
+
+    // Handle token/auth issues
     if (error.response?.status === 401 && !path.includes("/auth/")) {
       // Check if we should redirect or just report the error
       if (window.location.pathname !== "/login") {
