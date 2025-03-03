@@ -4,7 +4,7 @@
 cd "$(dirname "$0")"
 
 # Set the EC2 IP address
-export EC2_IP=${EC2_IP:-"176.34.66.195"}
+export EC2_IP=${EC2_IP:-"3.249.159.32"}
 
 # Install dependencies if needed
 if [ ! -d "node_modules" ]; then

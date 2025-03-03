@@ -3,7 +3,7 @@
 # This script adds Fabric network hostname entries to your hosts file
 # May need to be run with sudo
 
-FABRIC_IP="176.34.66.195"
+FABRIC_IP="3.249.159.32"
 
 echo "Adding Fabric network hostnames to /etc/hosts..."
 

@@ -4,7 +4,7 @@ const https = require("https");
 const http = require("http");
 
 // Configuration
-const EC2_IP = process.env.EC2_IP || "176.34.66.195";
+const EC2_IP = process.env.EC2_IP || "3.249.159.32";
 const RESOURCE_SERVER_PORT = process.env.RESOURCE_SERVER_PORT || 8080;
 const RESOURCE_SERVER_URL = `http://${EC2_IP}:${RESOURCE_SERVER_PORT}`;
 const CONNECTION_PROFILES_DIR = path.resolve(

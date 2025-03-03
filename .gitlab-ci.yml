@@ -2,12 +2,16 @@ image: node:18-bullseye
 
 stages:
   - test
+  - build
   - deploy
 
 variables:
   SERVER_PID_FILE: "/tmp/server.pid"
   SERVER_STARTUP_TIMEOUT: 120
   TEST_FLOW_TIMEOUT: 300
+  BOOTSTRAP_IMAGE_NAME: "legitify-project"
+  BACKEND_IMAGE_NAME: "legitify-project"
+  BACKEND_IMAGE_TAG: "backend"
 
 test_flow:
   stage: test
@@ -147,23 +151,55 @@ test_flow:
       - ~/.npm/
     policy: pull-push
 
+build_images:
+  stage: build
+  tags:
+    - shell
+  needs: ["test_flow"]
+  only:
+    - main
+    - master
+  script:
+    # Build backend image
+    - cd src/server
+    - docker build --platform linux/amd64 -t $DOCKER_USERNAME/$BACKEND_IMAGE_NAME:$BACKEND_IMAGE_TAG .
+
+    # Build bootstrap image
+    - cd $CI_PROJECT_DIR/deployment/hyperledger-bootstrap
+    - docker build --platform linux/amd64 -t $DOCKER_USERNAME/$BOOTSTRAP_IMAGE_NAME:ledger .
+
+    # Login and push images
+    - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+    - docker push $DOCKER_USERNAME/$BACKEND_IMAGE_NAME:$BACKEND_IMAGE_TAG
+    - docker push $DOCKER_USERNAME/$BOOTSTRAP_IMAGE_NAME:ledger
+
 deploy_to_render:
   stage: deploy
   tags:
     - shell
-  needs: ["test_flow"]
+  needs: ["build_images"]
   when: manual
   only:
     - main
     - master
-  variables:
-    IMAGE_NAME: "legitify-project"
-    IMAGE_TAG: "backend"
-  before_script:
-    - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
   script:
-    - cd src/server
-    - docker build --platform linux/amd64 -t $IMAGE_NAME:$IMAGE_TAG .
-    - docker push $IMAGE_NAME:$IMAGE_TAG
     - echo "Triggering Render deployment via webhook..."
     - curl -X POST "$RENDER_DEPLOY_HOOK"
+
+deploy_to_aws:
+  stage: deploy
+  tags:
+    - shell
+  needs: ["build_images"]
+  when: manual
+  only:
+    - main
+    - master
+  script:
+    - echo "Decoding AWS key from base64"
+    - echo "$AWS_PRIVATE_KEY_B64" | base64 -d > /tmp/aws_key.pem
+    - chmod 600 /tmp/aws_key.pem
+    - export AWS_KEY_PATH=/tmp/aws_key.pem
+    - echo "Deploying to AWS EC2 instance..."
+    - ssh -i $AWS_KEY_PATH -o StrictHostKeyChecking=no ec2-user@$AWS_INSTANCE_IP "cd ~/hyperledger-fabric && docker-compose pull && docker-compose up -d"
+    - echo "Deployment to AWS completed"

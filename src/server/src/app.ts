@@ -37,9 +37,7 @@ const startServer = async () => {
   try {
     const server = app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
-      console.log(
-        `Swagger docs available at http://176.34.66.195:${PORT}/docs`
-      );
+      console.log(`Swagger docs available at http://3.249.159.32:${PORT}/docs`);
     });
   } catch (error) {
     console.error("Failed to start server:", error);

@@ -279,7 +279,7 @@ function createOrgs() {
       infoln "Installing resource server dependencies..."
       npm install
     fi
-    export EC2_IP=${EC2_IP:-"176.34.66.195"}
+    export EC2_IP=${EC2_IP:-"3.249.159.32"}
     nohup node index.js > resource-server.log 2>&1 &
     infoln "Resource server started with PID $!"
     cd ..

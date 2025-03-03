@@ -60,7 +60,7 @@ const generateConnectionProfile = (org) => {
 
     // Add peer configuration
     template.peers[`peer0.${org}.com`] = {
-        url: `grpcs://${process.env.EC2_IP || '176.34.66.195'}:${peerPort}`,
+        url: `grpcs://${process.env.EC2_IP || '3.249.159.32'}:${peerPort}`,
         tlsCACerts: {
             pem: fs.readFileSync(
                 path.join(
@@ -82,7 +82,7 @@ const generateConnectionProfile = (org) => {
 
     // Add CA configuration
     template.certificateAuthorities[`ca.${org}.com`] = {
-        url: `https://${process.env.EC2_IP || '176.34.66.195'}:${caPort}`,
+        url: `https://${process.env.EC2_IP || '3.249.159.32'}:${caPort}`,
         caName: `ca-${org}`,
         tlsCACerts: {
             pem: fs.readFileSync(
@@ -101,7 +101,7 @@ const generateConnectionProfile = (org) => {
     // Add orderer information
     template.orderers = {
         'orderer.example.com': {
-            url: `grpcs://${process.env.EC2_IP || '176.34.66.195'}:7050`,
+            url: `grpcs://${process.env.EC2_IP || '3.249.159.32'}:7050`,
             tlsCACerts: {
                 pem: fs.readFileSync(
                     path.join(
@@ -345,7 +345,7 @@ app.get('/msp/:org/:mspType', (req, res) => {
             const certFile = files.find(
                 (file) =>
                     file.endsWith('.pem') ||
-                    file.endsWith('.crt') || 
+                    file.endsWith('.crt') ||
                     file.includes('cert') ||
                     !file.includes('.')
             );
