@@ -29,16 +29,17 @@ ssh $SSH_OPTS "$EC2_USER@$EC2_HOST" << 'EOF'
     sudo systemctl start docker
     sudo usermod -aG docker $USER
     
-    # Install Docker Compose plugin
-    if ! docker compose version &> /dev/null; then
-      echo "Installing Docker Compose plugin..."
-      sudo dnf install -y docker-compose-plugin
+    # Install Docker Compose (standalone binary)
+    if ! command -v docker-compose &> /dev/null; then
+      echo "Installing Docker Compose standalone binary..."
+      sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+      sudo chmod +x /usr/local/bin/docker-compose
       
       # Verify installation succeeded
-      if ! docker compose version &> /dev/null; then
-        echo "Error: Docker Compose installation failed!"
-        echo "Please check dnf repositories and network connectivity."
-        exit 1
+      if ! docker-compose --version &> /dev/null; then
+      echo "Error: Docker Compose installation failed!"
+      echo "Please check network connectivity and try again."
+      exit 1
       fi
     fi
     
