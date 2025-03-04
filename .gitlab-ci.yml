@@ -1,13 +1,23 @@
-image: node:18-bullseye
+# Use Docker image with Docker, Node.js and Git
+image: docker:24.0.5
 
 stages:
   - test
   - deploy
 
 variables:
+  # Variables for test setup
   SERVER_PID_FILE: "/tmp/server.pid"
   SERVER_STARTUP_TIMEOUT: 120
   TEST_FLOW_TIMEOUT: 300
+  # Docker-in-Docker TLS disabled for simplicity
+  DOCKER_TLS_CERTDIR: ""
+  # Use overlay2 storage driver
+  DOCKER_DRIVER: overlay2
+
+# Use Docker-in-Docker service
+services:
+  - docker:24.0.5-dind
 
 test_flow:
   stage: test
@@ -15,38 +25,25 @@ test_flow:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_BRANCH == "master"
-  tags:
-    - shell
   before_script:
-    - |
-      sudo apt-get update && sudo apt-get install -y \
-        curl \
-        git \
-        jq \
-        docker.io \
-        docker-compose \
-        golang-go
-    - |
-      curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-      export NVM_DIR="$HOME/.nvm"
-      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-      nvm install 18
-      nvm use 18
-      npm install -g typescript ts-node
+    # Install required dependencies in the container
+    - apk add --no-cache curl bash git jq nodejs npm golang
+    - npm install -g typescript ts-node
+    # Test each component
     - node --version
     - npm --version
     - docker --version
     - go version
-
-    - cd $CI_PROJECT_DIR
-    - git clean -fdx
-    - sudo chown -R gitlab-runner:gitlab-runner .
+    # Create workspace
+    - mkdir -p $CI_PROJECT_DIR
 
   script:
+    # Build and set up server
     - cd $CI_PROJECT_DIR/src/server
     - npm ci
     - npm install -g ts-node typescript
 
+    # Set up fabric environment
     - cd $CI_PROJECT_DIR/src/ledger
     - export ARCH=amd64
     - export FABRIC_PATH=$PWD
@@ -54,13 +51,17 @@ test_flow:
     - bash ./install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
     - chmod +x bin/*
 
+    # Set up chaincode
     - cd chaincode/degreeChaincode
     - GO111MODULE=on go mod vendor
+
+    # Run network scripts in Docker-isolated environment
     - cd $CI_PROJECT_DIR/src/ledger/legitify-network
     - bash scripts/stopNetwork.sh || true
     - bash scripts/startNetwork.sh
     - bash scripts/testDegreeChaincode.sh
 
+    # Set up and test server
     - |
       cd $CI_PROJECT_DIR/src/server
       chmod +x scripts/start-fresh-db.sh
@@ -85,6 +86,7 @@ test_flow:
         exit 1
       fi
 
+    # Run test flow
     - |
       cd $CI_PROJECT_DIR/src/server
       sed -i 's/exit 1  # Fail fast in CI/continue  # Continue despite test failure/' scripts/test-flow.sh
@@ -123,18 +125,12 @@ test_flow:
       # Clean up database and wallet
       cd $CI_PROJECT_DIR/src/server || true
       docker-compose down -v || true
-      sudo rm -rf pgdata src/wallet/* || true
+      rm -rf pgdata src/wallet/* || true
 
       # Tear down Fabric network
       cd $CI_PROJECT_DIR/src/ledger/legitify-network || true
       ./network.sh down || true
       docker system prune -af --volumes || true
-
-      # Reset permissions
-      cd $CI_PROJECT_DIR || true
-      sudo chown -R gitlab-runner:gitlab-runner . || true
-      sudo find . -type d -exec chmod 755 {} + || true
-      sudo find . -type f -exec chmod 644 {} + || true
 
       echo "Cleanup completed"
 
@@ -147,8 +143,9 @@ test_flow:
 
 deploy_to_render:
   stage: deploy
-  tags:
-    - shell
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
   # needs: ["test_flow"]
   when: manual
   only:
@@ -157,6 +154,7 @@ deploy_to_render:
   variables:
     IMAGE_NAME: "legitify-project"
     IMAGE_TAG: "backend"
+    DOCKER_TLS_CERTDIR: ""
   before_script:
     - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
   script:
@@ -164,12 +162,12 @@ deploy_to_render:
     - docker build --platform linux/amd64 -t $IMAGE_NAME:$IMAGE_TAG .
     - docker push $IMAGE_NAME:$IMAGE_TAG
     - echo "Triggering Render deployment via webhook..."
+    - apk add --no-cache curl
     - curl -X POST "$RENDER_DEPLOY_HOOK"
 
 deploy_ledger:
   stage: deploy
-  tags:
-    - shell
+  image: alpine:latest
   # needs: ["test_flow"]
   when: manual
   variables:
@@ -178,6 +176,8 @@ deploy_ledger:
     SSH_KEY_FILE: "/tmp/aws_ssh_key"
     SOURCE_DIR: "$CI_PROJECT_DIR/src/ledger"
   before_script:
+    # Install required tools
+    - apk add --no-cache openssh-client bash
     # Decode and prepare SSH key
     - echo "$AWS_PRIVATE_KEY_B64" | base64 -d > $SSH_KEY_FILE
     - chmod 600 $SSH_KEY_FILE
