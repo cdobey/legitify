@@ -105,6 +105,7 @@ ENV_CONTENT
     # Ensure PATH includes fabric binaries
     export PATH=$PATH:$HOME/fabric-samples/bin
     
+    cd ~/legitify/network/legitify-network
     chmod +x scripts/startNetwork.sh
     
     # Start new network with improved error handling
