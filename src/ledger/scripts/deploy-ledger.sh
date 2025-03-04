@@ -29,16 +29,24 @@ ssh $SSH_OPTS "$EC2_USER@$EC2_HOST" << 'EOF'
     sudo systemctl start docker
     sudo usermod -aG docker $USER
     
-    # Install Docker Compose if not already installed
-    if ! command -v docker-compose &> /dev/null; then
-        sudo dnf install -y python3-pip
-        pip3 install docker-compose
+    # Install Docker Compose using Docker's official plugin
+    if ! docker compose version &> /dev/null; then
+        echo "Installing Docker Compose plugin..."
+        sudo dnf install -y docker-compose-plugin
         
-        # Fallback if pip install didn't work
-        if ! command -v docker-compose &> /dev/null; then
-            sudo curl -L "https://github.com/docker/compose/releases/download/v2.12.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        # Verify installation
+        if ! docker compose version &> /dev/null; then
+            echo "Installing Docker Compose standalone as fallback..."
+            DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+            mkdir -p $DOCKER_CONFIG/cli-plugins
+            sudo curl -SL "https://github.com/docker/compose/releases/download/v2.5.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
             sudo chmod +x /usr/local/bin/docker-compose
+            sudo ln -sf /usr/local/bin/docker-compose $DOCKER_CONFIG/cli-plugins/docker-compose
         fi
+    fi
+    # Create compatibility symlink
+    if [ ! -f /usr/bin/docker-compose ] && [ -f /usr/local/bin/docker-compose ]; then
+        sudo ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
     fi
     
     # Install Go if not already installed
