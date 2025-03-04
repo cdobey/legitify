@@ -15,9 +15,7 @@ variables:
   # Use overlay2 storage driver
   DOCKER_DRIVER: overlay2
 
-# Use Docker-in-Docker service
-services:
-  - docker:24.0.5-dind
+# No need for services section when using Docker socket binding
 
 test_flow:
   stage: test
@@ -25,8 +23,7 @@ test_flow:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_BRANCH == "master"
-  tags:
-    - shell
+  # Remove tags section to use Docker executor
   before_script:
     # Install required dependencies in the container
     - apk add --no-cache curl bash git jq nodejs npm golang
@@ -107,7 +104,7 @@ test_flow:
 
       kill_process_tree() {
         local pid=$1
-        if [ -n "$pid" ]; then
+        if [ -n "$pid"; then
           children=$(pgrep -P $pid)
           for child in $children; do
             kill_process_tree $child
@@ -117,7 +114,7 @@ test_flow:
       }
 
       # Stop backend server
-      if [ -f "$SERVER_PID_FILE" ]; then
+      if [ -f "$SERVER_PID_FILE"; then
         SERVER_PID=$(cat "$SERVER_PID_FILE")
         echo "Stopping server with PID $SERVER_PID"
         kill_process_tree $SERVER_PID
