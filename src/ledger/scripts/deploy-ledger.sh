@@ -73,7 +73,7 @@ ssh $SSH_OPTS "$EC2_USER@$EC2_HOST" << 'EOF'
     
     # Run the install-fabric script
     chmod +x ~/legitify/install-fabric.sh
-    cd ~/legitify
+    cd ~/legitify/network
     bash ./install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
     
     # Create symbolic links to the fabric-samples/bin directory if needed
