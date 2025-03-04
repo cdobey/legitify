@@ -18,51 +18,76 @@ ssh $SSH_OPTS "$EC2_USER@$EC2_HOST" << 'EOF'
     set -e
     
     # Create project directory if it doesn't exist
-    mkdir -p ~/legitify
+    mkdir -p ~/legitify/network
     
     # Install basic dependencies if needed
     which docker &>/dev/null || sudo yum install -y docker
-    which docker-compose &>/dev/null || sudo curl -L "https://github.com/docker/compose/releases/download/v2.12.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose
-    which go &>/dev/null || sudo yum install -y golang
-    which jq &>/dev/null || sudo yum install -y jq
-    
-    # Ensure Docker is running
-    sudo systemctl status docker || sudo systemctl start docker
+    sudo systemctl enable docker
+    sudo systemctl start docker
     sudo usermod -aG docker $USER
+    
+    # Install Docker Compose if not already installed
+    if ! command -v docker-compose &> /dev/null; then
+        sudo curl -L "https://github.com/docker/compose/releases/download/v2.12.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+    fi
+    
+    # Install Go if not already installed
+    if ! command -v go &> /dev/null; then
+        sudo yum install -y golang
+    fi
+    
+    # Install other utilities
+    which jq &>/dev/null || sudo yum install -y jq
 EOF
 
 # Step 2: Create and upload deployment package
 echo "Creating and uploading deployment package..."
 DEPLOY_PACKAGE="/tmp/ledger-deploy.tar.gz"
 cd "${SOURCE_DIR}"
-tar -czf "${DEPLOY_PACKAGE}" --exclude="node_modules" --exclude=".git" .
+tar -czf "${DEPLOY_PACKAGE}" --exclude="node_modules" --exclude=".git" --exclude="bin" .
 scp $SSH_OPTS "${DEPLOY_PACKAGE}" "${EC2_USER}@${EC2_HOST}:~/legitify/ledger-deploy.tar.gz"
 
-# Step 3: Deploy and start network
+# Step 3: Copy install-fabric.sh script
+echo "Uploading install-fabric.sh script..."
+scp $SSH_OPTS "${SOURCE_DIR}/install-fabric.sh" "${EC2_USER}@${EC2_HOST}:~/legitify/install-fabric.sh"
+
+# Step 4: Deploy and start network
 echo "Deploying and starting network on EC2..."
 ssh $SSH_OPTS "$EC2_USER@$EC2_HOST" << 'EOF'
     set -e
     
     # Clean previous deployment and extract new one
-    rm -rf ~/legitify/network
-    mkdir -p ~/legitify/network
+    rm -rf ~/legitify/network/*
     tar -xzf ~/legitify/ledger-deploy.tar.gz -C ~/legitify/network
     rm ~/legitify/ledger-deploy.tar.gz
     
     # Make scripts executable
     find ~/legitify/network -name "*.sh" -exec chmod +x {} \;
     
-    # Install Fabric binaries
+    # Install Fabric binaries using the install-fabric.sh script
     cd ~/legitify/network
     export ARCH=amd64
     export FABRIC_PATH=$PWD
     export PATH=$PATH:$FABRIC_PATH/bin
-    if [ ! -d "bin" ]; then
-        curl -sSL https://raw.githubusercontent.com/hyperledger/fabric/main/scripts/bootstrap.sh | bash -s -- 2.5.10 1.5.13
-    fi
-    chmod +x bin/*
     
-    # Setup Go chaincode
+    # Run the install-fabric script
+    chmod +x ~/legitify/install-fabric.sh
+    cd ~/legitify
+    bash ./install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
+    
+    # Create symbolic links to the fabric-samples/bin directory if needed
+    if [ ! -d "$FABRIC_PATH/bin" ] && [ -d "$HOME/fabric-samples/bin" ]; then
+        mkdir -p $FABRIC_PATH/bin
+        ln -sf $HOME/fabric-samples/bin/* $FABRIC_PATH/bin/
+    fi
+    
+    # Make sure bin directory exists and binaries are executable
+    if [ -d "$FABRIC_PATH/bin" ]; then
+        chmod +x $FABRIC_PATH/bin/* || true
+    fi
+    
+    # Prepare Go chaincode environment
     cd ~/legitify/network/chaincode/degreeChaincode
     GO111MODULE=on go mod vendor
     
@@ -73,16 +98,20 @@ ssh $SSH_OPTS "$EC2_USER@$EC2_HOST" << 'EOF'
         sleep 5
     fi
     
+    # Ensure PATH includes fabric binaries
+    export PATH=$PATH:$HOME/fabric-samples/bin
+    
     # Start new network
     bash scripts/startNetwork.sh
     
-    # Create network management script if it doesn't exist
+    # Create network management script
     cat > ~/legitify/manage-network.sh << 'SCRIPT'
 #!/bin/bash
 set -e
 
 # Simple network management script
 NETWORK_DIR=~/legitify/network/legitify-network
+export PATH=$PATH:$HOME/fabric-samples/bin
 
 case "$1" in
   start)
