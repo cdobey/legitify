@@ -32,7 +32,7 @@ ssh $SSH_OPTS "$EC2_USER@$EC2_HOST" << 'EOF'
     # Install Docker Compose (standalone binary)
     if ! command -v docker-compose &> /dev/null; then
       echo "Installing Docker Compose standalone binary..."
-      sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose
+      sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
       sudo chmod +x /usr/local/bin/docker-compose
       
       # Verify installation succeeded
