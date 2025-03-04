@@ -25,6 +25,8 @@ test_flow:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_BRANCH == "master"
+  tags:
+    - shell
   before_script:
     # Install required dependencies in the container
     - apk add --no-cache curl bash git jq nodejs npm golang
@@ -143,6 +145,8 @@ test_flow:
 
 deploy_to_render:
   stage: deploy
+  tags:
+    - shell
   image: docker:24.0.5
   services:
     - docker:24.0.5-dind
@@ -167,6 +171,8 @@ deploy_to_render:
 
 deploy_ledger:
   stage: deploy
+  tags:
+    - shell
   image: alpine:latest
   # needs: ["test_flow"]
   when: manual
