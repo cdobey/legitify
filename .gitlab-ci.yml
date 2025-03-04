@@ -1,7 +1,7 @@
 image: node:18-bullseye
 
 stages:
-  # - test
+  - test
   - deploy
 
 variables:
@@ -9,141 +9,141 @@ variables:
   SERVER_STARTUP_TIMEOUT: 120
   TEST_FLOW_TIMEOUT: 300
 
-# test_flow:
-#   stage: test
-#   rules:
-#     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-#     - if: $CI_COMMIT_BRANCH == "main"
-#     - if: $CI_COMMIT_BRANCH == "master"
-#   tags:
-#     - shell
-#   before_script:
-#     - |
-#       sudo apt-get update && sudo apt-get install -y \
-#         curl \
-#         git \
-#         jq \
-#         docker.io \
-#         docker-compose \
-#         golang-go
-#     - |
-#       curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-#       export NVM_DIR="$HOME/.nvm"
-#       [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-#       nvm install 18
-#       nvm use 18
-#       npm install -g typescript ts-node
-#     - node --version
-#     - npm --version
-#     - docker --version
-#     - go version
+test_flow:
+  stage: test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "master"
+  tags:
+    - shell
+  before_script:
+    - |
+      sudo apt-get update && sudo apt-get install -y \
+        curl \
+        git \
+        jq \
+        docker.io \
+        docker-compose \
+        golang-go
+    - |
+      curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+      export NVM_DIR="$HOME/.nvm"
+      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      nvm install 18
+      nvm use 18
+      npm install -g typescript ts-node
+    - node --version
+    - npm --version
+    - docker --version
+    - go version
 
-#     - cd $CI_PROJECT_DIR
-#     - git clean -fdx
-#     - sudo chown -R gitlab-runner:gitlab-runner .
+    - cd $CI_PROJECT_DIR
+    - git clean -fdx
+    - sudo chown -R gitlab-runner:gitlab-runner .
 
-#   script:
-#     - cd $CI_PROJECT_DIR/src/server
-#     - npm ci
-#     - npm install -g ts-node typescript
+  script:
+    - cd $CI_PROJECT_DIR/src/server
+    - npm ci
+    - npm install -g ts-node typescript
 
-#     - cd $CI_PROJECT_DIR/src/ledger
-#     - export ARCH=amd64
-#     - export FABRIC_PATH=$PWD
-#     - export PATH=$PATH:$FABRIC_PATH/bin
-#     - bash ./install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
-#     - chmod +x bin/*
+    - cd $CI_PROJECT_DIR/src/ledger
+    - export ARCH=amd64
+    - export FABRIC_PATH=$PWD
+    - export PATH=$PATH:$FABRIC_PATH/bin
+    - bash ./install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
+    - chmod +x bin/*
 
-#     - cd chaincode/degreeChaincode
-#     - GO111MODULE=on go mod vendor
-#     - cd $CI_PROJECT_DIR/src/ledger/legitify-network
-#     - bash scripts/stopNetwork.sh || true
-#     - bash scripts/startNetwork.sh
-#     - bash scripts/testDegreeChaincode.sh
+    - cd chaincode/degreeChaincode
+    - GO111MODULE=on go mod vendor
+    - cd $CI_PROJECT_DIR/src/ledger/legitify-network
+    - bash scripts/stopNetwork.sh || true
+    - bash scripts/startNetwork.sh
+    - bash scripts/testDegreeChaincode.sh
 
-#     - |
-#       cd $CI_PROJECT_DIR/src/server
-#       chmod +x scripts/start-fresh-db.sh
-#       sed -i 's/read -p "Are you sure you want to continue? (y\/n): " -n 1 -r/REPLY="y"/' scripts/start-fresh-db.sh
-#       source scripts/start-fresh-db.sh
+    - |
+      cd $CI_PROJECT_DIR/src/server
+      chmod +x scripts/start-fresh-db.sh
+      sed -i 's/read -p "Are you sure you want to continue? (y\/n): " -n 1 -r/REPLY="y"/' scripts/start-fresh-db.sh
+      source scripts/start-fresh-db.sh
 
-#       echo "Waiting for server to be fully ready..."
-#       TIMEOUT=$SERVER_STARTUP_TIMEOUT
-#       while [ $TIMEOUT -gt 0 ]; do
-#         if curl -s http://localhost:3001/docs > /dev/null; then
-#           echo "Server is responding to requests"
-#           sleep 10
-#           break
-#         fi
-#         echo "Waiting... ($TIMEOUT seconds remaining)"
-#         sleep 1
-#         TIMEOUT=$((TIMEOUT - 1))
-#       done
+      echo "Waiting for server to be fully ready..."
+      TIMEOUT=$SERVER_STARTUP_TIMEOUT
+      while [ $TIMEOUT -gt 0 ]; do
+        if curl -s http://localhost:3001/docs > /dev/null; then
+          echo "Server is responding to requests"
+          sleep 10
+          break
+        fi
+        echo "Waiting... ($TIMEOUT seconds remaining)"
+        sleep 1
+        TIMEOUT=$((TIMEOUT - 1))
+      done
 
-#       if [ $TIMEOUT -eq 0 ]; then
-#         echo "Server failed to start within timeout period"
-#         exit 1
-#       fi
+      if [ $TIMEOUT -eq 0 ]; then
+        echo "Server failed to start within timeout period"
+        exit 1
+      fi
 
-#     - |
-#       cd $CI_PROJECT_DIR/src/server
-#       sed -i 's/exit 1  # Fail fast in CI/continue  # Continue despite test failure/' scripts/test-flow.sh
-#       chmod +x scripts/test-flow.sh
-#       ./scripts/test-flow.sh 2>&1 | tee test_output.log
-#       if ! grep -q "Test flow completed successfully!" test_output.log; then
-#         echo "Test flow did not complete successfully. Full test output:"
-#         cat test_output.log
-#         exit 1
-#       fi
+    - |
+      cd $CI_PROJECT_DIR/src/server
+      sed -i 's/exit 1  # Fail fast in CI/continue  # Continue despite test failure/' scripts/test-flow.sh
+      chmod +x scripts/test-flow.sh
+      ./scripts/test-flow.sh 2>&1 | tee test_output.log
+      if ! grep -q "Test flow completed successfully!" test_output.log; then
+        echo "Test flow did not complete successfully. Full test output:"
+        cat test_output.log
+        exit 1
+      fi
 
-#   after_script:
-#     - |
-#       echo "Starting cleanup..."
-#       set +e  # Continue on errors during cleanup
+  after_script:
+    - |
+      echo "Starting cleanup..."
+      set +e  # Continue on errors during cleanup
 
-#       kill_process_tree() {
-#         local pid=$1
-#         if [ -n "$pid" ]; then
-#           children=$(pgrep -P $pid)
-#           for child in $children; do
-#             kill_process_tree $child
-#           done
-#           kill -9 $pid 2>/dev/null || true
-#         fi
-#       }
+      kill_process_tree() {
+        local pid=$1
+        if [ -n "$pid" ]; then
+          children=$(pgrep -P $pid)
+          for child in $children; do
+            kill_process_tree $child
+          done
+          kill -9 $pid 2>/dev/null || true
+        fi
+      }
 
-#       # Stop backend server
-#       if [ -f "$SERVER_PID_FILE" ]; then
-#         SERVER_PID=$(cat "$SERVER_PID_FILE")
-#         echo "Stopping server with PID $SERVER_PID"
-#         kill_process_tree $SERVER_PID
-#         rm -f "$SERVER_PID_FILE"
-#       fi
+      # Stop backend server
+      if [ -f "$SERVER_PID_FILE" ]; then
+        SERVER_PID=$(cat "$SERVER_PID_FILE")
+        echo "Stopping server with PID $SERVER_PID"
+        kill_process_tree $SERVER_PID
+        rm -f "$SERVER_PID_FILE"
+      fi
 
-#       # Clean up database and wallet
-#       cd $CI_PROJECT_DIR/src/server || true
-#       docker-compose down -v || true
-#       sudo rm -rf pgdata src/wallet/* || true
+      # Clean up database and wallet
+      cd $CI_PROJECT_DIR/src/server || true
+      docker-compose down -v || true
+      sudo rm -rf pgdata src/wallet/* || true
 
-#       # Tear down Fabric network
-#       cd $CI_PROJECT_DIR/src/ledger/legitify-network || true
-#       ./network.sh down || true
-#       docker system prune -af --volumes || true
+      # Tear down Fabric network
+      cd $CI_PROJECT_DIR/src/ledger/legitify-network || true
+      ./network.sh down || true
+      docker system prune -af --volumes || true
 
-#       # Reset permissions
-#       cd $CI_PROJECT_DIR || true
-#       sudo chown -R gitlab-runner:gitlab-runner . || true
-#       sudo find . -type d -exec chmod 755 {} + || true
-#       sudo find . -type f -exec chmod 644 {} + || true
+      # Reset permissions
+      cd $CI_PROJECT_DIR || true
+      sudo chown -R gitlab-runner:gitlab-runner . || true
+      sudo find . -type d -exec chmod 755 {} + || true
+      sudo find . -type f -exec chmod 644 {} + || true
 
-#       echo "Cleanup completed"
+      echo "Cleanup completed"
 
-#   cache:
-#     key: ${CI_COMMIT_REF_SLUG}
-#     paths:
-#       - src/server/node_modules/
-#       - ~/.npm/
-#     policy: pull-push
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - src/server/node_modules/
+      - ~/.npm/
+    policy: pull-push
 
 deploy_to_render:
   stage: deploy
