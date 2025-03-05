@@ -10,9 +10,18 @@ SOURCE_DIR="${SOURCE_DIR:-$CI_PROJECT_DIR/src/ledger}"
 
 echo "Deploying Fabric network to EC2 instance ${EC2_HOST}..."
 
-# Install required dependencies on EC2
+# Install required dependencies on EC2 with better error handling
 echo "Setting up dependencies on EC2 instance..."
-ssh -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_FILE} ${EC2_USER}@${EC2_HOST} "sudo yum -y install tar git curl docker jq"
+ssh -o StrictHostKeyChecking=accept-new -i ${SSH_KEY_FILE} ${EC2_USER}@${EC2_HOST} << 'EOC'
+  # Skip curl installation since it's causing conflicts
+  # Install other required packages with --skip-broken
+  sudo yum -y install tar git docker jq --skip-broken || echo "Some packages might not have installed correctly, continuing anyway"
+  
+  # Make sure docker is running regardless
+  sudo systemctl start docker || true
+  sudo systemctl enable docker || true
+  sudo usermod -aG docker $USER || true
+EOC
 
 # Create deployment package
 echo "Creating and uploading deployment package..."
@@ -23,11 +32,6 @@ scp -i ${SSH_KEY_FILE} /tmp/ledger-deploy.tar.gz ${EC2_USER}@${EC2_HOST}:/tmp/
 # Deploy on EC2
 echo "Deploying and starting network on EC2..."
 ssh -i ${SSH_KEY_FILE} ${EC2_USER}@${EC2_HOST} << 'EOF'
-  # Ensure docker service is running
-  sudo systemctl start docker || true
-  sudo systemctl enable docker || true
-  sudo usermod -aG docker $USER || true
-
   # Create deployment directory
   mkdir -p ${HOME}/legitify/network
 
@@ -52,10 +56,8 @@ ssh -i ${SSH_KEY_FILE} ${EC2_USER}@${EC2_HOST} << 'EOF'
   rm -f /tmp/ledger-deploy.tar.gz
 
   # Ensure all scripts are executable
-  chmod +x ${HOME}/legitify/network/install-fabric.sh
-  chmod +x ${HOME}/legitify/network/legitify-network/*.sh
-  chmod +x ${HOME}/legitify/network/legitify-network/scripts/*.sh
-
+  find ${HOME}/legitify/network -name "*.sh" -exec chmod +x {} \;
+  
   # Start fabric network
   cd ${HOME}/legitify/network
   export ARCH=amd64
