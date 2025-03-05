@@ -226,7 +226,7 @@ export async function testFabricConnection(
             );
           else if (
             address !== process.env.EC2_IP &&
-            address !== "3.249.159.32"
+            address !== "18.202.198.84"
           ) {
             reject(
               new Error(

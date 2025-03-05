@@ -12,9 +12,9 @@ module.exports = {
 
   // Production environment (AWS)
   production: {
-    networkUrl: process.env.FABRIC_NETWORK_URL || "3.249.159.32",
+    networkUrl: process.env.FABRIC_NETWORK_URL || "18.202.198.84",
     networkPort: process.env.FABRIC_NETWORK_PORT || "7051",
-    caUrl: process.env.FABRIC_CA_URL || "3.249.159.32",
+    caUrl: process.env.FABRIC_CA_URL || "18.202.198.84",
     caPort: process.env.FABRIC_CA_PORT || "7054",
     // Other fabric configuration
   },
