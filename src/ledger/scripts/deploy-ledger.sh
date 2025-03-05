@@ -4,7 +4,7 @@ set -e
 # SSH connection details
 SSH_KEY_FILE="${SSH_KEY_FILE:-/tmp/aws_ssh_key}"
 EC2_USER="${EC2_USER:-ec2-user}"
-EC2_HOST="${EC2_HOST:-3.249.159.32}"
+EC2_HOST="${EC2_HOST:-18.202.198.84}"
 SOURCE_DIR="${SOURCE_DIR:-$PWD/..}"  # Default to parent directory (ledger folder)
 
 echo "Deploying Fabric network to EC2 instance ${EC2_HOST}..."

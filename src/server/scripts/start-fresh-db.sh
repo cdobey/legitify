@@ -14,7 +14,7 @@ fi
 
 # Check Fabric connectivity
 echo "🔌 Checking connectivity to Hyperledger Fabric network..."
-export EC2_IP=${EC2_IP:-"3.249.159.32"}
+export EC2_IP=${EC2_IP:-"18.202.198.84"}
 export RESOURCE_SERVER_PORT=${RESOURCE_SERVER_PORT:-"8080"}
 echo "Using EC2 instance at ${EC2_IP}:${RESOURCE_SERVER_PORT}"
 

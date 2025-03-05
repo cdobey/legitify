@@ -173,7 +173,7 @@ deploy_ledger:
   # needs: ["test_flow"]
   when: manual
   variables:
-    EC2_HOST: "3.249.159.32"
+    EC2_HOST: "18.202.198.84"
     EC2_USER: "ec2-user"
     SSH_KEY_FILE: "/tmp/aws_ssh_key"
     SOURCE_DIR: "$CI_PROJECT_DIR/src/ledger"

@@ -63,7 +63,7 @@ function createOrgUniversity() {
 
   infoln "Generating the peer0-tls certificates, use --csr.hosts to specify Subject Alternative Names"
   set -x
-  fabric-ca-client enroll -u https://peer0:peer0pw@localhost:7054 --caname ca-orguniversity -M "${PWD}/organizations/peerOrganizations/orguniversity.com/peers/peer0.orguniversity.com/tls" --enrollment.profile tls --csr.hosts peer0.orguniversity.com --csr.hosts localhost --csr.hosts 3.249.159.32 --tls.certfiles "${PWD}/organizations/fabric-ca/orguniversity/ca-cert.pem"
+  fabric-ca-client enroll -u https://peer0:peer0pw@localhost:7054 --caname ca-orguniversity -M "${PWD}/organizations/peerOrganizations/orguniversity.com/peers/peer0.orguniversity.com/tls" --enrollment.profile tls --csr.hosts peer0.orguniversity.com --csr.hosts localhost --csr.hosts 18.202.198.84 --tls.certfiles "${PWD}/organizations/fabric-ca/orguniversity/ca-cert.pem"
   { set +x; } 2>/dev/null
 
   # Copy the tls CA cert, server cert, server keystore to well known file names in the peer's tls directory that are referenced by peer startup config
@@ -149,7 +149,7 @@ function createOrgEmployer() {
 
   infoln "Generating the peer0-tls certificates, use --csr.hosts to specify Subject Alternative Names"
   set -x
-  fabric-ca-client enroll -u https://peer0:peer0pw@localhost:8054 --caname ca-orgemployer -M "${PWD}/organizations/peerOrganizations/orgemployer.com/peers/peer0.orgemployer.com/tls" --enrollment.profile tls --csr.hosts peer0.orgemployer.com --csr.hosts localhost --csr.hosts 3.249.159.32 --tls.certfiles "${PWD}/organizations/fabric-ca/orgemployer/ca-cert.pem"
+  fabric-ca-client enroll -u https://peer0:peer0pw@localhost:8054 --caname ca-orgemployer -M "${PWD}/organizations/peerOrganizations/orgemployer.com/peers/peer0.orgemployer.com/tls" --enrollment.profile tls --csr.hosts peer0.orgemployer.com --csr.hosts localhost --csr.hosts 18.202.198.84 --tls.certfiles "${PWD}/organizations/fabric-ca/orgemployer/ca-cert.pem"
   { set +x; } 2>/dev/null
 
   # Copy the tls CA cert, server cert, server keystore to well known file names in the peer's tls directory that are referenced by peer startup config
@@ -235,7 +235,7 @@ function createOrgIndividual() {
 
   infoln "Generating the peer0-tls certificates, use --csr.hosts to specify Subject Alternative Names"
   set -x
-  fabric-ca-client enroll -u https://peer0:peer0pw@localhost:9054 --caname ca-orgindividual -M "${PWD}/organizations/peerOrganizations/orgindividual.com/peers/peer0.orgindividual.com/tls" --enrollment.profile tls --csr.hosts peer0.orgindividual.com --csr.hosts localhost --csr.hosts 3.249.159.32 --tls.certfiles "${PWD}/organizations/fabric-ca/orgindividual/ca-cert.pem"
+  fabric-ca-client enroll -u https://peer0:peer0pw@localhost:9054 --caname ca-orgindividual -M "${PWD}/organizations/peerOrganizations/orgindividual.com/peers/peer0.orgindividual.com/tls" --enrollment.profile tls --csr.hosts peer0.orgindividual.com --csr.hosts localhost --csr.hosts 18.202.198.84 --tls.certfiles "${PWD}/organizations/fabric-ca/orgindividual/ca-cert.pem"
   { set +x; } 2>/dev/null
 
   # Copy the tls CA cert, server cert, server keystore to well known file names in the peer's tls directory that are referenced by peer startup config
@@ -312,7 +312,7 @@ function createOrderer() {
 
   infoln "Generating the orderer-tls certificates, use --csr.hosts to specify Subject Alternative Names"
   set -x
-  fabric-ca-client enroll -u https://orderer:ordererpw@localhost:10054 --caname ca-orderer -M "${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/tls" --enrollment.profile tls --csr.hosts orderer.example.com --csr.hosts localhost --csr.hosts 3.249.159.32 --tls.certfiles "${PWD}/organizations/fabric-ca/ordererOrg/ca-cert.pem"
+  fabric-ca-client enroll -u https://orderer:ordererpw@localhost:10054 --caname ca-orderer -M "${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/tls" --enrollment.profile tls --csr.hosts orderer.example.com --csr.hosts localhost --csr.hosts 18.202.198.84 --tls.certfiles "${PWD}/organizations/fabric-ca/ordererOrg/ca-cert.pem"
   { set +x; } 2>/dev/null
 
   # Copy the tls CA cert, server cert, server keystore to well known file names in the orderer's tls directory that are referenced by orderer startup config
