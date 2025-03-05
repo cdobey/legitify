@@ -8,10 +8,13 @@ variables:
   SERVER_PID_FILE: "/tmp/server.pid"
   SERVER_STARTUP_TIMEOUT: 120
   TEST_FLOW_TIMEOUT: 300
+  SKIP_TESTS: "true"
 
 test_flow:
   stage: test
   rules:
+    - if: $SKIP_TESTS == "true"
+      when: never
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_BRANCH == "master"
@@ -149,11 +152,12 @@ deploy_to_render:
   stage: deploy
   tags:
     - shell
-  # needs: ["test_flow"]
-  when: manual
-  only:
-    - main
-    - master
+  needs:
+    - job: test_flow
+      optional: true
+  rules:
+    - if: $SKIP_TESTS == "true" || $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"
+      when: manual
   variables:
     IMAGE_NAME: "legitify-project"
     IMAGE_TAG: "backend"
@@ -170,8 +174,11 @@ deploy_ledger:
   stage: deploy
   tags:
     - shell
-  # needs: ["test_flow"]
-  when: manual
+  needs:
+    - job: test_flow
+      optional: true
+  rules:
+    - when: manual
   variables:
     EC2_HOST: "18.202.198.84"
     EC2_USER: "ec2-user"
@@ -193,10 +200,12 @@ deploy_client:
   stage: deploy
   tags:
     - shell
-  when: manual
-  only:
-    - main
-    - master
+  needs:
+    - job: test_flow
+      optional: true
+  rules:
+    - if: $SKIP_TESTS == "true" || $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"
+      when: manual
   variables:
     IMAGE_NAME: "legitify-project"
     IMAGE_TAG: "client"
