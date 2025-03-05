@@ -24,4 +24,5 @@ EXPOSE 3001
 ENV IS_DEPLOYMENT=true
 
 # Run the fresh DB script followed by the test user creation script
-CMD bash scripts/start-fresh-db.sh && bash scripts/test-flow.sh
+# CMD bash scripts/start-fresh-db.sh && bash scripts/test-flow.sh
+CMD bash scripts/start-fresh-db.sh
