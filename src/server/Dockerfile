@@ -20,5 +20,8 @@ RUN npx prisma generate
 # Expose the port that Swagger UI will run on
 EXPOSE 3001
 
+# Set environment variable for automated deployment
+ENV IS_DEPLOYMENT=true
+
 # Run the fresh DB script followed by the test user creation script
 CMD bash scripts/start-fresh-db.sh && bash scripts/test-flow.sh

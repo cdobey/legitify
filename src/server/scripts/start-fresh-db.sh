@@ -2,14 +2,29 @@
 
 echo "🔄 Setting up for Supabase database..."
 
-# Ask for confirmation before deleting remote data
+# Determine if running in CI/deployment environment
+IS_DEPLOYMENT=${IS_DEPLOYMENT:-false}
+if [ "$CI" = "true" ] || [ "$IS_DEPLOYMENT" = "true" ]; then
+  echo "🤖 Running in automated deployment mode - confirmations will be skipped"
+  AUTO_CONFIRM="y"
+else
+  AUTO_CONFIRM=""
+fi
+
+# Ask for confirmation before deleting remote data (skip in deployment)
 echo "⚠️  WARNING: This will DELETE ALL DATA in your Supabase database!"
 echo "⚠️  All tables will be cleared and recreated. This action cannot be undone."
-read -p "Are you sure you want to continue? (y/n): " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-  echo "Operation cancelled"
-  exit 1
+
+if [ -z "$AUTO_CONFIRM" ]; then
+  read -p "Are you sure you want to continue? (y/n): " -n 1 -r
+  echo
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "Operation cancelled"
+    exit 1
+  fi
+else
+  echo "✅ Automatically confirmed data deletion (deployment mode)"
+  REPLY="y"
 fi
 
 # Check Fabric connectivity
@@ -27,12 +42,18 @@ if [ $? -ne 0 ]; then
   echo "  3. All required ports are open in the security group"
   echo "  4. The resource server is running on the EC2 instance"
   
-  read -p "Do you want to continue anyway? (y/n): " -n 1 -r
-  echo
-  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Operation cancelled"
-    exit 1
+  if [ -z "$AUTO_CONFIRM" ]; then
+    read -p "Do you want to continue anyway? (y/n): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      echo "Operation cancelled"
+      exit 1
+    fi
+  else
+    echo "✅ Automatically continuing despite connectivity issues (deployment mode)"
+    REPLY="y"
   fi
+  
   echo "⚠️ Proceeding despite connectivity issues..."
 else
   echo "✅ Fabric network connectivity check passed"
@@ -112,4 +133,4 @@ echo "✅ Setup complete!"
 echo "Connection details:"
 echo "  Using Supabase database: postgres.japzugjgdlvqkmytralh"
 echo "Server is running at http://localhost:3001"
-echo "Swagger documentation available at http://localhost:3001/docs" 
+echo "Swagger documentation available at http://localhost:3001/docs"
