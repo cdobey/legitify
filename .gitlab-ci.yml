@@ -188,3 +188,28 @@ deploy_ledger:
   after_script:
     # Clean up key after use for security
     - rm -f $SSH_KEY_FILE
+
+deploy_client:
+  stage: deploy
+  tags:
+    - shell
+  when: manual
+  only:
+    - main
+    - master
+  variables:
+    IMAGE_NAME: "legitify-project"
+    IMAGE_TAG: "client"
+  before_script:
+    # Login to Docker Hub using credentials stored as CI/CD variables.
+    - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+  script:
+    # Change directory to your client folder (adjust path if needed)
+    - cd $CI_PROJECT_DIR/src/client
+    # Build the Docker image for linux/amd64 with the tag "client"
+    - docker build --platform linux/amd64 -t $IMAGE_NAME:$IMAGE_TAG .
+    # Push the image to Docker Hub
+    - docker push $IMAGE_NAME:$IMAGE_TAG
+    # (Optional) Trigger Render to pull the new image using a deploy hook
+    - echo "Triggering Render deployment for client via webhook..."
+    - curl -X POST "$RENDER_CLIENT_DEPLOY_HOOK"

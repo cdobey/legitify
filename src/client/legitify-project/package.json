@@ -28,6 +28,7 @@
     "@vitejs/plugin-react": "^4.2.1",
     "postcss": "^8.5.3",
     "postcss-preset-mantine": "^1.17.0",
+    "terser": "^5.24.0",
     "typescript": "^5.3.3",
     "vite": "^5.1.3"
   }
