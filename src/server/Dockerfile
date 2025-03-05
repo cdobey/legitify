@@ -20,5 +20,5 @@ RUN npx prisma generate
 # Expose the port that Swagger UI will run on
 EXPOSE 3001
 
-# Start the server with migration at runtime
-CMD npx prisma migrate deploy && npm run start
+# Run the fresh DB script followed by the test user creation script
+CMD bash scripts/start-fresh-db.sh && bash scripts/test-flow.sh
