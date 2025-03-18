@@ -1,0 +1,25 @@
+deploy_ledger:
+  stage: deploy
+  tags:
+    - shell
+  needs:
+    - job: test_flow
+      optional: true
+  rules:
+    - when: manual
+  variables:
+    EC2_HOST: "18.202.198.84"
+    EC2_USER: "ec2-user"
+    SSH_KEY_FILE: "/tmp/aws_ssh_key"
+    SOURCE_DIR: "$CI_PROJECT_DIR/src/ledger"
+  before_script:
+    # Decode and prepare SSH key
+    - echo "$AWS_PRIVATE_KEY_B64" | base64 -d > $SSH_KEY_FILE
+    - chmod 600 $SSH_KEY_FILE
+  script:
+    - cd src/ledger/scripts
+    - chmod +x deploy-ledger.sh
+    - ./deploy-ledger.sh
+  after_script:
+    # Clean up key after use for security
+    - rm -f $SSH_KEY_FILE
