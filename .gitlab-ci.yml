@@ -180,7 +180,7 @@ deploy_ledger:
   rules:
     - when: manual
   variables:
-    EC2_HOST: "18.202.198.84"
+    EC2_HOST: "network.legitifyapp.com"
     EC2_USER: "ec2-user"
     SSH_KEY_FILE: "/tmp/aws_ssh_key"
     SOURCE_DIR: "$CI_PROJECT_DIR/src/ledger"

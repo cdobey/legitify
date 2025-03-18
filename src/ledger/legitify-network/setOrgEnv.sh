@@ -16,19 +16,19 @@ function setGlobals() {
     export CORE_PEER_LOCALMSPID="OrgUniversityMSP"
     export CORE_PEER_TLS_ROOTCERT_FILE=${ORG_UNIVERSITY_TLS_CERT}
     export CORE_PEER_MSPCONFIGPATH=${ORG_UNIVERSITY_MSP_PATH}
-    export CORE_PEER_ADDRESS=18.202.198.84:7051
+    export CORE_PEER_ADDRESS=network.legitifyapp.com:7051
     export FABRIC_CFG_PATH=${PWD}/configtx
   elif [ $USING_ORG = orgemployer ]; then
     export CORE_PEER_LOCALMSPID="OrgEmployerMSP"
     export CORE_PEER_TLS_ROOTCERT_FILE=${ORG_EMPLOYER_TLS_CERT}
     export CORE_PEER_MSPCONFIGPATH=${ORG_EMPLOYER_MSP_PATH}
-    export CORE_PEER_ADDRESS=18.202.198.84:8051
+    export CORE_PEER_ADDRESS=network.legitifyapp.com:8051
     export FABRIC_CFG_PATH=${PWD}/configtx
   elif [ $USING_ORG = orgindividual ]; then
     export CORE_PEER_LOCALMSPID="OrgIndividualMSP"
     export CORE_PEER_TLS_ROOTCERT_FILE=${ORG_INDIVIDUAL_TLS_CERT}
     export CORE_PEER_MSPCONFIGPATH=${ORG_INDIVIDUAL_MSP_PATH}
-    export CORE_PEER_ADDRESS=18.202.198.84:9051
+    export CORE_PEER_ADDRESS=network.legitifyapp.com:9051
     export FABRIC_CFG_PATH=${PWD}/configtx
   else
     echo "Unknown organization: $USING_ORG"
@@ -44,7 +44,7 @@ function setOrdererGlobals() {
   export CORE_PEER_LOCALMSPID="OrdererMSP"
   export CORE_PEER_TLS_ROOTCERT_FILE=${ORDERER_CA}
   export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/ordererOrganizations/example.com/users/Admin@example.com/msp
-  export CORE_PEER_ADDRESS=18.202.198.84:7050
+  export CORE_PEER_ADDRESS=network.legitifyapp.com:7050
   export FABRIC_CFG_PATH=${PWD}/configtx
 }
 

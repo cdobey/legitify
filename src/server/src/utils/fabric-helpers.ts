@@ -226,7 +226,7 @@ export async function testFabricConnection(
             );
           else if (
             address !== process.env.EC2_IP &&
-            address !== "18.202.198.84"
+            address !== "network.legitifyapp.com"
           ) {
             reject(
               new Error(

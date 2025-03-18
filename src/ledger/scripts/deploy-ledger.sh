@@ -2,7 +2,7 @@
 set -e
 
 # Configuration
-EC2_HOST="${EC2_HOST:-18.202.198.84}"
+EC2_HOST="${EC2_HOST:-network.legitifyapp.com}"
 EC2_USER="${EC2_USER:-ec2-user}"
 SSH_KEY_FILE="${SSH_KEY_FILE:-/tmp/aws_ssh_key}"
 DEPLOY_DIR="/home/${EC2_USER}/legitify/network"

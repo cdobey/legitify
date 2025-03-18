@@ -60,7 +60,9 @@ const generateConnectionProfile = (org) => {
 
     // Add peer configuration
     template.peers[`peer0.${org}.com`] = {
-        url: `grpcs://${process.env.EC2_IP || '18.202.198.84'}:${peerPort}`,
+        url: `grpcs://${
+            process.env.EC2_IP || 'network.legitifyapp.com'
+        }:${peerPort}`,
         tlsCACerts: {
             pem: fs.readFileSync(
                 path.join(
@@ -82,7 +84,9 @@ const generateConnectionProfile = (org) => {
 
     // Add CA configuration
     template.certificateAuthorities[`ca.${org}.com`] = {
-        url: `https://${process.env.EC2_IP || '18.202.198.84'}:${caPort}`,
+        url: `https://${
+            process.env.EC2_IP || 'network.legitifyapp.com'
+        }:${caPort}`,
         caName: `ca-${org}`,
         tlsCACerts: {
             pem: fs.readFileSync(
@@ -101,7 +105,9 @@ const generateConnectionProfile = (org) => {
     // Add orderer information
     template.orderers = {
         'orderer.example.com': {
-            url: `grpcs://${process.env.EC2_IP || '18.202.198.84'}:7050`,
+            url: `grpcs://${
+                process.env.EC2_IP || 'network.legitifyapp.com'
+            }:7050`,
             tlsCACerts: {
                 pem: fs.readFileSync(
                     path.join(

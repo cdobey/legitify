@@ -38,7 +38,7 @@ const startServer = async () => {
     const server = app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
       console.log(
-        `Swagger docs available at http://18.202.198.84:${PORT}/docs`
+        `Swagger docs available at http://network.legitifyapp.com:${PORT}/docs`
       );
     });
   } catch (error) {
