@@ -17,7 +17,7 @@ echo "Creating channel..."
 
 # Deploy the chaincode
 echo "Deploying chaincode..."
-./network.sh deployCC -ccn degreeCC -ccp ../chaincode/degreeChaincode/ -ccl go
+./network.sh deployCC -ccn degree -ccp ../chaincode/degreeChaincode/ -ccl go -ccep "OR('OrgUniversityMSP.peer','OrgEmployerMSP.peer','OrgIndividualMSP.peer')"
 
 # Confirm setup success
 echo "Network setup complete."
