@@ -11,7 +11,7 @@ export default defineConfig({
       "/api": {
         changeOrigin: true,
         secure: false,
-        target: "http://network.legitifyapp.com:3001",
+        target: "http://localhost:3001",
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
     },

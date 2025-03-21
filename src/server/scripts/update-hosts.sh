@@ -3,7 +3,7 @@
 # This script adds Fabric network hostname entries to your hosts file
 # May need to be run with sudo
 
-FABRIC_IP="network.legitifyapp.com"
+FABRIC_IP="localhost"
 
 echo "Adding Fabric network hostnames to /etc/hosts..."
 

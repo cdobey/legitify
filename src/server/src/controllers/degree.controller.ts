@@ -445,8 +445,8 @@ export const getAccessRequests: RequestHandler = async (
     );
 
     // Flatten and format the requests, but include more info for debugging
-    const requests = userDocuments.flatMap((doc) =>
-      doc.requests.map((request) => ({
+    const requests = userDocuments.flatMap((doc: any) =>
+      doc.requests.map((request: any) => ({
         requestId: request.id,
         docId: doc.id,
         docStatus: doc.status, // Add document status
@@ -489,7 +489,7 @@ export const getMyDegrees: RequestHandler = async (
       },
     });
 
-    const formattedDocs = documents.map((doc) => ({
+    const formattedDocs = documents.map((doc: any) => ({
       docId: doc.id,
       issuer: doc.issuerUser.orgName,
       status: doc.status,

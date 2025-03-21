@@ -1,3 +1,9 @@
+// Local environment variables for this file (set these as needed)
+const localEnv = {
+    PORT: 8080, // change to desired port
+    EC2_IP: 'network.legitifyapp.com', // change to desired IP address
+};
+
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -5,7 +11,7 @@ const path = require('path');
 const compression = require('compression');
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = localEnv.PORT || 8080;
 
 // Middleware
 app.use(cors());
@@ -16,7 +22,7 @@ app.use(express.json());
 const NETWORK_ROOT = path.resolve(__dirname, '..');
 const ORGANIZATIONS_DIR = path.join(NETWORK_ROOT, 'organizations');
 
-// Generate connection profiles on demand with the correct IP
+// Updated function to include all organizations and peers
 const generateConnectionProfile = (org) => {
     const template = {
         name: `legitify-network-${org}`,
@@ -36,78 +42,81 @@ const generateConnectionProfile = (org) => {
         certificateAuthorities: {},
     };
 
-    // Set organization info
-    const orgCapitalized = org.charAt(0).toUpperCase() + org.slice(1);
-    const orgMSPID = `${orgCapitalized}MSP`;
-    template.organizations[orgCapitalized] = {
-        mspid: orgMSPID,
-        peers: [`peer0.${org}.com`],
-        certificateAuthorities: [`ca.${org}.com`],
-    };
+    // Define all organizations we need to include
+    const allOrgs = ['orguniversity', 'orgemployer', 'orgindividual'];
 
-    // Set peer and CA info based on org
-    let peerPort, caPort;
-    if (org === 'orguniversity') {
-        peerPort = 7051;
-        caPort = 7054;
-    } else if (org === 'orgemployer') {
-        peerPort = 8051;
-        caPort = 8054;
-    } else if (org === 'orgindividual') {
-        peerPort = 9051;
-        caPort = 9054;
-    }
+    // Add all organizations to the template
+    allOrgs.forEach((orgName) => {
+        const orgCapitalized =
+            orgName.charAt(0).toUpperCase() + orgName.slice(1);
+        const orgMSPID = `${orgCapitalized}MSP`;
 
-    // Add peer configuration
-    template.peers[`peer0.${org}.com`] = {
-        url: `grpcs://${
-            process.env.EC2_IP || 'network.legitifyapp.com'
-        }:${peerPort}`,
-        tlsCACerts: {
-            pem: fs.readFileSync(
-                path.join(
-                    ORGANIZATIONS_DIR,
-                    `peerOrganizations/${org}.com/peers/peer0.${org}.com/tls/ca.crt`
+        template.organizations[orgCapitalized] = {
+            mspid: orgMSPID,
+            peers: [`peer0.${orgName}.com`],
+            certificateAuthorities: [`ca.${orgName}.com`],
+        };
+    });
+
+    // Add all peers and CA configurations
+    allOrgs.forEach((orgName) => {
+        let peerPort, caPort;
+        if (orgName === 'orguniversity') {
+            peerPort = 7051;
+            caPort = 7054;
+        } else if (orgName === 'orgemployer') {
+            peerPort = 8051;
+            caPort = 8054;
+        } else if (orgName === 'orgindividual') {
+            peerPort = 9051;
+            caPort = 9054;
+        }
+
+        // Add peer configuration
+        template.peers[`peer0.${orgName}.com`] = {
+            url: `grpcs://${localEnv.EC2_IP}:${peerPort}`,
+            tlsCACerts: {
+                pem: fs.readFileSync(
+                    path.join(
+                        ORGANIZATIONS_DIR,
+                        `peerOrganizations/${orgName}.com/peers/peer0.${orgName}.com/tls/ca.crt`
+                    ),
+                    'utf8'
                 ),
-                'utf8'
-            ),
-        },
-        grpcOptions: {
-            'ssl-target-name-override': `peer0.${org}.com`,
-            hostnameOverride: `peer0.${org}.com`,
-            'grpc.keepalive_time_ms': 120000,
-            'grpc.keepalive_timeout_ms': 20000,
-            'grpc.http2.min_time_between_pings_ms': 120000,
-            'grpc.http2.max_pings_without_data': 0,
-        },
-    };
+            },
+            grpcOptions: {
+                'ssl-target-name-override': `peer0.${orgName}.com`,
+                hostnameOverride: `peer0.${orgName}.com`,
+                'grpc.keepalive_time_ms': 120000,
+                'grpc.keepalive_timeout_ms': 20000,
+                'grpc.http2.min_time_between_pings_ms': 120000,
+                'grpc.http2.max_pings_without_data': 0,
+            },
+        };
 
-    // Add CA configuration
-    template.certificateAuthorities[`ca.${org}.com`] = {
-        url: `https://${
-            process.env.EC2_IP || 'network.legitifyapp.com'
-        }:${caPort}`,
-        caName: `ca-${org}`,
-        tlsCACerts: {
-            pem: fs.readFileSync(
-                path.join(
-                    ORGANIZATIONS_DIR,
-                    `peerOrganizations/${org}.com/ca/ca.${org}.com-cert.pem`
+        // Add CA configuration
+        template.certificateAuthorities[`ca.${orgName}.com`] = {
+            url: `https://${localEnv.EC2_IP}:${caPort}`,
+            caName: `ca-${orgName}`,
+            tlsCACerts: {
+                pem: fs.readFileSync(
+                    path.join(
+                        ORGANIZATIONS_DIR,
+                        `peerOrganizations/${orgName}.com/ca/ca.${orgName}.com-cert.pem`
+                    ),
+                    'utf8'
                 ),
-                'utf8'
-            ),
-        },
-        httpOptions: {
-            verify: false,
-        },
-    };
+            },
+            httpOptions: {
+                verify: false,
+            },
+        };
+    });
 
     // Add orderer information
     template.orderers = {
         'orderer.example.com': {
-            url: `grpcs://${
-                process.env.EC2_IP || 'network.legitifyapp.com'
-            }:7050`,
+            url: `grpcs://${localEnv.EC2_IP}:7050`,
             tlsCACerts: {
                 pem: fs.readFileSync(
                     path.join(
@@ -128,20 +137,23 @@ const generateConnectionProfile = (org) => {
         },
     };
 
-    // Add channels structure
+    // Add channels structure with all peers
     template.channels = {
         mychannel: {
             orderers: ['orderer.example.com'],
-            peers: {
-                [`peer0.${org}.com`]: {
-                    endorsingPeer: true,
-                    chaincodeQuery: true,
-                    ledgerQuery: true,
-                    eventSource: true,
-                },
-            },
+            peers: {},
         },
     };
+
+    // Include all peers in the channel configuration
+    allOrgs.forEach((orgName) => {
+        template.channels.mychannel.peers[`peer0.${orgName}.com`] = {
+            endorsingPeer: true,
+            chaincodeQuery: true,
+            ledgerQuery: true,
+            eventSource: true,
+        };
+    });
 
     return template;
 };

@@ -7,7 +7,7 @@ Error: listen EADDRINUSE: address already in use :::8080
     at listenInCluster (node:net:1994:12)
     at Server.listen (node:net:2099:7)
     at Function.listen (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/ledger/legitify-network/resource-server/node_modules/express/lib/application.js:635:24)
-    at Object.<anonymous> (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/ledger/legitify-network/resource-server/index.js:274:5)
+    at Object.<anonymous> (/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/ledger/legitify-network/resource-server/index.js:397:5)
     at Module._compile (node:internal/modules/cjs/loader:1554:14)
     at Object..js (node:internal/modules/cjs/loader:1706:10)
     at Module.load (node:internal/modules/cjs/loader:1289:32)

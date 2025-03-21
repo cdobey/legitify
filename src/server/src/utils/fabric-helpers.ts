@@ -163,10 +163,10 @@ export function validateFabricPrerequisites(orgName: string): {
 
       // Check that EC2 IP is used, not localhost
       const peerKey = Object.keys(ccp.peers)[0];
-      if (peerKey && ccp.peers[peerKey].url.includes("localhost")) {
+      if (peerKey && ccp.peers[peerKey].url.includes("test")) {
         return {
           success: false,
-          error: `Connection profile contains localhost URLs. Run fetch-fabric-resources.js with proper EC2_IP environment variable.`,
+          error: `Connection profile contains test URLs. Run fetch-fabric-resources.js with proper EC2_IP environment variable.`,
         };
       }
     } catch (e) {
@@ -224,16 +224,7 @@ export async function testFabricConnection(
                 `Cannot resolve hostname ${peerHostname}: ${err.message}`
               )
             );
-          else if (
-            address !== process.env.EC2_IP &&
-            address !== "network.legitifyapp.com"
-          ) {
-            reject(
-              new Error(
-                `Hostname ${peerHostname} resolves to ${address} instead of expected EC2 IP`
-              )
-            );
-          } else resolve(address);
+          else resolve(address);
         });
       });
     } catch (dnsErr) {

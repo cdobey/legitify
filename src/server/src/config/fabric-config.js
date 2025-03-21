@@ -12,9 +12,9 @@ module.exports = {
 
   // Production environment (AWS)
   production: {
-    networkUrl: process.env.FABRIC_NETWORK_URL || "network.legitifyapp.com",
+    networkUrl: process.env.FABRIC_NETWORK_URL || "localhost",
     networkPort: process.env.FABRIC_NETWORK_PORT || "7051",
-    caUrl: process.env.FABRIC_CA_URL || "network.legitifyapp.com",
+    caUrl: process.env.FABRIC_CA_URL || "localhost",
     caPort: process.env.FABRIC_CA_PORT || "7054",
     // Other fabric configuration
   },
