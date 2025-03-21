@@ -4,7 +4,6 @@ import crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
 import { getGateway } from "../config/gateway";
 import prisma from "../prisma/client";
-import { testFabricConnection } from "../utils/fabric-helpers";
 
 // Helper to compute SHA256
 function sha256(buffer: Buffer): string {
@@ -48,22 +47,6 @@ export const issueDegree: RequestHandler = async (
     const fileData = Buffer.from(base64File, "base64");
     const docHash = sha256(fileData);
     const docId = uuidv4();
-
-    // Test connection before attempting to interact with the network
-    const connectionTest = await testFabricConnection(
-      user.orgName?.toLowerCase() || ""
-    );
-
-    if (!connectionTest.connected) {
-      console.error(`Fabric connection test failed: ${connectionTest.error}`);
-      res.status(500).json({
-        error: "Failed to connect to blockchain network",
-        details: connectionTest.error,
-        resolution:
-          "Check hostname resolution and network connectivity to the Fabric network",
-      });
-      return;
-    }
 
     // Store hash in Fabric first
     const gateway = await getGateway(

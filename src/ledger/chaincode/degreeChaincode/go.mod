@@ -1,4 +1,4 @@
-module degreeChaincode
+module degreeCC
 
 go 1.20
 
