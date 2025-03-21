@@ -79,7 +79,7 @@ ssh -i ${SSH_KEY_FILE} ${EC2_USER}@${EC2_HOST} << 'EOF'
   cd ${HOME}/legitify/network/chaincode/degreeChaincode
   GO111MODULE=on go mod vendor
   cd ${HOME}/legitify/network/legitify-network
-  sudo ./network.sh deployCC -ccn degree -ccp ../chaincode/degreeChaincode -ccl go
+  bash scripts/startNetwork.sh
   
   # Set proper ownership of all files
   sudo chown -R ${USER}:${USER} ${HOME}/legitify
