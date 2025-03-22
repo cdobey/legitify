@@ -14,7 +14,11 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://your-client-app-domain.com"],
+    origin: [
+      "http://localhost:5173",
+      "https://legitify-project-client.onrender.com",
+      "https://legitifyapp.com/",
+    ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
