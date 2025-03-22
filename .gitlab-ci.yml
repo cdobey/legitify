@@ -187,7 +187,6 @@ deploy_all:
     # Step 2: Deploy Backend to Render
     - echo "Starting backend deployment..."
     - cd $CI_PROJECT_DIR/src/server
-    - echo "Building image: $BACKEND_IMAGE_NAME:$BACKEND_IMAGE_TAG"
     - docker build --platform linux/amd64 -t $BACKEND_IMAGE_NAME:$BACKEND_IMAGE_TAG .
     - docker push $BACKEND_IMAGE_NAME:$BACKEND_IMAGE_TAG
     - echo "Triggering Render deployment via webhook..."
@@ -198,7 +197,6 @@ deploy_all:
     # Step 3: Deploy Client to Render
     - echo "Starting client deployment..."
     - cd $CI_PROJECT_DIR/src/client/legitify-project
-    - echo "Building image: $CLIENT_IMAGE_NAME:$CLIENT_IMAGE_TAG"
     - docker build --platform linux/amd64 -t $CLIENT_IMAGE_NAME:$CLIENT_IMAGE_TAG .
     - docker push $CLIENT_IMAGE_NAME:$CLIENT_IMAGE_TAG
     - echo "Triggering Render deployment for client via webhook..."
