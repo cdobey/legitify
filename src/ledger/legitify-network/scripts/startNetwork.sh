@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Source the .env file
-source .env
+source ledger.env
 
 # Bring down any existing network
 echo "Shutting down existing network..."

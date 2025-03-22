@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Load environment variables
-source .env
+source ledger.env
 
 # Helper function to set University org context
 set_university_context() {

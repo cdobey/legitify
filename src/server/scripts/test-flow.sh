@@ -9,7 +9,7 @@ YELLOW='\033[0;33m'
 
 # Get the Supabase URL and key from .env file
 set -a
-source .env
+source server.env
 set +a
 
 echo -e "${BLUE}Starting test flow...${NC}"

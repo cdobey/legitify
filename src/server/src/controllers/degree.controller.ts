@@ -1,4 +1,9 @@
+import dotenv from 'dotenv';
 import { Request, RequestHandler, Response } from 'express';
+import path from 'path';
+
+// Configure dotenv to use server.env instead of .env
+dotenv.config({ path: path.resolve(__dirname, '../../server.env') });
 
 import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';

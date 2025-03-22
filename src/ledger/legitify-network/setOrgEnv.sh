@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-source .env
+source ledger.env
 
 function setGlobals() {
   local USING_ORG=""

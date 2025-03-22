@@ -1,7 +1,7 @@
-import axios, { AxiosInstance, AxiosResponse, CancelToken } from "axios";
+import axios, { AxiosInstance, AxiosResponse, CancelToken } from 'axios';
 
 export type ApiCallParams<T> = {
-  method: "get" | "post" | "put" | "delete";
+  method: 'get' | 'post' | 'put' | 'delete';
   path: string;
   params?: T;
   config?: {
@@ -19,9 +19,9 @@ export type ApiResponse<T> = {
 };
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: import.meta.env.VITE_API_URL || '/api', // Fallback to relative path
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
   // Configure axios to handle larger payloads
   maxContentLength: 10 * 1024 * 1024, // 10MB
@@ -29,8 +29,8 @@ const axiosInstance = axios.create({
   timeout: 60000, // Increase timeout to 60 seconds for larger uploads
 });
 
-axiosInstance.interceptors.request.use((config) => {
-  const token = sessionStorage.getItem("token");
+axiosInstance.interceptors.request.use(config => {
+  const token = sessionStorage.getItem('token');
   if (token) {
     config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
@@ -40,17 +40,17 @@ axiosInstance.interceptors.request.use((config) => {
 
 // Debug interceptor to log requests
 axiosInstance.interceptors.response.use(
-  (response) => {
+  response => {
     return response;
   },
-  (error) => {
-    console.error("API Error:", {
+  error => {
+    console.error('API Error:', {
       url: error.config?.url,
       status: error.response?.status,
       data: error.response?.data,
     });
     return Promise.reject(error);
-  }
+  },
 );
 
 export default async function apiCall<T, U = any>({
@@ -60,7 +60,7 @@ export default async function apiCall<T, U = any>({
   cancelToken,
   config,
 }: ApiCallParams<U>): Promise<T> {
-  const parameters = method === "get" ? { params } : { data: params };
+  const parameters = method === 'get' ? { params } : { data: params };
 
   const requestConfig = {
     url: path,
@@ -77,18 +77,18 @@ export default async function apiCall<T, U = any>({
     // Enhanced error handling for payload size issues
     if (error.response?.status === 413) {
       throw new Error(
-        "The file is too large for the server to process. Please use a smaller file."
+        'The file is too large for the server to process. Please use a smaller file.',
       );
     }
 
     // Handle token/auth issues
-    if (error.response?.status === 401 && !path.includes("/auth/")) {
+    if (error.response?.status === 401 && !path.includes('/auth/')) {
       // Check if we should redirect or just report the error
-      if (window.location.pathname !== "/login") {
-        console.warn("Authentication failed. Redirecting to login.");
-        sessionStorage.removeItem("token");
-        sessionStorage.removeItem("user");
-        window.location.href = "/login";
+      if (window.location.pathname !== '/login') {
+        console.warn('Authentication failed. Redirecting to login.');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+        window.location.href = '/login';
       }
     }
 
@@ -97,7 +97,7 @@ export default async function apiCall<T, U = any>({
       error.response?.data?.error ||
       error.response?.data?.message ||
       error.message ||
-      "Unknown API error";
+      'Unknown API error';
     throw new Error(errorMessage);
   }
 }
