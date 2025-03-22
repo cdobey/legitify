@@ -171,11 +171,11 @@ deploy_all:
     BACKEND_IMAGE_TAG: "backend"
     CLIENT_IMAGE_NAME: "${DOCKER_USERNAME}/legitify-project"
     CLIENT_IMAGE_TAG: "client"
-  before_script:
-    - echo "$AWS_PRIVATE_KEY_B64" | base64 -d > $SSH_KEY_FILE
-    - chmod 600 $SSH_KEY_FILE
-    - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
-    - echo "Logged in as Docker user: $DOCKER_USERNAME"
+  before_script: |
+    echo "$AWS_PRIVATE_KEY_B64" | base64 -d > $SSH_KEY_FILE
+    chmod 600 $SSH_KEY_FILE
+    docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+    echo "Logged in as Docker user: $DOCKER_USERNAME"
   script:
     # Step 1: Deploy Ledger
     - echo "Starting ledger deployment..."
