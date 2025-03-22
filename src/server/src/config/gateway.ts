@@ -42,7 +42,7 @@ export async function getGateway(
     await gateway.connect(ccp, {
       wallet,
       identity: userId,
-      discovery: { enabled: true, asLocalhost: false }, // Set to false for remote network
+      discovery: { enabled: false, asLocalhost: false }, // Set to false for remote network - Would be nice to revisit this and see if we can get discovery working
       eventHandlerOptions: {
         commitTimeout: 600, // 10 minutes (increased from 5)
         endorseTimeout: 300, // 5 minutes (increased from 2)
