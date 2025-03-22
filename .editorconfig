@@ -1,0 +1,22 @@
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+end_of_line = lf
+
+# JavaScript and TypeScript files
+[*.{js,ts,jsx,tsx,mjs,cjs}]
+quote_type = single
+
+# Markdown files
+[*.md]
+max_line_length = off
+trim_trailing_whitespace = false
+
+# JSON files matches Prettier config
+[*.json]
+indent_size = 2
