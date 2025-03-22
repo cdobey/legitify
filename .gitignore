@@ -78,3 +78,4 @@ src/server/pgdata/
 src/server/src/wallet/
 src/server/src/certificates/
 src/server/src/connectionProfiles/
+src/server/src/msp/
