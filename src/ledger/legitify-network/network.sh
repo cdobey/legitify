@@ -268,25 +268,7 @@ function createOrgs() {
 
   fi
 
-  infoln "Starting Fabric Resource Server"
-  # Check if resource server is already running
-  if pgrep -f "node resource-server/index.js" > /dev/null; then
-    infoln "Resource server is already running"
   else
-    # Start the resource server
-    cd "${PWD}/resource-server"
-    if [ ! -d "node_modules" ]; then
-      infoln "Installing resource server dependencies..."
-      npm install
-    fi
-    export EC2_IP=${EC2_IP:-"network.legitifyapp.com"}
-    nohup node index.js > resource-server.log 2>&1 &
-    infoln "Resource server started with PID $!"
-    cd ..
-    # Give the server a moment to start
-    sleep 2
-  fi
-
   infoln "Generating CCP files for OrgUniversity, OrgEmployer and OrgIndividual"
   ./organizations/ccp-generate.sh
 }
@@ -340,6 +322,9 @@ function networkUp() {
     fatalln "Unable to start network"
   fi
 
+  # Start the resource server
+  echo "Starting Fabric Resource Server..."
+  ./resource-server/start.sh
 }
 
 # call the script to create the channel, join the peers of org1 and org2,
