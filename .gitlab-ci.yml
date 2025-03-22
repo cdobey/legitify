@@ -167,17 +167,14 @@ deploy_all:
     SSH_KEY_FILE: "/tmp/aws_ssh_key"
     SOURCE_DIR: "$CI_PROJECT_DIR/src/ledger"
     # Docker image variables for backend and client
-    BACKEND_IMAGE_NAME: "${DOCKER_USERNAME}/legitify-project" # Add Docker username prefix
+    BACKEND_IMAGE_NAME: "${DOCKER_USERNAME}/legitify-project"
     BACKEND_IMAGE_TAG: "backend"
-    CLIENT_IMAGE_NAME: "${DOCKER_USERNAME}/legitify-project" # Add Docker username prefix
+    CLIENT_IMAGE_NAME: "${DOCKER_USERNAME}/legitify-project"
     CLIENT_IMAGE_TAG: "client"
   before_script:
-    # Decode and prepare SSH key for ledger deployment
     - echo "$AWS_PRIVATE_KEY_B64" | base64 -d > $SSH_KEY_FILE
     - chmod 600 $SSH_KEY_FILE
-    # Login to Docker Hub for image pushing
     - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
-    # Verify login status
     - echo "Logged in as Docker user: $DOCKER_USERNAME"
   script:
     # Step 1: Deploy Ledger
