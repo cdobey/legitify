@@ -13,6 +13,7 @@
 
 ## VS Code
 .vscode
+!.vscode/extensions.json
 
 ## IntelliJ
 .idea
@@ -21,10 +22,22 @@
 .classpath
 .settings
 
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
 # Dependencies and Build Directories
 ## Node.js
 node_modules/
 package-lock.json
+dist
+dist-ssr
+*.local
 
 ## Go
 src/ledger/chaincode/degreeChaincode/vendor/
@@ -79,3 +92,9 @@ src/server/src/wallet/
 src/server/src/certificates/
 src/server/src/connectionProfiles/
 src/server/src/msp/
+
+# Editor specific file extensions
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
