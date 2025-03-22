@@ -214,7 +214,7 @@ deploy_client:
     - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
   script:
     # Change directory to your client folder (adjust path if needed)
-    - cd $CI_PROJECT_DIR/src/client
+    - cd $CI_PROJECT_DIR/src/client/legitify-project
     # Build the Docker image for linux/amd64 with the tag "client"
     - docker build --platform linux/amd64 -t $IMAGE_NAME:$IMAGE_TAG .
     # Push the image to Docker Hub
