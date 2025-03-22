@@ -1,13 +1,13 @@
-import { Request, RequestHandler, Response } from "express";
+import { Request, RequestHandler, Response } from 'express';
 
-import crypto from "crypto";
-import { v4 as uuidv4 } from "uuid";
-import { getGateway } from "../config/gateway";
-import prisma from "../prisma/client";
+import crypto from 'crypto';
+import { v4 as uuidv4 } from 'uuid';
+import { getGateway } from '../config/gateway';
+import prisma from '../prisma/client';
 
 // Helper to compute SHA256
 function sha256(buffer: Buffer): string {
-  return crypto.createHash("sha256").update(buffer).digest("hex");
+  return crypto.createHash('sha256').update(buffer).digest('hex');
 }
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
@@ -15,15 +15,12 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 /**
  * Issues a degree to an individual. Only accessible by users with role 'university'.
  */
-export const issueDegree: RequestHandler = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const issueDegree: RequestHandler = async (req: Request, res: Response): Promise<void> => {
   try {
     // Cast req.user to our expected type
     const user = req.user as { uid: string; role: string; orgName?: string };
-    if (user.role !== "university") {
-      res.status(403).json({ error: "Only university can issue degrees" });
+    if (user.role !== 'university') {
+      res.status(403).json({ error: 'Only university can issue degrees' });
       return;
     }
 
@@ -33,40 +30,27 @@ export const issueDegree: RequestHandler = async (
     };
     // For file-based request, if base64File is not provided, you might throw an error.
     if (!individualId || !base64File) {
-      res.status(400).json({ error: "Missing individualId or base64File" });
+      res.status(400).json({ error: 'Missing individualId or base64File' });
       return;
     }
 
     // Add file size validation
-    const decodedFile = Buffer.from(base64File, "base64");
+    const decodedFile = Buffer.from(base64File, 'base64');
     if (decodedFile.length > MAX_FILE_SIZE) {
-      res.status(400).json({ error: "File size must be less than 5MB" });
+      res.status(400).json({ error: 'File size must be less than 5MB' });
       return;
     }
 
-    const fileData = Buffer.from(base64File, "base64");
+    const fileData = Buffer.from(base64File, 'base64');
     const docHash = sha256(fileData);
     const docId = uuidv4();
 
     // Store hash in Fabric first
-    const gateway = await getGateway(
-      user.uid,
-      user.orgName?.toLowerCase() || ""
-    );
-    const network = await gateway.getNetwork(
-      process.env.FABRIC_CHANNEL || "mychannel"
-    );
-    const contract = network.getContract(
-      process.env.FABRIC_CHAINCODE || "degreeCC"
-    );
+    const gateway = await getGateway(user.uid, user.orgName?.toLowerCase() || '');
+    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifyChannel');
+    const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
 
-    await contract.submitTransaction(
-      "IssueDegree",
-      docId,
-      docHash,
-      individualId,
-      user.uid
-    );
+    await contract.submitTransaction('IssueDegree', docId, docHash, individualId, user.uid);
     gateway.disconnect();
 
     // Store document in DB (without hash)
@@ -76,20 +60,19 @@ export const issueDegree: RequestHandler = async (
         issuedTo: individualId,
         issuer: user.uid,
         fileData,
-        status: "issued",
+        status: 'issued',
       },
     });
 
     res.status(201).json({
-      message: "Degree issued",
+      message: 'Degree issued',
       docId: newDocument.id,
       docHash, // Include hash in response for verification
     });
   } catch (error: unknown) {
-    console.error("issueDegree error:", error);
+    console.error('issueDegree error:', error);
     res.status(500).json({
-      error:
-        error instanceof Error ? error.message : "An unknown error occurred",
+      error: error instanceof Error ? error.message : 'An unknown error occurred',
     });
   }
 };
@@ -97,19 +80,16 @@ export const issueDegree: RequestHandler = async (
 /**
  * Accepts a degree. Only accessible by users with role 'individual'.
  */
-export const acceptDegree: RequestHandler = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const acceptDegree: RequestHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    if (req.user?.role !== "individual") {
-      res.status(403).json({ error: "Only individual can accept degrees" });
+    if (req.user?.role !== 'individual') {
+      res.status(403).json({ error: 'Only individual can accept degrees' });
       return;
     }
 
     const { docId } = req.body;
     if (!docId) {
-      res.status(400).json({ error: "Missing docId" });
+      res.status(400).json({ error: 'Missing docId' });
       return;
     }
 
@@ -118,32 +98,25 @@ export const acceptDegree: RequestHandler = async (
       where: { id: docId },
     });
     if (!doc || doc.issuedTo !== req.user.uid) {
-      res.status(404).json({ error: "Document not found or not owned by you" });
+      res.status(404).json({ error: 'Document not found or not owned by you' });
       return;
     }
 
-    const gateway = await getGateway(
-      req.user.uid,
-      req.user.orgName?.toLowerCase() || ""
-    );
-    const network = await gateway.getNetwork(
-      process.env.FABRIC_CHANNEL || "mychannel"
-    );
-    const contract = network.getContract(
-      process.env.FABRIC_CHAINCODE || "degreeCC"
-    );
+    const gateway = await getGateway(req.user.uid, req.user.orgName?.toLowerCase() || '');
+    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifyChannel');
+    const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
 
-    await contract.submitTransaction("AcceptDegree", docId);
+    await contract.submitTransaction('AcceptDegree', docId);
     gateway.disconnect();
 
     await prisma.document.update({
       where: { id: docId },
-      data: { status: "accepted" },
+      data: { status: 'accepted' },
     });
 
     res.json({ message: `Doc ${docId} accepted` });
   } catch (error: any) {
-    console.error("acceptDegree error:", error);
+    console.error('acceptDegree error:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -151,19 +124,16 @@ export const acceptDegree: RequestHandler = async (
 /**
  * Denies a degree. Only accessible by users with role 'individual'.
  */
-export const denyDegree: RequestHandler = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const denyDegree: RequestHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    if (req.user?.role !== "individual") {
-      res.status(403).json({ error: "Only individual can deny degrees" });
+    if (req.user?.role !== 'individual') {
+      res.status(403).json({ error: 'Only individual can deny degrees' });
       return;
     }
 
     const { docId } = req.body;
     if (!docId) {
-      res.status(400).json({ error: "Missing docId" });
+      res.status(400).json({ error: 'Missing docId' });
       return;
     }
 
@@ -171,34 +141,27 @@ export const denyDegree: RequestHandler = async (
       where: { id: docId },
     });
     if (!doc || doc.issuedTo !== req.user.uid) {
-      res.status(404).json({ error: "Document not found or not owned by you" });
+      res.status(404).json({ error: 'Document not found or not owned by you' });
       return;
     }
 
     // Interact with ledger
-    const gateway = await getGateway(
-      req.user.uid,
-      req.user.orgName?.toLowerCase() || ""
-    );
-    const network = await gateway.getNetwork(
-      process.env.FABRIC_CHANNEL || "mychannel"
-    );
-    const contract = network.getContract(
-      process.env.FABRIC_CHAINCODE || "degreeCC"
-    );
+    const gateway = await getGateway(req.user.uid, req.user.orgName?.toLowerCase() || '');
+    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifyChannel');
+    const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
 
-    await contract.submitTransaction("DenyDegree", docId);
+    await contract.submitTransaction('DenyDegree', docId);
     gateway.disconnect();
 
     // Update DB status
     await prisma.document.update({
       where: { id: docId },
-      data: { status: "denied" },
+      data: { status: 'denied' },
     });
 
     res.json({ message: `Doc ${docId} denied` });
   } catch (error: any) {
-    console.error("denyDegree error:", error);
+    console.error('denyDegree error:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -206,19 +169,16 @@ export const denyDegree: RequestHandler = async (
 /**
  * Employer requests access to a degree document.
  */
-export const requestAccess: RequestHandler = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const requestAccess: RequestHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    if (req.user?.role !== "employer") {
-      res.status(403).json({ error: "Only employer can request access" });
+    if (req.user?.role !== 'employer') {
+      res.status(403).json({ error: 'Only employer can request access' });
       return;
     }
 
     const { docId } = req.body;
     if (!docId) {
-      res.status(400).json({ error: "Missing docId" });
+      res.status(400).json({ error: 'Missing docId' });
       return;
     }
 
@@ -227,7 +187,7 @@ export const requestAccess: RequestHandler = async (
       where: { id: docId },
     });
     if (!doc) {
-      res.status(404).json({ error: "Document not found" });
+      res.status(404).json({ error: 'Document not found' });
       return;
     }
 
@@ -237,13 +197,13 @@ export const requestAccess: RequestHandler = async (
         id: requestId,
         requesterId: req.user.uid,
         documentId: docId,
-        status: "pending",
+        status: 'pending',
       },
     });
 
-    res.status(201).json({ message: "Access requested", requestId });
+    res.status(201).json({ message: 'Access requested', requestId });
   } catch (error: any) {
-    console.error("requestAccess error:", error);
+    console.error('requestAccess error:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -251,19 +211,16 @@ export const requestAccess: RequestHandler = async (
 /**
  * Individual grants or denies an employer's access request.
  */
-export const grantAccess: RequestHandler = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const grantAccess: RequestHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    if (req.user?.role !== "individual") {
-      res.status(403).json({ error: "Only individual can grant/deny access" });
+    if (req.user?.role !== 'individual') {
+      res.status(403).json({ error: 'Only individual can grant/deny access' });
       return;
     }
 
     const { requestId, granted } = req.body;
     if (!requestId || granted === undefined) {
-      res.status(400).json({ error: "Missing requestId or granted flag" });
+      res.status(400).json({ error: 'Missing requestId or granted flag' });
       return;
     }
 
@@ -272,29 +229,27 @@ export const grantAccess: RequestHandler = async (
       include: { document: true },
     });
     if (!accessRequest) {
-      res.status(404).json({ error: "Request not found" });
+      res.status(404).json({ error: 'Request not found' });
       return;
     }
 
     // Check if user owns the document
     if (accessRequest.document.issuedTo !== req.user.uid) {
-      res.status(403).json({ error: "You do not own this document" });
+      res.status(403).json({ error: 'You do not own this document' });
       return;
     }
 
     // Update request status
     await prisma.request.update({
       where: { id: requestId },
-      data: { status: granted ? "granted" : "denied" },
+      data: { status: granted ? 'granted' : 'denied' },
     });
 
     res.json({
-      message: `Access ${
-        granted ? "granted" : "denied"
-      } for request ${requestId}`,
+      message: `Access ${granted ? 'granted' : 'denied'} for request ${requestId}`,
     });
   } catch (error: any) {
-    console.error("grantAccess error:", error);
+    console.error('grantAccess error:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -302,19 +257,16 @@ export const grantAccess: RequestHandler = async (
 /**
  * Employer views a degree document if access is granted and verifies its hash.
  */
-export const viewDegree: RequestHandler = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const viewDegree: RequestHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    if (req.user?.role !== "employer") {
-      res.status(403).json({ error: "Only employer can view documents" });
+    if (req.user?.role !== 'employer') {
+      res.status(403).json({ error: 'Only employer can view documents' });
       return;
     }
 
     const docId = req.params.docId;
     if (!docId) {
-      res.status(400).json({ error: "Missing docId parameter" });
+      res.status(400).json({ error: 'Missing docId parameter' });
       return;
     }
 
@@ -323,11 +275,11 @@ export const viewDegree: RequestHandler = async (
       where: {
         documentId: docId,
         requesterId: req.user.uid,
-        status: "granted",
+        status: 'granted',
       },
     });
     if (!grantedRequest) {
-      res.status(403).json({ error: "No granted access for this document" });
+      res.status(403).json({ error: 'No granted access for this document' });
       return;
     }
 
@@ -335,23 +287,16 @@ export const viewDegree: RequestHandler = async (
       where: { id: docId },
     });
     if (!doc) {
-      res.status(404).json({ error: "Document not found" });
+      res.status(404).json({ error: 'Document not found' });
       return;
     }
 
     // Get hash from Fabric
-    const gateway = await getGateway(
-      req.user.uid,
-      req.user.orgName?.toLowerCase() || ""
-    );
-    const network = await gateway.getNetwork(
-      process.env.FABRIC_CHANNEL || "mychannel"
-    );
-    const contract = network.getContract(
-      process.env.FABRIC_CHAINCODE || "degreeCC"
-    );
+    const gateway = await getGateway(req.user.uid, req.user.orgName?.toLowerCase() || '');
+    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifyChannel');
+    const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
 
-    const record = await contract.evaluateTransaction("ReadDegree", docId);
+    const record = await contract.evaluateTransaction('ReadDegree', docId);
     const degreeRecord = JSON.parse(record.toString());
 
     // Verify hash matches current file
@@ -363,13 +308,11 @@ export const viewDegree: RequestHandler = async (
       verified: isVerified,
       issuer: degreeRecord.issuer,
       issuedAt: degreeRecord.issuedAt,
-      fileData: doc.fileData
-        ? Buffer.from(doc.fileData).toString("base64")
-        : null,
+      fileData: doc.fileData ? Buffer.from(doc.fileData).toString('base64') : null,
       status: doc.status,
     });
   } catch (error: any) {
-    console.error("viewDegree error:", error);
+    console.error('viewDegree error:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -379,17 +322,15 @@ export const viewDegree: RequestHandler = async (
  */
 export const getAccessRequests: RequestHandler = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
-    if (req.user?.role !== "individual") {
-      res
-        .status(403)
-        .json({ error: "Only individuals can view access requests" });
+    if (req.user?.role !== 'individual') {
+      res.status(403).json({ error: 'Only individuals can view access requests' });
       return;
     }
 
-    console.log("Fetching requests for user:", req.user.uid);
+    console.log('Fetching requests for user:', req.user.uid);
 
     // First, get all documents for debugging
     const allDocs = await prisma.document.findMany({
@@ -397,7 +338,7 @@ export const getAccessRequests: RequestHandler = async (
         issuedTo: req.user.uid,
       },
     });
-    console.log("All user documents:", allDocs);
+    console.log('All user documents:', allDocs);
 
     // Get all requests, with less restrictive filtering
     const userDocuments = await prisma.document.findMany({
@@ -422,10 +363,7 @@ export const getAccessRequests: RequestHandler = async (
       },
     });
 
-    console.log(
-      "User documents with requests:",
-      JSON.stringify(userDocuments, null, 2)
-    );
+    console.log('User documents with requests:', JSON.stringify(userDocuments, null, 2));
 
     // Flatten and format the requests, but include more info for debugging
     const requests = userDocuments.flatMap((doc: any) =>
@@ -436,14 +374,14 @@ export const getAccessRequests: RequestHandler = async (
         employerName: request.requester.orgName,
         requestDate: request.createdAt,
         status: request.status,
-      }))
+      })),
     );
 
-    console.log("Formatted requests:", requests);
+    console.log('Formatted requests:', requests);
 
     res.json(requests);
   } catch (error: any) {
-    console.error("getAccessRequests error:", error);
+    console.error('getAccessRequests error:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -451,10 +389,7 @@ export const getAccessRequests: RequestHandler = async (
 /**
  * Get all degrees issued to the logged-in user
  */
-export const getMyDegrees: RequestHandler = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const getMyDegrees: RequestHandler = async (req: Request, res: Response): Promise<void> => {
   try {
     const documents = await prisma.document.findMany({
       where: {
@@ -468,7 +403,7 @@ export const getMyDegrees: RequestHandler = async (
         },
       },
       orderBy: {
-        createdAt: "desc",
+        createdAt: 'desc',
       },
     });
 
@@ -481,7 +416,7 @@ export const getMyDegrees: RequestHandler = async (
 
     res.json(formattedDocs);
   } catch (error: any) {
-    console.error("getMyDegrees error:", error);
+    console.error('getMyDegrees error:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -491,12 +426,12 @@ export const getMyDegrees: RequestHandler = async (
  */
 export const verifyDegreeDocument: RequestHandler = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
     const user = req.user as { uid: string; role: string; orgName?: string };
-    if (user.role !== "employer") {
-      res.status(403).json({ error: "Only employers can verify documents" });
+    if (user.role !== 'employer') {
+      res.status(403).json({ error: 'Only employers can verify documents' });
       return;
     }
 
@@ -505,56 +440,45 @@ export const verifyDegreeDocument: RequestHandler = async (
       base64File: string;
     };
     if (!individualId || !base64File) {
-      res.status(400).json({ error: "Missing individualId or base64File" });
+      res.status(400).json({ error: 'Missing individualId or base64File' });
       return;
     }
 
-    const fileData = Buffer.from(base64File, "base64");
+    const fileData = Buffer.from(base64File, 'base64');
     const uploadedHash = sha256(fileData);
 
     // Find all accepted documents for this individual
     const docs = await prisma.document.findMany({
       where: {
         issuedTo: individualId,
-        status: "accepted",
+        status: 'accepted',
       },
     });
 
     if (!docs.length) {
       res.json({
         verified: false,
-        message: "No accepted documents found for this individual",
+        message: 'No accepted documents found for this individual',
       });
       return;
     }
 
     // Get gateway connection
-    const gateway = await getGateway(
-      user.uid,
-      user.orgName?.toLowerCase() || ""
-    );
-    const network = await gateway.getNetwork(
-      process.env.FABRIC_CHANNEL || "mychannel"
-    );
-    const contract = network.getContract(
-      process.env.FABRIC_CHAINCODE || "degreeCC"
-    );
+    const gateway = await getGateway(user.uid, user.orgName?.toLowerCase() || '');
+    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifyChannel');
+    const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
 
     // Check each document's hash
     for (const doc of docs) {
       try {
-        const result = await contract.evaluateTransaction(
-          "VerifyHash",
-          doc.id,
-          uploadedHash
-        );
-        const isVerified = (result as Buffer).toString() === "true";
+        const result = await contract.evaluateTransaction('VerifyHash', doc.id, uploadedHash);
+        const isVerified = (result as Buffer).toString() === 'true';
 
         if (isVerified) {
           gateway.disconnect();
           res.json({
             verified: true,
-            message: "Document verified successfully",
+            message: 'Document verified successfully',
             docId: doc.id,
           });
           return;
@@ -568,10 +492,10 @@ export const verifyDegreeDocument: RequestHandler = async (
     gateway.disconnect();
     res.json({
       verified: false,
-      message: "No matching document found",
+      message: 'No matching document found',
     });
   } catch (error: any) {
-    console.error("verifyDegreeDocument error:", error);
+    console.error('verifyDegreeDocument error:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -581,32 +505,25 @@ export const verifyDegreeDocument: RequestHandler = async (
  */
 export const getAllLedgerRecords: RequestHandler = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<void> => {
   try {
-    if (req.user?.role !== "university") {
-      res.status(403).json({ error: "Only university can view all records" });
+    if (req.user?.role !== 'university') {
+      res.status(403).json({ error: 'Only university can view all records' });
       return;
     }
 
-    const gateway = await getGateway(
-      req.user.uid,
-      req.user.orgName?.toLowerCase() || ""
-    );
-    const network = await gateway.getNetwork(
-      process.env.FABRIC_CHANNEL || "mychannel"
-    );
-    const contract = network.getContract(
-      process.env.FABRIC_CHAINCODE || "degreeCC"
-    );
+    const gateway = await getGateway(req.user.uid, req.user.orgName?.toLowerCase() || '');
+    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifyChannel');
+    const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
 
-    const result = await contract.evaluateTransaction("GetAllRecords");
+    const result = await contract.evaluateTransaction('GetAllRecords');
     const records = JSON.parse(result.toString());
     gateway.disconnect();
 
     res.json(records);
   } catch (error: any) {
-    console.error("getAllLedgerRecords error:", error);
+    console.error('getAllLedgerRecords error:', error);
     res.status(500).json({ error: error.message });
   }
 };

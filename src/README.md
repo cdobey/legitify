@@ -110,7 +110,7 @@ my-project/
    - **What happens**:
      1. Shuts down any existing Fabric network.
      2. Spins up the new network with CouchDB.
-     3. Creates a channel (`mychannel`).
+     3. Creates a channel (`legitifyChannel`).
      4. Deploys the chaincode (`degreeChaincode.go`).
    - **Duration**: Can take a few minutes, especially on first run.
 
@@ -164,7 +164,7 @@ In `src/server/.env`, you’ll typically have:
 # Example .env
 FABRIC_CONNECTION=../ledger/legitify-network/organizations/peerOrganizations/orguniversity.com/connection-orguniversity.json
 FABRIC_WALLET=./src/wallet
-FABRIC_CHANNEL=mychannel
+FABRIC_CHANNEL=legitifyChannel
 FABRIC_CHAINCODE=degreeCC
 FABRIC_USER=appUser
 DB_HOST=localhost
