@@ -38,6 +38,8 @@ ssh -i ${SSH_KEY_FILE} ${EC2_USER}@${EC2_HOST} << 'EOF'
   # Clean up previous deployment with proper permissions handling
   if [ -d "${HOME}/legitify/network/legitify-network" ]; then
     cd ${HOME}/legitify/network/legitify-network
+    # Stop any running resource server
+    sudo pkill node || true
     # Stop any running network first
     ./network.sh down || true
     
@@ -70,16 +72,13 @@ ssh -i ${SSH_KEY_FILE} ${EC2_USER}@${EC2_HOST} << 'EOF'
     chmod +x bin/*
   fi
 
-  # Start the network
-  cd ${HOME}/legitify/network/legitify-network
-  sudo ./network.sh down || true
-  sudo ./network.sh up createChannel -ca -s couchdb
-  
   # Deploy chaincode
   cd ${HOME}/legitify/network/chaincode/degreeChaincode
   GO111MODULE=on go mod vendor
+
+  # Start the network
   cd ${HOME}/legitify/network/legitify-network
-  bash scripts/startNetwork.sh
+  bash scripts/startNetwork.sh  
   
   # Set proper ownership of all files
   sudo chown -R ${USER}:${USER} ${HOME}/legitify
