@@ -8,7 +8,7 @@ variables:
   SERVER_PID_FILE: "/tmp/server.pid"
   SERVER_STARTUP_TIMEOUT: 120
   TEST_FLOW_TIMEOUT: 300
-  SKIP_TESTS: "true"
+  SKIP_TESTS: "false"
 
 test_flow:
   stage: test
@@ -148,7 +148,7 @@ test_flow:
       - ~/.npm/
     policy: pull-push
 
-deploy_to_render:
+deploy_all:
   stage: deploy
   tags:
     - shell
@@ -159,66 +159,48 @@ deploy_to_render:
     - if: $SKIP_TESTS == "true" || $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"
       when: manual
   variables:
-    IMAGE_NAME: "legitify-project"
-    IMAGE_TAG: "backend"
-  before_script:
-    - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
-  script:
-    - cd src/server
-    - docker build --platform linux/amd64 -t $IMAGE_NAME:$IMAGE_TAG .
-    - docker push $IMAGE_NAME:$IMAGE_TAG
-    - echo "Triggering Render deployment via webhook..."
-    - curl -X POST "$RENDER_DEPLOY_HOOK"
-
-deploy_ledger:
-  stage: deploy
-  tags:
-    - shell
-  needs:
-    - job: test_flow
-      optional: true
-  rules:
-    - when: manual
-  variables:
+    # Ledger deployment variables
     EC2_HOST: "network.legitifyapp.com"
     EC2_USER: "ec2-user"
     SSH_KEY_FILE: "/tmp/aws_ssh_key"
     SOURCE_DIR: "$CI_PROJECT_DIR/src/ledger"
+    # Docker image variables for backend and client
+    BACKEND_IMAGE_NAME: "legitify-project"
+    BACKEND_IMAGE_TAG: "backend"
+    CLIENT_IMAGE_NAME: "legitify-project"
+    CLIENT_IMAGE_TAG: "client"
   before_script:
-    # Decode and prepare SSH key
+    # Decode and prepare SSH key for ledger deployment
     - echo "$AWS_PRIVATE_KEY_B64" | base64 -d > $SSH_KEY_FILE
     - chmod 600 $SSH_KEY_FILE
+    # Login to Docker Hub for image pushing
+    - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
   script:
-    - cd src/ledger/scripts
+    # Step 1: Deploy Ledger
+    - echo "Starting ledger deployment..."
+    - cd $CI_PROJECT_DIR/src/ledger/scripts
     - chmod +x deploy-ledger.sh
     - ./deploy-ledger.sh
+    - echo "Ledger deployment completed"
+
+    # Step 2: Deploy Backend to Render
+    - echo "Starting backend deployment..."
+    - cd $CI_PROJECT_DIR/src/server
+    - docker build --platform linux/amd64 -t $BACKEND_IMAGE_NAME:$BACKEND_IMAGE_TAG .
+    - docker push $BACKEND_IMAGE_NAME:$BACKEND_IMAGE_TAG
+    - echo "Triggering Render deployment via webhook..."
+    - curl -X POST "$RENDER_DEPLOY_HOOK"
+    - echo "Waiting for backend deployment to complete..."
+    - sleep 60 # Add appropriate wait time for backend deployment
+
+    # Step 3: Deploy Client to Render
+    - echo "Starting client deployment..."
+    - cd $CI_PROJECT_DIR/src/client/legitify-project
+    - docker build --platform linux/amd64 -t $CLIENT_IMAGE_NAME:$CLIENT_IMAGE_TAG .
+    - docker push $CLIENT_IMAGE_NAME:$CLIENT_IMAGE_TAG
+    - echo "Triggering Render deployment for client via webhook..."
+    - curl -X POST "$RENDER_CLIENT_DEPLOY_HOOK"
+    - echo "Full deployment process completed successfully"
   after_script:
     # Clean up key after use for security
     - rm -f $SSH_KEY_FILE
-
-deploy_client:
-  stage: deploy
-  tags:
-    - shell
-  needs:
-    - job: test_flow
-      optional: true
-  rules:
-    - if: $SKIP_TESTS == "true" || $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"
-      when: manual
-  variables:
-    IMAGE_NAME: "legitify-project"
-    IMAGE_TAG: "client"
-  before_script:
-    # Login to Docker Hub using credentials stored as CI/CD variables.
-    - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
-  script:
-    # Change directory to your client folder (adjust path if needed)
-    - cd $CI_PROJECT_DIR/src/client/legitify-project
-    # Build the Docker image for linux/amd64 with the tag "client"
-    - docker build --platform linux/amd64 -t $IMAGE_NAME:$IMAGE_TAG .
-    # Push the image to Docker Hub
-    - docker push $IMAGE_NAME:$IMAGE_TAG
-    # (Optional) Trigger Render to pull the new image using a deploy hook
-    - echo "Triggering Render deployment for client via webhook..."
-    - curl -X POST "$RENDER_CLIENT_DEPLOY_HOOK"
