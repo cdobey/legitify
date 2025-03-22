@@ -268,7 +268,6 @@ function createOrgs() {
 
   fi
 
-  else
   infoln "Generating CCP files for OrgUniversity, OrgEmployer and OrgIndividual"
   ./organizations/ccp-generate.sh
 }
