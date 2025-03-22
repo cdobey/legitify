@@ -34,35 +34,35 @@ organizations:
 
 peers:
   peer0.orguniversity.com:
-    url: grpcs://localhost:7051
+    url: grpcs://network.legitifyapp.com:7051
     tlsCACerts:
       pem: |
         ${PEERPEM}
     grpcOptions:
-      ssl-target-name-override: peer0.orguniversity.com
-      hostnameOverride: peer0.orguniversity.com
+      ssl-target-name-override: network.legitifyapp.com
+      hostnameOverride: network.legitifyapp.com
 
   peer0.orgemployer.com:
-    url: grpcs://localhost:8051
+    url: grpcs://network.legitifyapp.com:8051
     tlsCACerts:
       pem: |
         ${PEERPEM}
     grpcOptions:
-      ssl-target-name-override: peer0.orgemployer.com
-      hostnameOverride: peer0.orgemployer.com
+      ssl-target-name-override: network.legitifyapp.com
+      hostnameOverride: network.legitifyapp.com
 
   peer0.orgindividual.com:
-    url: grpcs://localhost:9051
+    url: grpcs://network.legitifyapp.com:9051
     tlsCACerts:
       pem: |
         ${PEERPEM}
     grpcOptions:
-      ssl-target-name-override: peer0.orgindividual.com
-      hostnameOverride: peer0.orgindividual.com
+      ssl-target-name-override: network.legitifyapp.com
+      hostnameOverride: network.legitifyapp.com
 
 certificateAuthorities:
   ca.orguniversity.com:
-    url: https://localhost:7054
+    url: https://network.legitifyapp.com:7054
     caName: ca-orguniversity
     tlsCACerts:
       pem:
@@ -72,7 +72,7 @@ certificateAuthorities:
       verify: false
 
   ca.orgemployer.com:
-    url: https://localhost:8054
+    url: https://network.legitifyapp.com:8054
     caName: ca-orgemployer
     tlsCACerts:
       pem:
@@ -82,7 +82,7 @@ certificateAuthorities:
       verify: false
 
   ca.orgindividual.com:
-    url: https://localhost:9054
+    url: https://network.legitifyapp.com:9054
     caName: ca-orgindividual
     tlsCACerts:
       pem:

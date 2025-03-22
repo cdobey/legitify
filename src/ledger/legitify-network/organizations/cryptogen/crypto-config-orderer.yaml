@@ -14,20 +14,23 @@ OrdererOrgs:
     Domain: example.com
     EnableNodeOUs: true
 
-
     # ---------------------------------------------------------------------------
     # "Specs" - See PeerOrgs for complete description
     # ---------------------------------------------------------------------------
     Specs:
       - Hostname: orderer
         SANS:
+          - network.legitifyapp.com
           - localhost
       - Hostname: orderer2
         SANS:
+          - network.legitifyapp.com
           - localhost
       - Hostname: orderer3
         SANS:
+          - network.legitifyapp.com
           - localhost
       - Hostname: orderer4
         SANS:
+          - network.legitifyapp.com
           - localhost
