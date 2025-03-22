@@ -167,9 +167,9 @@ deploy_all:
     SSH_KEY_FILE: "/tmp/aws_ssh_key"
     SOURCE_DIR: "$CI_PROJECT_DIR/src/ledger"
     # Docker image variables for backend and client
-    BACKEND_IMAGE_NAME: "legitify-project"
+    BACKEND_IMAGE_NAME: "${DOCKER_USERNAME}/legitify-project" # Add Docker username prefix
     BACKEND_IMAGE_TAG: "backend"
-    CLIENT_IMAGE_NAME: "legitify-project"
+    CLIENT_IMAGE_NAME: "${DOCKER_USERNAME}/legitify-project" # Add Docker username prefix
     CLIENT_IMAGE_TAG: "client"
   before_script:
     # Decode and prepare SSH key for ledger deployment
@@ -177,6 +177,8 @@ deploy_all:
     - chmod 600 $SSH_KEY_FILE
     # Login to Docker Hub for image pushing
     - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+    # Verify login status
+    - echo "Logged in as Docker user: $DOCKER_USERNAME"
   script:
     # Step 1: Deploy Ledger
     - echo "Starting ledger deployment..."
@@ -188,6 +190,7 @@ deploy_all:
     # Step 2: Deploy Backend to Render
     - echo "Starting backend deployment..."
     - cd $CI_PROJECT_DIR/src/server
+    - echo "Building image: $BACKEND_IMAGE_NAME:$BACKEND_IMAGE_TAG"
     - docker build --platform linux/amd64 -t $BACKEND_IMAGE_NAME:$BACKEND_IMAGE_TAG .
     - docker push $BACKEND_IMAGE_NAME:$BACKEND_IMAGE_TAG
     - echo "Triggering Render deployment via webhook..."
@@ -198,6 +201,7 @@ deploy_all:
     # Step 3: Deploy Client to Render
     - echo "Starting client deployment..."
     - cd $CI_PROJECT_DIR/src/client/legitify-project
+    - echo "Building image: $CLIENT_IMAGE_NAME:$CLIENT_IMAGE_TAG"
     - docker build --platform linux/amd64 -t $CLIENT_IMAGE_NAME:$CLIENT_IMAGE_TAG .
     - docker push $CLIENT_IMAGE_NAME:$CLIENT_IMAGE_TAG
     - echo "Triggering Render deployment for client via webhook..."
