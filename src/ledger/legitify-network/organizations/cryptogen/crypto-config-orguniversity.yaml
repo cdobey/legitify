@@ -49,7 +49,6 @@ PeerOrgs:
       Count: 1
       SANS:
         - localhost
-        - network.legitifyapp.com
       # Start: 5
       # Hostname: {{.Prefix}}{{.Index}} # default
     # ---------------------------------------------------------------------------
