@@ -30,7 +30,7 @@
     },
     "peers": {
         "peer0.orguniversity.com": {
-            "url": "grpcs://localhost:7051",
+            "url": "grpcs://network.legitifyapp.com:7051",
             "tlsCACerts": {
                 "pem": "${PEERPEM}"
             },
@@ -40,7 +40,7 @@
             }
         },
         "peer0.orgemployer.com": {
-            "url": "grpcs://localhost:8051",
+            "url": "grpcs://network.legitifyapp.com:8051",
             "tlsCACerts": {
                 "pem": "${PEERPEM}"
             },
@@ -50,7 +50,7 @@
             }
         },
         "peer0.orgindividual.com": {
-            "url": "grpcs://localhost:9051",
+            "url": "grpcs://network.legitifyapp.com:9051",
             "tlsCACerts": {
                 "pem": "${PEERPEM}"
             },
@@ -62,7 +62,7 @@
     },
     "certificateAuthorities": {
         "ca.orguniversity.com": {
-            "url": "https://localhost:7054",
+            "url": "https://network.legitifyapp.com:7054",
             "caName": "ca-orguniversity",
             "tlsCACerts": {
                 "pem": ["${CAPEM}"]
@@ -72,7 +72,7 @@
             }
         },
         "ca.orgemployer.com": {
-            "url": "https://localhost:8054",
+            "url": "https://network.legitifyapp.com:8054",
             "caName": "ca-orgemployer",
             "tlsCACerts": {
                 "pem": ["${CAPEM}"]
@@ -82,7 +82,7 @@
             }
         },
         "ca.orgindividual.com": {
-            "url": "https://localhost:9054",
+            "url": "https://network.legitifyapp.com:9054",
             "caName": "ca-orgindividual",
             "tlsCACerts": {
                 "pem": ["${CAPEM}"]

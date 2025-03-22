@@ -122,7 +122,7 @@ function generate_user_certs() {
         -ca-key=$CERT_DIR/ca/ca-key.pem \
         -config=$PWD/organizations/cfssl/cert-signing-config.json \
         -cn="$USER" \
-        -hostname="$USER,localhost,127.0.0.1" \
+        -hostname="$USER,localhost,127.0.0.1,network.legitifyapp.com" \
         -profile="sign" \
         $PWD/organizations/cfssl/${TYPE}-${USER}-csr.json | cfssljson -bare $CERT_DIR/users/$USER/msp/signcerts/cert
 
@@ -150,7 +150,7 @@ function generate_user_certs() {
         -ca-key=$CERT_DIR/ca/ca-key.pem \
         -config=$PWD/organizations/cfssl/cert-signing-config.json \
         -cn="$USER" \
-        -hostname="$USER,localhost,127.0.0.1" \
+        -hostname="$USER,localhost,127.0.0.1,network.legitifyapp.com" \
         -profile="tls" \
         $PWD/organizations/cfssl/${TYPE}-${USER}-csr.json | cfssljson -bare $CERT_DIR/users/$USER/tls/client
 
@@ -178,7 +178,7 @@ function generate_peer_certs() {
         -ca-key="$CERT_DIR/ca/ca-key.pem" \
         -config="$PWD/organizations/cfssl/cert-signing-config.json" \
         -cn="$USER" \
-        -hostname="$USER,localhost,127.0.0.1" \
+        -hostname="$USER,localhost,127.0.0.1,network.legitifyapp.com" \
         -profile="sign" \
         "$PWD/organizations/cfssl/peer-${USER}.json" | cfssljson -bare "$CERT_DIR/peers/${USER}/msp/signcerts/cert"
 
@@ -207,7 +207,7 @@ function generate_peer_certs() {
         -ca-key="$CERT_DIR/ca/ca-key.pem" \
         -config="$PWD/organizations/cfssl/cert-signing-config.json" \
         -cn="$USER" \
-        -hostname="$USER,localhost,127.0.0.1" \
+        -hostname="$USER,localhost,127.0.0.1,network.legitifyapp.com" \
         -profile="tls" \
         "$PWD/organizations/cfssl/peer-${USER}.json" | cfssljson -bare "$CERT_DIR/peers/$USER/tls/server"
 
@@ -236,7 +236,7 @@ function generate_orderer_certs() {
         -ca-key="$CERT_DIR/ca/ca-key.pem" \
         -config="$PWD/organizations/cfssl/cert-signing-config.json" \
         -cn="$USER" \
-        -hostname="$USER,localhost,127.0.0.1" \
+        -hostname="$USER,localhost,127.0.0.1,network.legitifyapp.com" \
         -profile="sign" \
         "$PWD/organizations/cfssl/orderer-${USER}.json" | cfssljson -bare "$CERT_DIR/orderers/$USER/msp/signcerts/cert"
 
@@ -265,7 +265,7 @@ function generate_orderer_certs() {
         -ca-key="$CERT_DIR/ca/ca-key.pem" \
         -config="$PWD/organizations/cfssl/cert-signing-config.json" \
         -cn="$USER" \
-        -hostname="$USER,localhost,127.0.0.1" \
+        -hostname="$USER,localhost,127.0.0.1,network.legitifyapp.com" \
         -profile="tls" \
         "$PWD/organizations/cfssl/orderer-${USER}.json" | cfssljson -bare "$CERT_DIR/orderers/$USER/tls/server"
 
