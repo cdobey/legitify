@@ -4,7 +4,7 @@
 #
 
 volumes:
-  orderer.example.com:
+  orderer.legitifyapp.com:
   peer0.orguniversity.com:
   peer0.orgemployer.com:
   peer0.orgindividual.com:
@@ -14,8 +14,8 @@ networks:
     name: fabric_test
 
 services:
-  orderer.example.com:
-    container_name: orderer.example.com
+  orderer.legitifyapp.com:
+    container_name: orderer.legitifyapp.com
     image: hyperledger/fabric-orderer:2.5.10
     labels:
       service: hyperledger-fabric
@@ -41,14 +41,14 @@ services:
       - ORDERER_ADMIN_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
       - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
       - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
-      - ORDERER_OPERATIONS_LISTENADDRESS=orderer.example.com:9443
+      - ORDERER_OPERATIONS_LISTENADDRESS=orderer.legitifyapp.com:9443
       - ORDERER_METRICS_PROVIDER=prometheus
     working_dir: /root
     command: orderer
     volumes:
-      - ../organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/var/hyperledger/orderer/msp
-      - ../organizations/ordererOrganizations/example.com/orderers/orderer.example.com/tls/:/var/hyperledger/orderer/tls
-      - orderer.example.com:/var/hyperledger/production/orderer
+      - ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/msp:/var/hyperledger/orderer/msp
+      - ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/:/var/hyperledger/orderer/tls
+      - orderer.legitifyapp.com:/var/hyperledger/production/orderer
     ports:
       - 7050:7050
       - 7053:7053

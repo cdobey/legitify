@@ -8,7 +8,7 @@ TEST_NETWORK_HOME=${TEST_NETWORK_HOME:-${PWD}}
 . ${TEST_NETWORK_HOME}/scripts/utils.sh
 
 export CORE_PEER_TLS_ENABLED=true
-export ORDERER_CA=${TEST_NETWORK_HOME}/organizations/ordererOrganizations/example.com/tlsca/tlsca.example.com-cert.pem
+export ORDERER_CA=${TEST_NETWORK_HOME}/organizations/ordererOrganizations/legitifyapp.com/tlsca/tlsca.legitifyapp.com-cert.pem
 export PEER0_ORGUNIVERSITY_CA=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orguniversity.com/tlsca/tlsca.orguniversity.com-cert.pem
 export PEER0_ORGEMPLOYER_CA=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orgemployer.com/tlsca/tlsca.orgemployer.com-cert.pem
 export PEER0_ORGINDIVIDUAL_CA=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orgindividual.com/tlsca/tlsca.orgindividual.com-cert.pem

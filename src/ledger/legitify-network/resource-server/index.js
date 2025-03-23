@@ -114,20 +114,20 @@ const generateConnectionProfile = org => {
 
   // Add orderer information
   template.orderers = {
-    'orderer.example.com': {
+    'orderer.legitifyapp.com': {
       url: `grpcs://${localEnv.EC2_IP}:7050`,
       tlsCACerts: {
         pem: fs.readFileSync(
           path.join(
             ORGANIZATIONS_DIR,
-            'ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt',
+            'ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/ca.crt',
           ),
           'utf8',
         ),
       },
       grpcOptions: {
-        'ssl-target-name-override': 'orderer.example.com',
-        hostnameOverride: 'orderer.example.com',
+        'ssl-target-name-override': 'orderer.legitifyapp.com',
+        hostnameOverride: 'orderer.legitifyapp.com',
         'grpc.keepalive_time_ms': 120000,
         'grpc.keepalive_timeout_ms': 20000,
         'grpc.http2.min_time_between_pings_ms': 120000,
@@ -139,7 +139,7 @@ const generateConnectionProfile = org => {
   // Add channels structure with all peers
   template.channels = {
     legitifychannel: {
-      orderers: ['orderer.example.com'],
+      orderers: ['orderer.legitifyapp.com'],
       peers: {},
     },
   };
@@ -205,7 +205,7 @@ app.get('/certs/:orgType/:org/:certType', (req, res) => {
     } else if (orgType === 'orderer') {
       certPath = path.join(
         ORGANIZATIONS_DIR,
-        'ordererOrganizations/example.com/tlsca/tlsca.example.com-cert.pem',
+        'ordererOrganizations/legitifyapp.com/tlsca/tlsca.legitifyapp.com-cert.pem',
       );
     } else {
       return res.status(400).json({ error: 'Invalid organization type' });

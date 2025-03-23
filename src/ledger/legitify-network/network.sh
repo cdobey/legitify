@@ -230,8 +230,8 @@ function createOrgs() {
 
     infoln "Creating Orderer Org Identities"
     #function_name cert-type   CN   
-    orderer_cert orderer orderer.example.com
-    orderer_cert admin Admin@example.com
+    orderer_cert orderer orderer.legitifyapp.com
+    orderer_cert admin Admin@legitifyapp.com
 
   fi 
 
@@ -431,7 +431,7 @@ function networkDown() {
   # Don't remove the generated artifacts -- note, the ledgers are always removed
   if [ "$MODE" != "restart" ]; then
     # Bring down the network, deleting the volumes
-    for volume in docker_orderer.example.com docker_peer0.orguniversity.com docker_peer0.orgemployer.com docker_peer0.orgindividual.com; do
+    for volume in docker_orderer.legitifyapp.com docker_peer0.orguniversity.com docker_peer0.orgemployer.com docker_peer0.orgindividual.com; do
       if ${CONTAINER_CLI} volume inspect $volume > /dev/null 2>&1; then
         ${CONTAINER_CLI} volume rm $volume
       else
