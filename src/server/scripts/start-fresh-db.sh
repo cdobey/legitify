@@ -73,6 +73,16 @@ echo "✅ Successfully fetched Fabric resources from EC2 instance"
 
 echo "🗑️  Clearing all data from Supabase database..."
 
+# Export environment variables from server.env
+if [ -f server.env ]; then
+  echo "Loading environment variables from server.env"
+  export $(grep -v '^#' server.env | xargs)
+else
+  echo "❌ server.env file not found"
+  echo "Please make sure server.env exists and contains DATABASE_URL"
+  exit 1
+fi
+
 # Use Prisma to reset the database (drops all tables and recreates them)
 echo "🔄 Resetting database schema..."
 npx prisma migrate reset --force

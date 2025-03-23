@@ -91,7 +91,7 @@ echo "Starting Degree Chaincode Tests..."
 # Test 1: Issue a new degree (as University with Employer endorsement)
 echo "Test 1: Issuing new degree..."
 set_university_context
-DEGREE_ID="DEGREE009"
+DEGREE_ID="DEGREE010"
 DEGREE_HASH="abc123hash"
 OWNER_ID="INDIVIDUAL001"
 ISSUER_ID="OrgUniversityMSP"
