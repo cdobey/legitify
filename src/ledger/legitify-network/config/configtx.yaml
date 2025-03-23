@@ -23,6 +23,9 @@ Organizations:
         Rule: "OR('OrdererMSP.admin')"
     OrdererEndpoints:
       - orderer.legitifyapp.com:7050
+      - orderer2.legitifyapp.com:7052
+      - orderer3.legitifyapp.com:7056
+      - orderer4.legitifyapp.com:7058
 
   - &OrgUniversity
     Name: OrgUniversity
@@ -240,6 +243,18 @@ Profiles:
             Port: 7050
             ClientTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.crt
             ServerTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.crt
+          - Host: orderer2.legitifyapp.com
+            Port: 7052
+            ClientTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/server.crt
+            ServerTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/server.crt
+          - Host: orderer3.legitifyapp.com
+            Port: 7056
+            ClientTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/server.crt
+            ServerTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/server.crt
+          - Host: orderer4.legitifyapp.com
+            Port: 7058
+            ClientTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/server.crt
+            ServerTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/server.crt
       Organizations:
         - *OrdererOrg
       Capabilities: *OrdererCapabilities

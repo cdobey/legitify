@@ -34,16 +34,47 @@ set_employer_context() {
 invoke_chaincode() {
     local func=$1
     local args=$2
+    local success=false
     
-    peer chaincode invoke -o localhost:7050 \
-        --tls --cafile $ORDERER_CA \
-        -C legitifychannel -n degreeCC \
-        --peerAddresses localhost:7051 \
-        --tlsRootCertFiles ${ORG_UNIVERSITY_TLS_CERT} \
-        --peerAddresses localhost:8051 \
-        --tlsRootCertFiles ${ORG_EMPLOYER_TLS_CERT} \
-        -c "{\"Args\":[\"$func\",$args]}" \
-        --waitForEvent
+    # Define array of orderer endpoints to try
+    local ORDERER_ENDPOINTS=(
+        "localhost:7050"
+        "localhost:7052"
+        "localhost:7056"
+        "localhost:7058"
+    )
+  
+    # Try each orderer until one succeeds
+    for ORDERER_ENDPOINT in "${ORDERER_ENDPOINTS[@]}"; do
+        echo "Attempting to invoke using orderer at $ORDERER_ENDPOINT"
+        
+        peer chaincode invoke -o $ORDERER_ENDPOINT \
+            --tls --cafile $ORDERER_CA \
+            -C legitifychannel -n degreeCC \
+            --peerAddresses localhost:7051 \
+            --tlsRootCertFiles ${ORG_UNIVERSITY_TLS_CERT} \
+            --peerAddresses localhost:8051 \
+            --tlsRootCertFiles ${ORG_EMPLOYER_TLS_CERT} \
+            -c "{\"Args\":[\"$func\",$args]}" \
+            --waitForEvent > invoke_output.txt 2>&1
+        
+        if [ $? -eq 0 ]; then
+            echo "Invoke transaction successful using orderer at $ORDERER_ENDPOINT"
+            cat invoke_output.txt
+            success=true
+            break
+        else
+            echo "Warning: Invoke failed with orderer at $ORDERER_ENDPOINT, trying next orderer..."
+        fi
+    done
+    
+    if [ "$success" = false ]; then
+        echo "Error: Invoke failed with all available orderers"
+        cat invoke_output.txt
+        return 1
+    fi
+    
+    return 0
 }
 
 # Helper function for chaincode queries
@@ -60,7 +91,7 @@ echo "Starting Degree Chaincode Tests..."
 # Test 1: Issue a new degree (as University with Employer endorsement)
 echo "Test 1: Issuing new degree..."
 set_university_context
-DEGREE_ID="DEGREE002"
+DEGREE_ID="DEGREE009"
 DEGREE_HASH="abc123hash"
 OWNER_ID="INDIVIDUAL001"
 ISSUER_ID="OrgUniversityMSP"

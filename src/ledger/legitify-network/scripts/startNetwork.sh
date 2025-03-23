@@ -15,6 +15,10 @@ echo "Starting network with CouchDB..."
 echo "Creating channel..."
 ./network.sh createChannel -ca
 
+# Join all orderers to the channel
+echo "Joining all orderers to the channel..."
+./scripts/join-all-orderers.sh legitifychannel
+
 # Deploy the chaincode
 echo "Deploying chaincode..."
 ./network.sh deployCC -ccn degreeCC -ccp ../chaincode/degreeChaincode/ -ccl go

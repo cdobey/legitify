@@ -134,12 +134,68 @@ const generateConnectionProfile = org => {
         'grpc.http2.max_pings_without_data': 0,
       },
     },
+    'orderer2.legitifyapp.com': {
+      url: `grpcs://${localEnv.EC2_IP}:7052`,
+      tlsCACerts: {
+        pem: fs.readFileSync(
+          path.join(
+            ORGANIZATIONS_DIR,
+            'ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/ca.crt',
+          ),
+          'utf8',
+        ),
+      },
+      grpcOptions: {
+        'ssl-target-name-override': 'orderer2.legitifyapp.com',
+        'grpc.keepalive_time_ms': 120000,
+        'grpc.keepalive_timeout_ms': 20000,
+      },
+    },
+    'orderer3.legitifyapp.com': {
+      url: `grpcs://${localEnv.EC2_IP}:7056`,
+      tlsCACerts: {
+        pem: fs.readFileSync(
+          path.join(
+            ORGANIZATIONS_DIR,
+            'ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/ca.crt',
+          ),
+          'utf8',
+        ),
+      },
+      grpcOptions: {
+        'ssl-target-name-override': 'orderer3.legitifyapp.com',
+        'grpc.keepalive_time_ms': 120000,
+        'grpc.keepalive_timeout_ms': 20000,
+      },
+    },
+    'orderer4.legitifyapp.com': {
+      url: `grpcs://${localEnv.EC2_IP}:7058`,
+      tlsCACerts: {
+        pem: fs.readFileSync(
+          path.join(
+            ORGANIZATIONS_DIR,
+            'ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/ca.crt',
+          ),
+          'utf8',
+        ),
+      },
+      grpcOptions: {
+        'ssl-target-name-override': 'orderer4.legitifyapp.com',
+        'grpc.keepalive_time_ms': 120000,
+        'grpc.keepalive_timeout_ms': 20000,
+      },
+    },
   };
 
   // Add channels structure with all peers
   template.channels = {
     legitifychannel: {
-      orderers: ['orderer.legitifyapp.com'],
+      orderers: [
+        'orderer.legitifyapp.com',
+        'orderer2.legitifyapp.com',
+        'orderer3.legitifyapp.com',
+        'orderer4.legitifyapp.com',
+      ],
       peers: {},
     },
   };

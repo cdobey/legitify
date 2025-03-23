@@ -293,9 +293,25 @@ function createOrderer() {
   mkdir -p "${PWD}/organizations/ordererOrganizations/legitifyapp.com/tlsca"
   cp "${PWD}/organizations/fabric-ca/ordererOrg/ca-cert.pem" "${PWD}/organizations/ordererOrganizations/legitifyapp.com/tlsca/tlsca.legitifyapp.com-cert.pem"
 
-  infoln "Registering orderer"
+  # Register and enroll the orderers
+  infoln "Registering orderer1"
   set -x
   fabric-ca-client register --caname ca-orderer --id.name orderer --id.secret ordererpw --id.type orderer --tls.certfiles "${PWD}/organizations/fabric-ca/ordererOrg/ca-cert.pem"
+  { set +x; } 2>/dev/null
+
+  infoln "Registering orderer2"
+  set -x
+  fabric-ca-client register --caname ca-orderer --id.name orderer2 --id.secret orderer2pw --id.type orderer --tls.certfiles "${PWD}/organizations/fabric-ca/ordererOrg/ca-cert.pem"
+  { set +x; } 2>/dev/null
+
+  infoln "Registering orderer3"
+  set -x
+  fabric-ca-client register --caname ca-orderer --id.name orderer3 --id.secret orderer3pw --id.type orderer --tls.certfiles "${PWD}/organizations/fabric-ca/ordererOrg/ca-cert.pem"
+  { set +x; } 2>/dev/null
+
+  infoln "Registering orderer4"
+  set -x
+  fabric-ca-client register --caname ca-orderer --id.name orderer4 --id.secret orderer4pw --id.type orderer --tls.certfiles "${PWD}/organizations/fabric-ca/ordererOrg/ca-cert.pem"
   { set +x; } 2>/dev/null
 
   infoln "Registering the orderer admin"
@@ -303,6 +319,7 @@ function createOrderer() {
   fabric-ca-client register --caname ca-orderer --id.name ordererAdmin --id.secret ordererAdminpw --id.type admin --tls.certfiles "${PWD}/organizations/fabric-ca/ordererOrg/ca-cert.pem"
   { set +x; } 2>/dev/null
 
+  # Orderer 1
   infoln "Generating the orderer msp"
   set -x
   fabric-ca-client enroll -u https://orderer:ordererpw@localhost:10054 --caname ca-orderer -M "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/msp" --tls.certfiles "${PWD}/organizations/fabric-ca/ordererOrg/ca-cert.pem"
@@ -324,6 +341,73 @@ function createOrderer() {
   mkdir -p "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/msp/tlscacerts"
   cp "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/tlscacerts/"* "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/msp/tlscacerts/tlsca.legitifyapp.com-cert.pem"
 
+  # Orderer 2
+  infoln "Generating the orderer2 msp"
+  set -x
+  fabric-ca-client enroll -u https://orderer2:orderer2pw@localhost:10054 --caname ca-orderer -M "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/msp" --tls.certfiles "${PWD}/organizations/fabric-ca/ordererOrg/ca-cert.pem"
+  { set +x; } 2>/dev/null
+
+  cp "${PWD}/organizations/ordererOrganizations/legitifyapp.com/msp/config.yaml" "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/msp/config.yaml"
+
+  infoln "Generating the orderer2-tls certificates, use --csr.hosts to specify Subject Alternative Names"
+  set -x
+  fabric-ca-client enroll -u https://orderer2:orderer2pw@localhost:10054 --caname ca-orderer -M "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls" --enrollment.profile tls --csr.hosts orderer2.legitifyapp.com --csr.hosts localhost --csr.hosts localhost --tls.certfiles "${PWD}/organizations/fabric-ca/ordererOrg/ca-cert.pem"
+  { set +x; } 2>/dev/null
+
+  # Copy the tls CA cert, server cert, server keystore to well known file names in the orderer's tls directory that are referenced by orderer startup config
+  cp "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/tlscacerts/"* "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/ca.crt"
+  cp "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/signcerts/"* "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/server.crt"
+  cp "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/keystore/"* "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/server.key"
+
+  # Copy orderer org's CA cert to orderer's /msp/tlscacerts directory (for use in the orderer MSP definition)
+  mkdir -p "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/msp/tlscacerts"
+  cp "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/tlscacerts/"* "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/msp/tlscacerts/tlsca.legitifyapp.com-cert.pem"
+
+  # Orderer 3
+  infoln "Generating the orderer3 msp"
+  set -x
+  fabric-ca-client enroll -u https://orderer3:orderer3pw@localhost:10054 --caname ca-orderer -M "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/msp" --tls.certfiles "${PWD}/organizations/fabric-ca/ordererOrg/ca-cert.pem"
+  { set +x; } 2>/dev/null
+
+  cp "${PWD}/organizations/ordererOrganizations/legitifyapp.com/msp/config.yaml" "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/msp/config.yaml"
+
+  infoln "Generating the orderer3-tls certificates, use --csr.hosts to specify Subject Alternative Names"
+  set -x
+  fabric-ca-client enroll -u https://orderer3:orderer3pw@localhost:10054 --caname ca-orderer -M "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls" --enrollment.profile tls --csr.hosts orderer3.legitifyapp.com --csr.hosts localhost --csr.hosts localhost --tls.certfiles "${PWD}/organizations/fabric-ca/ordererOrg/ca-cert.pem"
+  { set +x; } 2>/dev/null
+
+  # Copy the tls CA cert, server cert, server keystore to well known file names in the orderer's tls directory that are referenced by orderer startup config
+  cp "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/tlscacerts/"* "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/ca.crt"
+  cp "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/signcerts/"* "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/server.crt"
+  cp "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/keystore/"* "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/server.key"
+
+  # Copy orderer org's CA cert to orderer's /msp/tlscacerts directory (for use in the orderer MSP definition)
+  mkdir -p "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/msp/tlscacerts"
+  cp "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/tlscacerts/"* "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/msp/tlscacerts/tlsca.legitifyapp.com-cert.pem"
+
+  # Orderer 4
+  infoln "Generating the orderer4 msp"
+  set -x
+  fabric-ca-client enroll -u https://orderer4:orderer4pw@localhost:10054 --caname ca-orderer -M "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/msp" --tls.certfiles "${PWD}/organizations/fabric-ca/ordererOrg/ca-cert.pem"
+  { set +x; } 2>/dev/null
+
+  cp "${PWD}/organizations/ordererOrganizations/legitifyapp.com/msp/config.yaml" "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/msp/config.yaml"
+
+  infoln "Generating the orderer4-tls certificates, use --csr.hosts to specify Subject Alternative Names"
+  set -x
+  fabric-ca-client enroll -u https://orderer4:orderer4pw@localhost:10054 --caname ca-orderer -M "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls" --enrollment.profile tls --csr.hosts orderer4.legitifyapp.com --csr.hosts localhost --csr.hosts localhost --tls.certfiles "${PWD}/organizations/fabric-ca/ordererOrg/ca-cert.pem"
+  { set +x; } 2>/dev/null
+
+  # Copy the tls CA cert, server cert, server keystore to well known file names in the orderer's tls directory that are referenced by orderer startup config
+  cp "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/tlscacerts/"* "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/ca.crt"
+  cp "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/signcerts/"* "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/server.crt"
+  cp "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/keystore/"* "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/server.key"
+
+  # Copy orderer org's CA cert to orderer's /msp/tlscacerts directory (for use in the orderer MSP definition)
+  mkdir -p "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/msp/tlscacerts"
+  cp "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/tlscacerts/"* "${PWD}/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/msp/tlscacerts/tlsca.legitifyapp.com-cert.pem"
+
+  # Admin
   infoln "Generating the admin msp"
   set -x
   fabric-ca-client enroll -u https://ordererAdmin:ordererAdminpw@localhost:10054 --caname ca-orderer -M "${PWD}/organizations/ordererOrganizations/legitifyapp.com/users/Admin@legitifyapp.com/msp" --tls.certfiles "${PWD}/organizations/fabric-ca/ordererOrg/ca-cert.pem"

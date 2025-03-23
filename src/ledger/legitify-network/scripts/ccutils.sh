@@ -296,60 +296,82 @@ listAllCommitted() {
 
 }
 
-chaincodeInvoke() {
+function chaincodeInvoke() {
   ORG=$1
   CHANNEL=$2
-  CC_NAME=$3
-  CC_INVOKE_CONSTRUCTOR=$4
+  NAME=$3
+  ARGS=$4
   
-  infoln "Invoking on peer0.org${ORG} on channel '$CHANNEL_NAME'..."
-  local rc=1
-  local COUNTER=1
-  # continue to poll
-  # we either get a successful response, or reach MAX RETRY
-  while [ $rc -ne 0 -a $COUNTER -lt $MAX_RETRY ]; do
-    sleep $DELAY
-    infoln "Attempting to Invoke on peer0.org${ORG}, Retry after $DELAY seconds."
-    set -x
-    peer chaincode invoke -o localhost:7050 -C $CHANNEL_NAME -n ${CC_NAME} -c ${CC_INVOKE_CONSTRUCTOR} --tls --cafile $ORDERER_CA  --peerAddresses localhost:7051 --tlsRootCertFiles $PEER0_ORG1_CA --peerAddresses localhost:9051 --tlsRootCertFiles $PEER0_ORG2_CA  >&log.txt
-    res=$?
-    { set +x; } 2>/dev/null
-    let rc=$res
-    COUNTER=$(expr $COUNTER + 1)
-  done
-  cat log.txt
-  if test $rc -eq 0; then
-    successln "Invoke successful on peer0.org${ORG} on channel '$CHANNEL_NAME'"
+  # Set peer variables based on organization
+  if [ "$ORG" -eq 1 ]; then
+    PEER="peer0.orguniversity.com"
+    PORT=7051
+    PEER_TLS_ROOTCERT=${PWD}/organizations/peerOrganizations/orguniversity.com/peers/peer0.orguniversity.com/tls/ca.crt
+    PEER2="peer0.orgindividual.com"
+    PORT2=9051
+    PEER2_TLS_ROOTCERT=${PWD}/organizations/peerOrganizations/orgindividual.com/peers/peer0.orgindividual.com/tls/ca.crt
+  elif [ "$ORG" -eq 2 ]; then
+    PEER="peer0.orgemployer.com"
+    PORT=8051
+    PEER_TLS_ROOTCERT=${PWD}/organizations/peerOrganizations/orgemployer.com/peers/peer0.orgemployer.com/tls/ca.crt
+    PEER2="peer0.orgindividual.com"
+    PORT2=9051
+    PEER2_TLS_ROOTCERT=${PWD}/organizations/peerOrganizations/orgindividual.com/peers/peer0.orgindividual.com/tls/ca.crt
+  elif [ "$ORG" -eq 3 ]; then
+    PEER="peer0.orgindividual.com"
+    PORT=9051
+    PEER_TLS_ROOTCERT=${PWD}/organizations/peerOrganizations/orgindividual.com/peers/peer0.orgindividual.com/tls/ca.crt
+    PEER2="peer0.orguniversity.com"
+    PORT2=7051
+    PEER2_TLS_ROOTCERT=${PWD}/organizations/peerOrganizations/orguniversity.com/peers/peer0.orguniversity.com/tls/ca.crt
   else
-    fatalln "After $MAX_RETRY attempts, Invoke result on peer0.org${ORG} is INVALID!"
+    errorln "ORG Unknown"
   fi
-}
-
-chaincodeQuery() {
-  ORG=$1
-  CHANNEL=$2
-  CC_NAME=$3
-  CC_QUERY_CONSTRUCTOR=$4
-
-  infoln "Querying on peer0.org${ORG} on channel '$CHANNEL_NAME'..."
-  local rc=1
-  local COUNTER=1
-  # continue to poll
-  # we either get a successful response, or reach MAX RETRY
-  while [ $rc -ne 0 -a $COUNTER -lt $MAX_RETRY ]; do
-    sleep $DELAY
-    infoln "Attempting to Query peer0.org${ORG}, Retry after $DELAY seconds."
+  
+  infoln "Invoking on ${PEER} on channel '${CHANNEL}'..."
+  
+  # Define array of orderer endpoints to try
+  ORDERER_ENDPOINTS=(
+    "localhost:7050"
+    "localhost:7052"
+    "localhost:7056"
+    "localhost:7058"
+  )
+  
+  # Try each orderer until one succeeds
+  for ORDERER_ENDPOINT in "${ORDERER_ENDPOINTS[@]}"; do
+    infoln "Attempting to invoke using orderer at $ORDERER_ENDPOINT"
     set -x
-    peer chaincode query -C $CHANNEL_NAME -n ${CC_NAME} -c ${CC_QUERY_CONSTRUCTOR} >&log.txt
+    peer chaincode invoke -o $ORDERER_ENDPOINT \
+      -C $CHANNEL \
+      -n $NAME \
+      -c $ARGS \
+      --tls \
+      --cafile $ORDERER_CA \
+      --peerAddresses localhost:${PORT} \
+      --tlsRootCertFiles ${PEER_TLS_ROOTCERT} \
+      --peerAddresses localhost:${PORT2} \
+      --tlsRootCertFiles ${PEER2_TLS_ROOTCERT} \
+      --waitForEvent &> invoke_output.txt
+    
     res=$?
-    { set +x; } 2>/dev/null
-    let rc=$res
-    COUNTER=$(expr $COUNTER + 1)
+    set +x
+    
+    if [ $res -eq 0 ]; then
+      cat invoke_output.txt
+      infoln "Invoke transaction successful using orderer at $ORDERER_ENDPOINT"
+      break
+    else
+      warnln "Invoke failed with orderer at $ORDERER_ENDPOINT, trying next orderer..."
+    fi
   done
-  cat log.txt
-  if test $rc -eq 0; then
-    successln "Query successful on peer0.org${ORG} on channel '$CHANNEL_NAME'"
-  else
-    fatalln "After $MAX_RETRY attempts, Query result on peer0.org${ORG} is INVALID!"
+  
+  # Check if any orderer succeeded
+  if [ $res -ne 0 ]; then
+    cat invoke_output.txt
+    errorln "Invoke failed with all available orderers"
   fi
+  
+  verifyResult $res "Invoke execution on $PEER failed"
+  infoln "Invoke transaction successful on $PEER on channel '$CHANNEL'"
 }
