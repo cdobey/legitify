@@ -5,10 +5,10 @@ stages:
   - deploy
 
 variables:
-  SERVER_PID_FILE: "/tmp/server.pid"
+  SERVER_PID_FILE: '/tmp/server.pid'
   SERVER_STARTUP_TIMEOUT: 120
   TEST_FLOW_TIMEOUT: 300
-  SKIP_TESTS: "false"
+  SKIP_TESTS: 'false'
 
 test_flow:
   stage: test
@@ -162,15 +162,15 @@ deploy_all:
       when: manual
   variables:
     # Ledger deployment variables
-    EC2_HOST: "network.legitifyapp.com"
-    EC2_USER: "ec2-user"
-    SSH_KEY_FILE: "/tmp/aws_ssh_key"
-    SOURCE_DIR: "$CI_PROJECT_DIR/src/ledger"
+    EC2_HOST: 'network.legitifyapp.com'
+    EC2_USER: 'ec2-user'
+    SSH_KEY_FILE: '/tmp/aws_ssh_key'
+    SOURCE_DIR: '$CI_PROJECT_DIR/src/ledger'
     # Docker image variables for backend and client
-    BACKEND_IMAGE_NAME: "${DOCKER_USERNAME}/legitify-project"
-    BACKEND_IMAGE_TAG: "backend"
-    CLIENT_IMAGE_NAME: "${DOCKER_USERNAME}/legitify-project"
-    CLIENT_IMAGE_TAG: "client"
+    BACKEND_IMAGE_NAME: '${DOCKER_USERNAME}/legitify-project'
+    BACKEND_IMAGE_TAG: 'backend'
+    CLIENT_IMAGE_NAME: '${DOCKER_USERNAME}/legitify-project'
+    CLIENT_IMAGE_TAG: 'client'
   before_script: |
     echo "$AWS_PRIVATE_KEY_B64" | base64 -d > $SSH_KEY_FILE
     chmod 600 $SSH_KEY_FILE
@@ -179,7 +179,7 @@ deploy_all:
   script:
     # Step 1: Deploy Ledger
     - echo "Starting ledger deployment..."
-    - cd $CI_PROJECT_DIR/src/ledger/scripts
+    - cd $CI_PROJECT_DIR/src/ledger/legitify-network/scripts
     - chmod +x deploy-ledger.sh
     - ./deploy-ledger.sh
     - echo "Ledger deployment completed"
