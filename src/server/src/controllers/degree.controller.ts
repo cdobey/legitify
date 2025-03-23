@@ -52,7 +52,7 @@ export const issueDegree: RequestHandler = async (req: Request, res: Response): 
 
     // Store hash in Fabric first
     const gateway = await getGateway(user.uid, user.orgName?.toLowerCase() || '');
-    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifyChannel');
+    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifychannel');
     const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
 
     await contract.submitTransaction('IssueDegree', docId, docHash, individualId, user.uid);
@@ -108,7 +108,7 @@ export const acceptDegree: RequestHandler = async (req: Request, res: Response):
     }
 
     const gateway = await getGateway(req.user.uid, req.user.orgName?.toLowerCase() || '');
-    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifyChannel');
+    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifychannel');
     const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
 
     await contract.submitTransaction('AcceptDegree', docId);
@@ -152,7 +152,7 @@ export const denyDegree: RequestHandler = async (req: Request, res: Response): P
 
     // Interact with ledger
     const gateway = await getGateway(req.user.uid, req.user.orgName?.toLowerCase() || '');
-    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifyChannel');
+    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifychannel');
     const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
 
     await contract.submitTransaction('DenyDegree', docId);
@@ -298,7 +298,7 @@ export const viewDegree: RequestHandler = async (req: Request, res: Response): P
 
     // Get hash from Fabric
     const gateway = await getGateway(req.user.uid, req.user.orgName?.toLowerCase() || '');
-    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifyChannel');
+    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifychannel');
     const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
 
     const record = await contract.evaluateTransaction('ReadDegree', docId);
@@ -470,7 +470,7 @@ export const verifyDegreeDocument: RequestHandler = async (
 
     // Get gateway connection
     const gateway = await getGateway(user.uid, user.orgName?.toLowerCase() || '');
-    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifyChannel');
+    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifychannel');
     const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
 
     // Check each document's hash
@@ -519,7 +519,7 @@ export const getAllLedgerRecords: RequestHandler = async (
     }
 
     const gateway = await getGateway(req.user.uid, req.user.orgName?.toLowerCase() || '');
-    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifyChannel');
+    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifychannel');
     const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
 
     const result = await contract.evaluateTransaction('GetAllRecords');

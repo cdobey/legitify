@@ -8,7 +8,7 @@ DELAY="$2"
 MAX_RETRY="$3"
 VERBOSE="$4"
 BFT="$5"
-: ${CHANNEL_NAME:="legitifyChannel"}
+: ${CHANNEL_NAME:="legitifychannel"}
 : ${DELAY:="3"}
 : ${MAX_RETRY:="5"}
 : ${VERBOSE:="false"}
@@ -72,7 +72,9 @@ createChannel() {
 # joinChannel ORG
 joinChannel() {
   ORG=$1
-  FABRIC_CFG_PATH=$PWD/../config/
+  FABRIC_CFG_PATH=$PWD/config/
+  echo "TestCFG6: ${FABRIC_CFG_PATH}"
+
   setGlobals $ORG
 	local rc=1
 	local COUNTER=1
@@ -101,13 +103,19 @@ if [ $BFT -eq 1 ] && [ -d "organizations/fabric-ca/ordererOrg/msp" ]; then
 fi
 
 ## Create channel genesis block
-FABRIC_CFG_PATH=$PWD/../config/
+FABRIC_CFG_PATH=$PWD/config/
+echo "TestCFG7: ${FABRIC_CFG_PATH}"
+
 BLOCKFILE="./channel-artifacts/${CHANNEL_NAME}.block"
 
 infoln "Generating channel genesis block '${CHANNEL_NAME}.block'"
-FABRIC_CFG_PATH=${PWD}/configtx
+FABRIC_CFG_PATH=${PWD}/config
+echo "TestCFG8: ${FABRIC_CFG_PATH}"
+
 if [ $BFT -eq 1 ]; then
   FABRIC_CFG_PATH=${PWD}/bft-config
+  echo "TestCFG9: ${FABRIC_CFG_PATH}"
+
 fi
 createChannelGenesisBlock $BFT
 

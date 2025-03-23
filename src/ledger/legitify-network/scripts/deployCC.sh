@@ -2,7 +2,7 @@
 
 source scripts/utils.sh
 
-CHANNEL_NAME=${1:-"legitifyChannel"}
+CHANNEL_NAME=${1:-"legitifychannel"}
 CC_NAME=${2}
 CC_SRC_PATH=${3}
 CC_SRC_LANGUAGE=${4}
@@ -47,7 +47,9 @@ else
   CC_COLL_CONFIG="--collections-config $CC_COLL_CONFIG"
 fi
 
-FABRIC_CFG_PATH=$PWD/../config/
+FABRIC_CFG_PATH=$PWD/config/
+echo "TestCFG10: ${FABRIC_CFG_PATH}"
+
 
 # import utils
 . scripts/envVar.sh

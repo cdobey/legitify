@@ -46,7 +46,7 @@ port: 7054
 cors:
   enabled: false
   origins:
-    - "*"
+    - '*'
 
 # Enables debug logging (default: false)
 debug: false
@@ -131,14 +131,14 @@ registry:
     - name: admin
       pass: adminpw
       type: client
-      affiliation: ""
+      affiliation: ''
       attrs:
-        hf.Registrar.Roles: "*"
-        hf.Registrar.DelegateRoles: "*"
+        hf.Registrar.Roles: '*'
+        hf.Registrar.DelegateRoles: '*'
         hf.Revoker: true
         hf.IntermediateCA: true
         hf.GenCRL: true
-        hf.Registrar.Attributes: "*"
+        hf.Registrar.Attributes: '*'
         hf.AffiliationMgr: true
 
 #############################################################################
@@ -184,7 +184,7 @@ ldap:
   attribute:
     # 'names' is an array of strings containing the LDAP attribute names which are
     # requested from the LDAP server for an LDAP identity's entry
-    names: ["uid", "member"]
+    names: ['uid', 'member']
     # The 'converters' section is used to convert an LDAP entry to the value of
     # a fabric CA attribute.
     # For example, the following converts an LDAP 'uid' attribute
@@ -314,7 +314,7 @@ csr:
     size: 256
   names:
     - C: US
-      ST: "North Carolina"
+      ST: 'North Carolina'
       L:
       O: Hyperledger
       OU: Fabric

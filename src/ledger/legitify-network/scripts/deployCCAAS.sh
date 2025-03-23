@@ -8,7 +8,7 @@
 
 source scripts/utils.sh
 
-CHANNEL_NAME=${1:-"legitifyChannel"}
+CHANNEL_NAME=${1:-"legitifychannel"}
 CC_NAME=${2}
 CC_SRC_PATH=${3}
 CCAAS_DOCKER_RUN=${4:-"true"}
@@ -46,6 +46,8 @@ println "- MAX_RETRY: ${C_GREEN}${MAX_RETRY}${C_RESET}"
 println "- VERBOSE: ${C_GREEN}${VERBOSE}${C_RESET}"
 
 FABRIC_CFG_PATH=$PWD/../config/
+echo "TestCFG11: ${FABRIC_CFG_PATH}"
+
 
 #User has not provided a name
 if [ -z "$CC_NAME" ] || [ "$CC_NAME" = "NA" ]; then

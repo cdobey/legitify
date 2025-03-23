@@ -135,19 +135,19 @@ Application: &ApplicationDefaults
   Policies:
     Readers:
       Type: ImplicitMeta
-      Rule: "ANY Readers"
+      Rule: 'ANY Readers'
     Writers:
       Type: ImplicitMeta
-      Rule: "ANY Writers"
+      Rule: 'ANY Writers'
     Admins:
       Type: ImplicitMeta
-      Rule: "MAJORITY Admins"
+      Rule: 'MAJORITY Admins'
     LifecycleEndorsement:
       Type: ImplicitMeta
-      Rule: "MAJORITY Endorsement"
+      Rule: 'MAJORITY Endorsement'
     Endorsement:
       Type: ImplicitMeta
-      Rule: "MAJORITY Endorsement"
+      Rule: 'MAJORITY Endorsement'
   Capabilities:
     <<: *ApplicationCapabilities
 
@@ -183,18 +183,18 @@ Orderer: &OrdererDefaults
   Policies:
     Readers:
       Type: ImplicitMeta
-      Rule: "ANY Readers"
+      Rule: 'ANY Readers'
     Writers:
       Type: ImplicitMeta
-      Rule: "ANY Writers"
+      Rule: 'ANY Writers'
     Admins:
       Type: ImplicitMeta
-      Rule: "MAJORITY Admins"
+      Rule: 'MAJORITY Admins'
     # BlockValidation specifies what signatures must be included in the block
     # from the orderer for the peer to validate it.
     BlockValidation:
       Type: ImplicitMeta
-      Rule: "ANY Writers"
+      Rule: 'ANY Writers'
 ################################################################################
 #
 #   CHANNEL
@@ -208,15 +208,15 @@ Channel: &ChannelDefaults
     # Who may invoke the 'Deliver' API
     Readers:
       Type: ImplicitMeta
-      Rule: "ANY Readers"
+      Rule: 'ANY Readers'
     # Who may invoke the 'Broadcast' API
     Writers:
       Type: ImplicitMeta
-      Rule: "ANY Writers"
+      Rule: 'ANY Writers'
     # By default, who may modify elements at this config level
     Admins:
       Type: ImplicitMeta
-      Rule: "MAJORITY Admins"
+      Rule: 'MAJORITY Admins'
 
   Capabilities:
     <<: *ChannelCapabilities

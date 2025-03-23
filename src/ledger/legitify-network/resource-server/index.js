@@ -138,7 +138,7 @@ const generateConnectionProfile = org => {
 
   // Add channels structure with all peers
   template.channels = {
-    legitifyChannel: {
+    legitifychannel: {
       orderers: ['orderer.example.com'],
       peers: {},
     },
@@ -146,7 +146,7 @@ const generateConnectionProfile = org => {
 
   // Include all peers in the channel configuration
   allOrgs.forEach(orgName => {
-    template.channels.legitifyChannel.peers[`peer0.${orgName}.com`] = {
+    template.channels.legitifychannel.peers[`peer0.${orgName}.com`] = {
       endorsingPeer: true,
       chaincodeQuery: true,
       ledgerQuery: true,

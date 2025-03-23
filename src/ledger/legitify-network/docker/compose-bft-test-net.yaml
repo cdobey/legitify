@@ -186,6 +186,9 @@ services:
     labels:
       service: hyperledger-fabric
     environment:
+      #Generic peer variables
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric_test
       - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
       - FABRIC_LOGGING_SPEC=INFO
       #- FABRIC_LOGGING_SPEC=DEBUG
@@ -211,6 +214,8 @@ services:
     volumes:
       - ../organizations/peerOrganizations/orguniversity.com/peers/peer0.orguniversity.com:/etc/hyperledger/fabric
       - peer0.orguniversity.com:/var/hyperledger/production
+      - ../config:/etc/hyperledger/peercfg
+      - ${DOCKER_SOCK:-/var/run/docker.sock}:/host/var/run/docker.sock
     working_dir: /root
     command: peer node start
     ports:
@@ -225,6 +230,9 @@ services:
     labels:
       service: hyperledger-fabric
     environment:
+      #Generic peer variables
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric_test
       - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
       - FABRIC_LOGGING_SPEC=INFO
       #- FABRIC_LOGGING_SPEC=DEBUG
@@ -250,6 +258,8 @@ services:
     volumes:
       - ../organizations/peerOrganizations/orgemployer.com/peers/peer0.orgemployer.com:/etc/hyperledger/fabric
       - peer0.orgemployer.com:/var/hyperledger/production
+      - ../config:/etc/hyperledger/peercfg
+      - ${DOCKER_SOCK:-/var/run/docker.sock}:/host/var/run/docker.sock
     working_dir: /root
     command: peer node start
     ports:
@@ -264,6 +274,9 @@ services:
     labels:
       service: hyperledger-fabric
     environment:
+      #Generic peer variables
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric_test
       - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
       - FABRIC_LOGGING_SPEC=INFO
       #- FABRIC_LOGGING_SPEC=DEBUG
@@ -289,6 +302,8 @@ services:
     volumes:
       - ../organizations/peerOrganizations/orgindividual.com/peers/peer0.orgindividual.com:/etc/hyperledger/fabric
       - peer0.orgindividual.com:/var/hyperledger/production
+      - ../config:/etc/hyperledger/peercfg
+      - ${DOCKER_SOCK:-/var/run/docker.sock}:/host/var/run/docker.sock
     working_dir: /root
     command: peer node start
     ports:

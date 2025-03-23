@@ -37,7 +37,7 @@ invoke_chaincode() {
     
     peer chaincode invoke -o localhost:7050 \
         --tls --cafile $ORDERER_CA \
-        -C legitifyChannel -n degreeCC \
+        -C legitifychannel -n degreeCC \
         --peerAddresses localhost:7051 \
         --tlsRootCertFiles ${ORG_UNIVERSITY_TLS_CERT} \
         --peerAddresses localhost:8051 \
@@ -51,7 +51,7 @@ query_chaincode() {
     local func=$1
     local args=$2
     
-    peer chaincode query -C legitifyChannel -n degreeCC \
+    peer chaincode query -C legitifychannel -n degreeCC \
         -c "{\"Args\":[\"$func\",$args]}"
 }
 

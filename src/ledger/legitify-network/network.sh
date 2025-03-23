@@ -19,7 +19,8 @@
 
 ROOTDIR=$(cd "$(dirname "$0")" && pwd)
 export PATH=${ROOTDIR}/../bin:${PWD}/../bin:$PATH
-export FABRIC_CFG_PATH=${PWD}/configtx
+export FABRIC_CFG_PATH=${PWD}/config
+echo "TestCFG: ${FABRIC_CFG_PATH}"
 export VERBOSE=false
 
 # push to the required directory & set a trap to go back if needed
@@ -237,7 +238,7 @@ function createOrgs() {
   # Create crypto material using Fabric CA
   if [ "$CRYPTO" == "Certificate Authorities" ]; then
     infoln "Generating certificates using Fabric CA"
-    ${CONTAINER_CLI_COMPOSE} -f compose/$COMPOSE_FILE_CA -f compose/$CONTAINER_CLI/${CONTAINER_CLI}-$COMPOSE_FILE_CA up -d 2>&1
+    ${CONTAINER_CLI_COMPOSE} -p legitify -f docker/${COMPOSE_FILE_CA} up -d 2>&1
 
     . organizations/fabric-ca/registerEnroll.sh
 
@@ -308,19 +309,18 @@ function networkUp() {
     createOrgs
   fi
 
-  COMPOSE_FILES="-f compose/${COMPOSE_FILE_BASE} -f compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_BASE} -f compose/${COMPOSE_FILE_CA} -f compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_CA}"
+  # Simplified compose file management - use only the main compose files
+  COMPOSE_FILES="-f docker/${COMPOSE_FILE_BASE} -f docker/${COMPOSE_FILE_CA}"
 
   if [ "${DATABASE}" == "couchdb" ]; then
-    COMPOSE_FILES="${COMPOSE_FILES} -f compose/${COMPOSE_FILE_COUCH} -f compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_COUCH}"
+    COMPOSE_FILES="${COMPOSE_FILES} -f docker/${COMPOSE_FILE_COUCH}"
   fi
 
-  DOCKER_SOCK="${DOCKER_SOCK}" ${CONTAINER_CLI_COMPOSE} ${COMPOSE_FILES} up -d --remove-orphans 2>&1
-
+  DOCKER_SOCK="${DOCKER_SOCK}" ${CONTAINER_CLI_COMPOSE} -p legitify ${COMPOSE_FILES} up -d --remove-orphans 2>&1
   $CONTAINER_CLI ps -a
   if [ $? -ne 0 ]; then
     fatalln "Unable to start network"
   fi
-
   # Start the resource server
   echo "Starting Fabric Resource Server..."
   ./resource-server/start.sh
@@ -331,39 +331,30 @@ function networkUp() {
 function createChannel() {
   # Bring up the network if it is not already up.
   bringUpNetwork="false"
-
   local bft_true=$1
-
   if ! $CONTAINER_CLI info > /dev/null 2>&1 ; then
     fatalln "$CONTAINER_CLI network is required to be running to create a channel"
   fi
-
   # check if all containers are present
   CONTAINERS=($($CONTAINER_CLI ps | grep hyperledger/ | awk '{print $2}'))
   len=$(echo ${#CONTAINERS[@]})
-
   if [[ $len -ge 4 ]] && [[ ! -d "organizations/peerOrganizations" ]]; then
     echo "Bringing network down to sync certs with containers"
     networkDown
   fi
-
   [[ $len -lt 4 ]] || [[ ! -d "organizations/peerOrganizations" ]] && bringUpNetwork="true" || echo "Network Running Already"
-
   if [ $bringUpNetwork == "true"  ]; then
     infoln "Bringing up network"
     networkUp
   fi
-
   # now run the script that creates a channel. This script uses configtxgen once
   # to create the channel creation transaction and the anchor peer updates.
   scripts/createChannel.sh $CHANNEL_NAME $CLI_DELAY $MAX_RETRY $VERBOSE $bft_true
 }
 
-
 ## Call the script to deploy a chaincode to the channel
 function deployCC() {
   scripts/deployCC.sh $CHANNEL_NAME $CC_NAME $CC_SRC_PATH $CC_SRC_LANGUAGE $CC_VERSION $CC_SEQUENCE $CC_INIT_FCN $CC_END_POLICY $CC_COLL_CONFIG $CLI_DELAY $MAX_RETRY $VERBOSE
-
   if [ $? -ne 0 ]; then
     fatalln "Deploying chaincode failed"
   fi
@@ -372,7 +363,6 @@ function deployCC() {
 ## Call the script to deploy a chaincode to the channel
 function deployCCAAS() {
   scripts/deployCCAAS.sh $CHANNEL_NAME $CC_NAME $CC_SRC_PATH $CCAAS_DOCKER_RUN $CC_VERSION $CC_SEQUENCE $CC_INIT_FCN $CC_END_POLICY $CC_COLL_CONFIG $CLI_DELAY $MAX_RETRY $VERBOSE $CCAAS_DOCKER_RUN
-
   if [ $? -ne 0 ]; then
     fatalln "Deploying chaincode-as-a-service failed"
   fi
@@ -380,75 +370,58 @@ function deployCCAAS() {
 
 ## Call the script to package the chaincode
 function packageChaincode() {
-
   infoln "Packaging chaincode"
-
   scripts/packageCC.sh $CC_NAME $CC_SRC_PATH $CC_SRC_LANGUAGE $CC_VERSION true
-
   if [ $? -ne 0 ]; then
     fatalln "Packaging the chaincode failed"
   fi
-
 }
 
 ## Call the script to list installed and committed chaincode on a peer
 function listChaincode() {
-
   export FABRIC_CFG_PATH=${PWD}/../config
-
+  echo "TestCFG2: ${FABRIC_CFG_PATH}"
   . scripts/envVar.sh
   . scripts/ccutils.sh
-
   setGlobals $ORG
-
   println
   queryInstalledOnPeer
   println
-
   listAllCommitted
-
 }
 
 ## Call the script to invoke 
 function invokeChaincode() {
-
   export FABRIC_CFG_PATH=${PWD}/../config
-
+  echo "TestCFG3: ${FABRIC_CFG_PATH}"
   . scripts/envVar.sh
   . scripts/ccutils.sh
-
   setGlobals $ORG
-
   chaincodeInvoke $ORG $CHANNEL_NAME $CC_NAME $CC_INVOKE_CONSTRUCTOR
-
 }
 
 ## Call the script to query chaincode 
 function queryChaincode() {
-
   export FABRIC_CFG_PATH=${PWD}/../config
-  
+  echo "TestCFG4: ${FABRIC_CFG_PATH}"
   . scripts/envVar.sh
   . scripts/ccutils.sh
-
   setGlobals $ORG
-
   chaincodeQuery $ORG $CHANNEL_NAME $CC_NAME $CC_QUERY_CONSTRUCTOR
-
 }
-
 
 # Tear down running network
 function networkDown() {
   local temp_compose=$COMPOSE_FILE_BASE
   COMPOSE_FILE_BASE=compose-bft-test-net.yaml
-  COMPOSE_BASE_FILES="-f compose/${COMPOSE_FILE_BASE} -f compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_BASE}"
-  COMPOSE_COUCH_FILES="-f compose/${COMPOSE_FILE_COUCH} -f compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_COUCH}"
-  COMPOSE_CA_FILES="-f compose/${COMPOSE_FILE_CA} -f compose/${CONTAINER_CLI}/${CONTAINER_CLI}-${COMPOSE_FILE_CA}"
-  COMPOSE_FILES="${COMPOSE_BASE_FILES} ${COMPOSE_COUCH_FILES} ${COMPOSE_CA_FILES}"
-
+  # Simplified compose file management for network down
+  COMPOSE_FILES="-f docker/${COMPOSE_FILE_BASE}"
+  if [ "${DATABASE}" == "couchdb" ]; then
+    COMPOSE_FILES="${COMPOSE_FILES} -f docker/${COMPOSE_FILE_COUCH}"
+  fi
+  COMPOSE_FILES="${COMPOSE_FILES} -f docker/${COMPOSE_FILE_CA}"
   if [ "${CONTAINER_CLI}" == "docker" ]; then
-    DOCKER_SOCK=$DOCKER_SOCK ${CONTAINER_CLI_COMPOSE} ${COMPOSE_FILES} down --volumes --remove-orphans
+    DOCKER_SOCK=$DOCKER_SOCK ${CONTAINER_CLI_COMPOSE} -p legitify ${COMPOSE_FILES} down --volumes --remove-orphans
   else
     fatalln "Container CLI  ${CONTAINER_CLI} not supported"
   fi
@@ -645,6 +618,8 @@ fi
 
 if [ $BFT -eq 1 ]; then
   export FABRIC_CFG_PATH=${PWD}/bft-config
+  echo "TestCFG5: ${FABRIC_CFG_PATH}"
+
   COMPOSE_FILE_BASE=compose-bft-test-net.yaml
 fi
 
