@@ -204,28 +204,29 @@ function printHelp() {
 }
 
 function installPrereqs() {
-
   infoln "installing prereqs"
 
-  FILE=../install-fabric.sh     
+  FILE=../setup-fabric.sh     
   if [ ! -f $FILE ]; then
+    infoln "setup-fabric.sh not found, downloading..."
     curl -sSLO https://raw.githubusercontent.com/hyperledger/fabric/main/scripts/install-fabric.sh && chmod +x install-fabric.sh
     cp install-fabric.sh ..
+    mv ../install-fabric.sh ../setup-fabric.sh
+    chmod +x ../setup-fabric.sh
   fi
   
   IMAGE_PARAMETER=""
   if [ "$IMAGETAG" != "default" ]; then
-    IMAGE_PARAMETER="-f ${IMAGETAG}"
+    IMAGE_PARAMETER="--fabric-version ${IMAGETAG}"
   fi 
 
   CA_IMAGE_PARAMETER=""
   if [ "$CA_IMAGETAG" != "default" ]; then
-    CA_IMAGE_PARAMETER="-c ${CA_IMAGETAG}"
+    CA_IMAGE_PARAMETER="--ca-version ${CA_IMAGETAG}"
   fi 
 
   cd ..
-  ./install-fabric.sh ${IMAGE_PARAMETER} ${CA_IMAGE_PARAMETER} docker binary
-
+  ./setup-fabric.sh ${IMAGE_PARAMETER} ${CA_IMAGE_PARAMETER} binary docker
 }
 
 # println echos string

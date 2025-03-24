@@ -50,56 +50,33 @@ test_flow:
     - npm ci
     - npm install -g ts-node typescript
 
+    # Prepare Fabric environment
     - cd $CI_PROJECT_DIR/src/ledger
     - export ARCH=amd64
     - export FABRIC_PATH=$PWD
     - export PATH=$PATH:$FABRIC_PATH/bin
-    - bash ./install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
-    - chmod +x bin/*
 
+    # Restore cached binaries if they exist
+    - |
+      if [ ! -d "$CI_PROJECT_DIR/src/ledger/bin" ] || [ ! -f "$CI_PROJECT_DIR/src/ledger/bin/peer" ]; then
+        echo "Fabric binaries not found in cache, downloading..."
+        
+        chmod +x $CI_PROJECT_DIR/src/ledger/setup-fabric.sh
+        $CI_PROJECT_DIR/src/ledger/setup-fabric.sh --fabric-version 2.5.10 --ca-version 1.5.13 binary
+        
+        chmod +x bin/*
+      else
+        echo "Using cached Fabric binaries"
+      fi
+
+    # Prepare chaincode
     - cd chaincode/degreeChaincode
     - GO111MODULE=on go mod vendor
+
+    # Start the network and test
     - cd $CI_PROJECT_DIR/src/ledger/legitify-network
-    - ./network.sh down || true
     - bash scripts/startNetwork.sh
     - bash scripts/testDegreeChaincode.sh
-
-    # The teststing bwelow is not appropriate at rthe moment as it tests agaiknst real world data and interferes with our live environments. We should comup
-    # With a better solution for this in the future such as mocking the data or focussing on unit tests.
-    # - |
-    #   cd $CI_PROJECT_DIR/src/server
-    #   chmod +x scripts/start-fresh-db.sh
-    #   sed -i 's/read -p "Are you sure you want to continue? (y\/n): " -n 1 -r/REPLY="y"/' scripts/start-fresh-db.sh
-    #   source scripts/start-fresh-db.sh
-
-    #   echo "Waiting for server to be fully ready..."
-    #   TIMEOUT=$SERVER_STARTUP_TIMEOUT
-    #   while [ $TIMEOUT -gt 0 ]; do
-    #     if curl -s http://localhost:3001/docs > /dev/null; then
-    #       echo "Server is responding to requests"
-    #       sleep 10
-    #       break
-    #     fi
-    #     echo "Waiting... ($TIMEOUT seconds remaining)"
-    #     sleep 1
-    #     TIMEOUT=$((TIMEOUT - 1))
-    #   done
-
-    #   if [ $TIMEOUT -eq 0 ]; then
-    #     echo "Server failed to start within timeout period"
-    #     exit 1
-    #   fi
-
-    # - |
-    #   cd $CI_PROJECT_DIR/src/server
-    #   sed -i 's/exit 1  # Fail fast in CI/continue  # Continue despite test failure/' scripts/test-flow.sh
-    #   chmod +x scripts/test-flow.sh
-    #   ./scripts/test-flow.sh 2>&1 | tee test_output.log
-    #   if ! grep -q "Test flow completed successfully!" test_output.log; then
-    #     echo "Test flow did not complete successfully. Full test output:"
-    #     cat test_output.log
-    #     exit 1
-    #   fi
 
   after_script:
     - |
@@ -144,9 +121,10 @@ test_flow:
       echo "Cleanup completed"
 
   cache:
-    key: ${CI_COMMIT_REF_SLUG}
+    key: ${CI_COMMIT_REF_SLUG}-fabric-binaries
     paths:
       - src/server/node_modules/
+      - src/ledger/bin/
       - ~/.npm/
     policy: pull-push
 

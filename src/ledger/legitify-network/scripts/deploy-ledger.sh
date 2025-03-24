@@ -68,7 +68,13 @@ ssh -i ${SSH_KEY_FILE} ${EC2_USER}@${EC2_HOST} << 'EOF'
   
   # Install Fabric binaries if needed
   if [ ! -d "./bin" ]; then
-    ./install-fabric.sh --fabric-version 2.5.10 binary --ca-version 1.5.13
+    if [ -f "./setup-fabric.sh" ]; then
+      chmod +x ./setup-fabric.sh
+      ./setup-fabric.sh --fabric-version 2.5.10 --ca-version 1.5.13 binary docker
+    else
+      echo "Error: setup-fabric.sh not found, deployment may fail."
+      exit 1
+    fi
     chmod +x bin/*
   fi
 
