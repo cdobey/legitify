@@ -7,6 +7,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../server.env') });
 
 import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
+import '../config/env'; // Import our environment helper
 import { getGateway } from '../config/gateway';
 import prisma from '../prisma/client';
 

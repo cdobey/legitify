@@ -2,6 +2,10 @@
 #
 # Hyperledger Fabric setup script - installs binaries and pulls Docker images
 
+# Hardcoded versions instead of using ledger.env
+FABRIC_VERSION="2.5.10"
+CA_VERSION="1.5.13"
+
 # Process arguments and set defaults
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -24,8 +28,8 @@ while [ $# -gt 0 ]; do
     --help|-h)
       echo "Usage: $0 [OPTIONS] [COMPONENTS]"
       echo "Options:"
-      echo "  --fabric-version, -f VERSION  Fabric version to install (default: 2.5.10)"
-      echo "  --ca-version, -c VERSION      Fabric CA version to install (default: 1.5.13)"
+      echo "  --fabric-version, -f VERSION  Fabric version to install (default: ${FABRIC_VERSION})"
+      echo "  --ca-version, -c VERSION      Fabric CA version to install (default: ${CA_VERSION})"
       echo "Components:"
       echo "  binary, bin                   Install binary components"
       echo "  docker, images                Pull Docker images"
@@ -39,10 +43,6 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
-
-# Default versions if not specified
-FABRIC_VERSION="${FABRIC_VERSION:-2.5.10}"
-CA_VERSION="${CA_VERSION:-1.5.13}"
 
 # Default to binary install if no components specified
 if [ "$INSTALL_BINARY" != "true" ] && [ "$PULL_DOCKER" != "true" ]; then

@@ -22,6 +22,18 @@
 .classpath
 .settings
 
+# Environment variables
+**/client.env
+**/.env
+**/.env.*
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+server.env
+**/server.env
+
 # Logs
 logs
 *.log
@@ -40,6 +52,7 @@ package-lock.json
 dist
 dist-ssr
 *.local
+build/
 
 ## Go
 src/ledger/chaincode/degreeChaincode/vendor/
@@ -50,6 +63,16 @@ src/ledger/build
 
 ## Maven
 src/ledger/target
+
+# Testing and Coverage
+coverage
+
+# TypeScript
+*.tsbuildinfo
+
+# NPM specific
+.npm
+.eslintcache
 
 # Hyperledger Fabric Specific
 ## Binary and Configuration Files

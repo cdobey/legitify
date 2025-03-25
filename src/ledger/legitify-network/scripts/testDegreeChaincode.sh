@@ -1,7 +1,23 @@
 #!/bin/bash
 
-# Load environment variables
-source ledger.env
+# Environment variables (moved from ledger.env)
+# OrgUniversity Variables
+export ORG_UNIVERSITY_TLS_CERT=$(pwd)/organizations/peerOrganizations/orguniversity.com/tlsca/tlsca.orguniversity.com-cert.pem
+export ORG_UNIVERSITY_MSP_PATH=$(pwd)/organizations/peerOrganizations/orguniversity.com/users/Admin@orguniversity.com/msp
+export ORG_UNIVERSITY_ADDRESS=localhost:7051
+
+# OrgEmployer Variables
+export ORG_EMPLOYER_TLS_CERT=$(pwd)/organizations/peerOrganizations/orgemployer.com/tlsca/tlsca.orgemployer.com-cert.pem
+export ORG_EMPLOYER_MSP_PATH=$(pwd)/organizations/peerOrganizations/orgemployer.com/users/Admin@orgemployer.com/msp
+export ORG_EMPLOYER_ADDRESS=localhost:8051
+
+# OrgIndividual Variables
+export ORG_INDIVIDUAL_TLS_CERT=$(pwd)/organizations/peerOrganizations/orgindividual.com/tlsca/tlsca.orgindividual.com-cert.pem
+export ORG_INDIVIDUAL_MSP_PATH=$(pwd)/organizations/peerOrganizations/orgindividual.com/users/Admin@orgindividual.com/msp
+export ORG_INDIVIDUAL_ADDRESS=localhost:9051
+
+# Orderer Settings
+export ORDERER_CA=$(pwd)/organizations/ordererOrganizations/legitifyapp.com/tlsca/tlsca.legitifyapp.com-cert.pem
 
 # Helper function to set University org context
 set_university_context() {

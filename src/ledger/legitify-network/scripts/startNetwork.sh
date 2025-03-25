@@ -1,7 +1,12 @@
 #!/bin/bash
 
-# Source the .env file
-source ledger.env
+# Hardcoded values instead of sourcing from ledger.env
+FABRIC_VERSION="2.5.10"
+FABRIC_CA_VERSION="1.5.13"
+CHANNEL_NAME="legitifychannel"
+CHAINCODE_NAME="degreeCC"
+CHAINCODE_PATH="../chaincode/degreeChaincode/"
+CHAINCODE_LANGUAGE="go"
 
 # Ensure we're using our custom config files
 export FABRIC_CFG_PATH=${PWD}/../config

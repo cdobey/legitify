@@ -11,19 +11,29 @@ const http = require('http');
 const { exit } = require('process');
 const dotenv = require('dotenv');
 
-// Load environment variables from server.env file
-const result = dotenv.config({ path: path.join(__dirname, '../server.env') });
-if (result.error) {
-  console.warn(
-    'Warning: Failed to load environment variables from server.env:',
-    result.error.message,
-  );
+// Load environment variables from server.env file only in development
+const isDeployment = process.env.IS_DEPLOYMENT === 'true';
+const envPath = path.join(__dirname, '../server.env');
+
+if (!isDeployment && fs.existsSync(envPath)) {
+  console.log('Loading environment variables from server.env');
+  const result = dotenv.config({ path: envPath });
+  if (result.error) {
+    console.warn(
+      'Warning: Failed to load environment variables from server.env:',
+      result.error.message,
+    );
+  }
+} else {
+  console.log('Using system environment variables');
 }
 
 // Configuration
-const EC2_IP = process.env.EC2_IP || 'network.legitifyapp.com';
+// Support both new FABRIC_CONNECTION and legacy EC2_IP for backwards compatibility
+const FABRIC_CONNECTION =
+  process.env.FABRIC_CONNECTION || process.env.EC2_IP || 'network.legitifyapp.com';
 const RESOURCE_SERVER_PORT = process.env.RESOURCE_SERVER_PORT || 8080;
-const RESOURCE_SERVER_URL = `http://${EC2_IP}:${RESOURCE_SERVER_PORT}`;
+const RESOURCE_SERVER_URL = `http://${FABRIC_CONNECTION}:${RESOURCE_SERVER_PORT}`;
 
 // Define the components to check
 const components = [
@@ -80,20 +90,20 @@ function checkHttpConnectivity(url) {
  */
 async function runConnectivityChecks() {
   console.log('=================================================================');
-  console.log(`Checking connectivity to Hyperledger Fabric on ${EC2_IP}`);
+  console.log(`Checking connectivity to Hyperledger Fabric on ${FABRIC_CONNECTION}`);
   console.log('=================================================================');
 
   let allSuccessful = true;
   let failures = [];
 
   for (const component of components) {
-    process.stdout.write(`Checking ${component.name} (${EC2_IP}:${component.port})... `);
+    process.stdout.write(`Checking ${component.name} (${FABRIC_CONNECTION}:${component.port})... `);
 
     let isConnected = false;
     if (component.protocol === 'http') {
       isConnected = await checkHttpConnectivity(`${RESOURCE_SERVER_URL}/health`);
     } else {
-      isConnected = checkPortConnectivity(EC2_IP, component.port);
+      isConnected = checkPortConnectivity(FABRIC_CONNECTION, component.port);
     }
 
     if (isConnected) {
@@ -112,7 +122,7 @@ async function runConnectivityChecks() {
   } else {
     console.log('❌ Some connectivity checks failed:');
     failures.forEach(component => {
-      console.log(`   - ${component.name} (${EC2_IP}:${component.port})`);
+      console.log(`   - ${component.name} (${FABRIC_CONNECTION}:${component.port})`);
     });
 
     console.log('\nPossible solutions:');

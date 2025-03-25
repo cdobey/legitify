@@ -5,12 +5,15 @@ import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ mode }) => {
+  console.log(`Building in ${mode} mode`);
+
   // Load standard env files first
   const env = loadEnv(mode, process.cwd(), '');
 
-  // Load client-specific env file
+  // Load client-specific env file for local development only
   const clientEnvPath = path.resolve(process.cwd(), 'client.env');
   if (fs.existsSync(clientEnvPath)) {
+    console.log('Loading environment from client.env file');
     const clientEnv = dotenv.parse(fs.readFileSync(clientEnvPath));
     // Add client env variables to process.env
     Object.keys(clientEnv).forEach(key => {
@@ -20,7 +23,13 @@ export default defineConfig(({ mode }) => {
         env[key] = clientEnv[key];
       }
     });
+  } else {
+    console.log('No client.env file found, using environment variables');
   }
+
+  // Determine API URL based on mode
+  const apiUrl =
+    mode === 'production' ? process.env.VITE_API_URL || '/api' : 'http://localhost:3001';
 
   return {
     plugins: [react()],
@@ -32,7 +41,7 @@ export default defineConfig(({ mode }) => {
         '/api': {
           changeOrigin: true,
           secure: false,
-          target: 'http://localhost:3001',
+          target: apiUrl,
           rewrite: path => path.replace(/^\/api/, ''),
         },
       },

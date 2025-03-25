@@ -19,7 +19,7 @@ export type ApiResponse<T> = {
 };
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api', // Fallback to relative path
+  baseURL: import.meta.env.VITE_API_URL || '/api', // Updated to use VITE_API_URL
   headers: {
     'Content-Type': 'application/json',
   },

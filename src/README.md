@@ -158,7 +158,7 @@ Our backend is a **TypeScript** + **Express** app that uses **Prisma** (PostgreS
 
 ## **2.2 Environment Variables**
 
-In `src/server/.env`, you’ll typically have:
+In `src/server/server.env`, you’ll typically have:
 
 ```bash
 # Example .env
@@ -171,7 +171,7 @@ DB_HOST=localhost
 DB_NAME=my_fabric_db
 DB_USER=postgres
 DB_PASS=postgrespw
-PORT=3001
+SERVER_PORT=3001
 JWT_SECRET=MySuperSecretJWTKey
 
 # Environment variables declared in this file are automatically made available to Prisma.
@@ -180,7 +180,7 @@ JWT_SECRET=MySuperSecretJWTKey
 # Prisma supports the native connection string format for PostgreSQL, MySQL, SQLite, SQL Server, MongoDB and CockroachDB.
 # See the documentation for all the connection string options: https://pris.ly/d/connection-strings
 
-DATABASE_URL="postgresql://postgres:postgrespw@127.0.0.1:5432/my_fabric_db?schema=public"
+POSTGRES_CONNECTION_URL="postgresql://postgres:postgrespw@127.0.0.1:5432/my_fabric_db?schema=public"
 
 ```
 
@@ -317,7 +317,7 @@ Each endpoint’s parameters and expected responses are documented in Swagger.
 
 5. **Database Connection**
 
-   - Confirm `DATABASE_URL` is correct in `src/server/.env` and that PostgreSQL is accessible.
+   - Confirm `POSTGRES_CONNECTION_URL` is correct in `src/server/.env` and that PostgreSQL is accessible.
 
 6. **Node/TypeScript Issues**
    - Check `npm install` for dependency errors.

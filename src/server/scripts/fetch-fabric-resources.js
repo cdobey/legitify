@@ -4,19 +4,29 @@ const https = require('https');
 const http = require('http');
 const dotenv = require('dotenv');
 
-// Load environment variables from server.env file
-const result = dotenv.config({ path: path.join(__dirname, '../server.env') });
-if (result.error) {
-  console.warn(
-    'Warning: Failed to load environment variables from server.env:',
-    result.error.message,
-  );
+// Load environment variables from server.env file only in development
+const isDeployment = process.env.IS_DEPLOYMENT === 'true';
+const envPath = path.join(__dirname, '../server.env');
+
+if (!isDeployment && fs.existsSync(envPath)) {
+  console.log('Loading environment variables from server.env');
+  const result = dotenv.config({ path: envPath });
+  if (result.error) {
+    console.warn(
+      'Warning: Failed to load environment variables from server.env:',
+      result.error.message,
+    );
+  }
+} else {
+  console.log('Using system environment variables');
 }
 
 // Configuration
-const EC2_IP = process.env.EC2_IP || 'network.legitifyapp.com';
+// Support both new FABRIC_CONNECTION and legacy EC2_IP for backwards compatibility
+const FABRIC_CONNECTION =
+  process.env.FABRIC_CONNECTION || process.env.EC2_IP || 'network.legitifyapp.com';
 const RESOURCE_SERVER_PORT = process.env.RESOURCE_SERVER_PORT || 8080;
-const RESOURCE_SERVER_URL = `http://${EC2_IP}:${RESOURCE_SERVER_PORT}`;
+const RESOURCE_SERVER_URL = `http://${FABRIC_CONNECTION}:${RESOURCE_SERVER_PORT}`;
 const CONNECTION_PROFILES_DIR = path.resolve(__dirname, '../src/connectionProfiles');
 const CERTS_DIR = path.resolve(__dirname, '../src/certificates');
 const MSP_DIR = path.resolve(__dirname, '../src/msp');

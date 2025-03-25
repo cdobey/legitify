@@ -7,10 +7,15 @@ NC='\033[0m' # No Color
 BLUE='\033[0;34m'
 YELLOW='\033[0;33m'
 
-# Get the Supabase URL and key from .env file
-set -a
-source server.env
-set +a
+# Get the Supabase URL and key from server.env file or environment
+if [ "$IS_DEPLOYMENT" != "true" ] && [ -f server.env ]; then
+  echo "Loading environment variables from server.env"
+  set -a
+  source server.env
+  set +a
+else
+  echo "Using system environment variables (deployment mode)"
+fi
 
 echo -e "${BLUE}Starting test flow...${NC}"
 
@@ -68,7 +73,7 @@ validate_response() {
     # Check for database connection errors
     if [[ "$response" == *"FATAL: could not open file"* ]]; then
         echo -e "${RED}Database permission error. Check your Supabase connection settings:${NC}"
-        echo -e "${YELLOW}1. Verify DATABASE_URL in .env is correct${NC}"
+        echo -e "${YELLOW}1. Verify POSTGRES_CONNECTION_URL in server.env is correct${NC}"
         echo -e "${YELLOW}2. Check if Prisma needs to be redeployed: npx prisma migrate deploy${NC}"
         echo -e "${YELLOW}3. Ensure your Supabase database password is correct${NC}"
         exit 1
@@ -84,19 +89,19 @@ validate_response() {
 
 # Check if server is running
 echo -e "\n${BLUE}Checking server connection...${NC}"
-SERVER_CHECK_RESPONSE=$(curl -s -X GET "$API_URL/docs" -m 5 || echo '{"error":"Connection failed"}')
+SERVER_CHECK_RESPONSE=$(curl -s -X GET "$LEGITIFY_API_URL/docs" -m 5 || echo '{"error":"Connection failed"}')
 
 if [[ "$SERVER_CHECK_RESPONSE" == *"error"* ]]; then
     echo -e "${RED}Server connection failed. Make sure the server is running.${NC}"
     echo -e "${YELLOW}Possible issues:${NC}"
-    echo -e "${YELLOW}1. Check if API_URL in .env is correct (currently: $API_URL)${NC}"
+    echo -e "${YELLOW}1. Check if LEGITIFY_API_URL in .env is correct (currently: $LEGITIFY_API_URL)${NC}"
     echo -e "${YELLOW}2. Verify the server is running on the expected port (default: 3001)${NC}"
     echo -e "${YELLOW}3. Make sure there are no firewall issues blocking the connection${NC}"
     echo -e "${YELLOW}4. Try running ./src/server/scripts/start-fresh-db.sh first${NC}"
     
     # Try to ping the server to check basic connectivity
     echo -e "\n${BLUE}Attempting to ping server host...${NC}"
-    SERVER_HOST=$(echo $API_URL | sed -E 's|https?://||' | sed -E 's|/.*||' | sed -E 's|:.*||')
+    SERVER_HOST=$(echo $LEGITIFY_API_URL | sed -E 's|https?://||' | sed -E 's|/.*||' | sed -E 's|:.*||')
     ping -c 1 $SERVER_HOST > /dev/null 2>&1
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Host $SERVER_HOST is reachable.${NC}"
@@ -113,7 +118,7 @@ fi
 
 # Check if database connection is working
 echo -e "\n${BLUE}Checking Supabase connection...${NC}"
-DB_CHECK_RESPONSE=$(curl -s -X GET "$SUPABASE_URL/rest/v1/" \
+DB_CHECK_RESPONSE=$(curl -s -X GET "$SUPABASE_API_URL/rest/v1/" \
 -H "apikey: $SUPABASE_ANON_KEY" || echo '{"error":"Connection failed"}')
 
 if [[ "$DB_CHECK_RESPONSE" == *"error"* ]]; then
@@ -127,7 +132,7 @@ echo -e "\n${BLUE}1. Registering users...${NC}"
 
 # Register university with stronger password
 echo -e "\n${BLUE}Registering university...${NC}"
-UNIVERSITY_REGISTER_RESPONSE=$(curl -s -X POST "$API_URL/auth/register" \
+UNIVERSITY_REGISTER_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/register" \
 -H "Content-Type: application/json" \
 -d '{
     "email": "university@test.com",
@@ -144,7 +149,7 @@ wait_a_bit
 
 # Register individual
 echo -e "\n${BLUE}Registering individual...${NC}"
-INDIVIDUAL_REGISTER_RESPONSE=$(curl -s -X POST "$API_URL/auth/register" \
+INDIVIDUAL_REGISTER_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/register" \
 -H "Content-Type: application/json" \
 -d '{
     "email": "individual@test.com",
@@ -161,7 +166,7 @@ wait_a_bit
 
 # Register employer
 echo -e "\n${BLUE}Registering employer...${NC}"
-EMPLOYER_REGISTER_RESPONSE=$(curl -s -X POST "$API_URL/auth/register" \
+EMPLOYER_REGISTER_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/register" \
 -H "Content-Type: application/json" \
 -d '{
     "email": "employer@test.com",
@@ -180,7 +185,7 @@ echo -e "\n${BLUE}2. Logging in users and extracting UIDs...${NC}"
 
 # Login university through test-login endpoint
 echo -e "\n${BLUE}Logging in university...${NC}"
-UNIVERSITY_LOGIN_RESPONSE=$(curl -s -X POST "$API_URL/auth/test-login" \
+UNIVERSITY_LOGIN_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/test-login" \
 -H "Content-Type: application/json" \
 -d '{
     "email": "university@test.com",
@@ -202,7 +207,7 @@ wait_a_bit
 
 # Login individual
 echo -e "\n${BLUE}Logging in individual...${NC}"
-INDIVIDUAL_LOGIN_RESPONSE=$(curl -s -X POST "$API_URL/auth/test-login" \
+INDIVIDUAL_LOGIN_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/test-login" \
 -H "Content-Type: application/json" \
 -d '{
     "email": "individual@test.com",
@@ -224,7 +229,7 @@ wait_a_bit
 
 # Login employer
 echo -e "\n${BLUE}Logging in employer...${NC}"
-EMPLOYER_LOGIN_RESPONSE=$(curl -s -X POST "$API_URL/auth/test-login" \
+EMPLOYER_LOGIN_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/test-login" \
 -H "Content-Type: application/json" \
 -d '{
     "email": "employer@test.com",
@@ -246,7 +251,7 @@ wait_a_bit
 
 # Test authentication to verify tokens
 echo -e "\n${BLUE}Testing authentication for university...${NC}"
-AUTH_TEST_RESPONSE=$(curl -s -X GET "$API_URL/me" \
+AUTH_TEST_RESPONSE=$(curl -s -X GET "$LEGITIFY_API_URL/me" \
 -H "Authorization: Bearer $UNIVERSITY_TOKEN")
 echo "Auth test response: $AUTH_TEST_RESPONSE"
 
@@ -260,7 +265,7 @@ fi
 wait_a_bit
 
 echo -e "\n${BLUE}3. University issues degree to individual...${NC}"
-ISSUE_RESPONSE=$(curl -s -X POST "$API_URL/degree/issue" \
+ISSUE_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/degree/issue" \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer $UNIVERSITY_TOKEN" \
 -d "{
@@ -284,7 +289,7 @@ fi
 wait_a_bit
 
 echo -e "\n${BLUE}4. Individual accepts degree...${NC}"
-ACCEPT_RESPONSE=$(curl -s -X POST "$API_URL/degree/accept" \
+ACCEPT_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/degree/accept" \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer $INDIVIDUAL_TOKEN" \
 -d "{
@@ -302,7 +307,7 @@ fi
 wait_a_bit
 
 echo -e "\n${BLUE}5. Employer requests access to degree...${NC}"
-REQUEST_RESPONSE=$(curl -s -X POST "$API_URL/degree/requestAccess" \
+REQUEST_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/degree/requestAccess" \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer $EMPLOYER_TOKEN" \
 -d "{
@@ -320,7 +325,7 @@ fi
 wait_a_bit
 
 echo -e "\n${BLUE}6. Individual grants access to employer...${NC}"
-GRANT_RESPONSE=$(curl -s -X POST "$API_URL/degree/grantAccess" \
+GRANT_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/degree/grantAccess" \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer $INDIVIDUAL_TOKEN" \
 -d "{
@@ -339,7 +344,7 @@ fi
 wait_a_bit
 
 echo -e "\n${BLUE}7. Employer verifies degree...${NC}"
-VERIFY_RESPONSE=$(curl -s -X GET "$API_URL/degree/view/$DOC_ID" \
+VERIFY_RESPONSE=$(curl -s -X GET "$LEGITIFY_API_URL/degree/view/$DOC_ID" \
 -H "Authorization: Bearer $EMPLOYER_TOKEN")
 echo "Verification response: $VERIFY_RESPONSE"
 
@@ -359,5 +364,5 @@ echo -e "2. Verify Supabase connection in .env file"
 echo -e "3. Confirm Hyperledger Fabric setup is working"
 echo -e "4. Visit Supabase dashboard to check user creation"
 echo -e "5. Try running ./src/server/scripts/start-fresh-db.sh again" 
-echo -e "6. Verify API_URL in .env matches the actual server address and port"
+echo -e "6. Verify LEGITIFY_API_URL in .env matches the actual server address and port"
 echo -e "7. Check if the server process is still running: ps aux | grep node"
