@@ -414,7 +414,7 @@ function queryChaincode() {
 # Tear down running network
 function networkDown() {
   local temp_compose=$COMPOSE_FILE_BASE
-  COMPOSE_FILE_BASE=compose-bft-test-net.yaml
+  COMPOSE_FILE_BASE=compose-test-net.yaml
   # Simplified compose file management for network down
   COMPOSE_FILES="-f docker/${COMPOSE_FILE_BASE}"
   if [ "${DATABASE}" == "couchdb" ]; then

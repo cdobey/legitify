@@ -20,8 +20,8 @@ services:
       - FABRIC_CA_SERVER_OPERATIONS_LISTENADDRESS=0.0.0.0:17054
       - FABRIC_CA_SERVER_CSR_HOSTS=ca.orguniversity.com,localhost,localhost
     ports:
-      - "7054:7054"
-      - "17054:17054"
+      - '7054:7054'
+      - '17054:17054'
     command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
     volumes:
       - ../organizations/fabric-ca/orguniversity:/etc/hyperledger/fabric-ca-server
@@ -41,8 +41,8 @@ services:
       - FABRIC_CA_SERVER_OPERATIONS_LISTENADDRESS=0.0.0.0:18054
       - FABRIC_CA_SERVER_CSR_HOSTS=ca.orgemployer.com,localhost,localhost
     ports:
-      - "8054:8054"
-      - "18054:18054"
+      - '8054:8054'
+      - '18054:18054'
     command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
     volumes:
       - ../organizations/fabric-ca/orgemployer:/etc/hyperledger/fabric-ca-server
@@ -51,18 +51,23 @@ services:
       - test
 
   ca.orgindividual.com:
-    container_name: ca.orgindividual.com
     image: hyperledger/fabric-ca:1.5
+    labels:
+      service: hyperledger-fabric
     environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
       - FABRIC_CA_SERVER_CA_NAME=ca-orgindividual
       - FABRIC_CA_SERVER_TLS_ENABLED=true
       - FABRIC_CA_SERVER_PORT=9054
+      - FABRIC_CA_SERVER_OPERATIONS_LISTENADDRESS=0.0.0.0:19054
       - FABRIC_CA_SERVER_CSR_HOSTS=ca.orgindividual.com,localhost,localhost
     ports:
-      - "9054:9054"
-    command: fabric-ca-server start -b admin:adminpw --port 9054
+      - '9054:9054'
+      - '19054:19054'
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
     volumes:
       - ../organizations/fabric-ca/orgindividual:/etc/hyperledger/fabric-ca-server
+    container_name: ca.orgindividual.com
     networks:
       - test
 
@@ -75,11 +80,11 @@ services:
       - FABRIC_CA_SERVER_CA_NAME=ca-orderer
       - FABRIC_CA_SERVER_TLS_ENABLED=true
       - FABRIC_CA_SERVER_PORT=10054
-      - FABRIC_CA_SERVER_OPERATIONS_LISTENADDRESS=0.0.0.0:19054
+      - FABRIC_CA_SERVER_OPERATIONS_LISTENADDRESS=0.0.0.0:20054
       - FABRIC_CA_SERVER_CSR_HOSTS=ca_orderer,localhost,localhost
     ports:
-      - "10054:10054"
-      - "19054:19054"
+      - '10054:10054'
+      - '20054:20054'
     command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
     volumes:
       - ../organizations/fabric-ca/ordererOrg:/etc/hyperledger/fabric-ca-server

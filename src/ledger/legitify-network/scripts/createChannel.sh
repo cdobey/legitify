@@ -28,45 +28,34 @@ fi
 
 createChannelGenesisBlock() {
   setGlobals 1
-	which configtxgen
-	if [ "$?" -ne 0 ]; then
-		fatalln "configtxgen tool not found."
-	fi
-	local bft_true=$1
-	set -x
-
-	if [ $bft_true -eq 1 ]; then
-		configtxgen -profile ChannelUsingBFT -outputBlock ./channel-artifacts/${CHANNEL_NAME}.block -channelID $CHANNEL_NAME
-	else
-		configtxgen -profile ChannelUsingRaft -outputBlock ./channel-artifacts/${CHANNEL_NAME}.block -channelID $CHANNEL_NAME
-	fi
-	res=$?
-	{ set +x; } 2>/dev/null
+  which configtxgen
+  if [ "$?" -ne 0 ]; then
+    fatalln "configtxgen tool not found."
+  fi
+  set -x
+  configtxgen -profile ChannelUsingRaft -outputBlock ./channel-artifacts/${CHANNEL_NAME}.block -channelID $CHANNEL_NAME
+  res=$?
+  { set +x; } 2>/dev/null
   verifyResult $res "Failed to generate channel configuration transaction..."
 }
 
 createChannel() {
-	# Poll in case the raft leader is not set yet
-	local rc=1
-	local COUNTER=1
-	local bft_true=$1
-	infoln "Adding orderers"
-	while [ $rc -ne 0 -a $COUNTER -lt $MAX_RETRY ] ; do
-		sleep $DELAY
-		set -x
-    . scripts/orderer.sh ${CHANNEL_NAME}> /dev/null 2>&1
-    if [ $bft_true -eq 1 ]; then
-      . scripts/orderer2.sh ${CHANNEL_NAME}> /dev/null 2>&1
-      . scripts/orderer3.sh ${CHANNEL_NAME}> /dev/null 2>&1
-      . scripts/orderer4.sh ${CHANNEL_NAME}> /dev/null 2>&1
-    fi
-		res=$?
-		{ set +x; } 2>/dev/null
-		let rc=$res
-		COUNTER=$(expr $COUNTER + 1)
-	done
-	cat log.txt
-	verifyResult $res "Channel creation failed"
+  # Poll in case the raft leader is not set yet
+  local rc=1
+  local COUNTER=1
+  infoln "Adding orderers"
+  while [ $rc -ne 0 -a $COUNTER -lt $MAX_RETRY ] ; do
+    sleep $DELAY
+    set -x
+    # Join all orderers to the channel
+    . scripts/join-all-orderers.sh ${CHANNEL_NAME} > /dev/null 2>&1
+    res=$?
+    { set +x; } 2>/dev/null
+    let rc=$res
+    COUNTER=$(expr $COUNTER + 1)
+  done
+  cat log.txt
+  verifyResult $res "Channel creation failed"
 }
 
 # joinChannel ORG
@@ -112,16 +101,11 @@ infoln "Generating channel genesis block '${CHANNEL_NAME}.block'"
 FABRIC_CFG_PATH=${PWD}/config
 echo "TestCFG8: ${FABRIC_CFG_PATH}"
 
-if [ $BFT -eq 1 ]; then
-  FABRIC_CFG_PATH=${PWD}/bft-config
-  echo "TestCFG9: ${FABRIC_CFG_PATH}"
-
-fi
-createChannelGenesisBlock $BFT
+createChannelGenesisBlock
 
 ## Create channel
 infoln "Creating channel ${CHANNEL_NAME}"
-createChannel $BFT
+createChannel
 successln "Channel '$CHANNEL_NAME' created"
 
 ## Join all the peers to the channel

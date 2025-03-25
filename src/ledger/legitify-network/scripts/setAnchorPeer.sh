@@ -54,41 +54,31 @@ createAnchorPeerUpdate() {
 updateAnchorPeer() {
   CHANNEL_NAME=$1
   CONFIG_UPDATE_FILE=${TEST_NETWORK_HOME}/channel-artifacts/${CHANNEL_NAME}_anchor_update.pb
-
+  
+  # Ensure directory exists with proper permissions
+  mkdir -p ${TEST_NETWORK_HOME}/channel-artifacts
+  chmod -R 755 ${TEST_NETWORK_HOME}/channel-artifacts
+  
   # Convert the config update from protobuf to JSON
-  configtxlator proto_decode --input ${CONFIG_UPDATE_FILE} --type common.ConfigUpdate | jq . > ${TEST_NETWORK_HOME}/channel-artifacts/${CHANNEL_NAME}_anchor_update.json
-
-  # Wrap the config update in an envelope using jq
-  jq -n --arg channel "$CHANNEL_NAME" \
-    --slurpfile update ${TEST_NETWORK_HOME}/channel-artifacts/${CHANNEL_NAME}_anchor_update.json \
-    '{
-      payload: {
-        header: {
-          channel_header: {
-            channel_id: $channel,
-            type: 2
-          }
-        },
-        data: {
-          config_update: $update[0]
-        }
-      }
-    }' > ${TEST_NETWORK_HOME}/channel-artifacts/config_update_in_envelope.json
-
-  # --- Add these lines to remove CRLF and BOM: ---
-  sed -i 's/\r//g' ${TEST_NETWORK_HOME}/channel-artifacts/config_update_in_envelope.json
-  sed -i '1s/^\xEF\xBB\xBF//' ${TEST_NETWORK_HOME}/channel-artifacts/config_update_in_envelope.json
-  # ----------------------------------------------
-
-  # Encode the envelope back to protobuf
-  configtxlator proto_encode \
-      --input ${TEST_NETWORK_HOME}/channel-artifacts/config_update_in_envelope.json \
-      --type common.Envelope \
-      --output ${TEST_NETWORK_HOME}/channel-artifacts/${CHANNEL_NAME}_anchor_update_envelope.pb
-
+  configtxlator proto_decode --input ${CONFIG_UPDATE_FILE} --type common.ConfigUpdate > ${TEST_NETWORK_HOME}/channel-artifacts/${CHANNEL_NAME}_anchor_update.json
+  
+  # Wrap the config update in an envelope using echo and a simpler approach
+  echo '{"payload":{"header":{"channel_header":{"channel_id":"'${CHANNEL_NAME}'", "type":2}},"data":{"config_update":'$(cat ${TEST_NETWORK_HOME}/channel-artifacts/${CHANNEL_NAME}_anchor_update.json)'}}}' > ${TEST_NETWORK_HOME}/channel-artifacts/config_update_in_envelope.json
+  
+  # Encode directly with temporary file approach to avoid stdout issues
+  TEMP_OUTPUT=${TEST_NETWORK_HOME}/channel-artifacts/temp_output.pb
+  configtxlator proto_encode --input ${TEST_NETWORK_HOME}/channel-artifacts/config_update_in_envelope.json --type common.Envelope --output ${TEMP_OUTPUT} 2>/dev/null || {
+    # If failed, try an alternative approach
+    infoln "Using alternative encoding approach..."
+    cat ${TEST_NETWORK_HOME}/channel-artifacts/config_update_in_envelope.json | configtxlator proto_encode --type common.Envelope > ${TEMP_OUTPUT}
+  }
+  
+  # Move the temp file to final destination
+  mv ${TEMP_OUTPUT} ${TEST_NETWORK_HOME}/channel-artifacts/${CHANNEL_NAME}_anchor_update_envelope.pb
+  
   # Sign the config update as all organizations
   collectSignatures "${TEST_NETWORK_HOME}/channel-artifacts/${CHANNEL_NAME}_anchor_update_envelope.pb"
-
+  
   # Submit the config update
   peer channel update -o localhost:7050 --ordererTLSHostnameOverride orderer.legitifyapp.com -c "$CHANNEL_NAME" -f "${TEST_NETWORK_HOME}/channel-artifacts/${CHANNEL_NAME}_anchor_update_envelope.pb" --tls --cafile "$ORDERER_CA" >&log.txt
   res=$?

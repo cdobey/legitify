@@ -30,6 +30,8 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+src/ledger/legitify-network/invoke_output.txt
+src/ledger/legitify-network/resource-server/resource-server.log
 
 # Dependencies and Build Directories
 ## Node.js
@@ -58,10 +60,7 @@ src/ledger/external-chaincode/
 src/ledger/legitify-network/builders/
 
 ## Network Artifacts
-src/ledger/legitify-network/channel-artifacts/*.tx
-src/ledger/legitify-network/channel-artifacts/*.block
-src/ledger/legitify-network/channel-artifacts/*.json
-src/ledger/legitify-network/channel-artifacts/*.pb
+src/ledger/legitify-network/channel-artifacts/
 src/ledger/legitify-network/ledgers
 src/ledger/legitify-network/ledgers-backup
 src/ledger/legitify-network/system-genesis-block/*
