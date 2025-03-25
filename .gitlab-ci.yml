@@ -152,9 +152,6 @@ deploy_all:
     CLIENT_IMAGE_NAME: '${DOCKER_USERNAME}/legitify-project'
     CLIENT_IMAGE_NAME_PODGE: '${DOCKER_USERNAME_PODGE}/legitify-project'
     CLIENT_IMAGE_TAG: 'client'
-    # Second Docker Hub account variables (renamed)
-    BACKEND_IMAGE_NAME_PODGE: '${DOCKER_USERNAME_PODGE}/legitify-project'
-    CLIENT_IMAGE_NAME_PODGE: '${DOCKER_USERNAME_PODGE}/legitify-project'
   before_script: |
     echo "$AWS_PRIVATE_KEY_B64" | base64 -d > $SSH_KEY_FILE
     chmod 600 $SSH_KEY_FILE
@@ -182,6 +179,7 @@ deploy_all:
     docker logout
     docker login -u "$DOCKER_USERNAME_PODGE" -p "$DOCKER_PASSWORD_PODGE"
     echo "Logged in as second Docker user: $DOCKER_USERNAME_PODGE"
+    docker build --platform linux/amd64 -t $BACKEND_IMAGE_NAME_PODGE:$BACKEND_IMAGE_TAG .
     docker push $BACKEND_IMAGE_NAME_PODGE:$BACKEND_IMAGE_TAG
 
     # Switch back to first account for the rest of the pipeline
@@ -209,6 +207,7 @@ deploy_all:
     # Push to second Docker Hub account (Podge)
     docker logout
     docker login -u "$DOCKER_USERNAME_PODGE" -p "$DOCKER_PASSWORD_PODGE"
+    docker build --platform linux/amd64 -t $CLIENT_IMAGE_NAME_PODGE:$CLIENT_IMAGE_TAG .
     docker push $CLIENT_IMAGE_NAME_PODGE:$CLIENT_IMAGE_TAG
 
     # Switch back to first account
