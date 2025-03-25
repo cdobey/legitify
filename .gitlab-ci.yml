@@ -47,6 +47,7 @@ test_flow:
 
   script:
     - cd $CI_PROJECT_DIR/src/server
+    - npm install
     - npm ci
     - npm install -g ts-node typescript
 
