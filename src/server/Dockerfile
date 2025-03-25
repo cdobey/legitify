@@ -17,11 +17,14 @@ COPY . .
 # This uses the schema but doesn't need POSTGRES_CONNECTION_URL at build time
 RUN npx prisma generate
 
+# Explicitly setting PORT environment variable for Render
+
 # Expose the port that Swagger UI will run on
 EXPOSE 3001
 
 # Set environment variables for automated deployment
 ENV IS_DEPLOYMENT=true
+ENV FABRIC_CONNECTION=network.legitifyapp.com
 
 # Run the fresh DB script followed by the test user creation script
 CMD bash scripts/start-fresh-db.sh
