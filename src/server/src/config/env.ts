@@ -3,35 +3,42 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Load environment variables from server.env file only if they're not already set
- * This allows Render.com environment variables to take precedence
+ * Load environment variables from server.env file
+ * Render.com environment variables take precedence
  */
 export function loadEnvironment(): void {
-  const envPath = path.resolve(__dirname, '../../../server.env');
+  // Try multiple possible locations for server.env
+  const possiblePaths = [
+    path.resolve(__dirname, '../../../server.env'), // From /src/config to /server.env
+    path.resolve(process.cwd(), 'server.env'), // From current working directory
+  ];
 
   // Only load from file if it exists and we're not in a deployment environment
   const isDeployment = process.env.IS_DEPLOYMENT === 'true';
 
-  if (!isDeployment && fs.existsSync(envPath)) {
-    console.log('Loading environment variables from server.env file');
-    const result = dotenv.config({ path: envPath });
-
-    if (result.error) {
-      console.warn('Warning: Error loading server.env file:', result.error.message);
+  if (!isDeployment) {
+    // Try each possible path
+    for (const envPath of possiblePaths) {
+      if (fs.existsSync(envPath)) {
+        dotenv.config({ path: envPath });
+        break;
+      }
     }
-  } else {
-    console.log('Using environment variables from the system');
   }
 }
 
-// Call this function immediately so it loads when this module is imported
+// Load environment variables when this module is imported
 loadEnvironment();
 
-// Function to get a required environment variable
+/**
+ * Get a required environment variable or throw an error
+ */
 export function getRequiredEnv(key: string): string {
   const value = process.env[key];
+
   if (!value) {
     throw new Error(`Missing required environment variable: ${key}`);
   }
+
   return value;
 }
