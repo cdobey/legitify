@@ -161,69 +161,69 @@ deploy_all:
     chmod 600 $SSH_KEY_FILE
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
     echo "Logged in as Docker user: $DOCKER_USERNAME"
-  script:
+  script: |
     # Step 1: Deploy Ledger
-    - echo "Starting ledger deployment..."
-    - cd $CI_PROJECT_DIR/src/ledger/legitify-network/scripts
-    - chmod +x deploy-ledger.sh
-    - ./deploy-ledger.sh
-    - echo "Ledger deployment completed"
+    echo "Starting ledger deployment..."
+    cd $CI_PROJECT_DIR/src/ledger/legitify-network/scripts
+    chmod +x deploy-ledger.sh
+    ./deploy-ledger.sh
+    echo "Ledger deployment completed"
 
     # Step 2: Deploy Backend to Render
-    - echo "Starting backend deployment..."
-    - cd $CI_PROJECT_DIR/src/server
+    echo "Starting backend deployment..."
+    cd $CI_PROJECT_DIR/src/server
 
     # Build the image once
-    - docker build --platform linux/amd64 -t $BACKEND_IMAGE_NAME:$BACKEND_IMAGE_TAG .
+    docker build --platform linux/amd64 -t $BACKEND_IMAGE_NAME:$BACKEND_IMAGE_TAG .
 
     # Push to first Docker Hub account
-    - docker push $BACKEND_IMAGE_NAME:$BACKEND_IMAGE_TAG
+    docker push $BACKEND_IMAGE_NAME:$BACKEND_IMAGE_TAG
 
     # Push to second Docker Hub account (Podge)
-    - docker logout
-    - docker login -u "$DOCKER_USERNAME_PODGE" -p "$DOCKER_PASSWORD_PODGE"
-    - echo "Logged in as second Docker user: $DOCKER_USERNAME_PODGE"
-    - docker tag $BACKEND_IMAGE_NAME:$BACKEND_IMAGE_TAG $BACKEND_IMAGE_NAME_PODGE:$BACKEND_IMAGE_TAG
-    - docker push $BACKEND_IMAGE_NAME_PODGE:$BACKEND_IMAGE_TAG
+    docker logout
+    docker login -u "$DOCKER_USERNAME_PODGE" -p "$DOCKER_PASSWORD_PODGE"
+    echo "Logged in as second Docker user: $DOCKER_USERNAME_PODGE"
+    docker tag $BACKEND_IMAGE_NAME:$BACKEND_IMAGE_TAG $BACKEND_IMAGE_NAME_PODGE:$BACKEND_IMAGE_TAG
+    docker push $BACKEND_IMAGE_NAME_PODGE:$BACKEND_IMAGE_TAG
 
     # Switch back to first account for the rest of the pipeline
-    - docker logout
-    - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+    docker logout
+    docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
 
     # Trigger both Render deployments for backend
-    - echo "Triggering Render deployments via webhooks..."
-    - curl -X POST "$RENDER_DEPLOY_HOOK"
-    - echo "Triggering Podge's Render deployment via webhook..."
-    - curl -X POST "$RENDER_DEPLOY_HOOK_PODGE"
-    - echo "Waiting for backend deployments to complete..."
-    - sleep 60 # Add appropriate wait time for backend deployment
+    echo "Triggering Render deployments via webhooks..."
+    curl -X POST "$RENDER_DEPLOY_HOOK"
+    echo "Triggering Podge's Render deployment via webhook..."
+    curl -X POST "$RENDER_DEPLOY_HOOK_PODGE"
+    echo "Waiting for backend deployments to complete..."
+    sleep 60
 
     # Step 3: Deploy Client to Render
-    - echo "Starting client deployment..."
-    - cd $CI_PROJECT_DIR/src/client/legitify-project
+    echo "Starting client deployment..."
+    cd $CI_PROJECT_DIR/src/client/legitify-project
 
     # Build the client image once
-    - docker build --platform linux/amd64 -t $CLIENT_IMAGE_NAME:$CLIENT_IMAGE_TAG .
+    docker build --platform linux/amd64 -t $CLIENT_IMAGE_NAME:$CLIENT_IMAGE_TAG .
 
     # Push to first Docker Hub account
-    - docker push $CLIENT_IMAGE_NAME:$CLIENT_IMAGE_TAG
+    docker push $CLIENT_IMAGE_NAME:$CLIENT_IMAGE_TAG
 
     # Push to second Docker Hub account (Podge)
-    - docker logout
-    - docker login -u "$DOCKER_USERNAME_PODGE" -p "$DOCKER_PASSWORD_PODGE"
-    - docker tag $CLIENT_IMAGE_NAME:$CLIENT_IMAGE_TAG $CLIENT_IMAGE_NAME_PODGE:$CLIENT_IMAGE_TAG
-    - docker push $CLIENT_IMAGE_NAME_PODGE:$CLIENT_IMAGE_TAG
+    docker logout
+    docker login -u "$DOCKER_USERNAME_PODGE" -p "$DOCKER_PASSWORD_PODGE"
+    docker tag $CLIENT_IMAGE_NAME:$CLIENT_IMAGE_TAG $CLIENT_IMAGE_NAME_PODGE:$CLIENT_IMAGE_TAG
+    docker push $CLIENT_IMAGE_NAME_PODGE:$CLIENT_IMAGE_TAG
 
     # Switch back to first account
-    - docker logout
-    - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+    docker logout
+    docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
 
     # Trigger both Render deployments for client
-    - echo "Triggering Render client deployments via webhooks..."
-    - curl -X POST "$RENDER_CLIENT_DEPLOY_HOOK"
-    - echo "Triggering Podge's Render client deployment via webhook..."
-    - curl -X POST "$RENDER_CLIENT_DEPLOY_HOOK_PODGE"
-    - echo "Full deployment process completed successfully"
-  after_script:
+    echo "Triggering Render client deployments via webhooks..."
+    curl -X POST "$RENDER_CLIENT_DEPLOY_HOOK"
+    echo "Triggering Podge's Render client deployment via webhook..."
+    curl -X POST "$RENDER_CLIENT_DEPLOY_HOOK_PODGE"
+    echo "Full deployment process completed successfully"
+  after_script: |
     # Clean up key after use for security
-    - rm -f $SSH_KEY_FILE
+    rm -f $SSH_KEY_FILE
