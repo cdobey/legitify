@@ -91,6 +91,7 @@ src/server/src/wallet/
 src/server/src/certificates/
 src/server/src/connectionProfiles/
 src/server/src/msp/
+src/server/package-lock.json
 
 # Editor specific file extensions
 *.suo
