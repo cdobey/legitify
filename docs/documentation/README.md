@@ -6,7 +6,7 @@ The first page of each document should contain at least:
 
 - your names,
 - your project title,
-- the type of document (e.g. *Technical Manual*)
+- the type of document (e.g. _Technical Manual_)
 - your student IDs, and
 - the date you finished working on the document.
 
@@ -14,4 +14,6 @@ In addition, the file names you choose to use should make clear what the documen
 
 **The final version of your documents should be converted to PDF and stored in this same directory**
 
-*Do not place any other files in this directory.*
+_Do not place any other files in this directory._
+
+_include_ Class graphs and sequence graphs (UML), system architecture graphs
