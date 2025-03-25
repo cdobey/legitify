@@ -18,6 +18,7 @@ COPY . .
 RUN npx prisma generate
 
 # Explicitly setting PORT environment variable for Render
+ENV PORT=3001
 
 # Expose the port that Swagger UI will run on
 EXPOSE 3001
