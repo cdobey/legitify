@@ -8,10 +8,7 @@ variables:
   SERVER_PID_FILE: '/tmp/server.pid'
   SERVER_STARTUP_TIMEOUT: 120
   TEST_FLOW_TIMEOUT: 300
-  SKIP_TESTS: 'false'
-  # Add second Docker Hub variables with the new naming
-  DOCKER_USERNAME_PODGE: '${DOCKER_USERNAME_PODGE}'
-  DOCKER_PASSWORD_PODGE: '${DOCKER_PASSWORD_PODGE}'
+  SKIP_TESTS: 'true'
 
 test_flow:
   stage: test
@@ -150,8 +147,10 @@ deploy_all:
     SOURCE_DIR: '$CI_PROJECT_DIR/src/ledger'
     # Docker image variables for backend and client
     BACKEND_IMAGE_NAME: '${DOCKER_USERNAME}/legitify-project'
+    BACKEND_IMAGE_NAME_PODGE: '${DOCKER_USERNAME_PODGE}/legitify-project'
     BACKEND_IMAGE_TAG: 'backend'
     CLIENT_IMAGE_NAME: '${DOCKER_USERNAME}/legitify-project'
+    CLIENT_IMAGE_NAME_PODGE: '${DOCKER_USERNAME_PODGE}/legitify-project'
     CLIENT_IMAGE_TAG: 'client'
     # Second Docker Hub account variables (renamed)
     BACKEND_IMAGE_NAME_PODGE: '${DOCKER_USERNAME_PODGE}/legitify-project'
@@ -183,8 +182,8 @@ deploy_all:
     docker logout
     docker login -u "$DOCKER_USERNAME_PODGE" -p "$DOCKER_PASSWORD_PODGE"
     echo "Logged in as second Docker user: $DOCKER_USERNAME_PODGE"
-    docker tag $BACKEND_IMAGE_NAME:$BACKEND_IMAGE_TAG $BACKEND_IMAGE_NAME:$BACKEND_IMAGE_TAG
-    docker push $BACKEND_IMAGE_NAME:$BACKEND_IMAGE_TAG
+    docker tag $BACKEND_IMAGE_NAME_PODGE:$BACKEND_IMAGE_TAG $BACKEND_IMAGE_NAME_PODGE:$BACKEND_IMAGE_TAG
+    docker push $BACKEND_IMAGE_NAME_PODGE:$BACKEND_IMAGE_TAG
 
     # Switch back to first account for the rest of the pipeline
     docker logout
@@ -211,8 +210,8 @@ deploy_all:
     # Push to second Docker Hub account (Podge)
     docker logout
     docker login -u "$DOCKER_USERNAME_PODGE" -p "$DOCKER_PASSWORD_PODGE"
-    docker tag $CLIENT_IMAGE_NAME:$CLIENT_IMAGE_TAG $CLIENT_IMAGE_NAME:$CLIENT_IMAGE_TAG
-    docker push $CLIENT_IMAGE_NAME:$CLIENT_IMAGE_TAG
+    docker tag $CLIENT_IMAGE_NAME_PODGE:$CLIENT_IMAGE_TAG $CLIENT_IMAGE_NAME_PODGE:$CLIENT_IMAGE_TAG
+    docker push $CLIENT_IMAGE_NAME_PODGE:$CLIENT_IMAGE_TAG
 
     # Switch back to first account
     docker logout
