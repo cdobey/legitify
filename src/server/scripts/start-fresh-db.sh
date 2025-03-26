@@ -46,8 +46,6 @@ if [ $? -ne 0 ]; then
 fi
 echo "✅ Successfully fetched Fabric resources"
 
-echo "🗑️  Clearing all data from Supabase database..."
-
 # Export environment variables from server.env only if in local development
 if [ "$IS_DEPLOYMENT" != "true" ] && [ -f server.env ]; then
   echo "Loading environment variables from server.env"
@@ -63,6 +61,12 @@ if [ -z "$POSTGRES_CONNECTION_URL" ]; then
   exit 1
 fi
 
+# Delete all Supabase Auth users
+echo "🗑️  Clearing all authorized users from Supabase Auth..."
+npx ts-node ./scripts/delete-auth-users.ts
+
+echo "🗑️  Clearing all data from Supabase database..."
+
 # Use Prisma to reset the database (drops all tables and recreates them)
 echo "🔄 Resetting database schema..."
 npx prisma migrate reset --force
@@ -76,7 +80,4 @@ npx prisma migrate deploy
 echo "🔑 Running enrollment script..."
 npx ts-node ./scripts/enrollAdmin.ts
 
-echo "🚀 Starting the server..."
-
-# Start the server
-npm run start
+echo "✅ Database setup completed successfully"

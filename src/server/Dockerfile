@@ -17,6 +17,9 @@ COPY . .
 # This uses the schema but doesn't need POSTGRES_CONNECTION_URL at build time
 RUN npx prisma generate
 
+# Make scripts executable
+RUN chmod +x scripts/*.sh
+
 # Explicitly setting PORT environment variable for Render
 ENV PORT=3001
 
@@ -27,5 +30,5 @@ EXPOSE 3001
 ENV IS_DEPLOYMENT=true
 ENV FABRIC_CONNECTION=network.legitifyapp.com
 
-# Run the fresh DB script followed by the test user creation script
-CMD bash scripts/start-fresh-db.sh
+# Use the conditional startup script
+CMD ["bash", "scripts/conditional-startup.sh"]
