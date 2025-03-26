@@ -1,31 +1,44 @@
-# ---- Stage 1: Build the React App ----
-    FROM node:18 as build
+# Simple Dockerfile for Vite React app
+FROM node:18 AS build
 
-    # Set working directory
-    WORKDIR /app
+# Set working directory
+WORKDIR /app
     
-    # Copy package files and install dependencies
-    COPY package*.json ./
-    RUN npm install
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm install
     
-    # Copy the rest of your source code
-    COPY . .
+# Copy the source code
+COPY . .
+
+# Build arguments for environment variables
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ARG VITE_API_URL
+
+# Set build environment variables (these won't persist in the final image)
+ENV VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+ENV VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+ENV VITE_API_URL=${VITE_API_URL}
     
-    # Build the app (default Vite output is in "dist")
-    RUN npm run build
+# Build the app
+RUN npm run build
     
-    # ---- Stage 2: Serve the App using Nginx ----
-    FROM nginx:alpine
+# Use Nginx to serve the app - clean image without build args
+FROM nginx:alpine
     
-    # Remove default Nginx static assets
-    RUN rm -rf /usr/share/nginx/html/*
+# Copy built app
+COPY --from=build /app/dist /usr/share/nginx/html
     
-    # Copy the built app from the previous stage
-    COPY --from=build /app/dist /usr/share/nginx/html
+# Add Nginx config for SPA
+RUN echo 'server { \
+    listen 80; \
+    location / { \
+        root /usr/share/nginx/html; \
+        index index.html; \
+        try_files $uri $uri/ /index.html; \
+    } \
+}' > /etc/nginx/conf.d/default.conf
     
-    # Expose port 80 (default for Nginx)
-    EXPOSE 80
-    
-    # Start Nginx in the foreground
-    CMD ["nginx", "-g", "daemon off;"]
-    
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

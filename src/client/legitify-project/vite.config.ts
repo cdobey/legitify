@@ -7,29 +7,32 @@ import { defineConfig, loadEnv } from 'vite';
 export default defineConfig(({ mode }) => {
   console.log(`Building in ${mode} mode`);
 
-  // Load standard env files first
+  // Load environment variables - Render.com will provide these
   const env = loadEnv(mode, process.cwd(), '');
 
-  // Load client-specific env file for local development only
-  const clientEnvPath = path.resolve(process.cwd(), 'client.env');
-  if (fs.existsSync(clientEnvPath)) {
-    console.log('Loading environment from client.env file');
-    const clientEnv = dotenv.parse(fs.readFileSync(clientEnvPath));
-    // Add client env variables to process.env
-    Object.keys(clientEnv).forEach(key => {
-      process.env[key] = clientEnv[key];
-      // Also add to import.meta.env for Vite
-      if (key.startsWith('VITE_')) {
-        env[key] = clientEnv[key];
-      }
-    });
-  } else {
-    console.log('No client.env file found, using environment variables');
+  // Load client.env file only for local development
+  if (mode !== 'production') {
+    const clientEnvPath = path.resolve(process.cwd(), 'client.env');
+    if (fs.existsSync(clientEnvPath)) {
+      console.log('Loading environment from client.env file');
+      dotenv.config({ path: clientEnvPath });
+    }
   }
 
-  // Determine API URL based on mode
-  const apiUrl =
-    mode === 'production' ? process.env.VITE_API_URL || '/api' : 'http://localhost:3001';
+  // Determine API URL based on mode (use only environment variable in production)
+  const apiUrl = mode === 'production' ? env.VITE_API_URL : 'http://localhost:3001';
+  console.log(`API URL: ${apiUrl}`);
+
+  // Check if required env vars are present during build
+  if (mode === 'production') {
+    const requiredVars = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'VITE_API_URL'];
+    const missingVars = requiredVars.filter(varName => !env[varName]);
+
+    if (missingVars.length > 0) {
+      console.error(`ERROR: Missing required environment variables: ${missingVars.join(', ')}`);
+      throw new Error('Missing required environment variables for production build');
+    }
+  }
 
   return {
     plugins: [react()],
@@ -45,6 +48,11 @@ export default defineConfig(({ mode }) => {
           rewrite: path => path.replace(/^\/api/, ''),
         },
       },
+    },
+    // Define environment variables explicitly for the client - no fallbacks
+    define: {
+      'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
+      'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
     },
     build: {
       // Optimize chunk splitting

@@ -198,8 +198,14 @@ deploy_all:
     echo "Starting client deployment..."
     cd $CI_PROJECT_DIR/src/client/legitify-project
 
-    # Build the client image once
-    docker build --platform linux/amd64 -t $CLIENT_IMAGE_NAME:$CLIENT_IMAGE_TAG .
+    # Build with credentials passed as build args (more secure than env file)
+    # Using --build-arg keeps the values out of the image history
+    echo "Building client Docker image..."
+    docker build --platform linux/amd64 \
+      --build-arg VITE_SUPABASE_URL=${VITE_SUPABASE_URL} \
+      --build-arg VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY} \
+      --build-arg VITE_API_URL=${VITE_API_URL} \
+      -t $CLIENT_IMAGE_NAME:$CLIENT_IMAGE_TAG .
 
     # Push to first Docker Hub account
     docker push $CLIENT_IMAGE_NAME:$CLIENT_IMAGE_TAG
