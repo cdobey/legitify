@@ -64,12 +64,6 @@ model WalletIdentity {
   @@unique([label, orgName])
 }
 
-model DeploymentInfo {
-  id          String   @id
-  commit_hash String
-  deployed_at DateTime @default(now())
-}
-
 enum Role {
   university
   individual
