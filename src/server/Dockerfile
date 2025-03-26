@@ -30,5 +30,6 @@ EXPOSE 3001
 ENV IS_DEPLOYMENT=true
 ENV FABRIC_CONNECTION=network.legitifyapp.com
 
-# Start the server directly - no conditional logic needed anymore
-CMD ["npm", "run", "start"]
+# Use simple startup script instead of direct command
+# This fetches Fabric resources before starting the server
+CMD ["bash", "scripts/simple-startup.sh"]

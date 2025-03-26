@@ -194,7 +194,7 @@ deploy_all:
     echo "Triggering Podge's Render deployment via webhook..."
     curl -X POST "$RENDER_DEPLOY_HOOK_PODGE"
 
-    # Wait for the backend deployment to be ready (simple inline function)
+    # Wait for the backend deployment to be ready
     echo "Waiting for backend deployment to complete and be accessible..."
 
     # Function to check if deployment is ready
@@ -237,7 +237,7 @@ deploy_all:
     export IS_DEPLOYMENT="true"
     export AUTO_CONFIRM="y"  # Skip confirmation prompts
 
-    # Run the existing DB setup script
+    # Run the DB setup script
     bash scripts/start-fresh-db.sh
 
     # Run the test flow against the deployed backend

@@ -27,25 +27,6 @@ else
   REPLY="y"
 fi
 
-# Check Fabric connectivity
-echo "🔌 Checking connectivity to Hyperledger Fabric network..."
-# Support both new FABRIC_CONNECTION and legacy EC2_IP for backwards compatibility
-export FABRIC_CONNECTION=${FABRIC_CONNECTION:-${EC2_IP:-"network.legitifyapp.com"}}
-export RESOURCE_SERVER_PORT=${RESOURCE_SERVER_PORT:-"8080"}
-echo "Using Fabric connection at ${FABRIC_CONNECTION}:${RESOURCE_SERVER_PORT}"
-
-# Fetch Fabric resources from EC2 instance
-echo "🌐 Fetching Hyperledger Fabric resources from Fabric network..."
-
-# Run the resource fetcher script
-node ./scripts/fetch-fabric-resources.js
-if [ $? -ne 0 ]; then
-  echo "❌ Failed to fetch Fabric resources from network"
-  echo "Please make sure the Fabric network and resource server are running"
-  exit 1
-fi
-echo "✅ Successfully fetched Fabric resources"
-
 # Export environment variables from server.env only if in local development
 if [ "$IS_DEPLOYMENT" != "true" ] && [ -f server.env ]; then
   echo "Loading environment variables from server.env"
