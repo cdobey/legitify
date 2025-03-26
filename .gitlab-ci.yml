@@ -232,30 +232,7 @@ deploy_all:
     echo "Setting up database on deployed application..."
     cd $CI_PROJECT_DIR/src/server
 
-    # First, fetch Fabric resources since they're needed for many operations
-    echo "Fetching Fabric resources for GitLab CI..."
-    export FABRIC_CONNECTION="network.legitifyapp.com"
-    export RESOURCE_SERVER_PORT="8080"
-
-    # Create necessary directories if they don't exist
-    mkdir -p src/connectionProfiles src/certificates src/msp src/wallet
-
-    # Fetch the connection profiles and certificates
-    node ./scripts/fetch-fabric-resources.js
-
-    # Pass all required environment variables from GitLab CI variables to the scripts
-    # Database connection info
-    export POSTGRES_CONNECTION_URL="$POSTGRES_CONNECTION_URL"
-    export SUPABASE_API_URL="$SUPABASE_API_URL"
-    export SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
-    export SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY"
-
-    # Fabric configuration
-    export FABRIC_CHANNEL="legitifychannel" 
-    export FABRIC_CHAINCODE="degreeCC"
-    export FABRIC_USER="appUser"
-
-    # Other environment settings for the scripts
+    # Use existing start-fresh-db.sh script with appropriate environment variables
     export LEGITIFY_API_URL="$DEPLOYED_API_URL"
     export IS_DEPLOYMENT="true"
     export AUTO_CONFIRM="y"  # Skip confirmation prompts
