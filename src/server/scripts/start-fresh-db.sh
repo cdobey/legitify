@@ -58,7 +58,6 @@ echo "🔧 Running Prisma migrations and generation..."
 echo "📝 Running Prisma migrations..."
 npx prisma migrate deploy
 
-echo "🔑 Running enrollment script..."
-npx ts-node ./scripts/enrollAdmin.ts
-
+# Note: Admin enrollment now happens in the container via simple-startup.sh
+# and should not be run here in GitLab CI as it requires proper connection profiles
 echo "✅ Database setup completed successfully"

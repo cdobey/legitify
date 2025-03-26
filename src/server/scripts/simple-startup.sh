@@ -15,6 +15,15 @@ if [ $? -ne 0 ]; then
 fi
 echo "✅ Fabric resources fetch attempt completed"
 
+# Enroll admin user with fabric connection profiles
+echo "🔑 Running enrollment script..."
+npx ts-node ./scripts/enrollAdmin.ts
+if [ $? -ne 0 ]; then
+  echo "❌ Failed to enroll admin user"
+  echo "Will continue startup anyway, but blockchain interactions may fail"
+fi
+echo "✅ Admin enrollment attempt completed"
+
 # Start the server
 echo "🚀 Starting the server..."
 npm run start
