@@ -213,7 +213,11 @@ deploy_all:
     # Push to second Docker Hub account (Podge)
     docker logout
     docker login -u "$DOCKER_USERNAME_PODGE" -p "$DOCKER_PASSWORD_PODGE"
-    docker build --platform linux/amd64 -t $CLIENT_IMAGE_NAME_PODGE:$CLIENT_IMAGE_TAG .
+    docker build --platform linux/amd64 \
+      --build-arg VITE_SUPABASE_URL=${VITE_SUPABASE_URL} \
+      --build-arg VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY} \
+      --build-arg VITE_API_URL=${VITE_API_URL} \
+      -t $CLIENT_IMAGE_NAME_PODGE:$CLIENT_IMAGE_TAG .
     docker push $CLIENT_IMAGE_NAME_PODGE:$CLIENT_IMAGE_TAG
 
     # Switch back to first account
