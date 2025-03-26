@@ -9,6 +9,8 @@ variables:
   SERVER_STARTUP_TIMEOUT: 120
   TEST_FLOW_TIMEOUT: 300
   SKIP_TESTS: 'true'
+  DEPLOYED_API_URL: 'https://api.legitifyapp.com'
+  MAX_DEPLOYMENT_WAIT: 300 # 5 minutes max wait time
 
 test_flow:
   stage: test
@@ -191,11 +193,61 @@ deploy_all:
     curl -X POST "$RENDER_DEPLOY_HOOK"
     echo "Triggering Podge's Render deployment via webhook..."
     curl -X POST "$RENDER_DEPLOY_HOOK_PODGE"
-    echo "Waiting for backend deployments to complete..."
-    sleep 60
+
+    # Wait for the backend deployment to be ready (simple inline function)
+    echo "Waiting for backend deployment to complete and be accessible..."
+
+    # Function to check if deployment is ready
+    check_deployment() {
+      curl --silent --fail "$DEPLOYED_API_URL/docs" > /dev/null
+      return $?
+    }
+
+    # Wait for deployment with timeout
+    MAX_WAIT=300  # 5 minutes timeout
+    START_TIME=$(date +%s)
+    RETRY_INTERVAL=10
+
+    echo "Waiting for deployment at $DEPLOYED_API_URL (timeout: ${MAX_WAIT}s)"
+    while true; do
+      if check_deployment; then
+        echo "✅ Deployment is ready!"
+        break
+      fi
+      
+      NOW=$(date +%s)
+      ELAPSED=$((NOW - START_TIME))
+      
+      if [ $ELAPSED -ge $MAX_WAIT ]; then
+        echo "❌ Deployment did not become ready within ${MAX_WAIT} seconds"
+        echo "Continuing anyway, but database setup may fail"
+        break
+      fi
+      
+      echo "⏳ Waiting for deployment... (${ELAPSED}s/${MAX_WAIT}s)"
+      sleep $RETRY_INTERVAL
+    done
+
+    # Run database reset on the deployed application
+    echo "Setting up database on deployed application..."
+    cd $CI_PROJECT_DIR/src/server
+
+    # Use existing start-fresh-db.sh script with appropriate environment variables
+    export LEGITIFY_API_URL="$DEPLOYED_API_URL"
+    export IS_DEPLOYMENT="true"
+    export AUTO_CONFIRM="y"  # Skip confirmation prompts
+
+    # Run the existing DB setup script
+    bash scripts/start-fresh-db.sh
+
+    # Run the test flow against the deployed backend
+    echo "Running test flow against deployed backend..."
+    bash scripts/test-flow.sh
+
+    # Continue with client deployment
+    echo "Database setup and testing completed. Starting client deployment..."
 
     # Step 3: Deploy Client to Render
-    echo "Starting client deployment..."
     cd $CI_PROJECT_DIR/src/client/legitify-project
 
     # Build with credentials passed as build args (more secure than env file)

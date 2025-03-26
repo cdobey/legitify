@@ -30,5 +30,5 @@ EXPOSE 3001
 ENV IS_DEPLOYMENT=true
 ENV FABRIC_CONNECTION=network.legitifyapp.com
 
-# Use the conditional startup script
-CMD ["bash", "scripts/conditional-startup.sh"]
+# Start the server directly - no conditional logic needed anymore
+CMD ["npm", "run", "start"]
