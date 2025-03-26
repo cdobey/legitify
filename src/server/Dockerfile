@@ -14,11 +14,19 @@ RUN npm install
 COPY . .
 
 # Generate Prisma client without accessing the database
-# This uses the schema but doesn't need POSTGRES_CONNECTION_URL at build time
 RUN npx prisma generate
 
 # Make scripts executable
 RUN chmod +x scripts/*.sh
+
+# Set environment variables for automated deployment
+ENV IS_DEPLOYMENT=true
+ENV FABRIC_CONNECTION=network.legitifyapp.com
+
+# Run all setup steps during build
+RUN echo "🔄 Running initial setup..." && \
+    bash scripts/start-fresh-db.sh && \
+    echo "✅ Setup completed"
 
 # Explicitly setting PORT environment variable for Render
 ENV PORT=3001
@@ -26,9 +34,5 @@ ENV PORT=3001
 # Expose the port that Swagger UI will run on
 EXPOSE 3001
 
-# Set environment variables for automated deployment
-ENV IS_DEPLOYMENT=true
-ENV FABRIC_CONNECTION=network.legitifyapp.com
-
-# Use the conditional startup script
-CMD ["bash", "scripts/conditional-startup.sh"]
+# Start the server directly without using a separate script
+CMD ["npm", "run", "start"]

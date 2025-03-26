@@ -192,7 +192,12 @@ deploy_all:
     echo "Triggering Podge's Render deployment via webhook..."
     curl -X POST "$RENDER_DEPLOY_HOOK_PODGE"
     echo "Waiting for backend deployments to complete..."
-    sleep 60
+    sleep 120
+
+    # Run test flow after deployment
+    echo "🧪 Running test flow after deployment..."
+    cd $CI_PROJECT_DIR/src/server
+    bash scripts/test-flow.sh || echo "⚠️ Test flow completed with warnings or errors"
 
     # Step 3: Deploy Client to Render
     echo "Starting client deployment..."
