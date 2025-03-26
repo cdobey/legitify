@@ -26,7 +26,7 @@ export default defineConfig(({ mode }) => {
   // Check if required env vars are present during build
   if (mode === 'production') {
     const requiredVars = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'VITE_API_URL'];
-    const missingVars = requiredVars.filter(varName => !env[varName]);
+    const missingVars = requiredVars.filter(varName => !process.env[varName] && !env[varName]);
 
     if (missingVars.length > 0) {
       console.error(`ERROR: Missing required environment variables: ${missingVars.join(', ')}`);
