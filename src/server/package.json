@@ -9,7 +9,8 @@
     "start": "ts-node src/app.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "db:init": "bash scripts/start-fresh-db.sh"
   },
   "prisma": {
     "schema": "src/prisma/schema.prisma"

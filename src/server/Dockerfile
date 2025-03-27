@@ -23,10 +23,8 @@ RUN chmod +x scripts/*.sh
 ENV IS_DEPLOYMENT=true
 ENV FABRIC_CONNECTION=network.legitifyapp.com
 
-# Run all setup steps during build
-RUN echo "🔄 Running initial setup..." && \
-    bash scripts/start-fresh-db.sh && \
-    echo "✅ Setup completed"
+# No database initialization during build - this will be handled by GitLab CI
+# after deployment to Render
 
 # Explicitly setting PORT environment variable for Render
 ENV PORT=3001
