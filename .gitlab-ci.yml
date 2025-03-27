@@ -244,6 +244,8 @@ deploy_all:
 
 initialize_database:
   stage: post-deploy
+  tags:
+    - shell
   needs:
     - job: deploy_all
   image: node:18
