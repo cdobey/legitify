@@ -238,10 +238,11 @@ deploy_all:
     echo "Triggering Podge's Render client deployment via webhook..."
     curl -X POST "$RENDER_CLIENT_DEPLOY_HOOK_PODGE"
     echo "Full deployment process completed successfully"
+    # In deploy_all stage:
   after_script: |
-    # Clean up key after use for security
     rm -f $SSH_KEY_FILE
-
+    echo "Cleaning up Docker resources after deployment build..."
+    docker system prune -af --volumes || echo "Docker prune failed, continuing..."
 initialize_database:
   stage: post-deploy
   tags:
