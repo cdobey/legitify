@@ -248,9 +248,21 @@ initialize_database:
     - shell
   needs:
     - job: deploy_all
-  image: node:18
   variables:
     IS_DEPLOYMENT: 'true'
+  before_script:
+    - |
+      sudo apt-get update && sudo apt-get install -y \
+        curl
+    - |
+      curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+      export NVM_DIR="$HOME/.nvm"
+      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      nvm install 18
+      nvm use 18
+      npm install -g typescript ts-node
+    - node --version
+    - npm --version
   script:
     - cd $CI_PROJECT_DIR/src/server
     - npm install
