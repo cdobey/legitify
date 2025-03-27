@@ -23,24 +23,26 @@ test_flow:
     - shell
   before_script:
     - |
-      sudo apt-get update && sudo apt-get install -y \
-        curl \
-        git \
-        jq \
-        docker.io \
-        docker-compose \
-        golang-go
-    - |
-      curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-      export NVM_DIR="$HOME/.nvm"
-      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-      nvm install 18
-      nvm use 18
-      npm install -g typescript ts-node
-    - node --version
-    - npm --version
-    - docker --version
-    - go version
+      # Add disk usage monitoring
+      echo "💾 Checking disk space before job starts:"
+      df -h /
+      docker system df || echo "Docker not running or command failed"
+
+      # For Amazon Linux - install required packages if needed
+      # Using yum instead of apt-get
+      if ! command -v jq &> /dev/null || ! command -v docker &> /dev/null; then
+        echo "Installing required packages..."
+        sudo yum update -y
+        sudo yum install -y jq docker golang git curl
+        # Clean yum cache
+        sudo yum clean all
+      fi
+
+      # Just verify versions of pre-installed tools
+      node --version
+      npm --version
+      docker --version
+      go version || echo "Go may not be installed"
 
     - cd $CI_PROJECT_DIR
     - git clean -fdx
@@ -50,7 +52,6 @@ test_flow:
     - cd $CI_PROJECT_DIR/src/server
     - npm install
     - npm ci
-    - npm install -g ts-node typescript
 
     # Prepare Fabric environment
     - cd $CI_PROJECT_DIR/src/ledger
@@ -114,11 +115,18 @@ test_flow:
       ./network.sh down || true
       docker system prune -af --volumes || true
 
+      # Clean npm cache
+      npm cache clean --force || true
+
       # Reset permissions
       cd $CI_PROJECT_DIR || true
       sudo chown -R gitlab-runner:gitlab-runner . || true
       sudo find . -type d -exec chmod 755 {} + || true
       sudo find . -type f -exec chmod 644 {} + || true
+
+      # Show disk space after cleanup
+      echo "💾 Checking disk space after cleanup:"
+      df -h /
 
       echo "Cleanup completed"
 
@@ -154,6 +162,14 @@ deploy_all:
     CLIENT_IMAGE_NAME_PODGE: '${DOCKER_USERNAME_PODGE}/legitify-project'
     CLIENT_IMAGE_TAG: 'client'
   before_script: |
+    # Add disk usage monitoring
+    echo "💾 Checking disk space before job starts:"
+    df -h /
+    docker system df || echo "Docker not running or command failed"
+
+    # For Amazon Linux - ensure docker is running
+    sudo systemctl start docker || sudo service docker start || echo "Could not start Docker service"
+
     echo "$AWS_PRIVATE_KEY_B64" | base64 -d > $SSH_KEY_FILE
     chmod 600 $SSH_KEY_FILE
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
@@ -238,11 +254,21 @@ deploy_all:
     echo "Triggering Podge's Render client deployment via webhook..."
     curl -X POST "$RENDER_CLIENT_DEPLOY_HOOK_PODGE"
     echo "Full deployment process completed successfully"
-    # In deploy_all stage:
   after_script: |
+    # Clean up key after use for security
     rm -f $SSH_KEY_FILE
+
+    # Aggressively prune Docker resources
     echo "Cleaning up Docker resources after deployment build..."
     docker system prune -af --volumes || echo "Docker prune failed, continuing..."
+
+    # Clean npm cache
+    npm cache clean --force || echo "NPM cache clean failed, continuing..."
+
+    # Show disk space after cleanup
+    echo "💾 Checking disk space after cleanup:"
+    df -h /
+
 initialize_database:
   stage: post-deploy
   tags:
@@ -251,19 +277,30 @@ initialize_database:
     - job: deploy_all
   variables:
     IS_DEPLOYMENT: 'true'
+  # Add cache configuration to reuse node_modules from test_flow
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}-fabric-binaries
+    paths:
+      - src/server/node_modules/
+      - src/ledger/bin/
+      - ~/.npm/
+    policy: pull # Only need to pull, not push
   before_script:
     - |
-      sudo apt-get update && sudo apt-get install -y \
-        curl
-    - |
-      curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-      export NVM_DIR="$HOME/.nvm"
-      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-      nvm install 18
-      nvm use 18
-      npm install -g typescript ts-node
-    - node --version
-    - npm --version
+      # Add disk usage monitoring
+      echo "💾 Checking disk space before job starts:"
+      df -h /
+      docker system df || echo "Docker not running or command failed"
+
+      # On Amazon Linux, make sure curl is available
+      if ! command -v curl &> /dev/null; then
+        sudo yum install -y curl
+        sudo yum clean all
+      fi
+
+      # Just verify versions of pre-installed tools
+      node --version
+      npm --version
   script:
     - cd $CI_PROJECT_DIR/src/server
     - npm install
@@ -279,6 +316,10 @@ initialize_database:
       export FABRIC_CHAINCODE=${FABRIC_CHAINCODE:-degreeCC}
       export LEGITIFY_API_URL=${LEGITIFY_API_URL:-"https://api.legitifyapp.com"}
 
+      # Show disk space before database operations
+      echo "💾 Checking disk space before database operations:"
+      df -h /
+
       # Initialize database
       echo "🔄 Initializing database on deployed backend..."
       npm run db:init
@@ -288,6 +329,15 @@ initialize_database:
       # Run test flow after database initialization
       echo "🧪 Running test flow after deployment and database initialization..."
       bash scripts/test-flow.sh || echo "⚠️ Test flow completed with warnings or errors"
+
+      # Show disk space after operations
+      echo "💾 Checking disk space after operations:"
+      df -h /
+  after_script: |
+    # Clean up after database initialization
+    echo "Cleaning up after database initialization..."
+    docker system prune -af --volumes || echo "Docker prune failed, continuing..."
+    npm cache clean --force || echo "NPM cache clean failed, continuing..."
   rules:
     - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"
       when: on_success
