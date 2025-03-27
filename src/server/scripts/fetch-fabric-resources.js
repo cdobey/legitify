@@ -29,29 +29,57 @@ const RESOURCE_SERVER_PORT = process.env.RESOURCE_SERVER_PORT || 8080;
 const RESOURCE_SERVER_URL = `http://${FABRIC_CONNECTION}:${RESOURCE_SERVER_PORT}`;
 
 // Determine base directory based on environment
-// In deployment (Docker container), files are in /app
-// In local development, they're in the current directory structure
-const baseDir = isDeployment ? '/app' : path.resolve(__dirname, '..');
+// More reliable directory selection that works in both CI and Docker
+let baseDir;
+if (isDeployment) {
+  // Check if /app exists and is writable (Docker container)
+  if (fs.existsSync('/app') && fs.accessSync('/app', fs.constants.W_OK)) {
+    baseDir = '/app';
+  } else {
+    // In CI but not in container, use current project dir
+    baseDir = path.resolve(__dirname, '..');
+  }
+} else {
+  // Local development
+  baseDir = path.resolve(__dirname, '..');
+}
+
+console.log(`Detected environment: ${isDeployment ? 'CI/Deployment' : 'Local Development'}`);
+console.log(`Using base directory: ${baseDir}`);
+
+// For CI environment, create directories in the project directory
 const CONNECTION_PROFILES_DIR = path.resolve(baseDir, 'src/connectionProfiles');
 const CERTS_DIR = path.resolve(baseDir, 'src/certificates');
 const MSP_DIR = path.resolve(baseDir, 'src/msp');
 
-console.log(`Using base directory: ${baseDir}`);
 console.log(`Connection profiles directory: ${CONNECTION_PROFILES_DIR}`);
 console.log(`Certificates directory: ${CERTS_DIR}`);
 console.log(`MSP directory: ${MSP_DIR}`);
 
-// Ensure directories exist
-if (!fs.existsSync(CONNECTION_PROFILES_DIR)) {
-  fs.mkdirSync(CONNECTION_PROFILES_DIR, { recursive: true });
-}
+// Create directories with more error handling
+try {
+  if (!fs.existsSync(CONNECTION_PROFILES_DIR)) {
+    fs.mkdirSync(CONNECTION_PROFILES_DIR, { recursive: true });
+    console.log(`Created ${CONNECTION_PROFILES_DIR}`);
+  }
 
-if (!fs.existsSync(CERTS_DIR)) {
-  fs.mkdirSync(CERTS_DIR, { recursive: true });
-}
+  if (!fs.existsSync(CERTS_DIR)) {
+    fs.mkdirSync(CERTS_DIR, { recursive: true });
+    console.log(`Created ${CERTS_DIR}`);
+  }
 
-if (!fs.existsSync(MSP_DIR)) {
-  fs.mkdirSync(MSP_DIR, { recursive: true });
+  if (!fs.existsSync(MSP_DIR)) {
+    fs.mkdirSync(MSP_DIR, { recursive: true });
+    console.log(`Created ${MSP_DIR}`);
+  }
+} catch (error) {
+  console.error(`Error creating directories: ${error.message}`);
+  if (error.code === 'EACCES') {
+    console.error(
+      'Permission denied. Try running with appropriate permissions or choose a different directory.',
+    );
+  }
+  process.exit(1);
 }
 
 /**
