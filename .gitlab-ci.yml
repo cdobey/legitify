@@ -310,8 +310,10 @@ initialize_database:
         sudo yum clean all
       fi
 
-      # Fix permissions for Prisma binaries
-      chmod -R +x ./src/server/node_modules/.bin/
+      # Fix permissions for Prisma binaries more aggressively
+      find ./src/server/node_modules/.bin -type f -exec chmod +x {} \; || true
+      sudo find ./src/server/node_modules/.bin -type f -exec chmod 755 {} \; || true
+      sudo chown -R gitlab-runner:gitlab-runner ./src/server/node_modules/.bin/ || true
 
       # Just verify versions of pre-installed tools
       node --version
@@ -320,6 +322,10 @@ initialize_database:
     - cd $CI_PROJECT_DIR/src/server
     - npm install
     - |
+      # Regenerate Prisma client with the correct environment variable
+      echo "🔄 Regenerating Prisma client..."
+      npx --no-permission-request prisma generate
+
       # Export all the required environment variables from GitLab CI
       export POSTGRES_CONNECTION_URL=$POSTGRES_CONNECTION_URL
       # For backward compatibility during transition

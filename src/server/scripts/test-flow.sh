@@ -7,6 +7,30 @@ NC='\033[0m' # No Color
 BLUE='\033[0;34m'
 YELLOW='\033[0;33m'
 
+# Determine base directory based on environment
+IS_DEPLOYMENT=${IS_DEPLOYMENT:-false}
+
+if [ "$IS_DEPLOYMENT" = "true" ]; then
+  if [ -d "/app" ] && [ -w "/app" ]; then
+    BASE_DIR="/app"
+    echo -e "${BLUE}Running in Docker container environment, using path: ${BASE_DIR}${NC}"
+  else
+    BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    echo -e "${BLUE}Running in CI environment, using path: ${BASE_DIR}${NC}"
+  fi
+else
+  BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  echo -e "${BLUE}Running in local development environment, using path: ${BASE_DIR}${NC}"
+fi
+
+export CONNECTION_PROFILES_DIR="${BASE_DIR}/src/connectionProfiles"
+export CERTIFICATES_DIR="${BASE_DIR}/src/certificates"
+export MSP_DIR="${BASE_DIR}/src/msp"
+
+echo -e "${BLUE}Using connection profiles directory: ${CONNECTION_PROFILES_DIR}${NC}"
+echo -e "${BLUE}Using certificates directory: ${CERTIFICATES_DIR}${NC}"
+echo -e "${BLUE}Using MSP directory: ${MSP_DIR}${NC}"
+
 # Get the Supabase URL and key from server.env file or environment
 if [ "$IS_DEPLOYMENT" != "true" ] && [ -f server.env ]; then
   echo "Loading environment variables from server.env"

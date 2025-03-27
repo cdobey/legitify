@@ -63,11 +63,17 @@ fi
 
 # Ensure Prisma binaries are executable
 echo "🔧 Ensuring Prisma binaries are executable..."
-chmod -R +x ./node_modules/.bin/
+find ./node_modules/.bin -type f -exec chmod +x {} \;
+sudo find ./node_modules/.bin -type f -exec chmod 755 {} \; || true
+ls -la ./node_modules/.bin/prisma || echo "Prisma binary not found at expected location" 
+
+# For backward compatibility during transition
+export DATABASE_URL=$POSTGRES_CONNECTION_URL
+echo "Setting DATABASE_URL for backward compatibility: $DATABASE_URL"
 
 # Regenerate Prisma client to ensure it uses the correct configuration
 echo "🔄 Regenerating Prisma client..."
-npx prisma generate
+npx --no-permission-request prisma generate
 
 # Delete all Supabase Auth users
 echo "🗑️  Clearing all authorized users from Supabase Auth..."
@@ -77,13 +83,13 @@ echo "🗑️  Clearing all data from Supabase database..."
 
 # Use Prisma to reset the database (drops all tables and recreates them)
 echo "🔄 Resetting database schema..."
-npx prisma migrate reset --force
+npx --no-permission-request prisma migrate reset --force
 
 echo "🔧 Running Prisma migrations and generation..."
 
 # Run Prisma migrations (with --force for non-interactive mode)
 echo "📝 Running Prisma migrations..."
-npx prisma migrate deploy
+npx --no-permission-request prisma migrate deploy
 
 echo "🔑 Running enrollment script..."
 npx ts-node ./scripts/enrollAdmin.ts
