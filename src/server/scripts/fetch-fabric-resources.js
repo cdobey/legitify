@@ -27,9 +27,19 @@ const FABRIC_CONNECTION =
   process.env.FABRIC_CONNECTION || process.env.EC2_IP || 'network.legitifyapp.com';
 const RESOURCE_SERVER_PORT = process.env.RESOURCE_SERVER_PORT || 8080;
 const RESOURCE_SERVER_URL = `http://${FABRIC_CONNECTION}:${RESOURCE_SERVER_PORT}`;
-const CONNECTION_PROFILES_DIR = path.resolve(__dirname, '../src/connectionProfiles');
-const CERTS_DIR = path.resolve(__dirname, '../src/certificates');
-const MSP_DIR = path.resolve(__dirname, '../src/msp');
+
+// Determine base directory based on environment
+// In deployment (Docker container), files are in /app
+// In local development, they're in the current directory structure
+const baseDir = isDeployment ? '/app' : path.resolve(__dirname, '..');
+const CONNECTION_PROFILES_DIR = path.resolve(baseDir, 'src/connectionProfiles');
+const CERTS_DIR = path.resolve(baseDir, 'src/certificates');
+const MSP_DIR = path.resolve(baseDir, 'src/msp');
+
+console.log(`Using base directory: ${baseDir}`);
+console.log(`Connection profiles directory: ${CONNECTION_PROFILES_DIR}`);
+console.log(`Certificates directory: ${CERTS_DIR}`);
+console.log(`MSP directory: ${MSP_DIR}`);
 
 // Ensure directories exist
 if (!fs.existsSync(CONNECTION_PROFILES_DIR)) {

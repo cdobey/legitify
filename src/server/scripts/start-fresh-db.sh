@@ -61,6 +61,14 @@ if [ -z "$POSTGRES_CONNECTION_URL" ]; then
   exit 1
 fi
 
+# Ensure Prisma binaries are executable
+echo "🔧 Ensuring Prisma binaries are executable..."
+chmod -R +x ./node_modules/.bin/
+
+# Regenerate Prisma client to ensure it uses the correct configuration
+echo "🔄 Regenerating Prisma client..."
+npx prisma generate
+
 # Delete all Supabase Auth users
 echo "🗑️  Clearing all authorized users from Supabase Auth..."
 npx ts-node ./scripts/delete-auth-users.ts

@@ -10,6 +10,8 @@ variables:
   SERVER_STARTUP_TIMEOUT: 120
   TEST_FLOW_TIMEOUT: 300
   SKIP_TESTS: 'true'
+  SKIP_DEPLOY: 'true'
+  SKIP_DB_INIT: 'false'
 
 test_flow:
   stage: test
@@ -146,6 +148,8 @@ deploy_all:
     - job: test_flow
       optional: true
   rules:
+    - if: $SKIP_DEPLOY == "true"
+      when: never
     - if: $SKIP_TESTS == "true" || $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"
       when: manual
   variables:
@@ -275,8 +279,16 @@ initialize_database:
     - shell
   needs:
     - job: deploy_all
+      optional: true # Make deploy_all optional to support skipping it
   variables:
     IS_DEPLOYMENT: 'true'
+  rules:
+    - if: $SKIP_DB_INIT == "true"
+      when: never
+    - if: $SKIP_DEPLOY == "true" && ($CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master")
+      when: on_success # Run even if deploy was skipped
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"
+      when: on_success
   # Add cache configuration to reuse node_modules from test_flow
   cache:
     key: ${CI_COMMIT_REF_SLUG}-fabric-binaries
@@ -298,6 +310,9 @@ initialize_database:
         sudo yum clean all
       fi
 
+      # Fix permissions for Prisma binaries
+      chmod -R +x ./src/server/node_modules/.bin/
+
       # Just verify versions of pre-installed tools
       node --version
       npm --version
@@ -307,6 +322,8 @@ initialize_database:
     - |
       # Export all the required environment variables from GitLab CI
       export POSTGRES_CONNECTION_URL=$POSTGRES_CONNECTION_URL
+      # For backward compatibility during transition
+      export DATABASE_URL=$POSTGRES_CONNECTION_URL
       export SUPABASE_API_URL=$SUPABASE_API_URL
       export SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
       export SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY
@@ -338,6 +355,3 @@ initialize_database:
     echo "Cleaning up after database initialization..."
     docker system prune -af --volumes || echo "Docker prune failed, continuing..."
     npm cache clean --force || echo "NPM cache clean failed, continuing..."
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"
-      when: on_success
