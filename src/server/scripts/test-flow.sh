@@ -7,38 +7,37 @@ NC='\033[0m' # No Color
 BLUE='\033[0;34m'
 YELLOW='\033[0;33m'
 
-# Determine base directory based on environment
-IS_DEPLOYMENT=${IS_DEPLOYMENT:-false}
+# Determine base directory directly from script location
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+echo -e "${BLUE}Current directory: ${BASE_DIR}${NC}"
 
-if [ "$IS_DEPLOYMENT" = "true" ]; then
-  if [ -d "/app" ] && [ -w "/app" ]; then
-    BASE_DIR="/app"
-    echo -e "${BLUE}Running in Docker container environment, using path: ${BASE_DIR}${NC}"
-  else
-    BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-    echo -e "${BLUE}Running in CI environment, using path: ${BASE_DIR}${NC}"
-  fi
-else
-  BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-  echo -e "${BLUE}Running in local development environment, using path: ${BASE_DIR}${NC}"
-fi
+# Set fabric resources path 
+FABRIC_RESOURCES_PATH="${BASE_DIR}/src"
+echo -e "${BLUE}Using Fabric resources path: ${FABRIC_RESOURCES_PATH}${NC}"
 
-export CONNECTION_PROFILES_DIR="${BASE_DIR}/src/connectionProfiles"
-export CERTIFICATES_DIR="${BASE_DIR}/src/certificates"
-export MSP_DIR="${BASE_DIR}/src/msp"
+# Export these paths as environment variables for the API to use
+export FABRIC_RESOURCES_PATH
+export CONNECTION_PROFILES_DIR="${FABRIC_RESOURCES_PATH}/connectionProfiles"
+export CERTIFICATES_DIR="${FABRIC_RESOURCES_PATH}/certificates"
+export MSP_DIR="${FABRIC_RESOURCES_PATH}/msp"
+
+# Override the paths that would normally be in /app for API access
+export APP_CONNECTION_PROFILES_PATH="${CONNECTION_PROFILES_DIR}"
+export APP_CERTIFICATES_PATH="${CERTIFICATES_DIR}"
+export APP_MSP_PATH="${MSP_DIR}"
 
 echo -e "${BLUE}Using connection profiles directory: ${CONNECTION_PROFILES_DIR}${NC}"
 echo -e "${BLUE}Using certificates directory: ${CERTIFICATES_DIR}${NC}"
 echo -e "${BLUE}Using MSP directory: ${MSP_DIR}${NC}"
 
 # Get the Supabase URL and key from server.env file or environment
-if [ "$IS_DEPLOYMENT" != "true" ] && [ -f server.env ]; then
+if [ -f server.env ]; then
   echo "Loading environment variables from server.env"
   set -a
   source server.env
   set +a
 else
-  echo "Using system environment variables (deployment mode)"
+  echo "Using system environment variables"
 fi
 
 echo -e "${BLUE}Starting test flow...${NC}"

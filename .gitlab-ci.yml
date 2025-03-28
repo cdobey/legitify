@@ -322,6 +322,13 @@ initialize_database:
     - cd $CI_PROJECT_DIR/src/server
     - npm install
     - |
+      # Export the actual paths instead of creating symlinks
+      echo "Setting up environment paths..."
+      export FABRIC_RESOURCES_PATH="$CI_PROJECT_DIR/src/server/src"
+      export APP_CONNECTION_PROFILES_PATH="$FABRIC_RESOURCES_PATH/connectionProfiles"
+      export APP_CERTIFICATES_PATH="$FABRIC_RESOURCES_PATH/certificates" 
+      export APP_MSP_PATH="$FABRIC_RESOURCES_PATH/msp"
+
       # Export all the required environment variables from GitLab CI
       export POSTGRES_CONNECTION_URL=$POSTGRES_CONNECTION_URL
       # For backward compatibility during transition
