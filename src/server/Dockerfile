@@ -32,5 +32,5 @@ ENV PORT=3001
 # Expose the port that Swagger UI will run on
 EXPOSE 3001
 
-# Start the server directly without using a separate script
-CMD ["npm", "run", "start"]
+# Use our entrypoint script to fetch resources and start the app
+ENTRYPOINT ["/app/scripts/entrypoint.sh"]
