@@ -167,3 +167,26 @@ export const deleteAccount: RequestHandler = async (req: Request, res: Response)
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const logout: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const uid = req.user?.uid;
+
+    if (!uid) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    // Invalidate the session in Supabase
+    const { error } = await supabase.auth.admin.signOut(uid);
+
+    if (error) {
+      throw error;
+    }
+
+    res.status(200).json({ message: 'Logged out successfully' });
+  } catch (error: any) {
+    console.error('Logout error:', error);
+    res.status(500).json({ error: 'Failed to logout' });
+  }
+};

@@ -8,49 +8,44 @@ import {
   Text,
   TextInput,
   Title,
-} from "@mantine/core";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import supabase from "../../config/supabase";
+} from '@mantine/core';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { authApi } from '../../api/auth/auth.api';
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    username: "",
-    role: "individual" as "individual" | "university" | "employer",
-    orgName: "",
+    email: '',
+    password: '',
+    username: '',
+    role: 'individual' as 'individual' | 'university' | 'employer',
+    orgName: '',
   });
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setIsLoading(true);
 
     try {
-      const { error: signUpError } = await supabase.auth.signUp({
+      // Use our server API instead of direct Supabase
+      await authApi.register({
         email: formData.email,
         password: formData.password,
-        options: {
-          data: {
-            username: formData.username,
-            role: formData.role,
-            orgName: formData.orgName,
-          },
-        },
+        username: formData.username,
+        role: formData.role,
+        orgName: formData.orgName,
       });
-
-      if (signUpError) throw new Error(signUpError.message);
 
       // Registration successful - show success and redirect to login
-      navigate("/login", {
-        state: { message: "Registration successful. Please log in." },
+      navigate('/login', {
+        state: { message: 'Registration successful. Please log in.' },
       });
     } catch (err: any) {
-      setError(err.message || "Failed to register");
+      setError(err.message || 'Failed to register');
     } finally {
       setIsLoading(false);
     }
@@ -59,14 +54,10 @@ const Register = () => {
   return (
     <Container size="xs">
       <Card shadow="sm" padding="lg" radius="md" withBorder>
-        <Title order={2} style={{ marginBottom: "1rem", textAlign: "center" }}>
+        <Title order={2} style={{ marginBottom: '1rem', textAlign: 'center' }}>
           Register
         </Title>
-        <Text
-          size="sm"
-          c="dimmed"
-          style={{ marginBottom: "1rem", textAlign: "center" }}
-        >
+        <Text size="sm" c="dimmed" style={{ marginBottom: '1rem', textAlign: 'center' }}>
           Create a new account to get started
         </Text>
 
@@ -76,10 +67,8 @@ const Register = () => {
             placeholder="your@email.com"
             required
             value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
-            style={{ marginBottom: "1rem" }}
+            onChange={e => setFormData({ ...formData, email: e.target.value })}
+            style={{ marginBottom: '1rem' }}
           />
 
           <TextInput
@@ -87,10 +76,8 @@ const Register = () => {
             placeholder="Choose a username"
             required
             value={formData.username}
-            onChange={(e) =>
-              setFormData({ ...formData, username: e.target.value })
-            }
-            style={{ marginBottom: "1rem" }}
+            onChange={e => setFormData({ ...formData, username: e.target.value })}
+            style={{ marginBottom: '1rem' }}
           />
 
           <PasswordInput
@@ -98,10 +85,8 @@ const Register = () => {
             placeholder="Your password"
             required
             value={formData.password}
-            onChange={(e) =>
-              setFormData({ ...formData, password: e.target.value })
-            }
-            style={{ marginBottom: "1rem" }}
+            onChange={e => setFormData({ ...formData, password: e.target.value })}
+            style={{ marginBottom: '1rem' }}
           />
 
           <Select
@@ -109,21 +94,18 @@ const Register = () => {
             placeholder="Select your role"
             required
             value={formData.role}
-            onChange={(value) =>
+            onChange={value =>
               setFormData({
                 ...formData,
-                role: (value || "individual") as
-                  | "university"
-                  | "individual"
-                  | "employer",
+                role: (value || 'individual') as 'university' | 'individual' | 'employer',
               })
             }
             data={[
-              { value: "university", label: "University" },
-              { value: "individual", label: "Individual" },
-              { value: "employer", label: "Employer" },
+              { value: 'university', label: 'University' },
+              { value: 'individual', label: 'Individual' },
+              { value: 'employer', label: 'Employer' },
             ]}
-            style={{ marginBottom: "1rem" }}
+            style={{ marginBottom: '1rem' }}
           />
 
           <TextInput
@@ -131,14 +113,12 @@ const Register = () => {
             placeholder="Your organization"
             required
             value={formData.orgName}
-            onChange={(e) =>
-              setFormData({ ...formData, orgName: e.target.value })
-            }
-            style={{ marginBottom: "1rem" }}
+            onChange={e => setFormData({ ...formData, orgName: e.target.value })}
+            style={{ marginBottom: '1rem' }}
           />
 
           {error && (
-            <Alert color="red" style={{ marginBottom: "1rem" }}>
+            <Alert color="red" style={{ marginBottom: '1rem' }}>
               {error}
             </Alert>
           )}

@@ -1,4 +1,4 @@
-import { login, register } from '../controllers/auth.controller';
+import { login, logout, register } from '../controllers/auth.controller';
 import {
   acceptDegree,
   denyDegree,
@@ -239,6 +239,24 @@ router.get('/auth/test-authenticated', authMiddleware, (req, res) => {
     user: req.user,
   });
 });
+
+/**
+ * @openapi
+ * /auth/logout:
+ *   post:
+ *     summary: Logout a user
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *       401:
+ *         description: Not authenticated
+ *       500:
+ *         description: Server error
+ */
+router.post('/auth/logout', authMiddleware, logout);
 
 // User Profile Route
 

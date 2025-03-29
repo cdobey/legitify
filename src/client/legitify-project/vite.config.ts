@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => {
 
   // Check if required env vars are present during build
   if (mode === 'production') {
-    const requiredVars = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'VITE_API_URL'];
+    const requiredVars = ['VITE_API_URL'];
     const missingVars = requiredVars.filter(varName => !process.env[varName] && !env[varName]);
 
     if (missingVars.length > 0) {
@@ -49,11 +49,8 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-    // Define environment variables explicitly for the client - no fallbacks
-    define: {
-      'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
-      'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
-    },
+    // Define is now empty as we don't need Supabase env vars
+    define: {},
     build: {
       // Optimize chunk splitting
       rollupOptions: {
@@ -62,7 +59,6 @@ export default defineConfig(({ mode }) => {
             'react-vendor': ['react', 'react-dom', 'react-router-dom'],
             mantine: ['@mantine/core', '@mantine/hooks'],
             query: ['@tanstack/react-query'],
-            supabase: ['@supabase/supabase-js'],
           },
         },
       },
@@ -84,7 +80,6 @@ export default defineConfig(({ mode }) => {
         '@mantine/core',
         '@mantine/hooks',
         '@tanstack/react-query',
-        '@supabase/supabase-js',
       ],
     },
   };

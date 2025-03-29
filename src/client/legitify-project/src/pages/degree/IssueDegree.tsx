@@ -7,19 +7,19 @@ import {
   Text,
   TextInput,
   Title,
-} from "@mantine/core";
-import { useState } from "react";
-import { useIssueDegree } from "../../api/degrees/degree.queries";
-import { useAuth } from "../../contexts/AuthContext";
-import { fileToBase64 } from "../../utils/fileUtils";
+} from '@mantine/core';
+import { useState } from 'react';
+import { useIssueDegree } from '../../api/degrees/degree.queries';
+import { useAuth } from '../../contexts/AuthContext';
+import { fileToBase64 } from '../../utils/fileUtils';
 
 // Reduced to 3MB for safer uploads with base64 encoding (which increases size by ~33%)
 const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB in bytes
 
 export default function IssueDegree() {
-  const [individualId, setIndividualId] = useState("");
+  const [individualId, setIndividualId] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [success, setSuccess] = useState("");
+  const [success, setSuccess] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -36,16 +36,17 @@ export default function IssueDegree() {
 
     if (file.size > MAX_FILE_SIZE) {
       setLocalError(
-        `File size must be less than ${
-          MAX_FILE_SIZE / (1024 * 1024)
-        }MB. Current file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`
+        `File size must be less than ${MAX_FILE_SIZE / (1024 * 1024)}MB. Current file is ${(
+          file.size /
+          (1024 * 1024)
+        ).toFixed(2)}MB`,
       );
       setFile(null);
       return;
     }
 
-    if (file.type !== "application/pdf") {
-      setLocalError("Only PDF files are accepted");
+    if (file.type !== 'application/pdf') {
+      setLocalError('Only PDF files are accepted');
       setFile(null);
       return;
     }
@@ -56,12 +57,12 @@ export default function IssueDegree() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError(null);
-    setSuccess("");
+    setSuccess('');
     setIsUploading(true);
     setUploadProgress(0);
 
     if (!file || !individualId) {
-      setLocalError("Please provide both Individual ID and a file");
+      setLocalError('Please provide both Individual ID and a file');
       setIsUploading(false);
       return;
     }
@@ -69,18 +70,16 @@ export default function IssueDegree() {
     try {
       // Simulate progress for better UX
       const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => Math.min(prev + 10, 90));
+        setUploadProgress(prev => Math.min(prev + 10, 90));
       }, 300);
 
       // Try refreshing the session token first to ensure it's valid
       await refreshSession();
 
       const base64File = await fileToBase64(file);
-      console.log("Preparing to submit degree issuance");
+      console.log('Preparing to submit degree issuance');
       console.log(
-        `File size: ${(file.size / 1024).toFixed(2)}KB, Base64 length: ${
-          base64File.length
-        }`
+        `File size: ${(file.size / 1024).toFixed(2)}KB, Base64 length: ${base64File.length}`,
       );
 
       const result = await issueMutation.mutateAsync({
@@ -91,15 +90,14 @@ export default function IssueDegree() {
       clearInterval(progressInterval);
       setUploadProgress(100);
       setSuccess(`Degree issued successfully! Document ID: ${result.docId}`);
-      setIndividualId("");
+      setIndividualId('');
       setFile(null);
     } catch (error: any) {
-      console.error("Degree issuance failed:", error);
+      console.error('Degree issuance failed:', error);
 
-      let errorMessage = error.message || "Failed to issue degree";
-      if (errorMessage.includes("payload") || error.message.includes("413")) {
-        errorMessage =
-          "File is too large for the server to process. Please use a smaller file.";
+      let errorMessage = error.message || 'Failed to issue degree';
+      if (errorMessage.includes('payload') || error.message.includes('413')) {
+        errorMessage = 'File is too large for the server to process. Please use a smaller file.';
       }
 
       setLocalError(errorMessage);
@@ -118,7 +116,7 @@ export default function IssueDegree() {
           label="Individual ID"
           required
           value={individualId}
-          onChange={(e) => setIndividualId(e.currentTarget.value)}
+          onChange={e => setIndividualId(e.currentTarget.value)}
           mb="md"
         />
         <FileInput
@@ -130,8 +128,7 @@ export default function IssueDegree() {
           mb="md"
         />
         <Text size="xs" color="dimmed" mb="xl">
-          Maximum file size: {MAX_FILE_SIZE / (1024 * 1024)}MB. Only PDF files
-          are accepted.
+          Maximum file size: {MAX_FILE_SIZE / (1024 * 1024)}MB. Only PDF files are accepted.
         </Text>
 
         {isUploading && (
@@ -142,7 +139,7 @@ export default function IssueDegree() {
             <Progress
               value={uploadProgress}
               mb="md"
-              color={uploadProgress === 100 ? "green" : "blue"}
+              color={uploadProgress === 100 ? 'green' : 'blue'}
               striped={uploadProgress < 100}
               animated={uploadProgress < 100}
             />
