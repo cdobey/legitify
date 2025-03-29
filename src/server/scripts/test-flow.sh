@@ -206,9 +206,9 @@ wait_a_bit
 
 echo -e "\n${BLUE}2. Logging in users and extracting UIDs...${NC}"
 
-# Login university through test-login endpoint
+# Login university through login endpoint
 echo -e "\n${BLUE}Logging in university...${NC}"
-UNIVERSITY_LOGIN_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/test-login" \
+UNIVERSITY_LOGIN_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/login" \
 -H "Content-Type: application/json" \
 -d '{
     "email": "university@test.com",
@@ -230,7 +230,7 @@ wait_a_bit
 
 # Login individual
 echo -e "\n${BLUE}Logging in individual...${NC}"
-INDIVIDUAL_LOGIN_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/test-login" \
+INDIVIDUAL_LOGIN_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/login" \
 -H "Content-Type: application/json" \
 -d '{
     "email": "individual@test.com",
@@ -252,7 +252,7 @@ wait_a_bit
 
 # Login employer
 echo -e "\n${BLUE}Logging in employer...${NC}"
-EMPLOYER_LOGIN_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/test-login" \
+EMPLOYER_LOGIN_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/login" \
 -H "Content-Type: application/json" \
 -d '{
     "email": "employer@test.com",

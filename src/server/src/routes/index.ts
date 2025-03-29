@@ -1,4 +1,4 @@
-import { register } from "../controllers/auth.controller";
+import { login, register } from '../controllers/auth.controller';
 import {
   acceptDegree,
   denyDegree,
@@ -10,54 +10,54 @@ import {
   requestAccess,
   verifyDegreeDocument,
   viewDegree,
-} from "../controllers/degree.controller";
-import { searchUsers } from "../controllers/user.controller";
+} from '../controllers/degree.controller';
+import { searchUsers } from '../controllers/user.controller';
 
-import { Router } from "express";
-import swaggerJsdoc from "swagger-jsdoc";
-import swaggerUi from "swagger-ui-express";
-import supabase from "../config/supabase";
-import { getProfile } from "../controllers/user.controller";
-import { authMiddleware } from "../middleware/auth";
+import { Router } from 'express';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
+import supabase from '../config/supabase';
+import { getProfile } from '../controllers/user.controller';
+import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
 
 // Swagger Configuration
 const swaggerOptions = {
   definition: {
-    openapi: "3.0.0",
-    info: { title: "Legitify API", version: "1.0.0" },
+    openapi: '3.0.0',
+    info: { title: 'Legitify API', version: '1.0.0' },
     components: {
       securitySchemes: {
         bearerAuth: {
-          type: "http",
-          scheme: "bearer",
-          bearerFormat: "Supabase JWT Token",
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'Supabase JWT Token',
         },
       },
       schemas: {
         LoginResponse: {
-          type: "object",
+          type: 'object',
           properties: {
             token: {
-              type: "string",
-              description: "Supabase access token",
+              type: 'string',
+              description: 'Supabase access token',
             },
           },
         },
         AuthTestResponse: {
-          type: "object",
+          type: 'object',
           properties: {
             message: {
-              type: "string",
-              description: "Success message",
+              type: 'string',
+              description: 'Success message',
             },
             user: {
-              type: "object",
+              type: 'object',
               properties: {
-                uid: { type: "string" },
-                role: { type: "string" },
-                orgName: { type: "string" },
+                uid: { type: 'string' },
+                role: { type: 'string' },
+                orgName: { type: 'string' },
               },
             },
           },
@@ -66,7 +66,7 @@ const swaggerOptions = {
     },
     security: [{ bearerAuth: [] }],
   },
-  apis: ["./src/routes/*.ts"],
+  apis: ['./src/routes/*.ts'],
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
@@ -113,7 +113,39 @@ const swaggerSpec = swaggerJsdoc(swaggerOptions);
  *       500:
  *         description: Internal server error
  */
-router.post("/auth/register", register);
+router.post('/auth/register', register);
+
+/**
+ * @openapi
+ * /auth/login:
+ *   post:
+ *     summary: Authenticate a user and get a JWT token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: "test@example.com"
+ *               password:
+ *                 type: string
+ *                 example: "password123"
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LoginResponse'
+ *       401:
+ *         description: Authentication failed
+ */
+router.post('/auth/login', login);
 
 /**
  * @openapi
@@ -143,10 +175,10 @@ router.post("/auth/register", register);
  *             schema:
  *               $ref: '#/components/schemas/LoginResponse'
  */
-router.post("/auth/test-login", async (req, res) => {
+router.post('/auth/test-login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log("Login attempt for email:", email);
+    console.log('Login attempt for email:', email);
 
     // Sign in with Supabase
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -155,15 +187,15 @@ router.post("/auth/test-login", async (req, res) => {
     });
 
     if (error) {
-      console.error("Sign in error:", error);
+      console.error('Sign in error:', error);
       throw error;
     }
 
     if (!data.session) {
-      throw new Error("No session returned from Supabase");
+      throw new Error('No session returned from Supabase');
     }
 
-    console.log("Token generated for user:", data.user?.id);
+    console.log('Token generated for user:', data.user?.id);
 
     res.json({
       token: data.session.access_token,
@@ -172,12 +204,12 @@ router.post("/auth/test-login", async (req, res) => {
       uid: data.user?.id,
     });
   } catch (error: any) {
-    console.error("Login error:", {
+    console.error('Login error:', {
       message: error.message,
       stack: error.stack,
     });
     res.status(401).json({
-      error: "Authentication failed",
+      error: 'Authentication failed',
       details: error.message,
     });
   }
@@ -201,9 +233,9 @@ router.post("/auth/test-login", async (req, res) => {
  *       401:
  *         description: Unauthorized
  */
-router.get("/auth/test-authenticated", authMiddleware, (req, res) => {
+router.get('/auth/test-authenticated', authMiddleware, (req, res) => {
   res.json({
-    message: "Authentication successful",
+    message: 'Authentication successful',
     user: req.user,
   });
 });
@@ -227,7 +259,7 @@ router.get("/auth/test-authenticated", authMiddleware, (req, res) => {
  *       404:
  *         description: User not found
  */
-router.get("/me", authMiddleware, getProfile);
+router.get('/me', authMiddleware, getProfile);
 
 /**
  * @openapi
@@ -250,7 +282,7 @@ router.get("/me", authMiddleware, getProfile);
  *       404:
  *         description: User not found
  */
-router.get("/user/search", authMiddleware, searchUsers);
+router.get('/user/search', authMiddleware, searchUsers);
 
 // Degree Management Routes
 
@@ -287,7 +319,7 @@ router.get("/user/search", authMiddleware, searchUsers);
  *       500:
  *         description: Internal server error
  */
-router.post("/degree/issue", authMiddleware, issueDegree);
+router.post('/degree/issue', authMiddleware, issueDegree);
 
 /**
  * @openapi
@@ -321,7 +353,7 @@ router.post("/degree/issue", authMiddleware, issueDegree);
  *       500:
  *         description: Internal server error
  */
-router.post("/degree/accept", authMiddleware, acceptDegree);
+router.post('/degree/accept', authMiddleware, acceptDegree);
 
 /**
  * @openapi
@@ -355,7 +387,7 @@ router.post("/degree/accept", authMiddleware, acceptDegree);
  *       500:
  *         description: Internal server error
  */
-router.post("/degree/deny", authMiddleware, denyDegree);
+router.post('/degree/deny', authMiddleware, denyDegree);
 
 /**
  * @openapi
@@ -389,7 +421,7 @@ router.post("/degree/deny", authMiddleware, denyDegree);
  *       500:
  *         description: Internal server error
  */
-router.post("/degree/requestAccess", authMiddleware, requestAccess);
+router.post('/degree/requestAccess', authMiddleware, requestAccess);
 
 /**
  * @openapi
@@ -426,7 +458,7 @@ router.post("/degree/requestAccess", authMiddleware, requestAccess);
  *       500:
  *         description: Internal server error
  */
-router.post("/degree/grantAccess", authMiddleware, grantAccess);
+router.post('/degree/grantAccess', authMiddleware, grantAccess);
 
 /**
  * @openapi
@@ -456,7 +488,7 @@ router.post("/degree/grantAccess", authMiddleware, grantAccess);
  *       500:
  *         description: Internal server error
  */
-router.get("/degree/view/:docId", authMiddleware, viewDegree);
+router.get('/degree/view/:docId', authMiddleware, viewDegree);
 
 /**
  * @openapi
@@ -493,7 +525,7 @@ router.get("/degree/view/:docId", authMiddleware, viewDegree);
  *       500:
  *         description: Internal server error
  */
-router.get("/degree/requests", authMiddleware, getAccessRequests);
+router.get('/degree/requests', authMiddleware, getAccessRequests);
 
 /**
  * @openapi
@@ -512,7 +544,7 @@ router.get("/degree/requests", authMiddleware, getAccessRequests);
  *       500:
  *         description: Internal server error
  */
-router.get("/degree/list", authMiddleware, getMyDegrees);
+router.get('/degree/list', authMiddleware, getMyDegrees);
 
 /**
  * @openapi
@@ -538,7 +570,7 @@ router.get("/degree/list", authMiddleware, getMyDegrees);
  *       403:
  *         description: Forbidden
  */
-router.post("/degree/verify", authMiddleware, verifyDegreeDocument);
+router.post('/degree/verify', authMiddleware, verifyDegreeDocument);
 
 /**
  * @openapi
@@ -557,9 +589,9 @@ router.post("/degree/verify", authMiddleware, verifyDegreeDocument);
  *       500:
  *         description: Internal server error
  */
-router.get("/degree/ledger/all", authMiddleware, getAllLedgerRecords);
+router.get('/degree/ledger/all', authMiddleware, getAllLedgerRecords);
 
 // Swagger Documentation Route
-router.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+router.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 export default router;
