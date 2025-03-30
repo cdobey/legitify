@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source ./ledger.env
+
 # Environment variables (moved from ledger.env)
 # OrgUniversity Variables
 export ORG_UNIVERSITY_TLS_CERT=$(pwd)/organizations/peerOrganizations/orguniversity.com/tlsca/tlsca.orguniversity.com-cert.pem
