@@ -89,6 +89,7 @@ src/ledger/legitify-network/ledgers-backup
 src/ledger/legitify-network/system-genesis-block/*
 src/ledger/legitify-network/*.tar.gz
 src/ledger/legitify-network/log.txt
+src/ledger/legitify-network/.running
 
 ## Organization Artifacts
 src/ledger/legitify-network/org3-artifacts/crypto-config/*
@@ -115,6 +116,12 @@ src/server/src/certificates/
 src/server/src/connectionProfiles/
 src/server/src/msp/
 src/server/package-lock.json
+
+# Supabase local configuration
+src/server/supabase-local/supabase/config.toml
+src/server/supabase-local/supabase/.branches
+src/server/supabase-local/supabase/.temp
+.env.keys
 
 # Editor specific file extensions
 *.suo

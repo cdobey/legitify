@@ -2,6 +2,14 @@
 
 echo "🔄 Setting up for Supabase database..."
 
+# Export environment variables from server.env only if in local development
+if [ "$IS_DEPLOYMENT" != "true" ] && [ -f server.env ]; then
+  echo "Loading environment variables from server.env"
+  export $(grep -v '^#' server.env | xargs)
+else
+  echo "Using system environment variables (deployment mode)"
+fi
+
 # Determine if running in CI/deployment environment
 IS_DEPLOYMENT=${IS_DEPLOYMENT:-false}
 if [ "$CI" = "true" ] || [ "$IS_DEPLOYMENT" = "true" ]; then
@@ -9,6 +17,24 @@ if [ "$CI" = "true" ] || [ "$IS_DEPLOYMENT" = "true" ]; then
   AUTO_CONFIRM="y"
 else
   AUTO_CONFIRM=""
+fi
+
+# Check if we're using local Supabase
+IS_LOCAL_SUPABASE=${IS_LOCAL_SUPABASE:-false}
+if [ "$IS_LOCAL_SUPABASE" = "true" ]; then
+  echo "🧪 Using local Supabase instance for testing"
+  # Check if Supabase is running locally
+  if curl -s http://localhost:54321/health > /dev/null; then
+    echo "✅ Local Supabase is running"
+  else
+    echo "❌ Local Supabase is not running. Please start it with 'supabase start'"
+    echo "If you haven't set up local Supabase, run:"
+    echo "1. npm install -g supabase (or brew install supabase/tap/supabase)"
+    echo "2. mkdir supabase-local && cd supabase-local"
+    echo "3. supabase init"
+    echo "4. supabase start"
+    exit 1
+  fi
 fi
 
 # Ask for confirmation before deleting remote data (skip in deployment)
@@ -46,14 +72,6 @@ if [ $? -ne 0 ]; then
 fi
 echo "✅ Successfully fetched Fabric resources"
 
-# Export environment variables from server.env only if in local development
-if [ "$IS_DEPLOYMENT" != "true" ] && [ -f server.env ]; then
-  echo "Loading environment variables from server.env"
-  export $(grep -v '^#' server.env | xargs)
-else
-  echo "Using system environment variables (deployment mode)"
-fi
-
 # Check if required variables are set
 if [ -z "$POSTGRES_CONNECTION_URL" ]; then
   echo "❌ POSTGRES_CONNECTION_URL is not set"
@@ -61,11 +79,9 @@ if [ -z "$POSTGRES_CONNECTION_URL" ]; then
   exit 1
 fi
 
-# Ensure Prisma binaries are executable
-echo "🔧 Ensuring Prisma binaries are executable..."
-find ./node_modules/.bin -type f -exec chmod +x {} \;
-sudo find ./node_modules/.bin -type f -exec chmod 755 {} \; || true
-ls -la ./node_modules/.bin/prisma || echo "Prisma binary not found at expected location" 
+# Print connection info
+echo "🔌 Using Supabase at: $SUPABASE_API_URL"
+echo "🔌 Using PostgreSQL at: $POSTGRES_CONNECTION_URL"
 
 # For backward compatibility during transition
 export DATABASE_URL=$POSTGRES_CONNECTION_URL
@@ -78,12 +94,6 @@ if command -v prisma &> /dev/null; then
 else
   echo "Using local Prisma installation"
   PRISMA_CMD="npx prisma"
-  
-  # Ensure Prisma binaries are executable, if using local
-  echo "🔧 Ensuring Prisma binaries are executable..."
-  chmod +x ./node_modules/.bin/prisma 2>/dev/null || echo "Cannot chmod prisma binary"
-  chmod -R +x ./node_modules/.prisma 2>/dev/null || echo "Cannot chmod .prisma directory"
-  sudo chmod 755 ./node_modules/.bin/prisma 2>/dev/null || echo "Cannot sudo chmod prisma binary"
 fi
 
 # Regenerate Prisma client to ensure it uses the correct configuration

@@ -140,8 +140,28 @@ async function fetchConnectionProfile(org) {
     console.log(`Fetching connection profile for ${org}...`);
     const connectionProfile = await makeRequest(`/connection-profile/${org}`);
     const filePath = path.join(CONNECTION_PROFILES_DIR, `connection-${org}.json`);
-    fs.writeFileSync(filePath, JSON.stringify(connectionProfile, null, 2));
-    console.log(`Saved connection profile to ${filePath}`);
+
+    // If running locally, replace all instances of network.legitifyapp.com with localhost
+    if (!isDeployment && FABRIC_CONNECTION === 'localhost') {
+      console.log(`Updating connection profile for local development (${org})...`);
+
+      // Convert to string for easier replacement
+      let connectionProfileStr = JSON.stringify(connectionProfile, null, 2);
+
+      // Replace network.legitifyapp.com with localhost in all URLs
+      connectionProfileStr = connectionProfileStr.replace(
+        /network\.legitifyapp\.com/g,
+        'localhost',
+      );
+
+      // Write the modified connection profile
+      fs.writeFileSync(filePath, connectionProfileStr);
+      console.log(`Saved modified connection profile to ${filePath} (for local development)`);
+    } else {
+      // Use the original connection profile for deployment
+      fs.writeFileSync(filePath, JSON.stringify(connectionProfile, null, 2));
+      console.log(`Saved connection profile to ${filePath}`);
+    }
   } catch (error) {
     console.error(`Error fetching connection profile for ${org}:`, error.message);
     throw error;
