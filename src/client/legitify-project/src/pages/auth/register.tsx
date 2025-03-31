@@ -3,14 +3,24 @@ import {
   Button,
   Card,
   Container,
+  Group,
   PasswordInput,
   Select,
   Text,
   TextInput,
   Title,
 } from '@mantine/core';
+import {
+  IconAlertCircle,
+  IconArrowRight,
+  IconAt,
+  IconBuildingBank,
+  IconLock,
+  IconUser,
+  IconUserCircle,
+} from '@tabler/icons-react';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { authApi } from '../../api/auth/auth.api';
 
 const Register = () => {
@@ -52,46 +62,56 @@ const Register = () => {
   };
 
   return (
-    <Container size="xs">
-      <Card shadow="sm" padding="lg" radius="md" withBorder>
-        <Title order={2} style={{ marginBottom: '1rem', textAlign: 'center' }}>
-          Register
+    <Container size="xs" py="xl">
+      <Card
+        shadow="md"
+        padding="xl"
+        radius="lg"
+        withBorder
+        style={{ maxWidth: 450, margin: '0 auto' }}
+      >
+        <Title order={2} ta="center" mb="sm" c="primaryBlue">
+          Create Account
         </Title>
-        <Text size="sm" c="dimmed" style={{ marginBottom: '1rem', textAlign: 'center' }}>
-          Create a new account to get started
+        <Text size="sm" c="dimmed" ta="center" mb="lg">
+          Join LegiTify to access our blockchain-powered degree verification system
         </Text>
 
         <form onSubmit={handleSubmit}>
           <TextInput
             label="Email"
             placeholder="your@email.com"
+            leftSection={<IconAt size={16} />}
             required
             value={formData.email}
             onChange={e => setFormData({ ...formData, email: e.target.value })}
-            style={{ marginBottom: '1rem' }}
+            mb="md"
           />
 
           <TextInput
             label="Username"
             placeholder="Choose a username"
+            leftSection={<IconUser size={16} />}
             required
             value={formData.username}
             onChange={e => setFormData({ ...formData, username: e.target.value })}
-            style={{ marginBottom: '1rem' }}
+            mb="md"
           />
 
           <PasswordInput
             label="Password"
             placeholder="Your password"
+            leftSection={<IconLock size={16} />}
             required
             value={formData.password}
             onChange={e => setFormData({ ...formData, password: e.target.value })}
-            style={{ marginBottom: '1rem' }}
+            mb="md"
           />
 
           <Select
             label="Role"
             placeholder="Select your role"
+            leftSection={<IconUserCircle size={16} />}
             required
             value={formData.role}
             onChange={value =>
@@ -105,27 +125,55 @@ const Register = () => {
               { value: 'individual', label: 'Individual' },
               { value: 'employer', label: 'Employer' },
             ]}
-            style={{ marginBottom: '1rem' }}
+            mb="md"
           />
 
           <TextInput
             label="Organization Name"
             placeholder="Your organization"
+            leftSection={<IconBuildingBank size={16} />}
             required
             value={formData.orgName}
             onChange={e => setFormData({ ...formData, orgName: e.target.value })}
-            style={{ marginBottom: '1rem' }}
+            mb="lg"
           />
 
           {error && (
-            <Alert color="red" style={{ marginBottom: '1rem' }}>
+            <Alert
+              color="red"
+              mb="md"
+              radius="md"
+              icon={<IconAlertCircle size={16} />}
+              title="Registration Error"
+            >
               {error}
             </Alert>
           )}
 
-          <Button type="submit" fullWidth loading={isLoading}>
-            Register
+          <Button
+            type="submit"
+            fullWidth
+            loading={isLoading}
+            color="primaryBlue"
+            rightSection={<IconArrowRight size={18} />}
+          >
+            Create Account
           </Button>
+
+          <Group justify="center" mt="md">
+            <Text size="sm" c="dimmed">
+              Already have an account?
+            </Text>
+            <Text
+              component={Link}
+              to="/login"
+              size="sm"
+              fw={500}
+              style={{ color: 'var(--primary-blue)' }}
+            >
+              Sign in
+            </Text>
+          </Group>
         </form>
       </Card>
     </Container>

@@ -206,7 +206,7 @@ start_client() {
     if ps -p $CLIENT_PID > /dev/null; then
         echo -e "${GREEN}Client started successfully with PID: ${CLIENT_PID}${NC}"
         # Print client URL
-        echo -e "${BLUE}Client should be available at: ${YELLOW}http://localhost:3000${NC}"
+        echo -e "${BLUE}Client should be available at: ${YELLOW}http://localhost:5173${NC}"
     else
         echo -e "${RED}Failed to start the client. Check client.log for details.${NC}"
         echo -e "${YELLOW}Continuing anyway...${NC}"
@@ -228,8 +228,8 @@ restart_client() {
     fi
     
     # Find and kill any processes using port 3000
-    echo -e "${YELLOW}Ensuring port 3000 is free...${NC}"
-    lsof -i :3000 | grep LISTEN | awk '{print $2}' | xargs kill -9 2>/dev/null || true
+    echo -e "${YELLOW}Ensuring port 5173 is free...${NC}"
+    lsof -i :5173 | grep LISTEN | awk '{print $2}' | xargs kill -9 2>/dev/null || true
     
     # Wait a moment to ensure the port is released
     echo -e "${YELLOW}Waiting for port to be released...${NC}"

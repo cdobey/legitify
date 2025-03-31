@@ -225,31 +225,54 @@ export const grantAccess: RequestHandler = async (req: Request, res: Response): 
     }
 
     const { requestId, granted } = req.body;
+    console.log(
+      `Grant access request: requestId=${requestId}, granted=${granted}, userId=${req.user.uid}`,
+    );
+
     if (!requestId || granted === undefined) {
       res.status(400).json({ error: 'Missing requestId or granted flag' });
       return;
     }
 
+    // Find access request with additional logging
+    console.log('Looking for access request:', requestId);
     const accessRequest = await prisma.request.findUnique({
       where: { id: requestId },
       include: { document: true },
     });
+
     if (!accessRequest) {
+      console.log('Access request not found:', requestId);
       res.status(404).json({ error: 'Request not found' });
       return;
     }
 
+    console.log('Found access request:', {
+      requestId: accessRequest.id,
+      documentId: accessRequest.documentId,
+      requesterId: accessRequest.requesterId,
+      documentOwnerId: accessRequest.document.issuedTo,
+    });
+
     // Check if user owns the document
     if (accessRequest.document.issuedTo !== req.user.uid) {
+      console.log(
+        `Ownership mismatch: document owner=${accessRequest.document.issuedTo}, current user=${req.user.uid}`,
+      );
       res.status(403).json({ error: 'You do not own this document' });
       return;
     }
 
     // Update request status
+    const newStatus = granted ? 'granted' : 'denied';
+    console.log(`Updating access request ${requestId} status to: ${newStatus}`);
+
     await prisma.request.update({
       where: { id: requestId },
-      data: { status: granted ? 'granted' : 'denied' },
+      data: { status: newStatus },
     });
+
+    console.log(`Access request ${requestId} successfully updated to ${newStatus}`);
 
     res.json({
       message: `Access ${granted ? 'granted' : 'denied'} for request ${requestId}`,
@@ -271,12 +294,15 @@ export const viewDegree: RequestHandler = async (req: Request, res: Response): P
     }
 
     const docId = req.params.docId;
+    console.log(`Employer ${req.user.uid} attempting to view document ${docId}`);
+
     if (!docId) {
       res.status(400).json({ error: 'Missing docId parameter' });
       return;
     }
 
-    // Check if access is granted
+    // Check if access is granted with enhanced logging
+    console.log(`Checking if access is granted for document ${docId} to user ${req.user.uid}`);
     const grantedRequest = await prisma.request.findFirst({
       where: {
         documentId: docId,
@@ -284,10 +310,30 @@ export const viewDegree: RequestHandler = async (req: Request, res: Response): P
         status: 'granted',
       },
     });
+
     if (!grantedRequest) {
-      res.status(403).json({ error: 'No granted access for this document' });
+      console.log(`No granted access found for document ${docId} and user ${req.user.uid}`);
+
+      // Check if there are any requests (for better error messages)
+      const anyRequest = await prisma.request.findFirst({
+        where: {
+          documentId: docId,
+          requesterId: req.user.uid,
+        },
+      });
+
+      if (anyRequest) {
+        console.log(`Found request with status: ${anyRequest.status}`);
+        res.status(403).json({
+          error: `Access request exists but status is '${anyRequest.status}'. Please wait for the owner to grant access.`,
+        });
+      } else {
+        res.status(403).json({ error: 'No access request found. Please request access first.' });
+      }
       return;
     }
+
+    console.log(`Access granted for document ${docId} to user ${req.user.uid}`);
 
     const doc = await prisma.document.findUnique({
       where: { id: docId },
@@ -441,35 +487,52 @@ export const verifyDegreeDocument: RequestHandler = async (
       return;
     }
 
-    const { individualId, base64File } = req.body as {
-      individualId: string;
+    const { email, base64File } = req.body as {
+      email: string;
       base64File: string;
     };
-    if (!individualId || !base64File) {
-      res.status(400).json({ error: 'Missing individualId or base64File' });
+    if (!email || !base64File) {
+      res.status(400).json({ error: 'Missing email or base64File' });
+      return;
+    }
+
+    // Find user by email
+    const targetUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!targetUser) {
+      res.json({
+        verified: false,
+        message: 'No user found with this email',
+      });
       return;
     }
 
     const fileData = Buffer.from(base64File, 'base64');
     const uploadedHash = sha256(fileData);
 
-    // Find all accepted documents for this individual
+    // Find all accepted documents for this user
     const docs = await prisma.document.findMany({
       where: {
-        issuedTo: individualId,
+        issuedTo: targetUser.id, // Use the found user's ID
         status: 'accepted',
+      },
+      include: {
+        issuedToUser: {
+          select: {
+            username: true,
+          },
+        },
+        issuerUser: {
+          select: {
+            orgName: true,
+          },
+        },
       },
     });
 
-    if (!docs.length) {
-      res.json({
-        verified: false,
-        message: 'No accepted documents found for this individual',
-      });
-      return;
-    }
-
-    // Get gateway connection
+    // Create gateway connection
     const gateway = await getGateway(user.uid, user.orgName?.toLowerCase() || '');
     const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifychannel');
     const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
@@ -530,6 +593,132 @@ export const getAllLedgerRecords: RequestHandler = async (
     res.json(records);
   } catch (error: any) {
     console.error('getAllLedgerRecords error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Get all degrees issued to a specific user by userId.
+ * Only accessible by users with role 'employer'.
+ */
+export const getUserDegrees: RequestHandler = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    // Only employers should access other users' degrees
+    if (req.user?.role !== 'employer') {
+      res.status(403).json({ error: 'Only employers can view user degrees' });
+      return;
+    }
+
+    const userId = req.params.userId;
+    if (!userId) {
+      res.status(400).json({ error: 'Missing userId parameter' });
+      return;
+    }
+
+    // Find the user to ensure they exist
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // Only return accepted degrees for security
+    const documents = await prisma.document.findMany({
+      where: {
+        issuedTo: userId,
+        status: 'accepted', // Only return accepted documents
+      },
+      include: {
+        issuerUser: {
+          select: {
+            orgName: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    const formattedDocs = documents.map((doc: any) => ({
+      docId: doc.id,
+      issuer: doc.issuerUser.orgName,
+      status: doc.status,
+      issueDate: doc.createdAt,
+    }));
+
+    res.json(formattedDocs);
+  } catch (error: any) {
+    console.error('getUserDegrees error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Get all degrees that the employer has been granted access to.
+ * Only accessible by users with role 'employer'.
+ */
+export const getAccessibleDegrees: RequestHandler = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    if (req.user?.role !== 'employer') {
+      res.status(403).json({ error: 'Only employers can view accessible degrees' });
+      return;
+    }
+
+    console.log(`Fetching accessible degrees for employer: ${req.user.uid}`);
+
+    // Get all the requests where this employer has been granted access
+    const accessRequests = await prisma.request.findMany({
+      where: {
+        requesterId: req.user.uid,
+        status: 'granted',
+      },
+      include: {
+        document: {
+          include: {
+            issuerUser: {
+              select: {
+                orgName: true,
+              },
+            },
+            issuedToUser: {
+              select: {
+                username: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    console.log(`Found ${accessRequests.length} accessible documents for employer ${req.user.uid}`);
+
+    // Format the response
+    const accessibleDocs = accessRequests.map(request => ({
+      requestId: request.id,
+      docId: request.documentId,
+      issuer: request.document.issuerUser.orgName,
+      owner: {
+        name: request.document.issuedToUser.username,
+        email: request.document.issuedToUser.email,
+      },
+      status: request.document.status,
+      dateGranted: request.updatedAt,
+    }));
+
+    res.json(accessibleDocs);
+  } catch (error: any) {
+    console.error('getAccessibleDegrees error:', error);
     res.status(500).json({ error: error.message });
   }
 };

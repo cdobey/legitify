@@ -2,9 +2,11 @@ import { login, logout, register } from '../controllers/auth.controller';
 import {
   acceptDegree,
   denyDegree,
+  getAccessibleDegrees,
   getAccessRequests,
-  getAllLedgerRecords, // Add this import
+  getAllLedgerRecords,
   getMyDegrees,
+  getUserDegrees,
   grantAccess,
   issueDegree,
   requestAccess,
@@ -608,6 +610,55 @@ router.post('/degree/verify', authMiddleware, verifyDegreeDocument);
  *         description: Internal server error
  */
 router.get('/degree/ledger/all', authMiddleware, getAllLedgerRecords);
+
+/**
+ * @openapi
+ * /degree/user/{userId}:
+ *   get:
+ *     summary: Get all degrees for a specific user by userId
+ *     tags:
+ *       - Degree
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the user whose degrees to retrieve
+ *     responses:
+ *       200:
+ *         description: List of user's accepted degrees
+ *       400:
+ *         description: Bad request
+ *       403:
+ *         description: Forbidden - only employers can access this endpoint
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/degree/user/:userId', authMiddleware, getUserDegrees);
+
+/**
+ * @openapi
+ * /degree/accessible:
+ *   get:
+ *     summary: Get all degrees accessible to the logged-in employer
+ *     tags:
+ *       - Degree
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of accessible degrees
+ *       403:
+ *         description: Forbidden - only employers can access this endpoint
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/degree/accessible', authMiddleware, getAccessibleDegrees);
 
 // Swagger Documentation Route
 router.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

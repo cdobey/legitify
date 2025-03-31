@@ -2,7 +2,7 @@ export interface DegreeDocument {
   docId: string;
   issuer: string;
   issuedTo: string;
-  status: "issued" | "accepted" | "denied";
+  status: 'issued' | 'accepted' | 'denied';
   issueDate: string;
   fileData?: string;
 }
@@ -11,6 +11,14 @@ export interface VerificationResult {
   verified: boolean;
   message: string;
   docId?: string;
+  details?: {
+    studentName?: string;
+    university?: string;
+    degreeTitle?: string;
+    graduationDate?: string;
+    issuer?: string;
+    issuedAt?: string;
+  };
 }
 
 export interface AccessRequest {
@@ -18,7 +26,7 @@ export interface AccessRequest {
   docId: string;
   employerName: string;
   requestDate: string;
-  status: "pending" | "granted" | "denied";
+  status: 'pending' | 'granted' | 'denied';
 }
 
 export interface IssueResponse {
@@ -37,8 +45,14 @@ export interface DirectVerificationPayload {
   base64File: string;
 }
 
-export interface VerificationResult {
-  verified: boolean;
-  message: string;
-  docId?: string;
+export interface AccessibleDegree {
+  requestId: string;
+  docId: string;
+  issuer: string;
+  owner: {
+    name: string;
+    email: string;
+  };
+  status: string;
+  dateGranted: string;
 }

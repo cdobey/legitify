@@ -10,9 +10,15 @@ import { queryClient } from './config/queryClient';
 import { AuthProvider } from './contexts/AuthContext';
 import './styles/index.css';
 import { theme } from './styles/theme';
+
+const interFontLink = document.createElement('link');
+interFontLink.rel = 'stylesheet';
+interFontLink.href =
+  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap';
+document.head.appendChild(interFontLink);
+
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 
-// Remove the initial loader
 const initialLoader = document.getElementById('initial-loader');
 if (initialLoader) {
   initialLoader.remove();

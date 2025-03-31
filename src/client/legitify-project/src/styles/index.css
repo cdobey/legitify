@@ -1,27 +1,64 @@
 :root {
+  /* Colors */
+  --primary-blue: #3c6ac3;
+  --accent-teal: #1ee7b8;
+  --accent-amber: #ffc107;
+  --background-light: #f4f7fa;
+  --text-dark: #1a202c;
+  --text-muted: #64748b;
+  --border-light: #eaecef;
+  --card-bg: #ffffff;
+  --header-bg: #ffffff;
+  --sidebar-bg: #ffffff;
+
+  /* Layout */
+  --sidebar-width-collapsed: 80px;
+  --sidebar-width-expanded: 280px;
+  --header-height: 60px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  /* Transitions */
+  --transition-sm: all 0.2s ease;
+  --transition-md: all 0.3s ease;
+
+  /* Font Rendering */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+/* Base Styles */
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: #f8f9fa;
+  background-color: var(--background-light);
+  color: var(--text-dark);
+  font-family: 'Inter', -apple-system, sans-serif;
+  line-height: 1.5;
 }
 
 #root {
   min-height: 100vh;
+}
+
+/* Typography */
+a {
+  font-weight: 500;
+  color: var(--primary-blue);
+  text-decoration: inherit;
+  transition: var(--transition-sm);
+}
+
+a:hover {
+  color: #2455b2;
 }
 
 h1 {
@@ -40,12 +77,120 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
 button:hover {
   border-color: #646cff;
 }
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Navigation Components */
+.mantine-AppShell-navbar {
+  transition: width 0.3s ease, transform 0.3s ease;
+  position: fixed !important;
+  top: 0 !important;
+  height: 100vh !important;
+  z-index: 400 !important;
+  background-color: var(--sidebar-bg) !important;
+  border-right: 1px solid var(--border-light) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* Header Styles */
+.mantine-AppShell-header {
+  position: fixed !important;
+  background-color: var(--background-light) !important;
+  z-index: 300 !important;
+  border-bottom: none !important;
+  transition: left 0.3s ease;
+  height: var(--header-height) !important;
+  box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.mantine-AppShell-header .mantine-Group-root {
+  width: 100%;
+  justify-content: space-between;
+  padding: 0 var(--mantine-spacing-md);
+}
+
+.mantine-AppShell-header .mantine-Title-root {
+  flex: 1;
+  text-align: center;
+  margin: 0;
+}
+
+.mantine-AppShell-header .mantine-Group-root > div:last-child {
+  margin-left: auto;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.mantine-AppShell-main {
+  transition: margin-left 0.3s ease;
+  margin-top: var(--header-height) !important;
+  padding: 0 !important;
+  min-height: calc(100vh - var(--header-height));
+  background-color: var(--background-light) !important;
+}
+
+/* Navigation Links */
+.mantine-NavLink-root {
+  transition: background-color 0.2s ease, color 0.2s ease;
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+
+.mantine-NavLink-root[data-active] {
+  background-color: rgba(60, 106, 195, 0.1) !important;
+  color: var(--primary-blue) !important;
+  font-weight: 500;
+}
+
+.mantine-NavLink-root:hover {
+  background-color: rgba(60, 106, 195, 0.05);
+}
+
+/* Background Patterns */
+.pattern-dots {
+  background-image: radial-gradient(var(--border-light) 1px, transparent 1px);
+  background-size: 20px 20px;
+  opacity: 0.5;
+}
+
+.pattern-diagonal {
+  background-image: linear-gradient(
+    45deg,
+    var(--border-light) 12.5%,
+    transparent 12.5%,
+    transparent 50%,
+    var(--border-light) 50%,
+    var(--border-light) 62.5%,
+    transparent 62.5%,
+    transparent 100%
+  );
+  background-size: 8px 8px;
+  opacity: 0.05;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .nav-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 200;
+    backdrop-filter: blur(2px);
+    display: none;
+  }
+
+  .nav-overlay-visible {
+    display: block;
+  }
 }
 
 @media (prefers-color-scheme: light) {
@@ -53,10 +198,30 @@ button:focus-visible {
     color: #213547;
     background-color: #ffffff;
   }
+
   a:hover {
     color: #747bff;
   }
+
   button {
     background-color: #f9f9f9;
   }
+}
+
+/* Add subtle patterns and texture to break up whitespace */
+.bg-pattern {
+  position: relative;
+}
+
+.bg-pattern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(var(--border-light) 1px, transparent 1px);
+  background-size: 20px 20px;
+  opacity: 0.3;
+  pointer-events: none;
 }

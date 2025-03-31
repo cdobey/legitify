@@ -1,18 +1,20 @@
-import { Box, Container, Text, Title } from "@mantine/core";
-import { Route, Routes } from "react-router-dom";
-import ProtectedRoute from "./components/ProtectedRoute";
-import Login from "./pages/auth/login";
-import Register from "./pages/auth/register";
-import AccessRequests from "./pages/degree/AccessRequests";
-import IssueDegree from "./pages/degree/IssueDegree";
-import ManageDegrees from "./pages/degree/ManageDegrees";
-import VerifyDegree from "./pages/degree/VerifyDegree";
-import ViewDegree from "./pages/degree/ViewDegree";
-import HomePage from "./pages/HomePage";
+import { Container, Text, Title } from '@mantine/core';
+import { Route, Routes } from 'react-router-dom';
+import MainLayout from './components/MainLayout';
+import ProtectedRoute from './components/ProtectedRoute';
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
+import AccessibleDegrees from './pages/degree/AccessibleDegrees';
+import AccessRequests from './pages/degree/AccessRequests';
+import IssueDegree from './pages/degree/IssueDegree';
+import ManageDegrees from './pages/degree/ManageDegrees';
+import VerifyDegree from './pages/degree/VerifyDegree';
+import ViewDegree from './pages/degree/ViewDegree';
+import HomePage from './pages/HomePage';
 
 function About() {
   return (
-    <Container>
+    <Container p="md">
       <Title>About</Title>
       <Text>About page coming soon...</Text>
     </Container>
@@ -21,7 +23,7 @@ function About() {
 
 export default function App() {
   return (
-    <Box>
+    <MainLayout>
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/register" element={<Register />} />
@@ -67,7 +69,15 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/degree/accessible"
+          element={
+            <ProtectedRoute requiredRole="employer">
+              <AccessibleDegrees />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
-    </Box>
+    </MainLayout>
   );
 }
