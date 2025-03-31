@@ -1,0 +1,62 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '2.1'
+
+networks:
+  test:
+    external:
+      name: fabric_test
+
+services:
+  explorerdb.legitifyapp.com:
+    image: ghcr.io/hyperledger-labs/explorer-db:latest
+    container_name: explorerdb.legitifyapp.com
+    hostname: explorerdb.legitifyapp.com
+    environment:
+      - DATABASE_DATABASE=fabricexplorer
+      - DATABASE_USERNAME=hppoc
+      - DATABASE_PASSWORD=password
+    healthcheck:
+      test: 'pg_isready -h localhost -p 5432 -q -U postgres'
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - explorerdb:/var/lib/postgresql/data
+    networks:
+      - test
+
+  explorer.legitifyapp.com:
+    image: ghcr.io/hyperledger-labs/explorer:latest
+    container_name: explorer.legitifyapp.com
+    hostname: explorer.legitifyapp.com
+    environment:
+      - DATABASE_HOST=explorerdb.legitifyapp.com
+      - DATABASE_PORT=5432
+      - DATABASE_DATABASE=fabricexplorer
+      - DATABASE_USERNAME=hppoc
+      - DATABASE_PASSWD=password
+      - LOG_LEVEL_APP=info
+      - LOG_LEVEL_DB=info
+      - LOG_LEVEL_CONSOLE=info
+      - LOG_CONSOLE_STDOUT=true
+      - DISCOVERY_AS_LOCALHOST=false
+    ports:
+      - 8090:8080
+    volumes:
+      - ./config.json:/opt/explorer/app/config.json
+      - ./config.json:/opt/explorer/app/platform/fabric/config.json
+      - ./connection-profile:/opt/explorer/app/platform/fabric/connection-profile
+      - ../legitify-network/organizations:/opt/explorer/app/platform/fabric/organizations
+    command: sh -c "sleep 16 && node /opt/explorer/app/main.js && tail -f /dev/null"
+    depends_on:
+      explorerdb.legitifyapp.com:
+        condition: service_healthy
+    networks:
+      - test
+
+volumes:
+  explorerdb:

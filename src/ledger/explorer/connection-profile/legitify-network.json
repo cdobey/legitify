@@ -1,0 +1,195 @@
+{
+  "name": "legitify-network",
+  "version": "2.0.0",
+  "license": "Apache-2.0",
+  "client": {
+    "tlsEnable": true,
+    "adminCredential": {
+      "id": "exploreradmin",
+      "password": "exploreradminpw"
+    },
+    "enableAuthentication": false,
+    "organization": "OrgUniversity",
+    "connection": {
+      "timeout": {
+        "peer": { "endorser": "300" },
+        "orderer": "300"
+      }
+    }
+  },
+  "channels": {
+    "legitifychannel": {
+      "peers": {
+        "peer0.orguniversity.com": {},
+        "peer0.orgemployer.com": {},
+        "peer0.orgindividual.com": {}
+      },
+      "connection": {
+        "timeout": {
+          "peer": {
+            "endorser": "6000",
+            "eventHub": "6000",
+            "eventReg": "6000"
+          },
+          "orderer": "6000"
+        }
+      },
+      "orderers": [
+        "orderer.legitifyapp.com",
+        "orderer2.legitifyapp.com",
+        "orderer3.legitifyapp.com",
+        "orderer4.legitifyapp.com"
+      ]
+    }
+  },
+  "organizations": {
+    "OrgUniversity": {
+      "mspid": "OrgUniversityMSP",
+      "adminPrivateKey": {
+        "path": "/opt/explorer/app/platform/fabric/organizations/peerOrganizations/orguniversity.com/users/Admin@orguniversity.com/msp/keystore/priv_sk"
+      },
+      "peers": ["peer0.orguniversity.com"],
+      "signedCert": {
+        "path": "/opt/explorer/app/platform/fabric/organizations/peerOrganizations/orguniversity.com/users/Admin@orguniversity.com/msp/signcerts/cert.pem"
+      }
+    },
+    "OrgEmployer": {
+      "mspid": "OrgEmployerMSP",
+      "adminPrivateKey": {
+        "path": "/opt/explorer/app/platform/fabric/organizations/peerOrganizations/orgemployer.com/users/Admin@orgemployer.com/msp/keystore/priv_sk"
+      },
+      "peers": ["peer0.orgemployer.com"],
+      "signedCert": {
+        "path": "/opt/explorer/app/platform/fabric/organizations/peerOrganizations/orgemployer.com/users/Admin@orgemployer.com/msp/signcerts/cert.pem"
+      }
+    },
+    "OrgIndividual": {
+      "mspid": "OrgIndividualMSP",
+      "adminPrivateKey": {
+        "path": "/opt/explorer/app/platform/fabric/organizations/peerOrganizations/orgindividual.com/users/Admin@orgindividual.com/msp/keystore/priv_sk"
+      },
+      "peers": ["peer0.orgindividual.com"],
+      "signedCert": {
+        "path": "/opt/explorer/app/platform/fabric/organizations/peerOrganizations/orgindividual.com/users/Admin@orgindividual.com/msp/signcerts/cert.pem"
+      }
+    },
+    "OrdererOrg": {
+      "mspid": "OrdererMSP",
+      "adminPrivateKey": {
+        "path": "/opt/explorer/app/platform/fabric/organizations/ordererOrganizations/legitifyapp.com/users/Admin@legitifyapp.com/msp/keystore/priv_sk"
+      },
+      "signedCert": {
+        "path": "/opt/explorer/app/platform/fabric/organizations/ordererOrganizations/legitifyapp.com/users/Admin@legitifyapp.com/msp/signcerts/cert.pem"
+      },
+      "orderers": [
+        "orderer.legitifyapp.com",
+        "orderer2.legitifyapp.com",
+        "orderer3.legitifyapp.com",
+        "orderer4.legitifyapp.com"
+      ]
+    }
+  },
+  "peers": {
+    "peer0.orguniversity.com": {
+      "tlsCACerts": {
+        "path": "/opt/explorer/app/platform/fabric/organizations/peerOrganizations/orguniversity.com/peers/peer0.orguniversity.com/tls/ca.crt"
+      },
+      "url": "grpcs://peer0.orguniversity.com:7051",
+      "eventUrl": "grpcs://peer0.orguniversity.com:7051",
+      "grpcOptions": {
+        "ssl-target-name-override": "peer0.orguniversity.com",
+        "hostnameOverride": "peer0.orguniversity.com",
+        "grpc.keepalive_time_ms": 120000,
+        "grpc.keepalive_timeout_ms": 20000
+      }
+    },
+    "peer0.orgemployer.com": {
+      "tlsCACerts": {
+        "path": "/opt/explorer/app/platform/fabric/organizations/peerOrganizations/orgemployer.com/peers/peer0.orgemployer.com/tls/ca.crt"
+      },
+      "url": "grpcs://peer0.orgemployer.com:8051",
+      "eventUrl": "grpcs://peer0.orgemployer.com:8051",
+      "grpcOptions": {
+        "ssl-target-name-override": "peer0.orgemployer.com",
+        "hostnameOverride": "peer0.orgemployer.com",
+        "grpc.keepalive_time_ms": 120000,
+        "grpc.keepalive_timeout_ms": 20000
+      }
+    },
+    "peer0.orgindividual.com": {
+      "tlsCACerts": {
+        "path": "/opt/explorer/app/platform/fabric/organizations/peerOrganizations/orgindividual.com/peers/peer0.orgindividual.com/tls/ca.crt"
+      },
+      "url": "grpcs://peer0.orgindividual.com:9051",
+      "eventUrl": "grpcs://peer0.orgindividual.com:9051",
+      "grpcOptions": {
+        "ssl-target-name-override": "peer0.orgindividual.com",
+        "hostnameOverride": "peer0.orgindividual.com",
+        "grpc.keepalive_time_ms": 120000,
+        "grpc.keepalive_timeout_ms": 20000
+      }
+    }
+  },
+  "orderers": {
+    "orderer.legitifyapp.com": {
+      "url": "grpcs://localhost:7050",
+      "tlsCACerts": {
+        "path": "/opt/explorer/app/platform/fabric/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/ca.crt"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "orderer.legitifyapp.com",
+        "hostnameOverride": "orderer.legitifyapp.com",
+        "grpc.keepalive_time_ms": 120000,
+        "grpc.keepalive_timeout_ms": 20000,
+        "grpc.http2.min_time_between_pings_ms": 120000,
+        "grpc.http2.max_pings_without_data": 0,
+        "request-timeout": 300000
+      }
+    },
+    "orderer2.legitifyapp.com": {
+      "url": "grpcs://localhost:7052",
+      "tlsCACerts": {
+        "path": "/opt/explorer/app/platform/fabric/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/ca.crt"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "orderer2.legitifyapp.com",
+        "hostnameOverride": "orderer2.legitifyapp.com",
+        "grpc.keepalive_time_ms": 120000,
+        "grpc.keepalive_timeout_ms": 20000,
+        "grpc.http2.min_time_between_pings_ms": 120000,
+        "grpc.http2.max_pings_without_data": 0,
+        "request-timeout": 300000
+      }
+    },
+    "orderer3.legitifyapp.com": {
+      "url": "grpcs://localhost:7056",
+      "tlsCACerts": {
+        "path": "/opt/explorer/app/platform/fabric/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/ca.crt"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "orderer3.legitifyapp.com",
+        "hostnameOverride": "orderer3.legitifyapp.com",
+        "grpc.keepalive_time_ms": 120000,
+        "grpc.keepalive_timeout_ms": 20000,
+        "grpc.http2.min_time_between_pings_ms": 120000,
+        "grpc.http2.max_pings_without_data": 0,
+        "request-timeout": 300000
+      }
+    },
+    "orderer4.legitifyapp.com": {
+      "url": "grpcs://localhost:7058",
+      "tlsCACerts": {
+        "path": "/opt/explorer/app/platform/fabric/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/ca.crt"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "orderer4.legitifyapp.com",
+        "hostnameOverride": "orderer4.legitifyapp.com",
+        "grpc.keepalive_time_ms": 120000,
+        "grpc.keepalive_timeout_ms": 20000,
+        "grpc.http2.min_time_between_pings_ms": 120000,
+        "grpc.http2.max_pings_without_data": 0,
+        "request-timeout": 300000
+      }
+    }
+  }
+}

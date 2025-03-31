@@ -7,6 +7,22 @@ CHANNEL_NAME="legitifychannel"
 CHAINCODE_NAME="degreeCC"
 CHAINCODE_PATH="../chaincode/degreeChaincode/"
 CHAINCODE_LANGUAGE="go"
+START_EXPLORER=false
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+  key="$1"
+  case $key in
+  --with-explorer)
+    START_EXPLORER=true
+    shift
+    ;;
+  *)
+    # Unknown option, just skip it
+    shift
+    ;;
+  esac
+done
 
 # Ensure we're using our custom config files
 export FABRIC_CFG_PATH=${PWD}/../config
@@ -26,24 +42,25 @@ if [ ! -f "../bin/peer" ] || [ ! -f "../bin/orderer" ]; then
   fi
   
   cd legitify-network
-  echo "Binaries installed successfully."
 fi
 
-# Bring down any existing network
-echo "Shutting down existing network..."
+echo "Starting Legitify Network..."
 ./network.sh down
-
-# Start the network with certificate authorities and CouchDB
-echo "Starting network with CouchDB..."
-./network.sh up -s couchdb -ca
-
-# Create the channel
-echo "Creating channel..."
-./network.sh createChannel -ca
-
-# Deploy the chaincode
-echo "Deploying chaincode..."
+./network.sh up createChannel -ca -c ${CHANNEL_NAME}
 ./network.sh deployCC -ccn ${CHAINCODE_NAME} -ccp ${CHAINCODE_PATH} -ccl ${CHAINCODE_LANGUAGE}
 
-# Confirm setup success
-echo "Network setup complete."
+# Start Explorer if requested
+if [ "$START_EXPLORER" = true ]; then
+  echo "Setting up and starting Hyperledger Explorer..."
+  EXPLORER_SCRIPT_PATH="../../explorer/scripts/explorer.sh"
+  if [ -f "$EXPLORER_SCRIPT_PATH" ]; then
+    chmod +x $EXPLORER_SCRIPT_PATH
+    bash $EXPLORER_SCRIPT_PATH up
+    echo "Hyperledger Explorer should be available at http://localhost:8090"
+    echo "Login with username: exploreradmin, password: exploreradminpw"
+  else
+    echo "Explorer script not found at $EXPLORER_SCRIPT_PATH"
+  fi
+fi
+
+echo "Network setup complete!"
