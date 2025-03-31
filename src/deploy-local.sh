@@ -218,6 +218,24 @@ start_client() {
 # Function to restart client
 restart_client() {
     print_header "Restarting Client"
+    
+    # Kill existing client process
+    if [ -f "${BASE_DIR}/client.pid" ]; then
+        CLIENT_PID=$(cat "${BASE_DIR}/client.pid")
+        echo -e "${YELLOW}Stopping client with PID: ${CLIENT_PID}...${NC}"
+        kill -9 $CLIENT_PID 2>/dev/null || true
+        rm "${BASE_DIR}/client.pid"
+    fi
+    
+    # Find and kill any processes using port 3000
+    echo -e "${YELLOW}Ensuring port 3000 is free...${NC}"
+    lsof -i :3000 | grep LISTEN | awk '{print $2}' | xargs kill -9 2>/dev/null || true
+    
+    # Wait a moment to ensure the port is released
+    echo -e "${YELLOW}Waiting for port to be released...${NC}"
+    sleep 3
+    
+    # Start the client
     start_client
 }
 
@@ -243,7 +261,6 @@ restart_server() {
     
     # Start the server
     start_server
-    run_test_flow
 }
 
 # Function to restart Hyperledger Fabric network
