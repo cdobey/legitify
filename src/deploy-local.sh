@@ -224,6 +224,24 @@ restart_client() {
 # Function to restart server
 restart_server() {
     print_header "Restarting Server"
+    
+    # Kill existing server process
+    if [ -f "${BASE_DIR}/server.pid" ]; then
+        SERVER_PID=$(cat "${BASE_DIR}/server.pid")
+        echo -e "${YELLOW}Stopping server with PID: ${SERVER_PID}...${NC}"
+        kill -9 $SERVER_PID 2>/dev/null || true
+        rm "${BASE_DIR}/server.pid"
+    fi
+    
+    # Find and kill any processes using port 3001
+    echo -e "${YELLOW}Ensuring port 3001 is free...${NC}"
+    lsof -i :3001 | grep LISTEN | awk '{print $2}' | xargs kill -9 2>/dev/null || true
+    
+    # Wait a moment to ensure the port is released
+    echo -e "${YELLOW}Waiting for port to be released...${NC}"
+    sleep 3
+    
+    # Start the server
     start_server
     run_test_flow
 }
