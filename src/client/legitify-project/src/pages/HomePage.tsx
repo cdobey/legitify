@@ -193,7 +193,7 @@ export default function HomePage() {
           </Grid.Col>
           <Grid.Col span={{ base: 12, md: 5 }} style={{ display: 'flex', alignItems: 'center' }}>
             <Image
-              src="../public/online-certificate.jpg"
+              src="/online-certificate.jpg"
               alt="Digital Degree Certification"
               radius="lg"
               style={{
