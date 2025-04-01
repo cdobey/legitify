@@ -45,7 +45,7 @@ export const degreeApi = {
       params: { docId },
     }),
 
-  grantAccess: (requestId: string, granted: boolean) =>
+  grantAccess: ({ requestId, granted }: { requestId: string; granted: boolean }) =>
     apiCall<{ message: string }>({
       method: 'post',
       path: '/degree/grantAccess',
@@ -75,5 +75,23 @@ export const degreeApi = {
     apiCall<any[]>({
       method: 'get',
       path: '/degree/accessible',
+    }),
+
+  getRecentIssuedDegrees: () =>
+    apiCall<any[]>({
+      method: 'get',
+      path: '/degree/recent-issued',
+    }),
+
+  getRecentVerifications: () =>
+    apiCall<any[]>({
+      method: 'get',
+      path: '/degree/recent-verifications',
+    }),
+
+  getAllLedgerRecords: () =>
+    apiCall<any[]>({
+      method: 'get',
+      path: '/degree/all-records',
     }),
 };

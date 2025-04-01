@@ -1,11 +1,13 @@
-import { Container, Text, Title } from '@mantine/core';
 import { Route, Routes } from 'react-router-dom';
 import MainLayout from './components/MainLayout';
 import ProtectedRoute from './components/ProtectedRoute';
+import { useAuth } from './contexts/AuthContext';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import Dashboard from './pages/Dashboard';
 import AccessibleDegrees from './pages/degree/AccessibleDegrees';
 import AccessRequests from './pages/degree/AccessRequests';
+import AllRecords from './pages/degree/AllRecords';
 import IssueDegree from './pages/degree/IssueDegree';
 import ManageDegrees from './pages/degree/ManageDegrees';
 import VerifyDegree from './pages/degree/VerifyDegree';
@@ -13,28 +15,37 @@ import ViewDegree from './pages/degree/ViewDegree';
 import HomePage from './pages/HomePage';
 import SearchUsers from './pages/users/SearchUsers';
 
-function About() {
-  return (
-    <Container p="md">
-      <Title>About</Title>
-      <Text>About page coming soon...</Text>
-    </Container>
-  );
-}
-
 export default function App() {
+  const { user } = useAuth();
+
   return (
     <MainLayout>
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        {/* Show Dashboard for authenticated users, HomePage for others */}
+        <Route path="/" element={user ? <Dashboard /> : <HomePage />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/about" element={<About />} />
         <Route
           path="/degree/issue"
           element={
             <ProtectedRoute requiredRole="university">
               <IssueDegree />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/degree/all-records"
+          element={
+            <ProtectedRoute requiredRole="university">
+              <AllRecords />
             </ProtectedRoute>
           }
         />

@@ -1,4 +1,4 @@
-import { useMutation, useQuery, UseQueryOptions } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
 import { degreeApi } from './degree.api';
 import {
   AccessibleDegree,
@@ -16,10 +16,14 @@ export const degreeKeys = {
   accessible: () => [...degreeKeys.all, 'accessible'] as const,
 };
 
-export const useMyDegrees = (options?: UseQueryOptions<DegreeDocument[]>) =>
-  useQuery({
+// Fix the type definitions to accept partial options and prioritize fetching
+export const useMyDegrees = (options?: Partial<UseQueryOptions<DegreeDocument[]>>) =>
+  useQuery<DegreeDocument[]>({
     queryKey: degreeKeys.lists(),
     queryFn: () => degreeApi.getMyDegrees(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: true,
+    retry: 2,
     ...options,
   });
 
@@ -55,10 +59,13 @@ export const useDenyDegree = () =>
     mutationFn: docId => degreeApi.denyDegree(docId),
   });
 
-export const useAccessRequests = (options?: UseQueryOptions<AccessRequest[]>) =>
-  useQuery({
+export const useAccessRequests = (options?: Partial<UseQueryOptions<AccessRequest[]>>) =>
+  useQuery<AccessRequest[]>({
     queryKey: degreeKeys.requests(),
     queryFn: () => degreeApi.getAccessRequests(),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
+    retry: 2,
     ...options,
   });
 
@@ -67,14 +74,32 @@ export const useRequestAccess = () =>
     mutationFn: docId => degreeApi.requestAccess(docId),
   });
 
-export const useGrantAccess = () =>
-  useMutation<{ message: string }, Error, { requestId: string; granted: boolean }>({
-    mutationFn: ({ requestId, granted }) => degreeApi.grantAccess(requestId, granted),
-  });
+export const useGrantAccess = () => {
+  const queryClient = useQueryClient();
 
-export const useAccessibleDegrees = (options?: UseQueryOptions<AccessibleDegree[]>) =>
-  useQuery({
+  return useMutation<{ message: string }, Error, { requestId: string; granted: boolean }>({
+    mutationFn: params => {
+      console.log('useGrantAccess mutation called with params:', params);
+      return degreeApi.grantAccess(params);
+    },
+    onSuccess: () => {
+      console.log('Grant access mutation successful, invalidating queries...');
+      // Invalidate relevant queries to trigger refetches
+      queryClient.invalidateQueries({ queryKey: degreeKeys.requests() });
+      queryClient.invalidateQueries({ queryKey: degreeKeys.accessible() });
+    },
+    onError: error => {
+      console.error('Grant access mutation failed:', error);
+    },
+  });
+};
+
+export const useAccessibleDegrees = (options?: Partial<UseQueryOptions<AccessibleDegree[]>>) =>
+  useQuery<AccessibleDegree[]>({
     queryKey: degreeKeys.accessible(),
     queryFn: () => degreeApi.getAccessibleDegrees(),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
+    retry: 2,
     ...options,
   });

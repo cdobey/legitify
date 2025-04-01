@@ -16,6 +16,28 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation();
   const sidebarRef = useRef<HTMLDivElement>(null);
 
+  // Scroll-aware header states
+  const [prevScrollPos, setPrevScrollPos] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  // Track scroll position and direction
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollPos = window.scrollY;
+
+      // Determine if we should show or hide the header
+      // When scrolling up OR at the top of the page, show the header
+      // Otherwise hide it when scrolling down
+      const shouldBeVisible = prevScrollPos > currentScrollPos || currentScrollPos < 50;
+
+      setVisible(shouldBeVisible);
+      setPrevScrollPos(currentScrollPos);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [prevScrollPos]);
+
   // Auto-collapse sidebar when route changes
   useEffect(() => {
     setNavCollapsed(true);
@@ -47,8 +69,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
   // Add function to get page title
   const getPageTitle = () => {
     const path = location.pathname;
-    if (path === '/') return 'Home';
-    if (path === '/about') return 'About';
+    if (path === '/') {
+      return <img src="/header-image.png" alt="Header" style={{ height: '40px', marginTop: 10 }} />;
+    }
     if (path === '/degree/issue') return 'Issue Degree';
     if (path === '/degree/manage') return 'Manage Degrees';
     if (path === '/degree/requests') return 'Access Requests';
@@ -96,7 +119,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
         <AppNavigation collapsed={navCollapsed} onToggleCollapse={toggleSidebar} />
       </AppShell.Navbar>
 
-      {/* Re-introduce subtle header with centered title */}
       <AppShell.Header
         style={{
           zIndex: 300,
@@ -104,10 +126,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
           top: 0,
           right: 0,
           left: navCollapsed ? 80 : 280,
-          transition: 'left 0.3s ease',
+          transform: visible ? 'translateY(0)' : 'translateY(-100%)',
+          transition: 'transform 0.3s ease, left 0.3s ease',
           backgroundColor: 'var(--background-light)',
           borderBottom: 'none',
-          boxShadow: 'none',
+          boxShadow: visible ? '0 2px 8px rgba(0, 0, 0, 0.05)' : 'none',
         }}
       >
         <Group h="100%" px="md" style={{ justifyContent: 'space-between' }}>
@@ -117,10 +140,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             {getPageTitle()}
           </Title>
 
-          {/* Right-aligned user profile with moderate padding */}
-          <div
-            style={{ width: 100, display: 'flex', justifyContent: 'flex-end', paddingRight: 10 }}
-          >
+          <div style={{ width: 100, display: 'flex', justifyContent: 'flex-end', paddingRight: 0 }}>
             <AppHeader />
           </div>
         </Group>

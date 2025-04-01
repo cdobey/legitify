@@ -6,6 +6,8 @@ import {
   getAccessRequests,
   getAllLedgerRecords,
   getMyDegrees,
+  getRecentIssuedDegrees,
+  getRecentVerifications,
   getUserDegrees,
   grantAccess,
   issueDegree,
@@ -659,6 +661,63 @@ router.get('/degree/user/:userId', authMiddleware, getUserDegrees);
  *         description: Internal server error
  */
 router.get('/degree/accessible', authMiddleware, getAccessibleDegrees);
+
+/**
+ * @openapi
+ * /degree/recent-issued:
+ *   get:
+ *     summary: Get recently issued degrees for university dashboard
+ *     tags:
+ *       - Degree
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of recently issued degrees
+ *       403:
+ *         description: Forbidden - only university can access this endpoint
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/degree/recent-issued', authMiddleware, getRecentIssuedDegrees);
+
+/**
+ * @openapi
+ * /degree/recent-verifications:
+ *   get:
+ *     summary: Get recent verification history for employer dashboard
+ *     tags:
+ *       - Degree
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of recent verifications
+ *       403:
+ *         description: Forbidden - only employers can access this endpoint
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/degree/recent-verifications', authMiddleware, getRecentVerifications);
+
+/**
+ * @openapi
+ * /degree/all-records:
+ *   get:
+ *     summary: Get all records from the blockchain ledger (alias for /degree/ledger/all)
+ *     tags:
+ *       - Degree
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of all degree records from the ledger
+ *       403:
+ *         description: Forbidden - only university role can access
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/degree/all-records', authMiddleware, getAllLedgerRecords);
 
 // Swagger Documentation Route
 router.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

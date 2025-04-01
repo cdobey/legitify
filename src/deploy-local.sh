@@ -141,7 +141,7 @@ start_server() {
     
     # Wait a moment for the server to start
     echo -e "${YELLOW}Waiting for server to start...${NC}"
-    sleep 10
+    sleep 20
     
     # Check if server is running
     if ps -p $SERVER_PID > /dev/null; then

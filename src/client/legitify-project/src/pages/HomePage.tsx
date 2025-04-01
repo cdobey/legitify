@@ -36,7 +36,7 @@ export default function HomePage() {
     <Box
       py={80}
       style={{
-        background: `linear-gradient(120deg, ${theme.colors.primaryBlue[6]} 0%, ${theme.colors.accentTeal[5]} 100%)`,
+        background: `linear-gradient(120deg, ${theme.colors.primaryBlue[6]} -50%, ${theme.colors.accentTeal[9]} 100%)`,
         borderRadius: '0', // Remove border radius from top
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
         position: 'relative',
@@ -193,13 +193,13 @@ export default function HomePage() {
           </Grid.Col>
           <Grid.Col span={{ base: 12, md: 5 }} style={{ display: 'flex', alignItems: 'center' }}>
             <Image
-              src="/online-certificate.jpg"
+              src="/online-certificate.png"
               alt="Digital Degree Certification"
               radius="lg"
               style={{
                 maxWidth: '100%',
                 boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
-                border: '4px solid rgba(255, 255, 255, 0.2)',
+                border: '4px solid rgba(255, 255, 255, 0.8)',
               }}
             />
           </Grid.Col>
@@ -614,7 +614,7 @@ export default function HomePage() {
     <Box
       py={80}
       style={{
-        background: `linear-gradient(120deg, ${theme.colors.primaryBlue[6]} 0%, ${theme.colors.accentTeal[5]} 100%)`,
+        background: `linear-gradient(120deg, ${theme.colors.primaryBlue[6]} -50%, ${theme.colors.accentTeal[9]} 100%)`,
         borderRadius: '30px 30px 0 0',
         position: 'relative',
         overflow: 'hidden',
@@ -670,12 +670,16 @@ export default function HomePage() {
           </Button>
           <Button
             component={Link}
-            to="/about"
+            to="#"
             size="lg"
             variant="outline"
             color="white"
             radius="xl"
             px="xl"
+            onClick={e => {
+              e.preventDefault();
+              alert('Coming soon!');
+            }}
             style={{ backdropFilter: 'blur(8px)' }}
           >
             Learn More

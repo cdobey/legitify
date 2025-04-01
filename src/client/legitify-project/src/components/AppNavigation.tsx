@@ -7,11 +7,9 @@ import {
   NavLink,
   Stack,
   Text,
-  Title,
   useMantineTheme,
 } from '@mantine/core';
 import {
-  IconBookmark,
   IconCertificate,
   IconFileCheck,
   IconFiles,
@@ -36,10 +34,13 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
   const location = useLocation();
   const theme = useMantineTheme();
 
-  // Common links for all users
+  // Common links for all users - Home now points to dashboard for logged-in users
   const commonLinks = [
-    { label: 'Home', to: '/', icon: <IconHome size={collapsed ? 20 : 16} /> },
-    { label: 'About', to: '/about', icon: <IconBookmark size={collapsed ? 20 : 16} /> },
+    {
+      label: 'Home',
+      to: user ? '/dashboard' : '/',
+      icon: <IconHome size={collapsed ? 20 : 16} />,
+    },
   ];
 
   // Role-specific links
@@ -104,7 +105,6 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
         justifyContent: collapsed ? 'center' : 'flex-start',
         padding: '0 16px',
         borderBottom: '1px solid var(--border-light)',
-        backgroundColor: 'white',
       }}
     >
       <Group gap={collapsed ? 0 : 'md'} wrap="nowrap" align="center">
@@ -116,9 +116,14 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
           color={theme.colors.primaryBlue[6]}
         />
         {!collapsed && (
-          <Title order={3} c="primaryBlue">
-            LegiTify
-          </Title>
+          <img
+            src="/header-image.png"
+            alt="LegiTify Logo"
+            style={{
+              maxHeight: '35px',
+              objectFit: 'contain',
+            }}
+          />
         )}
       </Group>
     </Box>
