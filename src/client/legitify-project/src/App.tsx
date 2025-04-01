@@ -11,6 +11,7 @@ import ManageDegrees from './pages/degree/ManageDegrees';
 import VerifyDegree from './pages/degree/VerifyDegree';
 import ViewDegree from './pages/degree/ViewDegree';
 import HomePage from './pages/HomePage';
+import SearchUsers from './pages/users/SearchUsers';
 
 function About() {
   return (
@@ -74,6 +75,14 @@ export default function App() {
           element={
             <ProtectedRoute requiredRole="employer">
               <AccessibleDegrees />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users/search"
+          element={
+            <ProtectedRoute requiredRole="employer">
+              <SearchUsers />
             </ProtectedRoute>
           }
         />

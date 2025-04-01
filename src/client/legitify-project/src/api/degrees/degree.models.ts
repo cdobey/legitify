@@ -37,7 +37,8 @@ export interface IssueResponse {
 export interface User {
   uid: string;
   email: string;
-  orgName: string;
+  username: string;
+  orgName?: string;
 }
 
 export interface DirectVerificationPayload {

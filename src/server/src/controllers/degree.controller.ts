@@ -30,13 +30,28 @@ export const issueDegree: RequestHandler = async (req: Request, res: Response): 
       return;
     }
 
-    const { individualId, base64File } = req.body as {
-      individualId: string;
+    const { email, base64File } = req.body as {
+      email: string;
       base64File?: string;
     };
-    // For file-based request, if base64File is not provided, you might throw an error.
-    if (!individualId || !base64File) {
-      res.status(400).json({ error: 'Missing individualId or base64File' });
+
+    if (!email || !base64File) {
+      res.status(400).json({ error: 'Missing email or base64File' });
+      return;
+    }
+
+    // Find the individual by email
+    const individual = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!individual) {
+      res.status(404).json({ error: 'Individual with this email not found' });
+      return;
+    }
+
+    if (individual.role !== 'individual') {
+      res.status(400).json({ error: 'The provided email does not belong to an individual user' });
       return;
     }
 
@@ -56,14 +71,14 @@ export const issueDegree: RequestHandler = async (req: Request, res: Response): 
     const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifychannel');
     const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
 
-    await contract.submitTransaction('IssueDegree', docId, docHash, individualId, user.uid);
+    await contract.submitTransaction('IssueDegree', docId, docHash, individual.id, user.uid);
     gateway.disconnect();
 
     // Store document in DB (without hash)
     const newDocument = await prisma.document.create({
       data: {
         id: docId,
-        issuedTo: individualId,
+        issuedTo: individual.id,
         issuer: user.uid,
         fileData,
         status: 'issued',

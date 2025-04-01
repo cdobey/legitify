@@ -67,6 +67,11 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
       icon: <IconSearch size={collapsed ? 20 : 16} />,
     },
     {
+      label: 'Search Users',
+      to: '/users/search',
+      icon: <IconUserPlus size={collapsed ? 20 : 16} />,
+    },
+    {
       label: 'Accessible Degrees',
       to: '/degree/accessible',
       icon: <IconFileCheck size={collapsed ? 20 : 16} />,

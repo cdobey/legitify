@@ -17,7 +17,7 @@ import { fileToBase64 } from '../../utils/fileUtils';
 const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB in bytes
 
 export default function IssueDegree() {
-  const [individualId, setIndividualId] = useState('');
+  const [email, setEmail] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [success, setSuccess] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
@@ -61,8 +61,8 @@ export default function IssueDegree() {
     setIsUploading(true);
     setUploadProgress(0);
 
-    if (!file || !individualId) {
-      setLocalError('Please provide both Individual ID and a file');
+    if (!file || !email) {
+      setLocalError('Please provide both email address and a file');
       setIsUploading(false);
       return;
     }
@@ -83,14 +83,14 @@ export default function IssueDegree() {
       );
 
       const result = await issueMutation.mutateAsync({
-        individualId,
+        email,
         base64File,
       });
 
       clearInterval(progressInterval);
       setUploadProgress(100);
       setSuccess(`Degree issued successfully! Document ID: ${result.docId}`);
-      setIndividualId('');
+      setEmail('');
       setFile(null);
     } catch (error: any) {
       console.error('Degree issuance failed:', error);
@@ -113,11 +113,13 @@ export default function IssueDegree() {
       </Title>
       <form onSubmit={handleSubmit}>
         <TextInput
-          label="Individual ID"
+          label="Student Email"
+          type="email"
           required
-          value={individualId}
-          onChange={e => setIndividualId(e.currentTarget.value)}
+          value={email}
+          onChange={e => setEmail(e.currentTarget.value)}
           mb="md"
+          placeholder="Enter the student's email address"
         />
         <FileInput
           label="Degree Document"

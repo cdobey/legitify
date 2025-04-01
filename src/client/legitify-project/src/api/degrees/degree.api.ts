@@ -4,11 +4,11 @@ import { AccessRequest, DegreeDocument, IssueResponse, VerificationResult } from
 export const degreeApi = {
   getMyDegrees: () => apiCall<DegreeDocument[]>({ method: 'get', path: '/degree/list' }),
 
-  issueDegree: (individualId: string, base64File: string) =>
+  issueDegree: (email: string, base64File: string) =>
     apiCall<IssueResponse>({
       method: 'post',
       path: '/degree/issue',
-      params: { individualId, base64File },
+      params: { email, base64File },
     }),
 
   verifyDegree: (email: string, base64File: string) =>

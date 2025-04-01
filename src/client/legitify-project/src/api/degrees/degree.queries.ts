@@ -5,6 +5,7 @@ import {
   AccessRequest,
   DegreeDocument,
   IssueResponse,
+  User,
   VerificationResult,
 } from './degree.models';
 
@@ -22,9 +23,21 @@ export const useMyDegrees = (options?: UseQueryOptions<DegreeDocument[]>) =>
     ...options,
   });
 
+export const useSearchUser = () =>
+  useMutation<User, Error, string>({
+    mutationFn: async email => degreeApi.searchUsers(email) as Promise<User>,
+  });
+
+export const useUserDegrees = (userId: string, options?: any) =>
+  useQuery<DegreeDocument[]>({
+    queryKey: ['userDegrees', userId],
+    queryFn: () => degreeApi.getUserDegrees(userId),
+    ...options,
+  });
+
 export const useIssueDegree = () =>
-  useMutation<IssueResponse, Error, { individualId: string; base64File: string }>({
-    mutationFn: ({ individualId, base64File }) => degreeApi.issueDegree(individualId, base64File),
+  useMutation<IssueResponse, Error, { email: string; base64File: string }>({
+    mutationFn: ({ email, base64File }) => degreeApi.issueDegree(email, base64File),
   });
 
 export const useVerifyDegree = () =>
