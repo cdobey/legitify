@@ -40,8 +40,23 @@ export const useUserDegrees = (userId: string, options?: any) =>
   });
 
 export const useIssueDegree = () =>
-  useMutation<IssueResponse, Error, { email: string; base64File: string }>({
-    mutationFn: ({ email, base64File }) => degreeApi.issueDegree(email, base64File),
+  useMutation<
+    IssueResponse,
+    Error,
+    {
+      email: string;
+      base64File: string;
+      degreeTitle: string;
+      fieldOfStudy: string;
+      graduationDate: string;
+      honors: string;
+      studentId: string;
+      programDuration: string;
+      gpa: number;
+      additionalNotes?: string;
+    }
+  >({
+    mutationFn: params => degreeApi.issueDegree(params),
   });
 
 export const useVerifyDegree = () =>

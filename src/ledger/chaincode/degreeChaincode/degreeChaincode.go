@@ -15,17 +15,27 @@ type DegreeChaincode struct {
 
 // DegreeRecord represents data stored on the ledger
 type DegreeRecord struct {
-	DocID       string    `json:"docId"`
-	DocHash     string    `json:"docHash"`
-	Owner       string    `json:"owner"` // The individual's ID
-	Issuer      string    `json:"issuer"`
-	IssuedAt    string    `json:"issuedAt"`
-	Accepted    bool      `json:"accepted"`
-	Denied      bool      `json:"denied"`
+	DocID           string  `json:"docId"`
+	DocHash         string  `json:"docHash"`
+	Owner           string  `json:"owner"` // The individual's ID
+	Issuer          string  `json:"issuer"`
+	IssuedAt        string  `json:"issuedAt"`
+	Accepted        bool    `json:"accepted"`
+	Denied          bool    `json:"denied"`
+	DegreeTitle     string  `json:"degreeTitle"`
+	FieldOfStudy    string  `json:"fieldOfStudy"`
+	GraduationDate  string  `json:"graduationDate"`
+	Honors          string  `json:"honors"`
+	StudentId       string  `json:"studentId"` 
+	ProgramDuration string  `json:"programDuration"`
+	GPA             float64 `json:"gpa"`
+	AdditionalNotes string  `json:"additionalNotes"`
 }
 
 // IssueDegree adds a new degree record to the ledger
-func (dc *DegreeChaincode) IssueDegree(ctx contractapi.TransactionContextInterface, docID, docHash, owner, issuer string) error {
+func (dc *DegreeChaincode) IssueDegree(ctx contractapi.TransactionContextInterface, 
+	docID, docHash, owner, issuer, degreeTitle, fieldOfStudy, graduationDate,
+	honors, studentId, programDuration string, gpa float64, additionalNotes string) error {
 	existing, err := ctx.GetStub().GetState(docID)
 	if err != nil {
 		return fmt.Errorf("failed to check ledger: %v", err)
@@ -35,13 +45,21 @@ func (dc *DegreeChaincode) IssueDegree(ctx contractapi.TransactionContextInterfa
 	}
 
 	record := &DegreeRecord{
-		DocID:    docID,
-		DocHash:  docHash,
-		Owner:    owner,
-		Issuer:   issuer,
-		IssuedAt: time.Now().UTC().Format(time.RFC3339),
-		Accepted: false,
-		Denied:   false,
+		DocID:           docID,
+		DocHash:         docHash,
+		Owner:           owner,
+		Issuer:          issuer,
+		IssuedAt:        time.Now().UTC().Format(time.RFC3339),
+		Accepted:        false,
+		Denied:          false,
+		DegreeTitle:     degreeTitle,
+		FieldOfStudy:    fieldOfStudy,
+		GraduationDate:  graduationDate,
+		Honors:          honors,
+		StudentId:       studentId,
+		ProgramDuration: programDuration,
+		GPA:             gpa,
+		AdditionalNotes: additionalNotes,
 	}
 	data, _ := json.Marshal(record)
 	return ctx.GetStub().PutState(docID, data)

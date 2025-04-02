@@ -24,13 +24,23 @@ model User {
 }
 
 model Document {
-  id           String    @id @default(uuid())
-  issuedTo     String
-  issuer       String
-  fileData     Bytes?    // Store as binary
-  status       DocumentStatus @default(issued)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id               String         @id @default(uuid())
+  issuedTo         String
+  issuer           String
+  fileData         Bytes?         // Store as binary
+  status           DocumentStatus @default(issued)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  
+  // New academic detail fields
+  degreeTitle      String?        // e.g., "Bachelor of Science"
+  fieldOfStudy     String?        // e.g., "Computer Science" 
+  graduationDate   DateTime?      // When the degree was earned
+  honors           String?        // e.g., "Cum Laude", "First Class"
+  studentId        String?        // Student's university ID
+  programDuration  String?        // e.g., "4 years"
+  gpa              Float?         // Grade Point Average
+  additionalNotes  String?        // Any additional information
 
   // Relations
   issuerUser    User      @relation("Issuer", fields: [issuer], references: [id])

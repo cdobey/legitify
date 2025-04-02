@@ -1,8 +1,8 @@
-import { Alert, Container, Text, Title } from "@mantine/core";
-import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
-import { degreeApi } from "../../api/degrees/degree.api";
-import { DegreeDocument } from "../../api/degrees/degree.models";
+import { Alert, Container, Text, Title } from '@mantine/core';
+import { useQuery } from '@tanstack/react-query';
+import { useParams } from 'react-router-dom';
+import { degreeApi } from '../../api/degrees/degree.api';
+import { DegreeDocument } from '../../api/degrees/degree.models';
 
 export default function ViewDegree() {
   const { docId } = useParams<{ docId: string }>();
@@ -12,7 +12,7 @@ export default function ViewDegree() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["degree", docId],
+    queryKey: ['degree', docId],
     queryFn: async () => {
       const result = await degreeApi.viewDegree(docId!);
       return result as DegreeDocument;
@@ -33,9 +33,7 @@ export default function ViewDegree() {
           <Text>Document ID: {degree.docId}</Text>
           <Text>Issued By: {degree.issuer}</Text>
           <Text>Status: {degree.status}</Text>
-          <Text>
-            Issue Date: {new Date(degree.issueDate).toLocaleDateString()}
-          </Text>
+          <Text>Issue Date: {new Date(degree.issueDate).toLocaleDateString()}</Text>
           {degree.fileData && (
             <embed
               src={`data:application/pdf;base64,${degree.fileData}`}

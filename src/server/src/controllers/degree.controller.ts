@@ -18,6 +18,19 @@ function sha256(buffer: Buffer): string {
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
+interface DegreeDetails {
+  email: string;
+  base64File: string;
+  degreeTitle: string;
+  fieldOfStudy: string;
+  graduationDate: string;
+  honors: string;
+  studentId: string;
+  programDuration: string;
+  gpa: number;
+  additionalNotes?: string;
+}
+
 /**
  * Issues a degree to an individual. Only accessible by users with role 'university'.
  */
@@ -30,10 +43,18 @@ export const issueDegree: RequestHandler = async (req: Request, res: Response): 
       return;
     }
 
-    const { email, base64File } = req.body as {
-      email: string;
-      base64File?: string;
-    };
+    const {
+      email,
+      base64File,
+      degreeTitle,
+      fieldOfStudy,
+      graduationDate,
+      honors,
+      studentId,
+      programDuration,
+      gpa,
+      additionalNotes = '',
+    } = req.body as DegreeDetails;
 
     if (!email || !base64File) {
       res.status(400).json({ error: 'Missing email or base64File' });
@@ -71,7 +92,21 @@ export const issueDegree: RequestHandler = async (req: Request, res: Response): 
     const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifychannel');
     const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
 
-    await contract.submitTransaction('IssueDegree', docId, docHash, individual.id, user.uid);
+    await contract.submitTransaction(
+      'IssueDegree',
+      docId,
+      docHash,
+      individual.id,
+      user.uid,
+      degreeTitle,
+      fieldOfStudy,
+      graduationDate,
+      honors,
+      studentId,
+      programDuration,
+      gpa.toString(),
+      additionalNotes,
+    );
     gateway.disconnect();
 
     // Store document in DB (without hash)
@@ -82,6 +117,14 @@ export const issueDegree: RequestHandler = async (req: Request, res: Response): 
         issuer: user.uid,
         fileData,
         status: 'issued',
+        degreeTitle,
+        fieldOfStudy,
+        graduationDate: new Date(graduationDate),
+        honors,
+        studentId,
+        programDuration,
+        gpa,
+        additionalNotes,
       },
     });
 
