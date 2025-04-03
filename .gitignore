@@ -93,21 +93,13 @@ src/ledger/legitify-network/.running
 
 ## Organization Artifacts
 src/ledger/legitify-network/org3-artifacts/crypto-config/*
-src/ledger/legitify-network/organizations/ordererOrganizations/*
-src/ledger/legitify-network/organizations/peerOrganizations/*
+src/ledger/legitify-network/organizations/ordererOrganizations/
+src/ledger/legitify-network/organizations/peerOrganizations/
 
 ## Fabric CA Directories
-src/ledger/legitify-network/organizations/fabric-ca/ordererOrg/*
-src/ledger/legitify-network/organizations/fabric-ca/orguniversity/*
-src/ledger/legitify-network/organizations/fabric-ca/orgemployer/*
-src/ledger/legitify-network/organizations/fabric-ca/orgindividual/*
-
-# Keep specific config files
-!src/ledger/full-stack-asset-transfer-guide/infrastructure/sample-network/config
-!src/ledger/legitify-network/organizations/fabric-ca/orguniversity/fabric-ca-server-config.yaml
-!src/ledger/legitify-network/organizations/fabric-ca/orgemployer/fabric-ca-server-config.yaml
-!src/ledger/legitify-network/organizations/fabric-ca/orgindividual/fabric-ca-server-config.yaml
-!src/ledger/legitify-network/organizations/fabric-ca/ordererorg/fabric-ca-server-config.yaml
+src/ledger/legitify-network/organizations/fabric-ca/
+!src/ledger/legitify-network/organizations/fabric-ca/registerEnroll.sh
+!src/ledger/legitify-network/organizations/fabric-ca/ca-config.yaml
 
 # Server Specific
 src/server/pgdata/

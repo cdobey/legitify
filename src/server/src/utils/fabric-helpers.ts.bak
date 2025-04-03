@@ -19,11 +19,6 @@ const orgConfigs: { [key: string]: OrgConfig } = {
     name: "orgnewuniversity",
     mspId: "OrgNewUniversityMSP",
     caName: "ca.orgnewuniversity.com",
-  orgnewuniversity2: {
-    name: "orgnewuniversity2",
-    mspId: "OrgNewUniversity2MSP",
-    caName: "ca.orgnewuniversity2.com",
-  },
   },
   },
   orgemployer: {
@@ -219,7 +214,6 @@ export async function testFabricConnection(
     if (orgName === "orguniversity") peerPort = 7051;
     else if (orgName === "orgemployer") peerPort = 8051;
     else if (orgName === "orgindividual") peerPort = 9051;
-    else if (orgName === "orgnewuniversity2") peerPort = 11051;
     else if (orgName === "orgnewuniversity") peerPort = 10051;
     else return { connected: false, error: "Unknown organization" };
 

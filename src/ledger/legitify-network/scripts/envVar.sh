@@ -101,3 +101,22 @@ verifyResult() {
     fatalln "$2"
   fi
 }
+
+# New Organization
+export PEER0_OrgNewUniversityMSP_CA=/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/ledger/legitify-network/organizations/peerOrganizations/orgnewuniversity.com/tlsca/tlsca.orgnewuniversity.com-cert.pem
+
+# New Organization
+export PEER0_OrgNewUniversityMSP_CA=/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/ledger/legitify-network/organizations/peerOrganizations/orgnewuniversity.com/tlsca/tlsca.orgnewuniversity.com-cert.pem
+
+# New Organization
+export PEER0_OrgNewUniversityMSP_CA=/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/ledger/legitify-network/organizations/peerOrganizations/orgnewuniversity.com/tlsca/tlsca.orgnewuniversity.com-cert.pem
+
+# Add new org to setGlobals function
+elif [ $USING_ORG -eq 4 ]; then
+    export CORE_PEER_LOCALMSPID=OrgNewUniversityMSP
+    export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_OrgNewUniversityMSP_CA
+    export CORE_PEER_MSPCONFIGPATH=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orgnewuniversity.com/users/Admin@orgnewuniversity.com/msp
+    export CORE_PEER_ADDRESS=localhost:10051
+
+# New Organization
+export PEER0_OrgNewUniversity2MSP_CA=/Users/chris.dobey/College/FYP/2025-csc1097-mannp2-dobeyc3/src/ledger/legitify-network/organizations/peerOrganizations/orgnewuniversity2.com/tlsca/tlsca.orgnewuniversity2.com-cert.pem
