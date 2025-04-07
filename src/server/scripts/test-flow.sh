@@ -68,6 +68,10 @@ extract_error() {
     echo $error
 }
 
+extract_university_id() {
+    echo $1 | grep -o '"university":{"id":"[^"]*' | grep -o '[^"]*$' || echo ""
+}
+
 # Add a delay function to avoid rate limiting
 wait_a_bit() {
     echo -e "${BLUE}Waiting 3 seconds...${NC}"
@@ -228,7 +232,44 @@ fi
 
 wait_a_bit
 
-# Login individual
+echo -e "\n${BLUE}2a. University creates a university entity...${NC}"
+UNIVERSITY_CREATE_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/university/create" \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer $UNIVERSITY_TOKEN" \
+-d '{
+    "name": "test-university", 
+    "displayName": "Test University",
+    "description": "A university for testing"
+}')
+echo "University Create Response: $UNIVERSITY_CREATE_RESPONSE"
+UNIVERSITY_ID=$(echo $UNIVERSITY_CREATE_RESPONSE | grep -o '"id":"[^"]*' | head -1 | grep -o '[^"]*$')
+echo "University ID: $UNIVERSITY_ID"
+
+if [ -z "$UNIVERSITY_ID" ]; then
+    echo -e "${RED}Failed to create university entity. Response: $UNIVERSITY_CREATE_RESPONSE${NC}"
+    exit 1
+fi
+
+wait_a_bit
+
+echo -e "\n${BLUE}2b. University adds the student to the university...${NC}"
+ADD_STUDENT_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/university/add-student" \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer $UNIVERSITY_TOKEN" \
+-d "{
+    \"universityId\": \"$UNIVERSITY_ID\",
+    \"studentEmail\": \"individual@test.com\"
+}")
+echo "Add Student Response: $ADD_STUDENT_RESPONSE"
+
+if [[ "$ADD_STUDENT_RESPONSE" == *"error"* ]]; then
+    echo -e "${RED}Failed to add student to university. Response: $ADD_STUDENT_RESPONSE${NC}"
+    exit 1
+fi
+
+wait_a_bit
+
+# Reorder these steps - now we'll log in individual first, then approve the affiliation
 echo -e "\n${BLUE}Logging in individual...${NC}"
 INDIVIDUAL_LOGIN_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/login" \
 -H "Content-Type: application/json" \
@@ -246,6 +287,41 @@ if [ -z "$INDIVIDUAL_TOKEN" ]; then
     echo -e "${RED}Failed to get token for individual user${NC}"
     echo -e "${YELLOW}Check server logs for details${NC}"
     exit 1
+fi
+
+wait_a_bit
+
+echo -e "\n${BLUE}2c. Individual approves the university affiliation request...${NC}"
+# First get the affiliations to find the affiliation ID - now with the correct token
+PENDING_AFFILIATIONS_RESPONSE=$(curl -s -X GET "$LEGITIFY_API_URL/university/pending-affiliations" \
+-H "Authorization: Bearer $INDIVIDUAL_TOKEN")
+echo "Pending Affiliations Response: $PENDING_AFFILIATIONS_RESPONSE"
+
+# Extract the affiliation ID from the response
+AFFILIATION_ID=$(echo $PENDING_AFFILIATIONS_RESPONSE | grep -o '"id":"[^"]*' | head -1 | grep -o '[^"]*$')
+echo "Affiliation ID: $AFFILIATION_ID"
+
+# Approve the affiliation
+if [ -n "$AFFILIATION_ID" ]; then
+  APPROVE_AFFILIATION_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/university/respond-affiliation" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $INDIVIDUAL_TOKEN" \
+  -d "{
+      \"affiliationId\": \"$AFFILIATION_ID\",
+      \"accept\": true
+  }")
+  echo "Approve Affiliation Response: $APPROVE_AFFILIATION_RESPONSE"
+  
+  # Check if there was an error in the approval
+  if [[ "$APPROVE_AFFILIATION_RESPONSE" == *"error"* ]]; then
+    echo -e "${RED}Failed to approve affiliation: $APPROVE_AFFILIATION_RESPONSE${NC}"
+    exit 1
+  else
+    echo -e "${GREEN}Affiliation successfully approved!${NC}"
+  fi
+else
+  echo -e "${RED}No pending affiliation found, the university might not have added the student yet${NC}"
+  exit 1
 fi
 
 wait_a_bit
@@ -293,6 +369,7 @@ ISSUE_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/degree/issue" \
 -H "Authorization: Bearer $UNIVERSITY_TOKEN" \
 -d "{
     \"email\": \"individual@test.com\",
+    \"universityId\": \"$UNIVERSITY_ID\",
     \"base64File\": \"JVBERi0xLjcKCjEgMCBvYmogICUgZW50cnkgcG9pbnQKPDwKICAvVHlwZSAvQ2F0YWxvZwogIC9QYWdlcyAyIDAgUgo+PgplbmRvYmoKCjIgMCBvYmoKPDwKICAvVHlwZSAvUGFnZXMKICAvTWVkaWFCb3ggWyAwIDAgMjAwIDIwMCBdCiAgL0NvdW50IDEKICAvS2lkcyBbIDMgMCBSIF0KPj4KZW5kb2JqCgozIDAgb2JqCjw8CiAgL1R5cGUgL1BhZ2UKICAvUGFyZW50IDIgMCBSCiAgL1Jlc291cmNlcyA8PAogICAgL0ZvbnQgPDwKICAgICAgL0YxIDQgMCBSIAogICAgPj4KICA+PgogIC9Db250ZW50cyA1IDAgUgo+PgplbmRvYmoKCjQgMCBvYmoKPDwKICAvVHlwZSAvRm9udAogIC9TdWJ0eXBlIC9UeXBlMQogIC9CYXNlRm9udCAvVGltZXMtUm9tYW4KPj4KZW5kb2JqCgo1IDAgb2JqICAlIHBhZ2UgY29udGVudAo8PAogIC9MZW5ndGggNDQKPj4Kc3RyZWFtCkJUCjcwIDUwIFRECi9GMSAxMiBUZgooSGVsbG8sIHdvcmxkISkgVGoKRVQKZW5kc3RyZWFtCmVuZG9iagoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDEwIDAwMDAwIG4gCjAwMDAwMDAwNzkgMDAwMDAgbiAKMDAwMDAwMDE3MyAwMDAwMCBuIAowMDAwMDAwMzAxIDAwMDAwIG4gCjAwMDAwMDAzODAgMDAwMDAgbiAKdHJhaWxlcgo8PAogIC9TaXplIDYKICAvUm9vdCAxIDAgUgo+PgpzdGFydHhyZWYKNDkyCiUlRU9G\",
     \"degreeTitle\": \"Test Degree\",
     \"fieldOfStudy\": \"Computer Science\",

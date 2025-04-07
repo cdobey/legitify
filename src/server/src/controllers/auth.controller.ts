@@ -1,3 +1,4 @@
+import { OrgName, Role } from '@prisma/client'; // Import Prisma enums
 import { Request, RequestHandler, Response } from 'express';
 import supabase from '../config/supabase';
 import prisma from '../prisma/client';
@@ -52,12 +53,41 @@ export const login: RequestHandler = async (req: Request, res: Response): Promis
 
 export const register: RequestHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password, username, role, orgName } = req.body;
+    console.log('Registration payload:', req.body); // Add debug logging
+
+    const {
+      email,
+      password,
+      username,
+      role,
+      universityIds,
+      joinUniversityId,
+      universityName,
+      universityDisplayName,
+      universityDescription,
+      orgName,
+    } = req.body;
 
     // Validate input
-    if (!email || !password || !username || !role || !orgName) {
+    if (!email || !password || !username || !role) {
       res.status(400).json({
-        error: 'email, password, username, role, and orgName are required',
+        error: 'email, password, username, and role are required',
+      });
+      return;
+    }
+
+    // Map role to the correct organization name using Prisma enum
+    let actualOrgName: OrgName;
+    if (role === 'individual') {
+      actualOrgName = OrgName.orgindividual;
+    } else if (role === 'university') {
+      actualOrgName = OrgName.orguniversity;
+    } else if (role === 'employer') {
+      actualOrgName = OrgName.orgemployer;
+    } else {
+      // If the role is invalid
+      res.status(400).json({
+        error: 'Invalid role. Must be "individual", "university", or "employer"',
       });
       return;
     }
@@ -83,7 +113,7 @@ export const register: RequestHandler = async (req: Request, res: Response): Pro
       user_metadata: {
         username,
         role,
-        orgName,
+        orgName: actualOrgName, // This is fine as Supabase just stores it as a string
       },
       email_confirm: true, // Auto-confirm the email
     });
@@ -95,19 +125,106 @@ export const register: RequestHandler = async (req: Request, res: Response): Pro
     const userId = authData.user.id;
 
     // Enroll user with Hyperledger Fabric
-    await enrollUser(userId, orgName);
+    await enrollUser(userId, actualOrgName);
 
-    // Create user in database
+    // Create user in database with the proper enum values
     const user = await prisma.user.create({
       data: {
         id: userId,
         username,
-        role,
-        orgName,
+        role: role as Role, // Cast to Prisma enum
+        orgName: actualOrgName, // Use the enum value
         email,
       },
     });
 
+    // Handle university registration if they're creating on signup
+    if (role === 'university' && universityName && universityDisplayName) {
+      try {
+        console.log(
+          'Creating university with name:',
+          universityName,
+          'and display name:',
+          universityDisplayName,
+        );
+
+        const university = await prisma.university.create({
+          data: {
+            name: universityName,
+            displayName: universityDisplayName,
+            description: universityDescription || '',
+            ownerId: userId,
+          },
+        });
+
+        console.log('University created successfully:', university);
+
+        res.status(201).json({
+          message: 'University user and university created successfully',
+          uid: userId,
+          metadata: authData.user.user_metadata,
+          university: university,
+        });
+        return;
+      } catch (uniError) {
+        console.error('Failed to create university during registration:', uniError);
+        // We still created the user, but let's log specific error details
+        if ((uniError as any).code === 'P2002') {
+          console.error('Unique constraint violation - university name may already exist');
+        }
+      }
+    }
+
+    // Handle university join request
+    if (role === 'university' && joinUniversityId) {
+      try {
+        // Create join request through the university controller
+        await prisma.universityJoinRequest.create({
+          data: {
+            requesterId: userId,
+            universityId: joinUniversityId,
+            status: 'pending',
+          },
+        });
+      } catch (joinError) {
+        console.error('Failed to create university join request:', joinError);
+      }
+    }
+
+    // Handle university affiliation for individuals
+    if (
+      role === 'individual' &&
+      universityIds &&
+      Array.isArray(universityIds) &&
+      universityIds.length > 0
+    ) {
+      try {
+        // Create affiliations
+        const affiliationPromises = universityIds.map(async (universityId: string) => {
+          return prisma.affiliation.create({
+            data: {
+              userId,
+              universityId,
+              status: 'pending', // Pending university approval
+            },
+          });
+        });
+
+        await Promise.all(affiliationPromises);
+
+        res.status(201).json({
+          message: 'User created with university affiliation requests',
+          uid: userId,
+          metadata: authData.user.user_metadata,
+        });
+        return;
+      } catch (affError) {
+        console.error('Failed to create university affiliations:', affError);
+        // Still proceed with user creation
+      }
+    }
+
+    // Just return success if we're here
     res.status(201).json({
       message: 'User created successfully',
       uid: userId,

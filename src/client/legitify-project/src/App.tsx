@@ -13,6 +13,8 @@ import ManageDegrees from './pages/degree/ManageDegrees';
 import VerifyDegree from './pages/degree/VerifyDegree';
 import ViewDegree from './pages/degree/ViewDegree';
 import HomePage from './pages/HomePage';
+import ManageUniversities from './pages/university/ManageUniversities';
+import MyUniversities from './pages/user/MyUniversities';
 import SearchUsers from './pages/users/SearchUsers';
 
 export default function App() {
@@ -94,6 +96,22 @@ export default function App() {
           element={
             <ProtectedRoute requiredRole="employer">
               <SearchUsers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/universities"
+          element={
+            <ProtectedRoute requiredRole="individual">
+              <MyUniversities />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/universities/manage"
+          element={
+            <ProtectedRoute requiredRole="university">
+              <ManageUniversities />
             </ProtectedRoute>
           }
         />

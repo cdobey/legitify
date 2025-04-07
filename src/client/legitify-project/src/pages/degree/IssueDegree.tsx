@@ -6,19 +6,26 @@ import {
   Grid,
   NumberInput,
   Progress,
+  Select,
   Text,
   TextInput,
   Textarea,
   Title,
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useIssueDegree } from '../../api/degrees/degree.queries';
 import { useAuth } from '../../contexts/AuthContext';
 import { fileToBase64 } from '../../utils/fileUtils';
 
 // Reduced to 3MB for safer uploads with base64 encoding (which increases size by ~33%)
 const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB in bytes
+
+interface University {
+  id: string;
+  name: string;
+  displayName: string;
+}
 
 interface DegreeFormData {
   email: string;
@@ -31,6 +38,7 @@ interface DegreeFormData {
   programDuration: string;
   gpa: number | '';
   additionalNotes: string;
+  universityId: string | null; // New field for university selection
 }
 
 export default function IssueDegree() {
@@ -45,14 +53,36 @@ export default function IssueDegree() {
     programDuration: '',
     gpa: '',
     additionalNotes: '',
+    universityId: null,
   });
+  const [universities, setUniversities] = useState<University[]>([]);
   const [success, setSuccess] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isLoadingUniversities, setIsLoadingUniversities] = useState(false);
 
-  const { refreshSession } = useAuth();
+  const { api, refreshSession } = useAuth();
   const issueMutation = useIssueDegree();
+
+  // Fetch universities on component mount
+  useEffect(() => {
+    const fetchUniversities = async () => {
+      try {
+        setIsLoadingUniversities(true);
+        await refreshSession();
+        const response = await api.get('/university/my');
+        setUniversities(response.data);
+      } catch (error: any) {
+        console.error('Failed to fetch universities:', error);
+        setLocalError('Failed to load universities. Please try again.');
+      } finally {
+        setIsLoadingUniversities(false);
+      }
+    };
+
+    fetchUniversities();
+  }, []);
 
   const handleFileChange = (file: File | null) => {
     setLocalError(null);
@@ -88,8 +118,14 @@ export default function IssueDegree() {
     setIsUploading(true);
     setUploadProgress(0);
 
-    if (!formData.file || !formData.email || !formData.degreeTitle || !formData.fieldOfStudy) {
-      setLocalError('Please fill in all required fields');
+    if (
+      !formData.file ||
+      !formData.email ||
+      !formData.degreeTitle ||
+      !formData.fieldOfStudy ||
+      !formData.universityId
+    ) {
+      setLocalError('Please fill in all required fields and select a university');
       setIsUploading(false);
       return;
     }
@@ -113,6 +149,7 @@ export default function IssueDegree() {
         programDuration: formData.programDuration || '',
         gpa: Number(formData.gpa) || 0,
         additionalNotes: formData.additionalNotes || '',
+        universityId: formData.universityId || '', // Include university ID
       });
 
       clearInterval(progressInterval);
@@ -131,6 +168,7 @@ export default function IssueDegree() {
         programDuration: '',
         gpa: '',
         additionalNotes: '',
+        universityId: null,
       });
     } catch (error: any) {
       console.error('Degree issuance failed:', error);
@@ -147,6 +185,23 @@ export default function IssueDegree() {
       </Title>
       <form onSubmit={handleSubmit}>
         <Grid>
+          {/* New university selection field */}
+          <Grid.Col span={12}>
+            <Select
+              label="Select University"
+              description="Choose which university is issuing this degree"
+              placeholder={
+                isLoadingUniversities ? 'Loading universities...' : 'Select a university'
+              }
+              data={universities.map(uni => ({ value: uni.id, label: uni.displayName }))}
+              value={formData.universityId}
+              onChange={value => setFormData({ ...formData, universityId: value })}
+              required
+              disabled={isLoadingUniversities}
+              mb="md"
+            />
+          </Grid.Col>
+
           <Grid.Col span={12}>
             <TextInput
               label="Student Email"
@@ -157,6 +212,7 @@ export default function IssueDegree() {
             />
           </Grid.Col>
 
+          {/* Rest of the form remains the same */}
           <Grid.Col span={6}>
             <TextInput
               label="Degree Title"
@@ -237,7 +293,7 @@ export default function IssueDegree() {
               required
               accept="application/pdf"
               value={formData.file}
-              onChange={file => setFormData({ ...formData, file })}
+              onChange={handleFileChange}
             />
           </Grid.Col>
 
@@ -280,7 +336,7 @@ export default function IssueDegree() {
         <Button
           type="submit"
           loading={issueMutation.isPending || isUploading}
-          disabled={issueMutation.isPending || isUploading}
+          disabled={issueMutation.isPending || isUploading || !formData.universityId}
           fullWidth
           mt="xl"
         >

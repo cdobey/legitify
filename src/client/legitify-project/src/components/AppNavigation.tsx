@@ -17,6 +17,7 @@ import {
   IconInbox,
   IconKey,
   IconLogout,
+  IconSchool,
   IconSearch,
   IconUser,
   IconUserPlus,
@@ -50,10 +51,20 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
       to: '/degree/issue',
       icon: <IconCertificate size={collapsed ? 20 : 16} />,
     },
+    {
+      label: 'Manage University', // Changed from plural to singular
+      to: '/universities/manage',
+      icon: <IconSchool size={collapsed ? 20 : 16} />,
+    },
   ];
 
   const individualLinks = [
     { label: 'My Degrees', to: '/degree/manage', icon: <IconFiles size={collapsed ? 20 : 16} /> },
+    {
+      label: 'My Universities',
+      to: '/universities',
+      icon: <IconSchool size={collapsed ? 20 : 16} />,
+    },
     {
       label: 'Access Requests',
       to: '/degree/requests',
@@ -150,6 +161,7 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
             color: active ? theme.colors.primaryBlue[6] : 'inherit',
             marginBottom: '8px',
           }}
+          data-active={active || undefined} // Fix the data attribute
         >
           {link.icon}
         </Box>

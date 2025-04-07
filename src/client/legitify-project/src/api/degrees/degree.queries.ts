@@ -1,10 +1,9 @@
 import { useMutation, useQuery, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
-import { degreeApi } from './degree.api';
+import { degreeApi, DegreeDetails } from './degree.api';
 import {
   AccessibleDegree,
   AccessRequest,
   DegreeDocument,
-  IssueResponse,
   User,
   VerificationResult,
 } from './degree.models';
@@ -39,25 +38,11 @@ export const useUserDegrees = (userId: string, options?: any) =>
     ...options,
   });
 
-export const useIssueDegree = () =>
-  useMutation<
-    IssueResponse,
-    Error,
-    {
-      email: string;
-      base64File: string;
-      degreeTitle: string;
-      fieldOfStudy: string;
-      graduationDate: string;
-      honors: string;
-      studentId: string;
-      programDuration: string;
-      gpa: number;
-      additionalNotes?: string;
-    }
-  >({
-    mutationFn: params => degreeApi.issueDegree(params),
+export const useIssueDegree = () => {
+  return useMutation({
+    mutationFn: (details: DegreeDetails) => degreeApi.issueDegree(details),
   });
+};
 
 export const useVerifyDegree = () =>
   useMutation<VerificationResult, Error, { email: string; base64File: string }>({

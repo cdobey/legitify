@@ -19,6 +19,7 @@ type DegreeRecord struct {
 	DocHash         string  `json:"docHash"`
 	Owner           string  `json:"owner"` // The individual's ID
 	Issuer          string  `json:"issuer"`
+	UniversityID    string  `json:"universityId"` // New field for university identity
 	IssuedAt        string  `json:"issuedAt"`
 	Accepted        bool    `json:"accepted"`
 	Denied          bool    `json:"denied"`
@@ -32,10 +33,19 @@ type DegreeRecord struct {
 	AdditionalNotes string  `json:"additionalNotes"`
 }
 
+// Affiliation represents the university-student relationship
+type Affiliation struct {
+	UserID       string `json:"userId"`
+	UniversityID string `json:"universityId"`
+	Status       string `json:"status"`
+}
+
 // IssueDegree adds a new degree record to the ledger
 func (dc *DegreeChaincode) IssueDegree(ctx contractapi.TransactionContextInterface, 
-	docID, docHash, owner, issuer, degreeTitle, fieldOfStudy, graduationDate,
+	docID, docHash, owner, issuer, universityId, degreeTitle, fieldOfStudy, graduationDate,
 	honors, studentId, programDuration string, gpa float64, additionalNotes string) error {
+	
+	// Check if document already exists
 	existing, err := ctx.GetStub().GetState(docID)
 	if err != nil {
 		return fmt.Errorf("failed to check ledger: %v", err)
@@ -43,12 +53,18 @@ func (dc *DegreeChaincode) IssueDegree(ctx contractapi.TransactionContextInterfa
 	if len(existing) != 0 {
 		return fmt.Errorf("document %s already exists", docID)
 	}
-
+	
+	// Verify the affiliation between university and student
+	// This validation would be done by the client-side application
+	// but we could add composite keys in Fabric to enforce this as well
+	
+	// For now, we'll include the universityId in the record
 	record := &DegreeRecord{
 		DocID:           docID,
 		DocHash:         docHash,
 		Owner:           owner,
 		Issuer:          issuer,
+		UniversityID:    universityId,
 		IssuedAt:        time.Now().UTC().Format(time.RFC3339),
 		Accepted:        false,
 		Denied:          false,
@@ -63,6 +79,54 @@ func (dc *DegreeChaincode) IssueDegree(ctx contractapi.TransactionContextInterfa
 	}
 	data, _ := json.Marshal(record)
 	return ctx.GetStub().PutState(docID, data)
+}
+
+// Add a university affiliation key to the ledger
+func (dc *DegreeChaincode) AddUniversityAffiliation(ctx contractapi.TransactionContextInterface, 
+	userId string, universityId string) error {
+	
+	// Create a composite key for the affiliation
+	affiliationKey, err := ctx.GetStub().CreateCompositeKey("affiliation", []string{userId, universityId})
+	if err != nil {
+		return fmt.Errorf("failed to create affiliation key: %v", err)
+	}
+	
+	// Check if affiliation already exists
+	existing, err := ctx.GetStub().GetState(affiliationKey)
+	if err != nil {
+		return fmt.Errorf("failed to check affiliation: %v", err)
+	}
+	if len(existing) != 0 {
+		return fmt.Errorf("affiliation already exists")
+	}
+	
+	// Create the affiliation
+	affiliation := &Affiliation{
+		UserID:       userId,
+		UniversityID: universityId,
+		Status:       "active",
+	}
+	data, _ := json.Marshal(affiliation)
+	return ctx.GetStub().PutState(affiliationKey, data)
+}
+
+// Check if a user is affiliated with a university
+func (dc *DegreeChaincode) CheckAffiliation(ctx contractapi.TransactionContextInterface, 
+	userId string, universityId string) (bool, error) {
+	
+	// Create the composite key
+	affiliationKey, err := ctx.GetStub().CreateCompositeKey("affiliation", []string{userId, universityId})
+	if err != nil {
+		return false, fmt.Errorf("failed to create affiliation key: %v", err)
+	}
+	
+	// Check if the affiliation exists
+	existing, err := ctx.GetStub().GetState(affiliationKey)
+	if err != nil {
+		return false, fmt.Errorf("failed to check affiliation: %v", err)
+	}
+	
+	return len(existing) > 0, nil
 }
 
 // AcceptDegree marks the record as accepted by the individual
@@ -155,6 +219,35 @@ func (dc *DegreeChaincode) GetAllRecords(ctx contractapi.TransactionContextInter
             return nil, fmt.Errorf("failed to unmarshal record: %v", err)
         }
         records = append(records, &record)
+    }
+
+    return records, nil
+}
+
+// GetUniversityRecords retrieves all degree records for a specific university
+func (dc *DegreeChaincode) GetUniversityRecords(ctx contractapi.TransactionContextInterface, universityId string) ([]*DegreeRecord, error) {
+    resultsIterator, err := ctx.GetStub().GetStateByRange("", "")
+    if err != nil {
+        return nil, fmt.Errorf("failed to get records: %v", err)
+    }
+    defer resultsIterator.Close()
+
+    var records []*DegreeRecord
+    for resultsIterator.HasNext() {
+        queryResult, err := resultsIterator.Next()
+        if err != nil {
+            return nil, fmt.Errorf("failed to get next record: %v", err)
+        }
+
+        var record DegreeRecord
+        if err := json.Unmarshal(queryResult.Value, &record); err != nil {
+            return nil, fmt.Errorf("failed to unmarshal record: %v", err)
+        }
+        
+        // Filter by university ID
+        if record.UniversityID == universityId {
+            records = append(records, &record)
+        }
     }
 
     return records, nil

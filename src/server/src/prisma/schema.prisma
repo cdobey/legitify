@@ -18,9 +18,49 @@ model User {
   updatedAt    DateTime    @updatedAt
 
   // Relations
-  issuedDocuments   Document[] @relation("Issuer")
-  receivedDocuments Document[] @relation("IssuedTo")
-  requests          Request[]  @relation("Requester")
+  issuedDocuments     Document[] @relation("Issuer")
+  receivedDocuments   Document[] @relation("IssuedTo")
+  requests            Request[]  @relation("Requester")
+  ownedUniversities   University[] @relation("UniversityOwner")
+  affiliations        Affiliation[] @relation("UserAffiliation")
+  sentJoinRequests    UniversityJoinRequest[] @relation("UniversityJoinRequester")
+  memberOfUniversities University[] @relation("UniversityMembers")
+}
+
+// New model for University sub-organizations
+model University {
+  id          String      @id @default(uuid())
+  name        String
+  displayName String      
+  description String?
+  ownerId     String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  owner        User         @relation("UniversityOwner", fields: [ownerId], references: [id])
+  affiliations Affiliation[] @relation("UniversityAffiliation")
+  joinRequests UniversityJoinRequest[] @relation("UniversityJoinTarget")
+  members      User[]       @relation("UniversityMembers")
+
+  @@unique([name, ownerId])
+}
+
+// New model for User-University affiliations
+model Affiliation {
+  id           String    @id @default(uuid())
+  userId       String
+  universityId String
+  role         String    @default("student") // student, admin, etc.
+  status       AffiliationStatus @default(pending)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  user        User       @relation("UserAffiliation", fields: [userId], references: [id])
+  university  University @relation("UniversityAffiliation", fields: [universityId], references: [id])
+
+  @@unique([userId, universityId])
 }
 
 model Document {
@@ -32,7 +72,10 @@ model Document {
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   
-  // New academic detail fields
+  // University that issued the degree
+  universityId     String?
+  
+  // Academic detail fields
   degreeTitle      String?        // e.g., "Bachelor of Science"
   fieldOfStudy     String?        // e.g., "Computer Science" 
   graduationDate   DateTime?      // When the degree was earned
@@ -96,4 +139,25 @@ enum RequestStatus {
   pending
   granted
   denied
+}
+
+// New enum for affiliation status
+enum AffiliationStatus {
+  pending
+  active
+  rejected
+}
+
+// New model for university join requests
+model UniversityJoinRequest {
+  id          String    @id @default(uuid())
+  requesterId String
+  universityId String
+  status      String    @default("pending") // pending, approved, rejected
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  requester   User      @relation("UniversityJoinRequester", fields: [requesterId], references: [id])
+  university  University @relation("UniversityJoinTarget", fields: [universityId], references: [id])
 }

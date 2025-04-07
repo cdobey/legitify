@@ -1,17 +1,15 @@
-import { Request, RequestHandler, Response } from "express";
-import prisma from "../prisma/client";
+import { Role } from '@prisma/client'; // Import the Role enum for proper typing
+import { Request, RequestHandler, Response } from 'express';
+import prisma from '../prisma/client';
 
 /**
  * Retrieves user profile information.
  */
-export const getProfile: RequestHandler = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const getProfile: RequestHandler = async (req: Request, res: Response): Promise<void> => {
   try {
     const uid = req.user?.uid;
     if (!uid) {
-      res.status(401).json({ error: "Not authenticated" });
+      res.status(401).json({ error: 'Not authenticated' });
       return;
     }
 
@@ -29,32 +27,29 @@ export const getProfile: RequestHandler = async (
     });
 
     if (!user) {
-      res.status(404).json({ error: "User not found" });
+      res.status(404).json({ error: 'User not found' });
       return;
     }
 
     res.json(user);
   } catch (error: any) {
-    console.error("getProfile error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error('getProfile error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
-export const searchUsers: RequestHandler = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const searchUsers: RequestHandler = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email } = req.query;
     if (!email) {
-      res.status(400).json({ error: "Email query parameter is required" });
+      res.status(400).json({ error: 'Email query parameter is required' });
       return;
     }
 
     const user = await prisma.user.findFirst({
       where: {
         email: email.toString(),
-        role: "individual", // Only search for individuals
+        role: Role.individual, // Use Role enum instead of string
       },
       select: {
         id: true,
@@ -65,7 +60,7 @@ export const searchUsers: RequestHandler = async (
     });
 
     if (!user) {
-      res.status(404).json({ error: "User not found" });
+      res.status(404).json({ error: 'User not found' });
       return;
     }
 
@@ -75,7 +70,7 @@ export const searchUsers: RequestHandler = async (
       username: user.username,
     });
   } catch (error: any) {
-    console.error("searchUsers error:", error);
+    console.error('searchUsers error:', error);
     res.status(500).json({ error: error.message });
   }
 };

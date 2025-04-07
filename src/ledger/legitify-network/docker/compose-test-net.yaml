@@ -193,6 +193,7 @@ services:
     environment:
       #Generic peer variables
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      # needed for running fabric on Mac M1
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric_test
       - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
       - FABRIC_LOGGING_SPEC=INFO
@@ -215,6 +216,8 @@ services:
       - CORE_OPERATIONS_LISTENADDRESS=peer0.orguniversity.com:9444
       - CORE_METRICS_PROVIDER=prometheus
       - CORE_CHAINCODE_EXECUTETIMEOUT=300s
+      # Keepalive settings
+      - CORE_PEER_KEEPALIVE_MININTERVAL=60s
     volumes:
       - ../organizations/peerOrganizations/orguniversity.com/peers/peer0.orguniversity.com:/etc/hyperledger/fabric
       - peer0.orguniversity.com:/var/hyperledger/production
@@ -236,6 +239,7 @@ services:
     environment:
       #Generic peer variables
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      # needed for running fabric on Mac M1
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric_test
       - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
       - FABRIC_LOGGING_SPEC=INFO
@@ -258,6 +262,8 @@ services:
       - CORE_OPERATIONS_LISTENADDRESS=peer0.orgemployer.com:9445
       - CORE_METRICS_PROVIDER=prometheus
       - CORE_CHAINCODE_EXECUTETIMEOUT=300s
+      # Keepalive settings
+      - CORE_PEER_KEEPALIVE_MININTERVAL=60s
     volumes:
       - ../organizations/peerOrganizations/orgemployer.com/peers/peer0.orgemployer.com:/etc/hyperledger/fabric
       - peer0.orgemployer.com:/var/hyperledger/production
@@ -279,6 +285,7 @@ services:
     environment:
       #Generic peer variables
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      # needed for running fabric on Mac M1
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric_test
       - GRPC_GO_KEEPALIVE_TIME=10s
       - GRPC_GO_KEEPALIVE_TIMEOUT=5s
@@ -304,6 +311,8 @@ services:
       - CORE_OPERATIONS_LISTENADDRESS=peer0.orgindividual.com:9446
       - CORE_METRICS_PROVIDER=prometheus
       - CORE_CHAINCODE_EXECUTETIMEOUT=500s
+      # Keepalive settings
+      - CORE_PEER_KEEPALIVE_MININTERVAL=60s
     command: peer node start
     ports:
       - 9051:9051

@@ -54,10 +54,24 @@ export const issueDegree: RequestHandler = async (req: Request, res: Response): 
       programDuration,
       gpa,
       additionalNotes = '',
-    } = req.body as DegreeDetails;
+      universityId, // New parameter for university ID
+    } = req.body as DegreeDetails & { universityId: string };
 
-    if (!email || !base64File) {
-      res.status(400).json({ error: 'Missing email or base64File' });
+    if (!email || !base64File || !universityId) {
+      res.status(400).json({ error: 'Missing required fields' });
+      return;
+    }
+
+    // Check if the university exists and is owned by this user
+    const university = await prisma.university.findFirst({
+      where: {
+        id: universityId,
+        ownerId: user.uid,
+      },
+    });
+
+    if (!university) {
+      res.status(404).json({ error: 'University not found or not owned by you' });
       return;
     }
 
@@ -73,6 +87,20 @@ export const issueDegree: RequestHandler = async (req: Request, res: Response): 
 
     if (individual.role !== 'individual') {
       res.status(400).json({ error: 'The provided email does not belong to an individual user' });
+      return;
+    }
+
+    // Check if the individual is affiliated with this university
+    const affiliation = await prisma.affiliation.findFirst({
+      where: {
+        userId: individual.id,
+        universityId,
+        status: 'active',
+      },
+    });
+
+    if (!affiliation) {
+      res.status(403).json({ error: 'Individual is not affiliated with this university' });
       return;
     }
 
@@ -98,6 +126,7 @@ export const issueDegree: RequestHandler = async (req: Request, res: Response): 
       docHash,
       individual.id,
       user.uid,
+      universityId, // Pass university ID to chaincode
       degreeTitle,
       fieldOfStudy,
       graduationDate,
@@ -115,6 +144,7 @@ export const issueDegree: RequestHandler = async (req: Request, res: Response): 
         id: docId,
         issuedTo: individual.id,
         issuer: user.uid,
+        universityId, // Store university ID in document
         fileData,
         status: 'issued',
         degreeTitle,

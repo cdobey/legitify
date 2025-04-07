@@ -24,6 +24,21 @@ import supabase from '../config/supabase';
 import { getProfile } from '../controllers/user.controller';
 import { authMiddleware } from '../middleware/auth';
 
+// Add these imports
+import {
+  addStudentToUniversity,
+  createUniversity,
+  getAllUniversities,
+  getMyUniversities,
+  getPendingAffiliations,
+  getStudentUniversities,
+  getUniversityStudents,
+  registerStudent,
+  requestJoinUniversity,
+  respondToAffiliation,
+  respondToJoinRequest,
+} from '../controllers/university.controller';
+
 const router = Router();
 
 // Swagger Configuration
@@ -718,6 +733,336 @@ router.get('/degree/recent-verifications', authMiddleware, getRecentVerification
  *         description: Internal server error
  */
 router.get('/degree/all-records', authMiddleware, getAllLedgerRecords);
+
+// University management routes
+/**
+ * @openapi
+ * /university/create:
+ *   post:
+ *     summary: Create a new university sub-organization
+ *     tags:
+ *       - University
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - displayName
+ *             properties:
+ *               name:
+ *                 type: string
+ *               displayName:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: University created successfully
+ *       400:
+ *         description: Bad request
+ *       403:
+ *         description: Forbidden - only university users can create universities
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/university/create', authMiddleware, createUniversity);
+
+/**
+ * @openapi
+ * /university/my:
+ *   get:
+ *     summary: Get all universities owned by the current user
+ *     tags:
+ *       - University
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of owned universities
+ *       403:
+ *         description: Forbidden - only university users can access this endpoint
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/university/my', authMiddleware, getMyUniversities);
+
+/**
+ * @openapi
+ * /university/add-student:
+ *   post:
+ *     summary: Add a student to a university
+ *     tags:
+ *       - University
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - universityId
+ *               - studentEmail
+ *             properties:
+ *               universityId:
+ *                 type: string
+ *               studentEmail:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Student added to university successfully
+ *       400:
+ *         description: Bad request
+ *       403:
+ *         description: Forbidden - only university users can add students
+ *       404:
+ *         description: University or student not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/university/add-student', authMiddleware, addStudentToUniversity);
+
+/**
+ * @openapi
+ * /university/my-affiliations:
+ *   get:
+ *     summary: Get all universities that a student is affiliated with
+ *     tags:
+ *       - University
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of affiliated universities
+ *       403:
+ *         description: Forbidden - only individual users can access this endpoint
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/university/my-affiliations', authMiddleware, getStudentUniversities);
+
+/**
+ * @openapi
+ * /university/register-student:
+ *   post:
+ *     summary: Register a new student and affiliate them with a university
+ *     tags:
+ *       - University
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - username
+ *               - password
+ *               - universityId
+ *             properties:
+ *               email:
+ *                 type: string
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               universityId:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Student registered and affiliated successfully
+ *       400:
+ *         description: Bad request
+ *       403:
+ *         description: Forbidden - only university users can register students
+ *       404:
+ *         description: University not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/university/register-student', authMiddleware, registerStudent);
+
+/**
+ * @openapi
+ * /university/{universityId}/students:
+ *   get:
+ *     summary: Get all students affiliated with a university
+ *     tags:
+ *       - University
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: universityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the university
+ *     responses:
+ *       200:
+ *         description: List of affiliated students
+ *       400:
+ *         description: Bad request
+ *       403:
+ *         description: Forbidden - only university users can access this endpoint
+ *       404:
+ *         description: University not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/university/:universityId/students', authMiddleware, getUniversityStudents);
+
+// Add this new endpoint for getting all universities (publicly accessible)
+/**
+ * @openapi
+ * /universities:
+ *   get:
+ *     summary: Get all available universities
+ *     tags:
+ *       - University
+ *     responses:
+ *       200:
+ *         description: List of universities
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/universities', getAllUniversities);
+
+// Add these new routes for pending affiliations
+/**
+ * @openapi
+ * /university/pending-affiliations:
+ *   get:
+ *     summary: Get all pending university affiliation requests for the current user
+ *     tags:
+ *       - University
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of pending affiliation requests
+ *       403:
+ *         description: Forbidden - only individual users can access this endpoint
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/university/pending-affiliations', authMiddleware, getPendingAffiliations);
+
+/**
+ * @openapi
+ * /university/respond-affiliation:
+ *   post:
+ *     summary: Respond to a university affiliation request
+ *     tags:
+ *       - University
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - affiliationId
+ *               - accept
+ *             properties:
+ *               affiliationId:
+ *                 type: string
+ *               accept:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Successfully responded to affiliation request
+ *       400:
+ *         description: Bad request
+ *       403:
+ *         description: Forbidden - only individual users can respond to affiliation requests
+ *       404:
+ *         description: Affiliation request not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/university/respond-affiliation', authMiddleware, respondToAffiliation);
+
+/**
+ * @openapi
+ * /university/request-join:
+ *   post:
+ *     summary: Request to join an existing university
+ *     tags:
+ *       - University
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - universityId
+ *             properties:
+ *               universityId:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Join request submitted successfully
+ *       400:
+ *         description: Bad request
+ *       403:
+ *         description: Forbidden - only university users can request to join
+ *       404:
+ *         description: University not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/university/request-join', authMiddleware, requestJoinUniversity);
+
+/**
+ * @openapi
+ * /university/respond-join:
+ *   post:
+ *     summary: Respond to a university join request
+ *     tags:
+ *       - University
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - requestId
+ *               - approve
+ *             properties:
+ *               requestId:
+ *                 type: string
+ *               approve:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Successfully responded to join request
+ *       400:
+ *         description: Bad request
+ *       403:
+ *         description: Forbidden - only university owners can respond to join requests
+ *       404:
+ *         description: Join request not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/university/respond-join', authMiddleware, respondToJoinRequest);
 
 // Swagger Documentation Route
 router.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

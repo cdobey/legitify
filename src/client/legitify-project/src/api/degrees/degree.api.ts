@@ -1,25 +1,28 @@
 import apiCall from '../apiCall';
-import { AccessRequest, DegreeDocument, IssueResponse, VerificationResult } from './degree.models';
+import { AccessRequest, DegreeDocument, VerificationResult } from './degree.models';
+
+export interface DegreeDetails {
+  email: string;
+  base64File: string;
+  degreeTitle: string;
+  fieldOfStudy: string;
+  graduationDate: string;
+  honors: string;
+  studentId: string;
+  programDuration: string;
+  gpa: number;
+  additionalNotes?: string;
+  universityId: string; // Added universityId as required parameter
+}
 
 export const degreeApi = {
   getMyDegrees: () => apiCall<DegreeDocument[]>({ method: 'get', path: '/degree/list' }),
 
-  issueDegree: (params: {
-    email: string;
-    base64File: string;
-    degreeTitle: string;
-    fieldOfStudy: string;
-    graduationDate: string;
-    honors: string;
-    studentId: string;
-    programDuration: string;
-    gpa: number;
-    additionalNotes?: string;
-  }) =>
-    apiCall<IssueResponse>({
+  issueDegree: (details: DegreeDetails) =>
+    apiCall<{ docId: string; docHash: string }>({
       method: 'post',
       path: '/degree/issue',
-      params,
+      params: details,
     }),
 
   verifyDegree: (email: string, base64File: string) =>

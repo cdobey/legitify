@@ -1,20 +1,35 @@
-export interface RegisterData {
+export interface LoginParams {
   email: string;
   password: string;
-  username: string;
-  role: "university" | "individual" | "employer";
-  orgName: string;
 }
 
 export interface LoginResponse {
-  user: UserProfile;
   token: string;
+  expiresIn: number;
+  refreshToken: string;
+  uid: string;
+}
+
+export interface RegisterParams {
+  email: string;
+  password: string;
+  username: string;
+  role: 'university' | 'individual' | 'employer';
+  orgName?: string;
+  // University registration fields
+  universityName?: string;
+  universityDisplayName?: string;
+  universityDescription?: string;
+  joinUniversityId?: string;
+  universityIds?: string[];
 }
 
 export interface UserProfile {
   id: string;
-  email: string;
   username: string;
-  role: "university" | "individual" | "employer";
+  email: string;
+  role: string;
   orgName: string;
+  createdAt: string;
+  updatedAt: string;
 }

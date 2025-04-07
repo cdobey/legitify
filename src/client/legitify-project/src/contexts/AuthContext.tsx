@@ -1,5 +1,7 @@
+import axios, { AxiosInstance } from 'axios';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import apiCall from '../api/apiCall';
 import { authApi } from '../api/auth/auth.api';
 import { UserProfile } from '../api/auth/auth.models';
 
@@ -10,6 +12,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   refreshSession: () => Promise<boolean>;
+  api: AxiosInstance; // Add the api property
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,6 +21,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Create authenticated API instance
+  const api = axios.create({
+    baseURL: import.meta.env.VITE_API_URL, // Changed from process.env.REACT_APP_API_URL
+  });
+
+  // Add request interceptor to include auth token
+  api.interceptors.request.use(
+    config => {
+      const token = sessionStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    error => Promise.reject(error),
+  );
 
   // Fetch user profile
   const fetchUserProfile = async (): Promise<void> => {
@@ -97,16 +117,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Login function
   const login = async (email: string, password: string): Promise<void> => {
-    const response = await authApi.login(email, password);
-    if (response.user) {
-      setUser(response.user);
-      sessionStorage.setItem('user', JSON.stringify(response.user));
+    const response = await authApi.login({ email, password });
+    if (response.token) {
+      // Store the token
+      sessionStorage.setItem('token', response.token);
+
+      // Fetch the user profile
+      await fetchUserProfile();
     }
   };
 
   // Logout function
   const logout = async (): Promise<void> => {
-    await authApi.logout();
+    const token = sessionStorage.getItem('token');
+    if (token) {
+      try {
+        await authApi.logout(token);
+      } catch (error) {
+        console.error('Logout error:', error);
+      }
+    }
+
+    sessionStorage.removeItem('token');
     sessionStorage.removeItem('user');
     setUser(null);
     navigate('/');
@@ -119,6 +151,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     refreshUser,
     refreshSession,
+    api, // Include the api instance
+    apiCall, // Include the apiCall utility
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
