@@ -1,3 +1,18 @@
+import { useRecentIssuedDegreesQuery } from '@/api/degrees/degree.queries';
+import { University } from '@/api/universities/university.models';
+import {
+  useAddStudentMutation,
+  useCreateUniversityMutation,
+  useJoinUniversityMutation,
+  useRegisterStudentMutation,
+  useRespondToAffiliationMutation,
+} from '@/api/universities/university.mutations';
+import {
+  useAllUniversitiesQuery,
+  useMyUniversitiesQuery,
+  useUniversityPendingAffiliationsQuery,
+} from '@/api/universities/university.queries';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Alert,
   Badge,
@@ -32,26 +47,8 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
 
-interface University {
-  id: string;
-  name: string;
-  displayName: string;
-  description: string;
-  ownerId: string;
-  affiliations: Array<{
-    id: string;
-    userId: string;
-    status: string;
-    user: {
-      id: string;
-      username: string;
-      email: string;
-    };
-  }>;
-}
-
+// Define only the form interfaces that aren't imported
 interface NewStudentForm {
   email: string;
 }
@@ -62,34 +59,42 @@ interface RegisterStudentForm {
   password: string;
 }
 
-interface Affiliation {
-  id: string;
-  userId: string;
-  status: string;
-  initiatedBy?: 'student' | 'university';
-  createdAt: string;
-  user: {
-    id: string;
-    username: string;
-    email: string;
-  };
-}
-
 export default function ManageUniversities() {
   const [university, setUniversity] = useState<University | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [allUniversities, setAllUniversities] = useState<University[]>([]);
-  const [pendingAffiliations, setPendingAffiliations] = useState<Affiliation[]>([]);
   const [createModalOpened, { open: openCreateModal, close: closeCreateModal }] =
     useDisclosure(false);
   const [joinModalOpened, { open: openJoinModal, close: closeJoinModal }] = useDisclosure(false);
   const [registerModalOpened, { open: openRegisterModal, close: closeRegisterModal }] =
     useDisclosure(false);
   const [csvModalOpened, { open: openCsvModal, close: closeCsvModal }] = useDisclosure(false);
-  const { api, refreshSession } = useAuth();
+  const { refreshSession } = useAuth();
 
+  // Replace direct API calls with React Query hooks
+  const {
+    data: universities,
+    isLoading: isLoadingUniversities,
+    error: universitiesError,
+  } = useMyUniversitiesQuery();
+
+  const createUniversityMutation = useCreateUniversityMutation();
+  const joinUniversityMutation = useJoinUniversityMutation();
+  const addStudentMutation = useAddStudentMutation();
+  const registerStudentMutation = useRegisterStudentMutation();
+  const respondToAffiliationMutation = useRespondToAffiliationMutation();
+
+  const { data: allUniversities = [], isLoading: isLoadingAllUniversities } =
+    useAllUniversitiesQuery({
+      enabled: joinModalOpened,
+    });
+
+  const { data: pendingAffiliations = [], isLoading: isLoadingPendingAffiliations } =
+    useUniversityPendingAffiliationsQuery(university?.id || '', {
+      enabled: !!university?.id,
+    });
+
+  // Form definitions remain the same
   const newStudentForm = useForm({
     initialValues: {
       email: '',
@@ -133,51 +138,17 @@ export default function ManageUniversities() {
     },
   });
 
-  // Fetch the university associated with the current user
+  // Set the university from the query results
   useEffect(() => {
-    const fetchUniversity = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        await refreshSession();
-        const { data } = await api.get('/university/my');
-
-        if (Array.isArray(data) && data.length > 0) {
-          // Ensure affiliations is defined before assigning
-          const university = data[0];
-          // Add the fallback for affiliations if they're missing
-          if (!university.affiliations) {
-            university.affiliations = [];
-          }
-          setUniversity(university);
-
-          // Fetch pending affiliations for this university after loading university
-          fetchPendingAffiliations(university.id);
-        } else {
-          setError('No university found. Please create one.');
-        }
-      } catch (err: any) {
-        console.error('Failed to fetch university:', err);
-        setError(err.message || 'Failed to load university information');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUniversity();
-  }, []);
-
-  // Function to fetch pending affiliations
-  const fetchPendingAffiliations = async (universityId: string) => {
-    try {
-      const { data } = await api.get(`/university/${universityId}/pending-affiliations`);
-      setPendingAffiliations(data || []);
-    } catch (err: any) {
-      console.error('Failed to fetch pending affiliations:', err);
-      // Don't set error - this isn't a critical error, just show empty
-      setPendingAffiliations([]);
+    if (universities && universities.length > 0) {
+      // Create a new object with affiliations as an empty array if it's undefined
+      const uni = universities[0];
+      setUniversity({
+        ...uni,
+        affiliations: uni.affiliations || [],
+      });
     }
-  };
+  }, [universities]);
 
   // Create a new university
   const handleCreateUniversity = async (values: {
@@ -186,66 +157,35 @@ export default function ManageUniversities() {
     description: string;
   }) => {
     try {
-      setLoading(true);
       setError(null);
-
-      const response = await api.post('/university/create', values);
-      setUniversity(response.data.university);
+      await refreshSession();
+      const response = await createUniversityMutation.mutateAsync(values);
+      setUniversity(response.university);
       setSuccess('University created successfully');
       closeCreateModal();
-
-      // Refresh data
-      const { data } = await api.get('/university/my');
-      if (Array.isArray(data) && data.length > 0) {
-        setUniversity(data[0]);
-      }
     } catch (err: any) {
       console.error('Failed to create university:', err);
       setError(err.message || 'Failed to create university');
-    } finally {
-      setLoading(false);
     }
   };
 
   // Request to join a university
   const handleJoinUniversity = async (values: { universityId: string }) => {
     try {
-      setLoading(true);
       setError(null);
-
-      await api.post('/university/request-join', {
-        universityId: values.universityId,
-      });
-
+      await refreshSession();
+      await joinUniversityMutation.mutateAsync({ universityId: values.universityId });
       setSuccess('Join request sent successfully. Waiting for approval.');
       closeJoinModal();
     } catch (err: any) {
       console.error('Failed to send join request:', err);
       setError(err.message || 'Failed to send join request');
-    } finally {
-      setLoading(false);
     }
   };
-
-  // Fetch all universities for the join modal
-  useEffect(() => {
-    if (joinModalOpened) {
-      const fetchAllUniversities = async () => {
-        try {
-          const { data } = await api.get('/universities');
-          setAllUniversities(data);
-        } catch (err: any) {
-          console.error('Failed to fetch universities:', err);
-        }
-      };
-      fetchAllUniversities();
-    }
-  }, [joinModalOpened]);
 
   // Handle adding a new student to the university
   const handleAddStudent = async (values: NewStudentForm) => {
     try {
-      setLoading(true);
       setSuccess(null);
       setError(null);
 
@@ -254,31 +194,23 @@ export default function ManageUniversities() {
         return;
       }
 
-      await api.post('/university/add-student', {
+      await refreshSession();
+      await addStudentMutation.mutateAsync({
         universityId: university.id,
         studentEmail: values.email,
       });
 
       setSuccess(`Invitation sent to ${values.email}`);
       newStudentForm.reset();
-
-      // Refresh university data to get updated affiliations
-      const { data } = await api.get('/university/my');
-      if (Array.isArray(data) && data.length > 0) {
-        setUniversity(data[0]);
-      }
     } catch (err: any) {
       console.error('Failed to add student:', err);
       setError(err.message || 'Failed to add student');
-    } finally {
-      setLoading(false);
     }
   };
 
   // Handle registering a new student directly in the university
   const handleRegisterStudent = async (values: RegisterStudentForm) => {
     try {
-      setLoading(true);
       setSuccess(null);
       setError(null);
 
@@ -287,7 +219,8 @@ export default function ManageUniversities() {
         return;
       }
 
-      await api.post('/university/register-student', {
+      await refreshSession();
+      await registerStudentMutation.mutateAsync({
         email: values.email,
         username: values.username,
         password: values.password,
@@ -299,17 +232,9 @@ export default function ManageUniversities() {
       );
       registerStudentForm.reset();
       closeRegisterModal();
-
-      // Refresh data
-      const { data } = await api.get('/university/my');
-      if (Array.isArray(data) && data.length > 0) {
-        setUniversity(data[0]);
-      }
     } catch (err: any) {
       console.error('Failed to register student:', err);
       setError(err.message || 'Failed to register student');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -318,6 +243,41 @@ export default function ManageUniversities() {
     setSuccess('CSV upload functionality coming soon!');
     closeCsvModal();
   };
+
+  // Handle responding to an affiliation request
+  const handleAffiliationResponse = async (affiliationId: string, accept: boolean) => {
+    try {
+      setError(null);
+      setSuccess(null);
+      await refreshSession();
+
+      await respondToAffiliationMutation.mutateAsync({
+        affiliationId,
+        accept,
+      });
+
+      // Show success message
+      setSuccess(`Request ${accept ? 'approved' : 'rejected'} successfully`);
+    } catch (err: any) {
+      console.error('Failed to respond to affiliation:', err);
+      setError(err.message || 'Failed to respond to affiliation');
+    }
+  };
+
+  // Add this query for recent issued degrees
+  const { data: recentIssuedDegrees, isLoading: isLoadingRecentDegrees } =
+    useRecentIssuedDegreesQuery({
+      enabled: !!university,
+    });
+
+  // Determine overall loading state
+  const isLoading =
+    isLoadingUniversities ||
+    createUniversityMutation.isPending ||
+    joinUniversityMutation.isPending ||
+    addStudentMutation.isPending ||
+    registerStudentMutation.isPending ||
+    respondToAffiliationMutation.isPending;
 
   const renderDashboardInfo = () => {
     if (!university) return null;
@@ -350,14 +310,47 @@ export default function ManageUniversities() {
           <Title order={3} mb="md">
             Recent Activity
           </Title>
-          {/* You can add recent activity here - like degrees issued */}
-          <Text c="dimmed">Recent degree issuance will display here</Text>
+
+          {isLoadingRecentDegrees ? (
+            <Text c="dimmed">Loading recent degrees...</Text>
+          ) : recentIssuedDegrees && recentIssuedDegrees.length > 0 ? (
+            <Table>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Recipient</Table.Th>
+                  <Table.Th>Status</Table.Th>
+                  <Table.Th>Date</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {recentIssuedDegrees.slice(0, 5).map(degree => (
+                  <Table.Tr key={degree.docId}>
+                    <Table.Td>{degree.recipientName || degree.issuedTo}</Table.Td>
+                    <Table.Td>
+                      <Badge
+                        color={
+                          degree.status === 'accepted'
+                            ? 'green'
+                            : degree.status === 'denied'
+                            ? 'red'
+                            : 'blue'
+                        }
+                      >
+                        {degree.status}
+                      </Badge>
+                    </Table.Td>
+                    <Table.Td>{new Date(degree.issueDate).toLocaleDateString()}</Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          ) : (
+            <Text c="dimmed">No recent degree issuances found</Text>
+          )}
         </Card>
       </Group>
     );
   };
-
-  // Add these functions to separate different types of requests
 
   const renderStudentJoinRequests = () => {
     if (!university || !pendingAffiliations) return null;
@@ -474,33 +467,6 @@ export default function ManageUniversities() {
     );
   };
 
-  // Handle responding to an affiliation request
-  const handleAffiliationResponse = async (affiliationId: string, accept: boolean) => {
-    try {
-      setLoading(true);
-      setError(null);
-      setSuccess(null);
-
-      await api.post('/university/respond-affiliation', {
-        affiliationId,
-        accept,
-      });
-
-      // Show success message
-      setSuccess(`Request ${accept ? 'approved' : 'rejected'} successfully`);
-
-      // Refresh pending affiliations
-      if (university) {
-        fetchPendingAffiliations(university.id);
-      }
-    } catch (err: any) {
-      console.error('Failed to respond to affiliation:', err);
-      setError(err.message || 'Failed to respond to affiliation');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Function to render the form for adding students
   const renderAddStudentForm = () => (
     <Box mb="xl">
@@ -545,7 +511,7 @@ export default function ManageUniversities() {
   );
 
   // If no university exists yet, show options to create or join
-  if (!loading && !university) {
+  if (!isLoading && !university) {
     return (
       <Container size="lg">
         <Title order={2} mb="xl">
@@ -594,7 +560,7 @@ export default function ManageUniversities() {
               <Button variant="subtle" onClick={closeCreateModal}>
                 Cancel
               </Button>
-              <Button type="submit" loading={loading}>
+              <Button type="submit" loading={isLoading}>
                 Create University
               </Button>
             </Group>
@@ -620,7 +586,7 @@ export default function ManageUniversities() {
               <Button variant="subtle" onClick={closeJoinModal}>
                 Cancel
               </Button>
-              <Button type="submit" loading={loading}>
+              <Button type="submit" loading={isLoading}>
                 Send Request
               </Button>
             </Group>
@@ -631,7 +597,7 @@ export default function ManageUniversities() {
   }
 
   // If no university exists yet, show message
-  if (!loading && !university) {
+  if (!isLoading && !university) {
     return (
       <Container size="lg">
         <Title order={2} mb="xl">
@@ -647,7 +613,7 @@ export default function ManageUniversities() {
   return (
     <Container size="lg">
       <Box style={{ position: 'relative' }}>
-        <LoadingOverlay visible={loading} />
+        <LoadingOverlay visible={isLoading} />
 
         <Title order={2} mb="lg">
           Manage University: {university?.displayName || ''}

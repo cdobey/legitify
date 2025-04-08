@@ -36,6 +36,7 @@ import { Link } from 'react-router-dom';
 import { AccessRequest } from '../api/degrees/degree.models';
 import { useAuth } from '../contexts/AuthContext';
 import { useDashboardData } from '../hooks/useDashboardData';
+
 export default function Dashboard() {
   const { user } = useAuth();
   const theme = useMantineTheme();
@@ -46,9 +47,24 @@ export default function Dashboard() {
   // Force immediate data loading when dashboard is mounted
   useEffect(() => {
     if (user) {
+      console.log(`Dashboard mounted for ${user.role} user: ${user.username}`);
       refetch();
     }
   }, [user, refetch]);
+
+  // Debug log dashboard data
+  useEffect(() => {
+    if (data) {
+      console.log('Dashboard data loaded:', {
+        stats: data.stats,
+        myDegrees: data.myDegrees?.length,
+        accessRequests: data.accessRequests?.length,
+        accessibleDegrees: data.accessibleDegrees?.length,
+        recentVerifications: data.recentVerifications?.length,
+        recentIssued: data.recentIssued?.length,
+      });
+    }
+  }, [data]);
 
   // Use data directly from the dashboard query
   const myDegrees = data?.myDegrees || [];
@@ -213,6 +229,11 @@ export default function Dashboard() {
   };
 
   const renderUniversityDashboard = () => {
+    console.log('Rendering university dashboard with:', {
+      recentIssuedCount: data?.recentIssued?.length || 0,
+      stats: data?.stats,
+    });
+
     const stats = [
       {
         title: 'Total Issued',
@@ -272,13 +293,13 @@ export default function Dashboard() {
 
           {data?.recentIssued && data.recentIssued.length > 0 ? (
             <Stack>
-              {data.recentIssued.map((degree: any, index: number) => (
+              {data.recentIssued.map((degree, index) => (
                 <Card key={index} withBorder p="sm">
                   <Group justify="space-between">
                     <div>
-                      <Text fw={500}>Document ID: {degree.docId}</Text>
+                      <Text fw={500}>{degree.recipientName || degree.issuedTo}</Text>
                       <Text size="xs" c="dimmed">
-                        Issued to: {degree.issuedTo || 'Unknown'}
+                        Document ID: {degree.docId}
                       </Text>
                     </div>
                     <Badge
@@ -301,7 +322,7 @@ export default function Dashboard() {
             </Stack>
           ) : (
             <Text c="dimmed" ta="center" p="lg">
-              No recently issued degrees found
+              No recently issued degrees found. Try issuing a degree first.
             </Text>
           )}
         </Paper>
@@ -310,6 +331,11 @@ export default function Dashboard() {
   };
 
   const renderIndividualDashboard = () => {
+    console.log('Rendering individual dashboard with:', {
+      myDegreesCount: myDegrees.length,
+      requestsCount: pendingRequests.length,
+    });
+
     // Calculate percentages for the progress bars
     const total = data?.stats?.total || 0;
     const acceptedPercent =
@@ -442,40 +468,80 @@ export default function Dashboard() {
   };
 
   const renderEmployerDashboard = () => {
+    console.log('Rendering employer dashboard with:', {
+      accessibleDegreesCount: accessibleDegrees.length,
+      verificationsCount: data?.recentVerifications?.length || 0,
+    });
+
+    // Calculate stats from accessible degrees
+    const statsFromAccessibleDegrees = {
+      totalAccessible: accessibleDegrees.length,
+      uniqueIndividuals: new Set(accessibleDegrees.map(degree => degree.owner.email)).size,
+      uniqueUniversities: new Set(accessibleDegrees.map(degree => degree.issuer)).size,
+      recentlyGranted: accessibleDegrees.filter(degree => {
+        const grantDate = new Date(degree.dateGranted);
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        return grantDate > thirtyDaysAgo;
+      }).length,
+    };
+
     return (
       <>
         <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md" mb="xl">
           <Paper withBorder radius="md" p="md">
             <Title order={4} mb="md">
-              Recent Verifications
+              Credentials Overview
             </Title>
 
-            {data?.recentVerifications && data.recentVerifications.length > 0 ? (
-              <Stack>
-                {data.recentVerifications.map((verification: any, index: number) => (
-                  <Card key={index} withBorder p="sm">
-                    <Group justify="space-between">
-                      <div>
-                        <Text fw={500}>{verification.email || 'Unknown User'}</Text>
-                        <Text size="xs" c="dimmed">
-                          Document: {verification.docId || 'N/A'}
-                        </Text>
-                      </div>
-                      <Badge color={verification.result ? 'green' : 'red'}>
-                        {verification.result ? 'Verified' : 'Failed'}
-                      </Badge>
-                    </Group>
-                    <Text size="xs" mt="xs">
-                      Verified on: {new Date(verification.date).toLocaleDateString()}
-                    </Text>
-                  </Card>
+            <Stack gap="md">
+              <Grid>
+                {[
+                  {
+                    title: 'Accessible Credentials',
+                    value: statsFromAccessibleDegrees.totalAccessible,
+                    icon: <IconFileCheck size={22} />,
+                    color: 'blue',
+                  },
+                  {
+                    title: 'From Universities',
+                    value: statsFromAccessibleDegrees.uniqueUniversities,
+                    icon: <IconSchool size={22} />,
+                    color: 'green',
+                  },
+                  {
+                    title: 'Unique Individuals',
+                    value: statsFromAccessibleDegrees.uniqueIndividuals,
+                    icon: <IconUserPlus size={22} />,
+                    color: 'teal',
+                  },
+                  {
+                    title: 'Recently Granted',
+                    value: statsFromAccessibleDegrees.recentlyGranted,
+                    icon: <IconClock size={22} />,
+                    color: 'violet',
+                  },
+                ].map((stat, index) => (
+                  <Grid.Col key={index} span={6}>
+                    <Card withBorder p="sm">
+                      <Group wrap="nowrap">
+                        <ThemeIcon color={stat.color} variant="light" size={40} radius="md">
+                          {stat.icon}
+                        </ThemeIcon>
+                        <div>
+                          <Text size="xs" c="dimmed" tt="uppercase">
+                            {stat.title}
+                          </Text>
+                          <Text fw={700} size="xl">
+                            {stat.value}
+                          </Text>
+                        </div>
+                      </Group>
+                    </Card>
+                  </Grid.Col>
                 ))}
-              </Stack>
-            ) : (
-              <Text c="dimmed" ta="center" p="lg">
-                No recent verifications
-              </Text>
-            )}
+              </Grid>
+            </Stack>
           </Paper>
 
           <Paper withBorder radius="md" p="md">

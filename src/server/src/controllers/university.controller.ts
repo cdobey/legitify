@@ -620,62 +620,6 @@ export const respondToAffiliation: RequestHandler = async (
 };
 
 /**
- * Get pending affiliation requests for a university
- * Only university owners should be able to see these
- */
-export const getUniversityPendingAffiliations: RequestHandler = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  try {
-    if (req.user?.role !== 'university') {
-      res.status(403).json({ error: 'Only university users can access this endpoint' });
-      return;
-    }
-
-    const universityId = req.params.universityId;
-    if (!universityId) {
-      res.status(400).json({ error: 'Missing universityId parameter' });
-      return;
-    }
-
-    // Check if user owns this university
-    const university = await prisma.university.findFirst({
-      where: {
-        id: universityId,
-        ownerId: req.user.uid,
-      },
-    });
-
-    if (!university) {
-      res.status(403).json({ error: 'You do not own this university' });
-      return;
-    }
-
-    // Get pending affiliations for this university
-    const pendingAffiliations = await prisma.affiliation.findMany({
-      where: {
-        universityId,
-        status: 'pending',
-      },
-      include: {
-        user: {
-          select: {
-            username: true,
-            email: true,
-          },
-        },
-      },
-    });
-
-    res.json(pendingAffiliations);
-  } catch (error: any) {
-    console.error('getUniversityPendingAffiliations error:', error);
-    res.status(500).json({ error: error.message });
-  }
-};
-
-/**
  * Request to join a university (for university users)
  */
 export const requestJoinUniversity: RequestHandler = async (
@@ -733,69 +677,6 @@ export const requestJoinUniversity: RequestHandler = async (
     });
   } catch (error: any) {
     console.error('requestJoinUniversity error:', error);
-    res.status(500).json({ error: error.message });
-  }
-};
-
-/**
- * Approve or reject a university join request
- */
-export const respondToJoinRequest: RequestHandler = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  try {
-    if (req.user?.role !== 'university') {
-      res.status(403).json({ error: 'Only university users can respond to join requests' });
-      return;
-    }
-
-    const { requestId, approve } = req.body;
-    if (!requestId) {
-      res.status(400).json({ error: 'Request ID is required' });
-      return;
-    }
-
-    // Get the join request
-    const joinRequest = await prisma.universityJoinRequest.findUnique({
-      where: { id: requestId },
-      include: { university: true },
-    });
-
-    if (!joinRequest) {
-      res.status(404).json({ error: 'Join request not found' });
-      return;
-    }
-
-    // Check if current user owns the university
-    if (joinRequest.university.ownerId !== req.user.uid) {
-      res.status(403).json({ error: 'You do not own this university' });
-      return;
-    }
-
-    if (approve) {
-      // Set the requester as a member of this university
-      await prisma.university.update({
-        where: { id: joinRequest.universityId },
-        data: {
-          members: {
-            connect: { id: joinRequest.requesterId },
-          },
-        },
-      });
-    }
-
-    // Update request status
-    await prisma.universityJoinRequest.update({
-      where: { id: requestId },
-      data: { status: approve ? 'approved' : 'rejected' },
-    });
-
-    res.json({
-      message: `Join request ${approve ? 'approved' : 'rejected'} successfully`,
-    });
-  } catch (error: any) {
-    console.error('respondToJoinRequest error:', error);
     res.status(500).json({ error: error.message });
   }
 };

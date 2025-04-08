@@ -1,8 +1,9 @@
 import axios, { AxiosInstance } from 'axios';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login as apiLogin, logout as apiLogout, getProfile } from '../api/auth/auth.api';
 import { LoginParams } from '../api/auth/auth.models';
+import { useLoginMutation } from '../api/auth/auth.mutations';
+import { useUserProfileQuery } from '../api/auth/auth.queries';
 import { AuthUser } from '../api/users/user.models';
 
 // Simplified context type
@@ -23,6 +24,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const loginMutation = useLoginMutation();
+
   // Create authenticated API instance
   const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
@@ -40,16 +43,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     error => Promise.reject(error),
   );
 
-  const fetchUserProfile = async (): Promise<void> => {
-    try {
-      const token = sessionStorage.getItem('token');
-      if (!token) return;
+  // Initialize the query with enabled:false so it doesn't auto-fetch
+  const userProfileQuery = useUserProfileQuery({
+    enabled: false,
+  });
 
-      const profile = await getProfile();
-      setUser(profile);
-      sessionStorage.setItem('user', JSON.stringify(profile));
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
+  // Handle successful profile fetches
+  useEffect(() => {
+    if (userProfileQuery.data) {
+      setUser(userProfileQuery.data);
+      sessionStorage.setItem('user', JSON.stringify(userProfileQuery.data));
+    }
+  }, [userProfileQuery.data]);
+
+  // Handle errors in profile fetching
+  useEffect(() => {
+    if (userProfileQuery.error) {
+      console.error('Error fetching user profile:', userProfileQuery.error);
 
       // Try to recover from storage if API call fails
       const savedUser = sessionStorage.getItem('user');
@@ -61,6 +71,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           sessionStorage.removeItem('user');
         }
       }
+    }
+  }, [userProfileQuery.error]);
+
+  const fetchUserProfile = async (): Promise<void> => {
+    try {
+      const token = sessionStorage.getItem('token');
+      if (!token) return;
+
+      // Use the refetch function from useUserProfileQuery
+      await userProfileQuery.refetch();
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
     }
   };
 
@@ -74,8 +96,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!token) return false;
 
       // If we can fetch the profile, the session is valid
-      await getProfile();
-      return true;
+      const { isSuccess } = await userProfileQuery.refetch();
+      return isSuccess;
     } catch (error) {
       console.error('Session refresh error:', error);
       return false;
@@ -87,7 +109,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initializeAuth = async () => {
       setIsLoading(true);
       try {
-        await fetchUserProfile();
+        const token = sessionStorage.getItem('token');
+        if (token) {
+          await userProfileQuery.refetch();
+        }
       } catch (error) {
         console.error('Auth initialization error:', error);
       } finally {
@@ -100,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string): Promise<void> => {
     const params: LoginParams = { email, password };
-    const response = await apiLogin(params);
+    const response = await loginMutation.mutateAsync(params);
 
     if (response.token) {
       sessionStorage.setItem('token', response.token);
@@ -109,17 +134,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async (): Promise<void> => {
-    const token = sessionStorage.getItem('token');
-
-    if (token) {
-      try {
-        await apiLogout(token);
-      } catch (error) {
-        // Non-critical error, just log it
-        console.error('Logout API error:', error);
-      }
-    }
-
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('user');
     setUser(null);

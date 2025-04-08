@@ -1,3 +1,14 @@
+import { University } from '@/api/universities/university.models';
+import {
+  useJoinUniversityMutation,
+  useRespondToAffiliationMutation,
+} from '@/api/universities/university.mutations';
+import {
+  useAllUniversitiesQuery,
+  usePendingAffiliationsQuery,
+  useStudentUniversitiesQuery,
+} from '@/api/universities/university.queries';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Alert,
   Badge,
@@ -24,176 +35,92 @@ import {
   IconSchool,
   IconX,
 } from '@tabler/icons-react';
-import { useEffect, useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-
-interface University {
-  id: string;
-  name: string;
-  displayName: string;
-  description?: string;
-  owner?: {
-    username: string;
-  };
-}
-
-interface Affiliation {
-  id: string;
-  userId: string;
-  universityId: string;
-  status: 'pending' | 'active' | 'rejected';
-  initiatedBy?: 'student' | 'university';
-  university: University;
-}
+import { useState } from 'react';
 
 export default function MyUniversities() {
-  const [universities, setUniversities] = useState<University[]>([]);
-  const [pendingAffiliations, setPendingAffiliations] = useState<Affiliation[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [selectedUniversity, setSelectedUniversity] = useState<University | null>(null);
-  const [detailsOpened, detailsHandlers] = useDisclosure(false);
-  const [joinModalOpened, joinModalHandlers] = useDisclosure(false);
-  const [availableUniversities, setAvailableUniversities] = useState<University[]>([]);
   const [selectedUniversityId, setSelectedUniversityId] = useState<string | null>(null);
-  const [joinRequestLoading, setJoinRequestLoading] = useState(false);
-  const { api, refreshSession } = useAuth();
+  const [detailsOpened, detailsHandlers] = useDisclosure(false);
+  const [selectedUniversity, setSelectedUniversity] = useState<University | null>(null);
+  const { refreshSession } = useAuth();
 
-  useEffect(() => {
-    const fetchUniversities = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  // Replace direct API calls with React Query hooks
+  const { data: universities = [], isLoading: isLoadingUniversities } =
+    useStudentUniversitiesQuery();
 
-        // Get active affiliations
-        await refreshSession();
-        const activeResponse = await api.get('/university/my-affiliations');
+  const { data: pendingAffiliations = [], isLoading: isLoadingPendingAffiliations } =
+    usePendingAffiliationsQuery();
 
-        // Safely handle the response - check if it's an array
-        if (Array.isArray(activeResponse.data)) {
-          setUniversities(activeResponse.data.filter(Boolean)); // Filter out any null/undefined items
-        } else {
-          console.warn('Unexpected format for active affiliations:', activeResponse.data);
-          setUniversities([]);
-        }
+  const joinUniversityMutation = useJoinUniversityMutation();
+  const respondToAffiliationMutation = useRespondToAffiliationMutation();
 
-        // Get pending affiliations
-        try {
-          // Changed to correct endpoint for pending affiliations
-          const pendingResponse = await api.get('/university/pending-affiliations');
-          if (Array.isArray(pendingResponse.data)) {
-            setPendingAffiliations(pendingResponse.data.filter(Boolean));
-          }
-        } catch (pendingError) {
-          console.log('No pending affiliations or endpoint not available');
-          // This is not a critical error, so we don't set the main error state
-        }
-      } catch (err: any) {
-        console.error('Failed to fetch universities:', err);
-        setError(err.message || 'Failed to load your universities');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUniversities();
-  }, []);
-
-  // Handle the response to a university affiliation request
-  const handleAffiliationResponse = async (affiliationId: string, accept: boolean) => {
-    try {
-      setLoading(true);
-      await refreshSession();
-      await api.post('/university/respond-affiliation', {
-        affiliationId,
-        accept,
-      });
-
-      // Refresh the data
-      setPendingAffiliations(prev => prev.filter(a => a.id !== affiliationId));
-
-      // If accepted, add to active universities
-      if (accept) {
-        const affiliation = pendingAffiliations.find(a => a.id === affiliationId);
-        if (affiliation && affiliation.university) {
-          setUniversities(prev => [...prev, affiliation.university]);
-        }
-      }
-    } catch (err: any) {
-      setError(err.message || 'Failed to respond to affiliation request');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Add function to fetch available universities for join modal
-  const fetchAvailableUniversities = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get('/universities');
-
-      // Filter out universities the user is already affiliated with or has pending requests to
-      const alreadyAffiliatedIds = new Set([
-        ...universities.map(uni => uni.id),
-        ...pendingAffiliations.map(aff => aff.universityId),
-      ]);
-
-      const filteredUniversities = response.data.filter(
-        (uni: University) => !alreadyAffiliatedIds.has(uni.id),
-      );
-
-      setAvailableUniversities(filteredUniversities);
-    } catch (err: any) {
-      console.error('Failed to fetch universities:', err);
-      setError('Failed to load available universities');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Open join modal and fetch available universities
   const openJoinModal = () => {
-    fetchAvailableUniversities();
     modals.open({
       title: 'Request to Join University',
       size: 'md',
       children: (
-        <Stack>
-          <Text size="sm" mb="md">
-            Select a university to request affiliation with. Your request will need to be approved
-            by the university administrator.
-          </Text>
-
-          <Select
-            label="Select University"
-            placeholder="Choose a university"
-            data={availableUniversities.map(uni => ({
-              value: uni.id,
-              label: `${uni.displayName} (by ${uni.owner?.username || 'Unknown'})`,
-            }))}
-            value={selectedUniversityId}
-            onChange={setSelectedUniversityId}
-            searchable
-            nothingFoundMessage="No universities found"
-            mb="xl"
-          />
-
-          <Group justify="flex-end">
-            <Button variant="subtle" onClick={() => modals.closeAll()}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleJoinRequest}
-              loading={joinRequestLoading}
-              disabled={!selectedUniversityId}
-            >
-              Submit Request
-            </Button>
-          </Group>
-        </Stack>
+        <JoinUniversityModalContent
+          onSubmit={handleJoinRequest}
+          onCancel={() => modals.closeAll()}
+        />
       ),
     });
+  };
+
+  const JoinUniversityModalContent = ({
+    onSubmit,
+    onCancel,
+  }: {
+    onSubmit: () => void;
+    onCancel: () => void;
+  }) => {
+    const { data: availableUniversities = [], isLoading: isLoadingAll } = useAllUniversitiesQuery();
+
+    // Filter out universities the user is already affiliated with
+    const filteredUniversities = availableUniversities.filter(uni => {
+      const alreadyAffiliatedIds = new Set([
+        ...universities.map(u => u.id),
+        ...pendingAffiliations.map(aff => aff.universityId),
+      ]);
+      return !alreadyAffiliatedIds.has(uni.id);
+    });
+
+    return (
+      <Stack>
+        <Text size="sm" mb="md">
+          Select a university to request affiliation with. Your request will need to be approved by
+          the university administrator.
+        </Text>
+
+        <Select
+          label="Select University"
+          placeholder={isLoadingAll ? 'Loading universities...' : 'Choose a university'}
+          data={filteredUniversities.map(uni => ({
+            value: uni.id,
+            label: `${uni.displayName} (by ${uni.owner?.username || 'Unknown'})`,
+          }))}
+          value={selectedUniversityId}
+          onChange={setSelectedUniversityId}
+          searchable
+          nothingFoundMessage="No universities found"
+          mb="xl"
+        />
+
+        <Group justify="flex-end">
+          <Button variant="subtle" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button
+            onClick={onSubmit}
+            loading={joinUniversityMutation.isPending}
+            disabled={!selectedUniversityId}
+          >
+            Submit Request
+          </Button>
+        </Group>
+      </Stack>
+    );
   };
 
   // Handle join request submission
@@ -208,11 +135,8 @@ export default function MyUniversities() {
     }
 
     try {
-      setJoinRequestLoading(true);
-      setError(null);
-
       await refreshSession();
-      await api.post('/university/request-join', {
+      await joinUniversityMutation.mutateAsync({
         universityId: selectedUniversityId,
       });
 
@@ -221,12 +145,6 @@ export default function MyUniversities() {
         message: 'Join request submitted successfully. Waiting for approval.',
         color: 'green',
       });
-
-      // Refresh pending affiliations to show the new request
-      const pendingResponse = await api.get('/university/pending-affiliations');
-      if (Array.isArray(pendingResponse.data)) {
-        setPendingAffiliations(pendingResponse.data.filter(Boolean));
-      }
 
       modals.closeAll();
       setSelectedUniversityId(null);
@@ -237,8 +155,6 @@ export default function MyUniversities() {
         message: err.message || 'Failed to send join request',
         color: 'red',
       });
-    } finally {
-      setJoinRequestLoading(false);
     }
   };
 
@@ -366,6 +282,12 @@ export default function MyUniversities() {
     );
   };
 
+  const isLoading =
+    isLoadingUniversities ||
+    isLoadingPendingAffiliations ||
+    joinUniversityMutation.isPending ||
+    respondToAffiliationMutation.isPending;
+
   return (
     <Container size="lg">
       <Group justify="space-between" align="center" mb="xl">
@@ -381,7 +303,7 @@ export default function MyUniversities() {
       </Group>
 
       <Box style={{ position: 'relative' }}>
-        <LoadingOverlay visible={loading} />
+        <LoadingOverlay visible={isLoading} />
 
         {error && (
           <Alert icon={<IconAlertCircle size="1rem" />} title="Error" color="red" mb="md">
@@ -395,7 +317,7 @@ export default function MyUniversities() {
           </Alert>
         )}
 
-        {!loading && !error && universities.length === 0 && !pendingAffiliations.length && (
+        {!isLoading && !error && universities.length === 0 && !pendingAffiliations.length && (
           <Alert icon={<IconSchool size="1rem" />} title="No Universities" color="blue">
             You are not affiliated with any universities yet. Use the button above to request to
             join a university.

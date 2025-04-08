@@ -6,10 +6,10 @@ import {
   DegreeDocument,
   DegreeDocumentsResponse,
   DegreeResponse,
+  LedgerRecord,
   VerificationResult,
 } from './degree.models';
 // Import User from user.models instead
-import { User } from '../users/user.models';
 
 export const getMyDegrees = () =>
   apiCall<DegreeDocumentsResponse>({ method: 'get', path: '/degree/list' });
@@ -68,13 +68,6 @@ export const viewDegree = (docId: string) =>
     path: `/degree/view/${docId}`,
   });
 
-export const searchUsers = (email: string) =>
-  apiCall<User>({
-    method: 'get',
-    path: '/user/search',
-    params: { email },
-  });
-
 export const getUserDegrees = (userId: string) =>
   apiCall<DegreeDocumentsResponse>({
     method: 'get',
@@ -93,14 +86,8 @@ export const getRecentIssuedDegrees = () =>
     path: '/degree/recent-issued',
   });
 
-export const getRecentVerifications = () =>
-  apiCall<any[]>({
-    method: 'get',
-    path: '/degree/recent-verifications',
-  });
-
 export const getAllLedgerRecords = () =>
-  apiCall<any[]>({
+  apiCall<LedgerRecord[]>({
     method: 'get',
-    path: '/degree/all-records',
+    path: '/degree/ledger/all',
   });

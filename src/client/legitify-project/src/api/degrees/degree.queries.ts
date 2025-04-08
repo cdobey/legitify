@@ -6,7 +6,6 @@ import {
   getAllLedgerRecords,
   getMyDegrees,
   getRecentIssuedDegrees,
-  getRecentVerifications,
   getUserDegrees,
   viewDegree,
 } from './degree.api';
@@ -15,6 +14,7 @@ import {
   AccessRequestsResponse,
   DegreeDocument,
   DegreeDocumentsResponse,
+  LedgerRecord,
 } from './degree.models';
 
 export const degreeKeys = {
@@ -91,17 +91,10 @@ export const useRecentIssuedDegreesQuery = (
     ...options,
   });
 
-export const useRecentVerificationsQuery = (
-  options?: Partial<UseQueryOptions<any[], AxiosError>>,
+export const useLedgerRecordsQuery = (
+  options?: Partial<UseQueryOptions<LedgerRecord[], AxiosError>>,
 ) =>
-  useQuery<any[], AxiosError>({
-    queryKey: [...degreeKeys.all, 'recent-verifications'],
-    queryFn: () => getRecentVerifications(),
-    ...options,
-  });
-
-export const useLedgerRecordsQuery = (options?: Partial<UseQueryOptions<any[], AxiosError>>) =>
-  useQuery<any[], AxiosError>({
+  useQuery<LedgerRecord[], AxiosError>({
     queryKey: [...degreeKeys.all, 'ledger-records'],
     queryFn: () => getAllLedgerRecords(),
     ...options,

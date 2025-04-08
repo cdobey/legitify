@@ -1,4 +1,4 @@
-import { login, logout, register } from '../controllers/auth.controller';
+import { login, register } from '../controllers/auth.controller';
 import {
   acceptDegree,
   denyDegree,
@@ -7,7 +7,6 @@ import {
   getAllLedgerRecords,
   getMyDegrees,
   getRecentIssuedDegrees,
-  getRecentVerifications,
   getUserDegrees,
   grantAccess,
   issueDegree,
@@ -20,7 +19,6 @@ import { searchUsers } from '../controllers/user.controller';
 import { Router } from 'express';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
-import supabase from '../config/supabase';
 import { getProfile } from '../controllers/user.controller';
 import { authMiddleware } from '../middleware/auth';
 
@@ -32,12 +30,10 @@ import {
   getMyUniversities,
   getPendingAffiliations,
   getStudentUniversities,
-  getUniversityPendingAffiliations,
   getUniversityStudents,
   registerStudent,
   requestJoinUniversity,
   respondToAffiliation,
-  respondToJoinRequest,
 } from '../controllers/university.controller';
 
 const router = Router();
@@ -166,119 +162,6 @@ router.post('/auth/register', register);
  *         description: Authentication failed
  */
 router.post('/auth/login', login);
-
-/**
- * @openapi
- * /auth/test-login:
- *   post:
- *     summary: Test endpoint to get a Supabase token
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [email, password]
- *             properties:
- *               email:
- *                 type: string
- *                 example: "test@example.com"
- *               password:
- *                 type: string
- *                 example: "password123"
- *     responses:
- *       200:
- *         description: Login successful
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/LoginResponse'
- */
-router.post('/auth/test-login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    console.log('Login attempt for email:', email);
-
-    // Sign in with Supabase
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      console.error('Sign in error:', error);
-      throw error;
-    }
-
-    if (!data.session) {
-      throw new Error('No session returned from Supabase');
-    }
-
-    console.log('Token generated for user:', data.user?.id);
-
-    res.json({
-      token: data.session.access_token,
-      expiresIn: data.session.expires_at,
-      refreshToken: data.session.refresh_token,
-      uid: data.user?.id,
-    });
-  } catch (error: any) {
-    console.error('Login error:', {
-      message: error.message,
-      stack: error.stack,
-    });
-    res.status(401).json({
-      error: 'Authentication failed',
-      details: error.message,
-    });
-  }
-});
-
-/**
- * @openapi
- * /auth/test-authenticated:
- *   get:
- *     summary: Test endpoint for authenticated requests
- *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Authentication successful
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/AuthTestResponse'
- *       401:
- *         description: Unauthorized
- */
-router.get('/auth/test-authenticated', authMiddleware, (req, res) => {
-  res.json({
-    message: 'Authentication successful',
-    user: req.user,
-  });
-});
-
-/**
- * @openapi
- * /auth/logout:
- *   post:
- *     summary: Logout a user
- *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Logout successful
- *       401:
- *         description: Not authenticated
- *       500:
- *         description: Server error
- */
-router.post('/auth/logout', authMiddleware, logout);
-
-// User Profile Route
 
 /**
  * @openapi
@@ -614,14 +497,14 @@ router.post('/degree/verify', authMiddleware, verifyDegreeDocument);
  * @openapi
  * /degree/ledger/all:
  *   get:
- *     summary: Get all records from the blockchain ledger
+ *     summary: Get all records from the blockchain ledger for the calling university
  *     tags:
  *       - Degree
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: List of all degree records from the ledger
+ *         description: List of all degree records from the ledger for the authenticated university
  *       403:
  *         description: Forbidden - only university role can access
  *       500:
@@ -696,44 +579,6 @@ router.get('/degree/accessible', authMiddleware, getAccessibleDegrees);
  *         description: Internal server error
  */
 router.get('/degree/recent-issued', authMiddleware, getRecentIssuedDegrees);
-
-/**
- * @openapi
- * /degree/recent-verifications:
- *   get:
- *     summary: Get recent verification history for employer dashboard
- *     tags:
- *       - Degree
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of recent verifications
- *       403:
- *         description: Forbidden - only employers can access this endpoint
- *       500:
- *         description: Internal server error
- */
-router.get('/degree/recent-verifications', authMiddleware, getRecentVerifications);
-
-/**
- * @openapi
- * /degree/all-records:
- *   get:
- *     summary: Get all records from the blockchain ledger (alias for /degree/ledger/all)
- *     tags:
- *       - Degree
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: List of all degree records from the ledger
- *       403:
- *         description: Forbidden - only university role can access
- *       500:
- *         description: Internal server error
- */
-router.get('/degree/all-records', authMiddleware, getAllLedgerRecords);
 
 // University management routes
 /**
@@ -1027,74 +872,6 @@ router.post('/university/respond-affiliation', authMiddleware, respondToAffiliat
  *         description: Internal server error
  */
 router.post('/university/request-join', authMiddleware, requestJoinUniversity);
-
-/**
- * @openapi
- * /university/respond-join:
- *   post:
- *     summary: Respond to a university join request
- *     tags:
- *       - University
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - requestId
- *               - approve
- *             properties:
- *               requestId:
- *                 type: string
- *               approve:
- *                 type: boolean
- *     responses:
- *       200:
- *         description: Successfully responded to join request
- *       400:
- *         description: Bad request
- *       403:
- *         description: Forbidden - only university owners can respond to join requests
- *       404:
- *         description: Join request not found
- *       500:
- *         description: Internal server error
- */
-router.post('/university/respond-join', authMiddleware, respondToJoinRequest);
-
-/**
- * @openapi
- * /university/{universityId}/pending-affiliations:
- *   get:
- *     summary: Get pending affiliations for a specific university
- *     tags:
- *       - University
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: universityId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: List of pending affiliations for this university
- *       403:
- *         description: Forbidden - only university owners can view pending requests
- *       404:
- *         description: University not found
- *       500:
- *         description: Internal server error
- */
-router.get(
-  '/university/:universityId/pending-affiliations',
-  authMiddleware,
-  getUniversityPendingAffiliations,
-);
 
 // Swagger Documentation Route
 router.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

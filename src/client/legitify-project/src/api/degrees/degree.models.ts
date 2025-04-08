@@ -17,6 +17,8 @@ export interface DegreeDocument {
   status: 'issued' | 'accepted' | 'denied';
   issueDate: string;
   fileData?: string;
+  recipientName?: string;
+  university?: string;
 }
 
 export type DegreeDocumentsResponse = DegreeDocument[];
@@ -49,14 +51,6 @@ export interface AccessRequest {
 }
 
 export type AccessRequestsResponse = AccessRequest[];
-
-// Remove the User interface from degree.models.ts as it's now defined in user.models.ts
-// export interface User {
-//   uid: string;
-//   email: string;
-//   username: string;
-//   orgName?: string;
-// }
 
 export interface AccessibleDegree {
   requestId: string;
@@ -98,4 +92,24 @@ export interface RequestAccessResponse {
 
 export interface ActionResponse {
   message: string;
+}
+
+export interface LedgerRecord {
+  docId: string;
+  docHash: string;
+  owner: string;
+  issuer: string;
+  universityId: string;
+  issuedAt: string;
+  accepted: boolean;
+  denied: boolean;
+  degreeTitle: string;
+  fieldOfStudy: string;
+  graduationDate: string;
+  honors: string;
+  studentId: string;
+  programDuration: string;
+  gpa: number;
+  additionalNotes: string;
+  universityName: string;
 }

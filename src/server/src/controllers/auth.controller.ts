@@ -238,14 +238,3 @@ export const register: RequestHandler = async (req: Request, res: Response): Pro
     });
   }
 };
-
-export const logout: RequestHandler = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-    res.json({ message: 'Logged out successfully' });
-  } catch (error: any) {
-    console.error('Logout error:', error);
-    res.status(500).json({ error: error.message });
-  }
-};

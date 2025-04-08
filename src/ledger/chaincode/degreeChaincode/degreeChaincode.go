@@ -40,6 +40,12 @@ type Affiliation struct {
 	Status       string `json:"status"`
 }
 
+type AccessGrant struct {
+	DocID      string    `json:"docId"`
+	RequestedBy string    `json:"requestedBy"`
+	GrantedAt  string    `json:"grantedAt"`
+}
+
 // IssueDegree adds a new degree record to the ledger
 func (dc *DegreeChaincode) IssueDegree(ctx contractapi.TransactionContextInterface, 
 	docID, docHash, owner, issuer, universityId, degreeTitle, fieldOfStudy, graduationDate,
@@ -223,7 +229,7 @@ func (dc *DegreeChaincode) GetAllRecords(ctx contractapi.TransactionContextInter
     var records []*DegreeRecord
     for resultsIterator.HasNext() {
         queryResult, err := resultsIterator.Next()
-        if err != nil {
+        if (err != nil) {
             return nil, fmt.Errorf("failed to get next record: %v", err)
         }
 
@@ -285,6 +291,44 @@ func (dc *DegreeChaincode) GetUniversityRecords(ctx contractapi.TransactionConte
     }
 
     return records, nil
+}
+
+// GrantAccess records that a requester has been granted access to a document
+func (dc *DegreeChaincode) GrantAccess(ctx contractapi.TransactionContextInterface, docID string, requesterId string) error {
+	// Check if the document exists
+	data, err := ctx.GetStub().GetState(docID)
+	if err != nil {
+		return fmt.Errorf("failed to read document %s: %v", docID, err)
+	}
+	if len(data) == 0 {
+		return fmt.Errorf("document %s not found", docID)
+	}
+
+	// Create a composite key for the access grant
+	accessKey, err := ctx.GetStub().CreateCompositeKey("access", []string{docID, requesterId})
+	if err != nil {
+		return fmt.Errorf("failed to create access key: %v", err)
+	}
+
+	// Create an access grant record
+	accessGrant := &AccessGrant{
+		DocID:      docID,
+		RequestedBy: requesterId,
+		GrantedAt:  time.Now().UTC().Format(time.RFC3339),
+	}
+
+	// Serialize and store the access grant
+	grantData, err := json.Marshal(accessGrant)
+	if err != nil {
+		return fmt.Errorf("failed to marshal access grant: %v", err)
+	}
+
+	// Store the access grant
+	if err := ctx.GetStub().PutState(accessKey, grantData); err != nil {
+		return fmt.Errorf("failed to store access grant: %v", err)
+	}
+
+	return nil
 }
 
 func main() {

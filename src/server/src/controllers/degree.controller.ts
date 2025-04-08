@@ -959,26 +959,3 @@ export const getRecentIssuedDegrees: RequestHandler = async (
     res.status(500).json({ error: error.message });
   }
 };
-
-/**
- * Get recent verification history for employer dashboard.
- * Only accessible by users with role 'employer'.
- */
-export const getRecentVerifications: RequestHandler = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  try {
-    if (req.user?.role !== 'employer') {
-      res.status(403).json({ error: 'Only employers can access this data' });
-      return;
-    }
-
-    // For now, just return an empty array since verification history isn't stored
-    // This is where you would add the implementation to retrieve actual verification history
-    res.json([]);
-  } catch (error: any) {
-    console.error('getRecentVerifications error:', error);
-    res.status(500).json({ error: error.message });
-  }
-};

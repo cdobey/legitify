@@ -1,4 +1,6 @@
 import { useIssueDegreeeMutation } from '@/api/degrees/degree.mutations';
+import { useAuth } from '@/contexts/AuthContext';
+import { fileToBase64 } from '@/utils/fileUtils';
 import {
   Alert,
   Button,
@@ -14,9 +16,8 @@ import {
   Title,
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
-import { useEffect, useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { fileToBase64 } from '../../utils/fileUtils';
+import { useState } from 'react';
+import { useMyUniversitiesQuery } from '../../api/universities/university.queries';
 
 // Reduced to 3MB for safer uploads with base64 encoding (which increases size by ~33%)
 const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB in bytes
@@ -55,34 +56,19 @@ export default function IssueDegree() {
     additionalNotes: '',
     universityId: null,
   });
-  const [universities, setUniversities] = useState<University[]>([]);
   const [success, setSuccess] = useState('');
   const [localError, setLocalError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [isLoadingUniversities, setIsLoadingUniversities] = useState(false);
 
-  const { api, refreshSession } = useAuth();
+  const { refreshSession } = useAuth();
   const issueMutation = useIssueDegreeeMutation();
 
-  // Fetch universities on component mount
-  useEffect(() => {
-    const fetchUniversities = async () => {
-      try {
-        setIsLoadingUniversities(true);
-        await refreshSession();
-        const response = await api.get('/university/my');
-        setUniversities(response.data);
-      } catch (error: any) {
-        console.error('Failed to fetch universities:', error);
-        setLocalError('Failed to load universities. Please try again.');
-      } finally {
-        setIsLoadingUniversities(false);
-      }
-    };
-
-    fetchUniversities();
-  }, []);
+  const {
+    data: universities = [],
+    isLoading: isLoadingUniversities,
+    error: universitiesError,
+  } = useMyUniversitiesQuery();
 
   const handleFileChange = (file: File | null) => {
     setLocalError(null);
@@ -185,7 +171,6 @@ export default function IssueDegree() {
       </Title>
       <form onSubmit={handleSubmit}>
         <Grid>
-          {/* New university selection field */}
           <Grid.Col span={12}>
             <Select
               label="Select University"

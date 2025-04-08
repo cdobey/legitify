@@ -54,8 +54,6 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-    // Define is now empty as we don't need Supabase env vars
-    define: {},
     build: {
       // Optimize chunk splitting
       rollupOptions: {
