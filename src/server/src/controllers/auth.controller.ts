@@ -1,4 +1,4 @@
-import { OrgName, Role } from '@prisma/client'; // Import Prisma enums
+import { OrgName, Role } from '@prisma/client';
 import { Request, RequestHandler, Response } from 'express';
 import supabase from '../config/supabase';
 import prisma from '../prisma/client';

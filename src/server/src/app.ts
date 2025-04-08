@@ -1,7 +1,7 @@
 import cors from 'cors';
 import express, { Request, Response } from 'express';
 import morgan from 'morgan';
-import './config/env'; // Import our environment helper (will load env vars)
+import './config/env';
 import prisma from './prisma/client';
 import indexRoutes from './routes/index';
 
