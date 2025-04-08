@@ -2,6 +2,62 @@ import { Request, RequestHandler, Response } from 'express';
 import { getGateway } from '../config/gateway';
 import prisma from '../prisma/client';
 
+// Helper function to create a university
+export async function createUniversityHelper(
+  userId: string,
+  name: string,
+  displayName: string,
+  description?: string,
+) {
+  // Check if the user already has a university
+  const existingUniversity = await prisma.university.findFirst({
+    where: {
+      ownerId: userId,
+    },
+  });
+
+  if (existingUniversity) {
+    throw new Error(
+      'You already have a university. University users can only have one associated university.',
+    );
+  }
+
+  // Check if university with this name already exists for this user
+  const existingUniversityByName = await prisma.university.findFirst({
+    where: {
+      name,
+      ownerId: userId,
+    },
+  });
+
+  if (existingUniversityByName) {
+    throw new Error('University with this name already exists');
+  }
+
+  // Create the university in the database
+  const university = await prisma.university.create({
+    data: {
+      name,
+      displayName,
+      description: description || '',
+      ownerId: userId,
+    },
+  });
+
+  // Import necessary functions for fabric identity update
+  const { updateUniversityIdentity } = await import('../utils/fabric-helpers');
+
+  // Update the user's fabric identity to include this university ID
+  try {
+    await updateUniversityIdentity(userId, university.id);
+  } catch (fabricError) {
+    console.error('Failed to update Fabric identity with university attribute:', fabricError);
+    // Continue anyway as the university was created in the database
+  }
+
+  return university;
+}
+
 /**
  * Create a new university sub-organization
  */
@@ -16,22 +72,6 @@ export const createUniversity: RequestHandler = async (
       return;
     }
 
-    // Check if the user already has a university
-    const existingUniversity = await prisma.university.findFirst({
-      where: {
-        ownerId: req.user.uid,
-      },
-    });
-
-    if (existingUniversity) {
-      res.status(400).json({
-        error:
-          'You already have a university. University users can only have one associated university.',
-        university: existingUniversity,
-      });
-      return;
-    }
-
     const { name, displayName, description } = req.body;
 
     if (!name || !displayName) {
@@ -39,39 +79,7 @@ export const createUniversity: RequestHandler = async (
       return;
     }
 
-    // Check if university with this name already exists for this user
-    const existingUniversityByName = await prisma.university.findFirst({
-      where: {
-        name,
-        ownerId: req.user.uid,
-      },
-    });
-
-    if (existingUniversityByName) {
-      res.status(400).json({ error: 'University with this name already exists' });
-      return;
-    }
-
-    // Create the university in the database
-    const university = await prisma.university.create({
-      data: {
-        name,
-        displayName,
-        description: description || '',
-        ownerId: req.user.uid,
-      },
-    });
-
-    // Import necessary functions for fabric identity update
-    const { updateUniversityIdentity } = await import('../utils/fabric-helpers');
-
-    // Update the user's fabric identity to include this university ID
-    try {
-      await updateUniversityIdentity(req.user.uid, university.id);
-    } catch (fabricError) {
-      console.error('Failed to update Fabric identity with university attribute:', fabricError);
-      // Continue anyway as the university was created in the database
-    }
+    const university = await createUniversityHelper(req.user.uid, name, displayName, description);
 
     res.status(201).json({
       message: 'University created successfully',

@@ -1,24 +1,11 @@
+import { useViewDegreeQuery } from '@/api/degrees/degree.queries';
 import { Alert, Container, Text, Title } from '@mantine/core';
-import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
-import { degreeApi } from '../../api/degrees/degree.api';
-import { DegreeDocument } from '../../api/degrees/degree.models';
 
 export default function ViewDegree() {
   const { docId } = useParams<{ docId: string }>();
 
-  const {
-    data: degree,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ['degree', docId],
-    queryFn: async () => {
-      const result = await degreeApi.viewDegree(docId!);
-      return result as DegreeDocument;
-    },
-    enabled: !!docId,
-  });
+  const { data: degree, isLoading, error } = useViewDegreeQuery(docId!, { enabled: !!docId });
 
   if (isLoading) return <Text>Loading...</Text>;
   if (error) return <Alert color="red">{(error as Error).message}</Alert>;

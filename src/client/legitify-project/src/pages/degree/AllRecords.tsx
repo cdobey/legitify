@@ -1,16 +1,8 @@
 import { Alert, Badge, Container, Paper, Stack, Table, Text, Title } from '@mantine/core';
-import { useQuery } from '@tanstack/react-query';
-import { degreeApi } from '../../api/degrees/degree.api';
+import { useLedgerRecordsQuery } from '../../api/degrees/degree.queries';
 
 export default function AllRecords() {
-  const {
-    data: records,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ['allRecords'],
-    queryFn: () => degreeApi.getAllLedgerRecords(),
-  });
+  const { data: records, isLoading, error } = useLedgerRecordsQuery();
 
   if (isLoading) {
     return (

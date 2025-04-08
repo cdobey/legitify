@@ -1,3 +1,6 @@
+import { useRequestAccessMutation } from '@/api/degrees/degree.mutations';
+import { useUserDegreesQuery } from '@/api/degrees/degree.queries';
+import { useSearchUserMutation } from '@/api/users/user.mutations';
 import {
   Alert,
   Badge,
@@ -15,22 +18,21 @@ import {
 } from '@mantine/core';
 import { IconSearch, IconUserCheck } from '@tabler/icons-react';
 import { useState } from 'react';
-import { useRequestAccess, useSearchUser, useUserDegrees } from '../../api/degrees/degree.queries';
 
 export default function SearchUsers() {
   const [email, setEmail] = useState('');
   const [searchPerformed, setSearchPerformed] = useState(false);
 
-  const searchMutation = useSearchUser();
-  const requestAccessMutation = useRequestAccess();
+  const searchMutation = useSearchUserMutation();
+  const requestAccessMutation = useRequestAccessMutation();
 
   // Only fetch degrees if we have a user
   const {
     data: degrees,
     isLoading: degreesLoading,
     error: degreesError,
-  } = useUserDegrees(searchMutation.data?.uid || '', {
-    enabled: !!searchMutation.data?.uid,
+  } = useUserDegreesQuery(searchMutation.data?.id || '', {
+    enabled: !!searchMutation.data?.id,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 

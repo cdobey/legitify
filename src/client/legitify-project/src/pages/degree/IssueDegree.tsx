@@ -1,3 +1,4 @@
+import { useIssueDegreeeMutation } from '@/api/degrees/degree.mutations';
 import {
   Alert,
   Button,
@@ -14,7 +15,6 @@ import {
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useEffect, useState } from 'react';
-import { useIssueDegree } from '../../api/degrees/degree.queries';
 import { useAuth } from '../../contexts/AuthContext';
 import { fileToBase64 } from '../../utils/fileUtils';
 
@@ -63,7 +63,7 @@ export default function IssueDegree() {
   const [isLoadingUniversities, setIsLoadingUniversities] = useState(false);
 
   const { api, refreshSession } = useAuth();
-  const issueMutation = useIssueDegree();
+  const issueMutation = useIssueDegreeeMutation();
 
   // Fetch universities on component mount
   useEffect(() => {

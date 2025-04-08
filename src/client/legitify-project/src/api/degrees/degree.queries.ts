@@ -1,11 +1,20 @@
-import { useMutation, useQuery, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
-import { degreeApi, DegreeDetails } from './degree.api';
+import { useQuery, UseQueryOptions } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import {
-  AccessibleDegree,
-  AccessRequest,
+  getAccessibleDegrees,
+  getAccessRequests,
+  getAllLedgerRecords,
+  getMyDegrees,
+  getRecentIssuedDegrees,
+  getRecentVerifications,
+  getUserDegrees,
+  viewDegree,
+} from './degree.api';
+import {
+  AccessibleDegreesResponse,
+  AccessRequestsResponse,
   DegreeDocument,
-  User,
-  VerificationResult,
+  DegreeDocumentsResponse,
 } from './degree.models';
 
 export const degreeKeys = {
@@ -13,93 +22,87 @@ export const degreeKeys = {
   lists: () => [...degreeKeys.all, 'list'] as const,
   requests: () => [...degreeKeys.all, 'requests'] as const,
   accessible: () => [...degreeKeys.all, 'accessible'] as const,
+  user: (userId: string) => [...degreeKeys.all, 'user', userId] as const,
+  degree: (docId: string) => [...degreeKeys.all, 'degree', docId] as const,
 };
 
-// Fix the type definitions to accept partial options and prioritize fetching
-export const useMyDegrees = (options?: Partial<UseQueryOptions<DegreeDocument[]>>) =>
-  useQuery<DegreeDocument[]>({
+export const useMyDegreesQuery = (
+  options?: Partial<UseQueryOptions<DegreeDocumentsResponse, AxiosError>>,
+) =>
+  useQuery<DegreeDocumentsResponse, AxiosError>({
     queryKey: degreeKeys.lists(),
-    queryFn: () => degreeApi.getMyDegrees(),
+    queryFn: () => getMyDegrees(),
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: true,
     retry: 2,
     ...options,
   });
 
-export const useSearchUser = () =>
-  useMutation<User, Error, string>({
-    mutationFn: async email => degreeApi.searchUsers(email) as Promise<User>,
-  });
-
-export const useUserDegrees = (userId: string, options?: any) =>
-  useQuery<DegreeDocument[]>({
-    queryKey: ['userDegrees', userId],
-    queryFn: () => degreeApi.getUserDegrees(userId),
+export const useUserDegreesQuery = (
+  userId: string,
+  options?: Partial<UseQueryOptions<DegreeDocumentsResponse, AxiosError>>,
+) =>
+  useQuery<DegreeDocumentsResponse, AxiosError>({
+    queryKey: degreeKeys.user(userId),
+    queryFn: () => getUserDegrees(userId) as Promise<DegreeDocumentsResponse>,
     ...options,
   });
 
-export const useIssueDegree = () => {
-  return useMutation({
-    mutationFn: (details: DegreeDetails) => degreeApi.issueDegree(details),
-  });
-};
-
-export const useVerifyDegree = () =>
-  useMutation<VerificationResult, Error, { email: string; base64File: string }>({
-    mutationFn: ({ email, base64File }) => degreeApi.verifyDegree(email, base64File),
-  });
-
-export const useAcceptDegree = () =>
-  useMutation<{ message: string }, Error, string>({
-    mutationFn: docId => degreeApi.acceptDegree(docId),
-  });
-
-export const useDenyDegree = () =>
-  useMutation<{ message: string }, Error, string>({
-    mutationFn: docId => degreeApi.denyDegree(docId),
-  });
-
-export const useAccessRequests = (options?: Partial<UseQueryOptions<AccessRequest[]>>) =>
-  useQuery<AccessRequest[]>({
+export const useAccessRequestsQuery = (
+  options?: Partial<UseQueryOptions<AccessRequestsResponse, AxiosError>>,
+) =>
+  useQuery<AccessRequestsResponse, AxiosError>({
     queryKey: degreeKeys.requests(),
-    queryFn: () => degreeApi.getAccessRequests(),
+    queryFn: () => getAccessRequests(),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
     retry: 2,
     ...options,
   });
 
-export const useRequestAccess = () =>
-  useMutation<{ message: string; requestId: string }, Error, string>({
-    mutationFn: docId => degreeApi.requestAccess(docId),
-  });
-
-export const useGrantAccess = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<{ message: string }, Error, { requestId: string; granted: boolean }>({
-    mutationFn: params => {
-      console.log('useGrantAccess mutation called with params:', params);
-      return degreeApi.grantAccess(params);
-    },
-    onSuccess: () => {
-      console.log('Grant access mutation successful, invalidating queries...');
-      // Invalidate relevant queries to trigger refetches
-      queryClient.invalidateQueries({ queryKey: degreeKeys.requests() });
-      queryClient.invalidateQueries({ queryKey: degreeKeys.accessible() });
-    },
-    onError: error => {
-      console.error('Grant access mutation failed:', error);
-    },
-  });
-};
-
-export const useAccessibleDegrees = (options?: Partial<UseQueryOptions<AccessibleDegree[]>>) =>
-  useQuery<AccessibleDegree[]>({
+export const useAccessibleDegreesQuery = (
+  options?: Partial<UseQueryOptions<AccessibleDegreesResponse, AxiosError>>,
+) =>
+  useQuery<AccessibleDegreesResponse, AxiosError>({
     queryKey: degreeKeys.accessible(),
-    queryFn: () => degreeApi.getAccessibleDegrees(),
+    queryFn: () => getAccessibleDegrees(),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
     retry: 2,
+    ...options,
+  });
+
+export const useViewDegreeQuery = (
+  docId: string,
+  options?: Partial<UseQueryOptions<DegreeDocument, AxiosError>>,
+) =>
+  useQuery<DegreeDocument, AxiosError>({
+    queryKey: degreeKeys.degree(docId),
+    queryFn: () => viewDegree(docId),
+    ...options,
+  });
+
+export const useRecentIssuedDegreesQuery = (
+  options?: Partial<UseQueryOptions<DegreeDocumentsResponse, AxiosError>>,
+) =>
+  useQuery<DegreeDocumentsResponse, AxiosError>({
+    queryKey: [...degreeKeys.all, 'recent-issued'],
+    queryFn: () => getRecentIssuedDegrees(),
+    ...options,
+  });
+
+export const useRecentVerificationsQuery = (
+  options?: Partial<UseQueryOptions<any[], AxiosError>>,
+) =>
+  useQuery<any[], AxiosError>({
+    queryKey: [...degreeKeys.all, 'recent-verifications'],
+    queryFn: () => getRecentVerifications(),
+    ...options,
+  });
+
+export const useLedgerRecordsQuery = (options?: Partial<UseQueryOptions<any[], AxiosError>>) =>
+  useQuery<any[], AxiosError>({
+    queryKey: [...degreeKeys.all, 'ledger-records'],
+    queryFn: () => getAllLedgerRecords(),
     ...options,
   });

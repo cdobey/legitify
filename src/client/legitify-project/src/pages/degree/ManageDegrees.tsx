@@ -1,3 +1,6 @@
+import { DegreeDocument } from '@/api/degrees/degree.models';
+import { useAcceptDegreeMutation, useDenyDegreeMutation } from '@/api/degrees/degree.mutations';
+import { useMyDegreesQuery } from '@/api/degrees/degree.queries';
 import {
   Alert,
   Badge,
@@ -36,15 +39,13 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import { useState } from 'react';
-import { DegreeDocument } from '../../api/degrees/degree.models';
-import { useAcceptDegree, useDenyDegree, useMyDegrees } from '../../api/degrees/degree.queries';
 
 export default function ManageDegrees() {
   const theme = useMantineTheme();
   const [statusFilter, setStatusFilter] = useState<string | null>('all');
-  const { data: degrees, isLoading, error, refetch } = useMyDegrees();
-  const acceptMutation = useAcceptDegree();
-  const denyMutation = useDenyDegree();
+  const { data: degrees, isLoading, error, refetch } = useMyDegreesQuery();
+  const acceptMutation = useAcceptDegreeMutation();
+  const denyMutation = useDenyDegreeMutation();
 
   const openDenyConfirmModal = (degree: DegreeDocument) => {
     modals.openConfirmModal({
@@ -110,12 +111,15 @@ export default function ManageDegrees() {
   };
 
   const filteredDegrees = degrees?.filter(
-    degree => statusFilter === 'all' || degree.status === statusFilter,
+    (degree: DegreeDocument) => statusFilter === 'all' || degree.status === statusFilter,
   );
 
-  const pendingDegrees = degrees?.filter(degree => degree.status === 'issued') || [];
-  const acceptedDegrees = degrees?.filter(degree => degree.status === 'accepted') || [];
-  const deniedDegrees = degrees?.filter(degree => degree.status === 'denied') || [];
+  const pendingDegrees =
+    degrees?.filter((degree: DegreeDocument) => degree.status === 'issued') || [];
+  const acceptedDegrees =
+    degrees?.filter((degree: DegreeDocument) => degree.status === 'accepted') || [];
+  const deniedDegrees =
+    degrees?.filter((degree: DegreeDocument) => degree.status === 'denied') || [];
 
   const getStatusBadge = (status: string) => {
     switch (status) {

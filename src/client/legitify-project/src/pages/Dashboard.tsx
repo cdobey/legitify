@@ -52,7 +52,7 @@ export default function Dashboard() {
 
   // Use data directly from the dashboard query
   const myDegrees = data?.myDegrees || [];
-  const accessibleDegrees = data?.accessibleDegrees || []; // Add this line to define accessibleDegrees
+  const accessibleDegrees = data?.accessibleDegrees || [];
   const pendingRequests =
     data?.accessRequests?.filter((req: AccessRequest) => req.status === 'pending') || [];
 

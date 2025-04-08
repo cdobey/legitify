@@ -1,15 +1,14 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { degreeApi } from '../degrees/degree.api';
-import { DegreeDocument, User } from '../degrees/degree.models';
+import { useQuery, UseQueryOptions } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
+import { DegreeDocumentsResponse } from '../degrees/degree.models';
+import { getUserDegrees } from './user.api';
 
-export const useSearchUser = () =>
-  useMutation<User, Error, string>({
-    mutationFn: async email => degreeApi.searchUsers(email) as Promise<User>,
-  });
-
-export const useUserDegrees = (userId: string, options?: any) =>
-  useQuery<DegreeDocument[]>({
+export const useUserDegreesQuery = (
+  userId: string,
+  options?: Partial<UseQueryOptions<DegreeDocumentsResponse, AxiosError>>,
+) =>
+  useQuery<DegreeDocumentsResponse, AxiosError>({
     queryKey: ['userDegrees', userId],
-    queryFn: () => degreeApi.getUserDegrees(userId),
+    queryFn: () => getUserDegrees(userId),
     ...options,
   });

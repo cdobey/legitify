@@ -42,7 +42,7 @@ interface Affiliation {
   userId: string;
   universityId: string;
   status: 'pending' | 'active' | 'rejected';
-  initiatedBy?: 'student' | 'university'; // Add this field to track who initiated
+  initiatedBy?: 'student' | 'university';
   university: University;
 }
 

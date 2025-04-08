@@ -1,111 +1,106 @@
 import apiCall from '../apiCall';
-import { AccessRequest, DegreeDocument, VerificationResult } from './degree.models';
+import {
+  AccessibleDegreesResponse,
+  AccessRequestsResponse,
+  DegreeDetails,
+  DegreeDocument,
+  DegreeDocumentsResponse,
+  DegreeResponse,
+  VerificationResult,
+} from './degree.models';
+// Import User from user.models instead
+import { User } from '../users/user.models';
 
-export interface DegreeDetails {
-  email: string;
-  base64File: string;
-  degreeTitle: string;
-  fieldOfStudy: string;
-  graduationDate: string;
-  honors: string;
-  studentId: string;
-  programDuration: string;
-  gpa: number;
-  additionalNotes?: string;
-  universityId: string; // Added universityId as required parameter
-}
+export const getMyDegrees = () =>
+  apiCall<DegreeDocumentsResponse>({ method: 'get', path: '/degree/list' });
 
-export const degreeApi = {
-  getMyDegrees: () => apiCall<DegreeDocument[]>({ method: 'get', path: '/degree/list' }),
+export const issueDegree = (details: DegreeDetails) =>
+  apiCall<DegreeResponse>({
+    method: 'post',
+    path: '/degree/issue',
+    params: details,
+  });
 
-  issueDegree: (details: DegreeDetails) =>
-    apiCall<{ docId: string; docHash: string }>({
-      method: 'post',
-      path: '/degree/issue',
-      params: details,
-    }),
+export const verifyDegree = (email: string, base64File: string) =>
+  apiCall<VerificationResult>({
+    method: 'post',
+    path: '/degree/verify',
+    params: { email, base64File },
+  });
 
-  verifyDegree: (email: string, base64File: string) =>
-    apiCall<VerificationResult>({
-      method: 'post',
-      path: '/degree/verify',
-      params: { email, base64File },
-    }),
+export const acceptDegree = (docId: string) =>
+  apiCall<{ message: string }>({
+    method: 'post',
+    path: '/degree/accept',
+    params: { docId },
+  });
 
-  acceptDegree: (docId: string) =>
-    apiCall<{ message: string }>({
-      method: 'post',
-      path: '/degree/accept',
-      params: { docId },
-    }),
+export const denyDegree = (docId: string) =>
+  apiCall<{ message: string }>({
+    method: 'post',
+    path: '/degree/deny',
+    params: { docId },
+  });
 
-  denyDegree: (docId: string) =>
-    apiCall<{ message: string }>({
-      method: 'post',
-      path: '/degree/deny',
-      params: { docId },
-    }),
+export const getAccessRequests = () =>
+  apiCall<AccessRequestsResponse>({
+    method: 'get',
+    path: '/degree/requests',
+  });
 
-  getAccessRequests: () =>
-    apiCall<AccessRequest[]>({
-      method: 'get',
-      path: '/degree/requests',
-    }),
+export const requestAccess = (docId: string) =>
+  apiCall<{ message: string; requestId: string }>({
+    method: 'post',
+    path: '/degree/requestAccess',
+    params: { docId },
+  });
 
-  requestAccess: (docId: string) =>
-    apiCall<{ message: string; requestId: string }>({
-      method: 'post',
-      path: '/degree/requestAccess',
-      params: { docId },
-    }),
+export const grantAccess = ({ requestId, granted }: { requestId: string; granted: boolean }) =>
+  apiCall<{ message: string }>({
+    method: 'post',
+    path: '/degree/grantAccess',
+    params: { requestId, granted },
+  });
 
-  grantAccess: ({ requestId, granted }: { requestId: string; granted: boolean }) =>
-    apiCall<{ message: string }>({
-      method: 'post',
-      path: '/degree/grantAccess',
-      params: { requestId, granted },
-    }),
+export const viewDegree = (docId: string) =>
+  apiCall<DegreeDocument>({
+    method: 'get',
+    path: `/degree/view/${docId}`,
+  });
 
-  viewDegree: (docId: string) =>
-    apiCall({
-      method: 'get',
-      path: `/degree/view/${docId}`,
-    }),
+export const searchUsers = (email: string) =>
+  apiCall<User>({
+    method: 'get',
+    path: '/user/search',
+    params: { email },
+  });
 
-  searchUsers: (email: string) =>
-    apiCall({
-      method: 'get',
-      path: '/user/search',
-      params: { email },
-    }),
+export const getUserDegrees = (userId: string) =>
+  apiCall<DegreeDocumentsResponse>({
+    method: 'get',
+    path: `/degree/user/${userId}`,
+  });
 
-  getUserDegrees: (userId: string) =>
-    apiCall({
-      method: 'get',
-      path: `/degree/user/${userId}`,
-    }),
+export const getAccessibleDegrees = () =>
+  apiCall<AccessibleDegreesResponse>({
+    method: 'get',
+    path: '/degree/accessible',
+  });
 
-  getAccessibleDegrees: () =>
-    apiCall<any[]>({
-      method: 'get',
-      path: '/degree/accessible',
-    }),
+export const getRecentIssuedDegrees = () =>
+  apiCall<DegreeDocumentsResponse>({
+    method: 'get',
+    path: '/degree/recent-issued',
+  });
 
-  getRecentIssuedDegrees: () =>
-    apiCall<any[]>({
-      method: 'get',
-      path: '/degree/recent-issued',
-    }),
+export const getRecentVerifications = () =>
+  apiCall<any[]>({
+    method: 'get',
+    path: '/degree/recent-verifications',
+  });
 
-  getRecentVerifications: () =>
-    apiCall<any[]>({
-      method: 'get',
-      path: '/degree/recent-verifications',
-    }),
-
-  getAllLedgerRecords: () =>
-    apiCall<any[]>({
-      method: 'get',
-      path: '/degree/all-records',
-    }),
-};
+export const getAllLedgerRecords = () =>
+  apiCall<any[]>({
+    method: 'get',
+    path: '/degree/all-records',
+  });

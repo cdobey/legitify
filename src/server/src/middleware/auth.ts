@@ -1,13 +1,7 @@
-import { NextFunction, Request, Response } from "express";
-import supabase from "../config/supabase";
-import prisma from "../prisma/client";
-
-// Define the shape of the Supabase auth payload
-interface AuthUser {
-  uid: string;
-  role?: string;
-  orgName?: string;
-}
+import { NextFunction, Request, Response } from 'express';
+import supabase from '../config/supabase';
+import prisma from '../prisma/client';
+import { AuthUser } from '../types/user.types';
 
 declare global {
   namespace Express {
@@ -20,16 +14,16 @@ declare global {
 export const authMiddleware = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith("Bearer ")) {
-      res.status(401).json({ error: "No token provided" });
+    if (!authHeader?.startsWith('Bearer ')) {
+      res.status(401).json({ error: 'No token provided' });
       return;
     }
 
-    const token = authHeader.split("Bearer ")[1];
+    const token = authHeader.split('Bearer ')[1];
 
     // Verify the Supabase token
     const {
@@ -38,8 +32,8 @@ export const authMiddleware = async (
     } = await supabase.auth.getUser(token);
 
     if (error || !user) {
-      console.error("Token verification error:", error);
-      res.status(401).json({ error: "Invalid token" });
+      console.error('Token verification error:', error);
+      res.status(401).json({ error: 'Invalid token' });
       return;
     }
 
@@ -49,8 +43,8 @@ export const authMiddleware = async (
     });
 
     if (!dbUser?.role || !dbUser?.orgName) {
-      console.error("Missing role or orgName for user:", user.id);
-      res.status(403).json({ error: "User missing required claims" });
+      console.error('Missing role or orgName for user:', user.id);
+      res.status(403).json({ error: 'User missing required claims' });
       return;
     }
 
@@ -60,7 +54,7 @@ export const authMiddleware = async (
       orgName: dbUser.orgName,
     };
 
-    console.log("Authenticated user:", {
+    console.log('Authenticated user:', {
       uid: req.user.uid,
       role: req.user.role,
       orgName: req.user.orgName,
@@ -68,13 +62,13 @@ export const authMiddleware = async (
 
     next();
   } catch (error: any) {
-    console.error("Auth middleware error:", {
+    console.error('Auth middleware error:', {
       message: error.message,
       code: error.code,
       stack: error.stack,
     });
     res.status(401).json({
-      error: "Authentication failed",
+      error: 'Authentication failed',
       message: error.message,
       code: error.code,
     });

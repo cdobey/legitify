@@ -1,9 +1,9 @@
+import { useAccessibleDegreesQuery } from '@/api/degrees/degree.queries';
 import { Alert, Badge, Button, Card, Container, Group, Stack, Text, Title } from '@mantine/core';
 import { Link } from 'react-router-dom';
-import { useAccessibleDegrees } from '../../api/degrees/degree.queries';
 
 export default function AccessibleDegrees() {
-  const { data: degrees, isLoading, error, refetch } = useAccessibleDegrees();
+  const { data: degrees, isLoading, error, refetch } = useAccessibleDegreesQuery();
 
   if (isLoading) {
     return (

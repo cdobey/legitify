@@ -1,3 +1,4 @@
+import { register } from '@/api/auth/auth.api';
 import {
   Alert,
   Button,
@@ -29,7 +30,6 @@ import {
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { authApi } from '../../api/auth/auth.api';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface University {
@@ -140,7 +140,7 @@ const Register = () => {
       }
 
       // Register the user
-      await authApi.register(registrationData);
+      await register(registrationData);
 
       // AUTO-LOGIN - Log the user in automatically after registration
       await login(form.values.email, form.values.password);

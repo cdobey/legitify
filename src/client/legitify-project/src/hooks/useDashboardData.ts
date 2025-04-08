@@ -1,14 +1,61 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { UseQueryOptions, useQueries, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { degreeApi } from '../api/degrees/degree.api';
+import {
+  getAccessRequests,
+  getAccessibleDegrees,
+  getMyDegrees,
+  getRecentIssuedDegrees,
+  getRecentVerifications,
+} from '../api/degrees/degree.api';
+import {
+  AccessRequestsResponse,
+  AccessibleDegreesResponse,
+  DegreeDocumentsResponse,
+} from '../api/degrees/degree.models';
 import { degreeKeys } from '../api/degrees/degree.queries';
+import { AuthUser } from '../api/users/user.models';
 import { useAuth } from '../contexts/AuthContext';
 
+interface DashboardStats {
+  total: number;
+  accepted: number;
+  pending: number;
+  rejected: number;
+}
+
+interface DashboardData {
+  stats: DashboardStats;
+  myDegrees?: DegreeDocumentsResponse;
+  accessRequests?: AccessRequestsResponse;
+  accessibleDegrees?: AccessibleDegreesResponse;
+  recentVerifications?: any[];
+  recentIssued?: DegreeDocumentsResponse;
+}
+
+// Type for the query result
+interface QueryResultWithKey<T> {
+  data?: T;
+  isSuccess: boolean;
+  isLoading: boolean;
+  isError: boolean;
+  error: Error | null;
+  queryKey?: readonly unknown[]; // Make queryKey optional
+}
+
+// Type for the combined result
+interface CombinedQueryResult {
+  isLoading: boolean;
+  isError: boolean;
+  error: Error | null | undefined;
+  data: DashboardData;
+  refetch: () => Promise<void>; // Add refetch function
+}
+
 export const useDashboardData = () => {
-  const { user } = useAuth();
+  const { user } = useAuth() as { user: AuthUser | null };
   const queryClient = useQueryClient();
 
-  // Force prefetch all required data when the dashboard hook is called
+  // Prefetch data when the component mounts or user changes
   useEffect(() => {
     if (!user) return;
 
@@ -18,13 +65,13 @@ export const useDashboardData = () => {
         // Prefetch my degrees immediately without waiting
         queryClient.prefetchQuery({
           queryKey: degreeKeys.lists(),
-          queryFn: () => degreeApi.getMyDegrees(),
+          queryFn: () => getMyDegrees(),
         });
 
         // Prefetch access requests
         queryClient.prefetchQuery({
           queryKey: degreeKeys.requests(),
-          queryFn: () => degreeApi.getAccessRequests(),
+          queryFn: () => getAccessRequests(),
         });
       }
 
@@ -32,21 +79,21 @@ export const useDashboardData = () => {
         // Prefetch accessible degrees
         queryClient.prefetchQuery({
           queryKey: degreeKeys.accessible(),
-          queryFn: () => degreeApi.getAccessibleDegrees(),
+          queryFn: () => getAccessibleDegrees(),
         });
 
         // Prefetch recent verifications
         queryClient.prefetchQuery({
-          queryKey: ['recentVerifications'],
-          queryFn: () => degreeApi.getRecentVerifications(),
+          queryKey: [...degreeKeys.all, 'recent-verifications'],
+          queryFn: () => getRecentVerifications(),
         });
       }
 
       if (user.role === 'university') {
         // Prefetch recently issued degrees
         queryClient.prefetchQuery({
-          queryKey: ['recentIssued'],
-          queryFn: () => degreeApi.getRecentIssuedDegrees(),
+          queryKey: [...degreeKeys.all, 'recent-issued'],
+          queryFn: () => getRecentIssuedDegrees(),
         });
       }
     };
@@ -54,94 +101,181 @@ export const useDashboardData = () => {
     prefetchData();
   }, [user, queryClient]);
 
-  // This main query now directly calls the backend APIs instead of relying on other queries
-  return useQuery({
-    queryKey: ['dashboardData', user?.id, user?.role],
-    queryFn: async () => {
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
-      // Base data structure that will be enhanced based on role
-      const dashboardData: any = {
-        stats: {
-          total: 0,
-          accepted: 0,
-          pending: 0,
-          rejected: 0,
+  // Use parallel queries with useQueries for better performance and organization
+  const queryResults = useQueries({
+    queries: generateQueriesForRole(user),
+    combine: (results): CombinedQueryResult => {
+      // Transform the results into a unified dashboard data object
+      return {
+        isLoading: results.some(result => result.isLoading),
+        isError: results.some(result => result.isError),
+        error: results.find(result => result.error)?.error,
+        data: combineQueryData(results as QueryResultWithKey<unknown>[], user?.role),
+        refetch: async () => {
+          // Refetch all queries
+          await Promise.all(results.map(result => result.refetch()));
         },
       };
+    },
+  });
 
-      // Perform direct data fetching without relying on other queries
-      try {
-        if (user.role === 'individual') {
-          // Fetch directly from API
-          const myDegrees = await degreeApi.getMyDegrees();
-          dashboardData.myDegrees = myDegrees || [];
+  return queryResults;
+};
 
-          // Calculate statistics
-          if (myDegrees && myDegrees.length > 0) {
-            dashboardData.stats.total = myDegrees.length;
-            dashboardData.stats.accepted = myDegrees.filter(
-              (d: any) => d.status === 'accepted',
-            ).length;
-            dashboardData.stats.pending = myDegrees.filter(
-              (d: any) => d.status === 'issued',
-            ).length;
-            dashboardData.stats.rejected = myDegrees.filter(
-              (d: any) => d.status === 'denied',
-            ).length;
-          }
+// Helper function to generate the appropriate queries based on user role
+const generateQueriesForRole = (user: AuthUser | null): UseQueryOptions[] => {
+  if (!user) return [];
 
-          // Fetch access requests
-          const accessRequests = await degreeApi.getAccessRequests();
-          dashboardData.accessRequests = accessRequests || [];
-        }
+  const commonOptions = {
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: true,
+    retry: 2,
+    enabled: !!user,
+  };
 
-        if (user.role === 'employer') {
-          // Fetch accessible degrees directly
-          const accessibleDegrees = await degreeApi.getAccessibleDegrees();
-          dashboardData.accessibleDegrees = accessibleDegrees || [];
+  const queries: UseQueryOptions[] = [];
 
-          // Fetch verifications
-          try {
-            const recentVerifications = await degreeApi.getRecentVerifications();
-            dashboardData.recentVerifications = recentVerifications || [];
-          } catch (error) {
-            console.error('Error fetching recent verifications:', error);
-            dashboardData.recentVerifications = [];
-          }
-        }
+  if (user.role === 'individual') {
+    queries.push({
+      queryKey: degreeKeys.lists(),
+      queryFn: () => getMyDegrees() as Promise<DegreeDocumentsResponse>,
+      ...commonOptions,
+    });
 
-        if (user.role === 'university') {
-          // Fetch recent issued degrees directly
-          const recentIssued = await degreeApi.getRecentIssuedDegrees();
-          dashboardData.recentIssued = recentIssued || [];
+    queries.push({
+      queryKey: degreeKeys.requests(),
+      queryFn: () => getAccessRequests() as Promise<AccessRequestsResponse>,
+      ...commonOptions,
+    });
+  }
 
-          // Calculate statistics
-          if (recentIssued && recentIssued.length > 0) {
-            dashboardData.stats.total = recentIssued.length;
-            dashboardData.stats.accepted = recentIssued.filter(
-              (d: any) => d.status === 'accepted',
-            ).length;
-            dashboardData.stats.pending = recentIssued.filter(
-              (d: any) => d.status === 'issued',
-            ).length;
-            dashboardData.stats.rejected = recentIssued.filter(
-              (d: any) => d.status === 'denied',
-            ).length;
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        // Don't throw, so partial data can still be shown
+  if (user.role === 'employer') {
+    queries.push({
+      queryKey: degreeKeys.accessible(),
+      queryFn: () => getAccessibleDegrees() as Promise<AccessibleDegreesResponse>,
+      ...commonOptions,
+    });
+
+    queries.push({
+      queryKey: [...degreeKeys.all, 'recent-verifications'],
+      queryFn: () => getRecentVerifications() as Promise<any[]>,
+      ...commonOptions,
+    });
+  }
+
+  if (user.role === 'university') {
+    queries.push({
+      queryKey: [...degreeKeys.all, 'recent-issued'],
+      queryFn: () => getRecentIssuedDegrees() as Promise<DegreeDocumentsResponse>,
+      ...commonOptions,
+    });
+  }
+
+  return queries;
+};
+
+// Helper function to combine query results into a unified data structure
+const combineQueryData = (
+  results: QueryResultWithKey<unknown>[],
+  userRole?: string,
+): DashboardData => {
+  const dashboardData: DashboardData = {
+    stats: {
+      total: 0,
+      accepted: 0,
+      pending: 0,
+      rejected: 0,
+    },
+  };
+
+  // All queries have succeeded
+  if (results.every(result => result.isSuccess)) {
+    if (userRole === 'individual') {
+      // Update how we find specific queries since queryKey might be undefined
+      const myDegreesResult = results.find(
+        r =>
+          r.data &&
+          Array.isArray(r.data) &&
+          r.queryKey &&
+          Array.isArray(r.queryKey) &&
+          r.queryKey.includes('list'),
+      ) as QueryResultWithKey<DegreeDocumentsResponse> | undefined;
+
+      const accessRequestsResult = results.find(
+        r =>
+          r.data &&
+          Array.isArray(r.data) &&
+          r.queryKey &&
+          Array.isArray(r.queryKey) &&
+          r.queryKey.includes('requests'),
+      ) as QueryResultWithKey<AccessRequestsResponse> | undefined;
+
+      if (myDegreesResult?.data) {
+        const myDegrees = myDegreesResult.data;
+        dashboardData.myDegrees = myDegrees;
+
+        // Calculate statistics
+        dashboardData.stats.total = myDegrees.length;
+        dashboardData.stats.accepted = myDegrees.filter(d => d.status === 'accepted').length;
+        dashboardData.stats.pending = myDegrees.filter(d => d.status === 'issued').length;
+        dashboardData.stats.rejected = myDegrees.filter(d => d.status === 'denied').length;
       }
 
-      return dashboardData;
-    },
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: true, // Enable refetch on window focus
-    retry: 2, // Retry failed requests
-  });
+      if (accessRequestsResult?.data) {
+        dashboardData.accessRequests = accessRequestsResult.data;
+      }
+    }
+
+    if (userRole === 'employer') {
+      const accessibleDegreesResult = results.find(
+        r =>
+          r.data &&
+          Array.isArray(r.data) &&
+          r.queryKey &&
+          Array.isArray(r.queryKey) &&
+          r.queryKey.includes('accessible'),
+      ) as QueryResultWithKey<AccessibleDegreesResponse> | undefined;
+
+      const verificationsResult = results.find(
+        r =>
+          r.data &&
+          Array.isArray(r.data) &&
+          r.queryKey &&
+          Array.isArray(r.queryKey) &&
+          r.queryKey.includes('recent-verifications'),
+      ) as QueryResultWithKey<any[]> | undefined;
+
+      if (accessibleDegreesResult?.data) {
+        dashboardData.accessibleDegrees = accessibleDegreesResult.data;
+      }
+
+      if (verificationsResult?.data) {
+        dashboardData.recentVerifications = verificationsResult.data;
+      }
+    }
+
+    if (userRole === 'university') {
+      const recentIssuedResult = results.find(
+        r =>
+          r.data &&
+          Array.isArray(r.data) &&
+          r.queryKey &&
+          Array.isArray(r.queryKey) &&
+          r.queryKey.includes('recent-issued'),
+      ) as QueryResultWithKey<DegreeDocumentsResponse> | undefined;
+
+      if (recentIssuedResult?.data) {
+        const recentIssued = recentIssuedResult.data;
+        dashboardData.recentIssued = recentIssued;
+
+        // Calculate statistics
+        dashboardData.stats.total = recentIssued.length;
+        dashboardData.stats.accepted = recentIssued.filter(d => d.status === 'accepted').length;
+        dashboardData.stats.pending = recentIssued.filter(d => d.status === 'issued').length;
+        dashboardData.stats.rejected = recentIssued.filter(d => d.status === 'denied').length;
+      }
+    }
+  }
+
+  return dashboardData;
 };

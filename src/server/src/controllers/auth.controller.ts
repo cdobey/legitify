@@ -3,6 +3,52 @@ import { Request, RequestHandler, Response } from 'express';
 import supabase from '../config/supabase';
 import prisma from '../prisma/client';
 import { enrollUser } from '../utils/fabric-helpers';
+import { createUniversityHelper } from './university.controller';
+
+// Helper function to handle Supabase user creation
+async function createSupabaseUser(
+  email: string,
+  password: string,
+  username: string,
+  role: string,
+  orgName: OrgName,
+) {
+  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    email,
+    password,
+    user_metadata: {
+      username,
+      role,
+      orgName,
+    },
+    email_confirm: true,
+  });
+
+  if (authError || !authData.user) {
+    throw authError || new Error('Failed to create user in Supabase');
+  }
+
+  return authData.user;
+}
+
+// Helper function to handle user registration in database
+async function createDatabaseUser(
+  userId: string,
+  username: string,
+  role: Role,
+  orgName: OrgName,
+  email: string,
+) {
+  return prisma.user.create({
+    data: {
+      id: userId,
+      username,
+      role,
+      orgName,
+      email,
+    },
+  });
+}
 
 export const login: RequestHandler = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -60,12 +106,11 @@ export const register: RequestHandler = async (req: Request, res: Response): Pro
       password,
       username,
       role,
-      universityIds,
-      joinUniversityId,
       universityName,
       universityDisplayName,
       universityDescription,
-      orgName,
+      joinUniversityId,
+      universityIds,
     } = req.body;
 
     // Validate input
@@ -76,7 +121,7 @@ export const register: RequestHandler = async (req: Request, res: Response): Pro
       return;
     }
 
-    // Map role to the correct organization name using Prisma enum
+    // Map role to organization name
     let actualOrgName: OrgName;
     if (role === 'individual') {
       actualOrgName = OrgName.orgindividual;
@@ -85,7 +130,6 @@ export const register: RequestHandler = async (req: Request, res: Response): Pro
     } else if (role === 'employer') {
       actualOrgName = OrgName.orgemployer;
     } else {
-      // If the role is invalid
       res.status(400).json({
         error: 'Invalid role. Must be "individual", "university", or "employer"',
       });
@@ -106,79 +150,40 @@ export const register: RequestHandler = async (req: Request, res: Response): Pro
       return;
     }
 
-    // Create user in Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      user_metadata: {
-        username,
-        role,
-        orgName: actualOrgName, // This is fine as Supabase just stores it as a string
-      },
-      email_confirm: true, // Auto-confirm the email
-    });
-
-    if (authError || !authData.user) {
-      throw authError || new Error('Failed to create user in Supabase');
-    }
-
-    const userId = authData.user.id;
+    // Create user in Supabase
+    const supabaseUser = await createSupabaseUser(email, password, username, role, actualOrgName);
+    const userId = supabaseUser.id;
 
     // Enroll user with Hyperledger Fabric
     await enrollUser(userId, actualOrgName);
 
-    // Create user in database with the proper enum values
-    const user = await prisma.user.create({
-      data: {
-        id: userId,
-        username,
-        role: role as Role, // Cast to Prisma enum
-        orgName: actualOrgName, // Use the enum value
-        email,
-      },
-    });
+    // Create user in database
+    await createDatabaseUser(userId, username, role as Role, actualOrgName, email);
 
-    // Handle university registration if they're creating on signup
-    if (role === 'university' && universityName && universityDisplayName) {
-      try {
-        console.log(
-          'Creating university with name:',
-          universityName,
-          'and display name:',
-          universityDisplayName,
-        );
+    // Handle university-specific registration
+    if (role === 'university') {
+      if (universityName && universityDisplayName) {
+        try {
+          const university = await createUniversityHelper(
+            userId,
+            universityName,
+            universityDisplayName,
+            universityDescription,
+          );
 
-        const university = await prisma.university.create({
-          data: {
-            name: universityName,
-            displayName: universityDisplayName,
-            description: universityDescription || '',
-            ownerId: userId,
-          },
-        });
-
-        console.log('University created successfully:', university);
-
-        res.status(201).json({
-          message: 'University user and university created successfully',
-          uid: userId,
-          metadata: authData.user.user_metadata,
-          university: university,
-        });
-        return;
-      } catch (uniError) {
-        console.error('Failed to create university during registration:', uniError);
-        // We still created the user, but let's log specific error details
-        if ((uniError as any).code === 'P2002') {
-          console.error('Unique constraint violation - university name may already exist');
+          res.status(201).json({
+            message: 'University user and university created successfully',
+            uid: userId,
+            metadata: supabaseUser.user_metadata,
+            university,
+          });
+          return;
+        } catch (uniError) {
+          console.error('Failed to create university during registration:', uniError);
+          // Continue with user creation even if university creation fails
         }
-      }
-    }
-
-    // Handle university join request
-    if (role === 'university' && joinUniversityId) {
-      try {
-        // Create join request through the university controller
+      } else if (joinUniversityId) {
+        // Handle join request
         await prisma.universityJoinRequest.create({
           data: {
             requesterId: userId,
@@ -186,124 +191,61 @@ export const register: RequestHandler = async (req: Request, res: Response): Pro
             status: 'pending',
           },
         });
-      } catch (joinError) {
-        console.error('Failed to create university join request:', joinError);
       }
     }
 
-    // Handle university affiliation for individuals
-    if (
-      role === 'individual' &&
-      universityIds &&
-      Array.isArray(universityIds) &&
-      universityIds.length > 0
-    ) {
-      try {
-        // Create affiliations
-        const affiliationPromises = universityIds.map(async (universityId: string) => {
-          return prisma.affiliation.create({
-            data: {
-              userId,
-              universityId,
-              status: 'pending', // Pending university approval
-            },
-          });
-        });
-
-        await Promise.all(affiliationPromises);
-
-        res.status(201).json({
-          message: 'User created with university affiliation requests',
-          uid: userId,
-          metadata: authData.user.user_metadata,
-        });
-        return;
-      } catch (affError) {
-        console.error('Failed to create university affiliations:', affError);
-        // Still proceed with user creation
-      }
+    // Handle individual university affiliations
+    if (role === 'individual' && universityIds?.length > 0) {
+      const affiliationPromises = universityIds.map((universityId: string) =>
+        prisma.affiliation.create({
+          data: {
+            userId,
+            universityId,
+            status: 'pending',
+          },
+        }),
+      );
+      await Promise.all(affiliationPromises);
     }
 
-    // Just return success if we're here
     res.status(201).json({
       message: 'User created successfully',
       uid: userId,
-      metadata: authData.user.user_metadata,
+      metadata: supabaseUser.user_metadata,
     });
   } catch (error: any) {
     console.error('Registration error:', error);
 
-    // If Supabase user was created but database creation failed
-    if (error.code === 'P2002' && error.meta?.target) {
-      // Prisma unique constraint error
+    // Cleanup Supabase user if database creation failed
+    if (error.code === 'P2002') {
       try {
-        // Since we can't directly filter users in Supabase admin API,
-        // we'll need to search for the user in our database first
         const userEmail = req.body.email;
         const dbUser = await prisma.user.findUnique({
           where: { email: userEmail },
         });
 
         if (dbUser?.id) {
-          // Now delete the user from Supabase
           await supabase.auth.admin.deleteUser(dbUser.id);
         }
       } catch (cleanupError) {
         console.error('Failed to cleanup Supabase user:', cleanupError);
       }
-      res.status(400).json({
-        error: `${error.meta.target.join(', ')} already exists`,
-      });
-      return;
     }
 
-    res.status(500).json({ error: error.message });
-  }
-};
-
-export const deleteAccount: RequestHandler = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const uid = req.user?.uid;
-    if (!uid) {
-      res.status(401).json({ error: 'Not authenticated' });
-      return;
-    }
-
-    // Delete from Supabase Auth
-    const { error } = await supabase.auth.admin.deleteUser(uid);
-    if (error) throw error;
-
-    // Delete from database
-    await prisma.user.delete({
-      where: { id: uid },
+    res.status(500).json({
+      error: 'Registration failed',
+      details: error.message,
     });
-
-    res.json({ message: 'Account deleted successfully' });
-  } catch (error: any) {
-    console.error('Delete account error:', error);
-    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 export const logout: RequestHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    const uid = req.user?.uid;
-
-    if (!uid) {
-      res.status(401).json({ error: 'Not authenticated' });
-      return;
-    }
-
-    // Invalidate the session in Supabase
-    const { error } = await supabase.auth.admin.signOut(uid);
-
-    if (error) {
-      throw error;
-    }
-
-    res.status(200).json({ message: 'Logged out successfully' });
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    res.json({ message: 'Logged out successfully' });
   } catch (error: any) {
     console.error('Logout error:', error);
-    res.status(500).json({ error: 'Failed to logout' });
+    res.status(500).json({ error: error.message });
   }
 };

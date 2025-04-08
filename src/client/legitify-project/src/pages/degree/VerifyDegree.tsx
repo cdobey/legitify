@@ -1,3 +1,5 @@
+import { VerificationResult } from '@/api/degrees/degree.models';
+import { useVerifyDegreeMutation } from '@/api/degrees/degree.mutations';
 import {
   Alert,
   Button,
@@ -21,18 +23,6 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import { useState } from 'react';
-import { useVerifyDegree } from '../../api/degrees/degree.queries';
-
-interface VerificationResult {
-  verified: boolean;
-  message: string;
-  details?: {
-    studentName?: string;
-    university?: string;
-    degreeTitle?: string;
-    graduationDate?: string;
-  };
-}
 
 export default function VerifyDegree() {
   const theme = useMantineTheme();
@@ -41,7 +31,7 @@ export default function VerifyDegree() {
     document: null as File | null,
   });
   const [result, setResult] = useState<VerificationResult | null>(null);
-  const { mutateAsync: verifyDegree, isPending: isVerifying } = useVerifyDegree();
+  const { mutateAsync: verifyDegree, isPending: isVerifying } = useVerifyDegreeMutation();
 
   const handleVerification = async (event: React.FormEvent) => {
     event.preventDefault();

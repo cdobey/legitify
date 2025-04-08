@@ -1,3 +1,5 @@
+import { AuthUser, OrgName, UserRole } from '../users/user.models';
+
 export interface LoginParams {
   email: string;
   password: string;
@@ -14,8 +16,8 @@ export interface RegisterParams {
   email: string;
   password: string;
   username: string;
-  role: 'university' | 'individual' | 'employer';
-  orgName?: string;
+  role: UserRole;
+  orgName?: OrgName;
   // University registration fields
   universityName?: string;
   universityDisplayName?: string;
@@ -24,12 +26,5 @@ export interface RegisterParams {
   universityIds?: string[];
 }
 
-export interface UserProfile {
-  id: string;
-  username: string;
-  email: string;
-  role: string;
-  orgName: string;
-  createdAt: string;
-  updatedAt: string;
-}
+// Make UserProfile an extension of AuthUser
+export type UserProfile = AuthUser;

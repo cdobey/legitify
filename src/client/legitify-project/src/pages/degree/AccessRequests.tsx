@@ -1,3 +1,5 @@
+import { useGrantAccessMutation } from '@/api/degrees/degree.mutations';
+import { useAccessRequestsQuery } from '@/api/degrees/degree.queries';
 import {
   Alert,
   Badge,
@@ -34,13 +36,12 @@ import {
 } from '@tabler/icons-react';
 import { useState } from 'react';
 import { AccessRequest } from '../../api/degrees/degree.models';
-import { useAccessRequests, useGrantAccess } from '../../api/degrees/degree.queries';
 
 export default function AccessRequests() {
   const { colorScheme } = useMantineColorScheme();
   const theme = useMantineTheme();
-  const { data: requests, isLoading, error, refetch } = useAccessRequests();
-  const grantMutation = useGrantAccess();
+  const { data: requests, isLoading, error, refetch } = useAccessRequestsQuery();
+  const grantMutation = useGrantAccessMutation();
   const [activeTab, setActiveTab] = useState<string | null>('all');
 
   // Organize requests by status

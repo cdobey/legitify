@@ -1,22 +1,25 @@
+import crypto from 'crypto';
 import dotenv from 'dotenv';
 import { Request, RequestHandler, Response } from 'express';
 import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import '../config/env';
+import { getGateway } from '../config/gateway';
+import prisma from '../prisma/client';
+import { AuthUser, RequestWithUser } from '../types/user.types';
 
 // Configure dotenv to use server.env instead of .env
 dotenv.config({ path: path.resolve(__dirname, '../../server.env') });
 
-import crypto from 'crypto';
-import { v4 as uuidv4 } from 'uuid';
-import '../config/env'; // Import our environment helper
-import { getGateway } from '../config/gateway';
-import prisma from '../prisma/client';
+// Constants
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+const FABRIC_CHANNEL = process.env.FABRIC_CHANNEL || 'legitifychannel';
+const FABRIC_CHAINCODE = process.env.FABRIC_CHAINCODE || 'degreeCC';
 
 // Helper to compute SHA256
 function sha256(buffer: Buffer): string {
   return crypto.createHash('sha256').update(buffer).digest('hex');
 }
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
 interface DegreeDetails {
   email: string;
@@ -31,17 +34,69 @@ interface DegreeDetails {
   additionalNotes?: string;
 }
 
+// Helper function to interact with Fabric network
+async function submitFabricTransaction(
+  userId: string,
+  orgName: string,
+  transactionName: string,
+  ...args: string[]
+): Promise<void> {
+  const gateway = await getGateway(userId, orgName.toLowerCase());
+  try {
+    const network = await gateway.getNetwork(FABRIC_CHANNEL);
+    const contract = network.getContract(FABRIC_CHAINCODE);
+    await contract.submitTransaction(transactionName, ...args);
+  } finally {
+    gateway.disconnect();
+  }
+}
+
+// Helper function to validate and process degree file
+function processDegreeFile(base64File: string): { fileData: Buffer; docHash: string } {
+  const decodedFile = Buffer.from(base64File, 'base64');
+  if (decodedFile.length > MAX_FILE_SIZE) {
+    throw new Error('File size must be less than 5MB');
+  }
+  const fileData = Buffer.from(base64File, 'base64');
+  const docHash = sha256(fileData);
+  return { fileData, docHash };
+}
+
+// Helper function to validate user role
+function validateUserRole(user: AuthUser | undefined, requiredRole: string): void {
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+  if (!user.role) {
+    throw new Error('User role not found');
+  }
+  if (user.role !== requiredRole) {
+    throw new Error(`Only ${requiredRole} can perform this action`);
+  }
+}
+
+// Helper function to get user info safely
+function getUserInfo(req: RequestWithUser): { uid: string; role: string; orgName: string } {
+  if (!req.user) {
+    throw new Error('User not authenticated');
+  }
+  if (!req.user.role) {
+    throw new Error('User role not found');
+  }
+  return {
+    uid: req.user.uid,
+    role: req.user.role,
+    orgName: req.user.orgName || '',
+  };
+}
+
 /**
  * Issues a degree to an individual. Only accessible by users with role 'university'.
  */
 export const issueDegree: RequestHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    // Cast req.user to our expected type
-    const user = req.user as { uid: string; role: string; orgName?: string };
-    if (user.role !== 'university') {
-      res.status(403).json({ error: 'Only university can issue degrees' });
-      return;
-    }
+    const user = req.user as AuthUser;
+    validateUserRole(user, 'university');
 
     const {
       email,
@@ -54,7 +109,7 @@ export const issueDegree: RequestHandler = async (req: Request, res: Response): 
       programDuration,
       gpa,
       additionalNotes = '',
-      universityId, // New parameter for university ID
+      universityId,
     } = req.body as DegreeDetails & { universityId: string };
 
     if (!email || !base64File || !universityId) {
@@ -104,29 +159,20 @@ export const issueDegree: RequestHandler = async (req: Request, res: Response): 
       return;
     }
 
-    // Add file size validation
-    const decodedFile = Buffer.from(base64File, 'base64');
-    if (decodedFile.length > MAX_FILE_SIZE) {
-      res.status(400).json({ error: 'File size must be less than 5MB' });
-      return;
-    }
-
-    const fileData = Buffer.from(base64File, 'base64');
-    const docHash = sha256(fileData);
+    // Process the degree file
+    const { fileData, docHash } = processDegreeFile(base64File);
     const docId = uuidv4();
 
-    // Store hash in Fabric first
-    const gateway = await getGateway(user.uid, user.orgName?.toLowerCase() || '');
-    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifychannel');
-    const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
-
-    await contract.submitTransaction(
+    // Store hash in Fabric
+    await submitFabricTransaction(
+      user.uid,
+      user.orgName || '',
       'IssueDegree',
       docId,
       docHash,
       individual.id,
       user.uid,
-      universityId, // Pass university ID to chaincode
+      universityId,
       degreeTitle,
       fieldOfStudy,
       graduationDate,
@@ -136,15 +182,14 @@ export const issueDegree: RequestHandler = async (req: Request, res: Response): 
       gpa.toString(),
       additionalNotes,
     );
-    gateway.disconnect();
 
-    // Store document in DB (without hash)
+    // Store document in DB
     const newDocument = await prisma.document.create({
       data: {
         id: docId,
         issuedTo: individual.id,
         issuer: user.uid,
-        universityId, // Store university ID in document
+        universityId,
         fileData,
         status: 'issued',
         degreeTitle,
@@ -161,7 +206,7 @@ export const issueDegree: RequestHandler = async (req: Request, res: Response): 
     res.status(201).json({
       message: 'Degree issued',
       docId: newDocument.id,
-      docHash, // Include hash in response for verification
+      docHash,
     });
   } catch (error: unknown) {
     console.error('issueDegree error:', error);
@@ -176,10 +221,8 @@ export const issueDegree: RequestHandler = async (req: Request, res: Response): 
  */
 export const acceptDegree: RequestHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    if (req.user?.role !== 'individual') {
-      res.status(403).json({ error: 'Only individual can accept degrees' });
-      return;
-    }
+    validateUserRole(req.user, 'individual');
+    const userInfo = getUserInfo(req);
 
     const { docId } = req.body;
     if (!docId) {
@@ -191,18 +234,15 @@ export const acceptDegree: RequestHandler = async (req: Request, res: Response):
     const doc = await prisma.document.findUnique({
       where: { id: docId },
     });
-    if (!doc || doc.issuedTo !== req.user.uid) {
+    if (!doc || doc.issuedTo !== userInfo.uid) {
       res.status(404).json({ error: 'Document not found or not owned by you' });
       return;
     }
 
-    const gateway = await getGateway(req.user.uid, req.user.orgName?.toLowerCase() || '');
-    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifychannel');
-    const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
+    // Update Fabric ledger
+    await submitFabricTransaction(userInfo.uid, userInfo.orgName, 'AcceptDegree', docId);
 
-    await contract.submitTransaction('AcceptDegree', docId);
-    gateway.disconnect();
-
+    // Update DB status
     await prisma.document.update({
       where: { id: docId },
       data: { status: 'accepted' },
@@ -220,10 +260,8 @@ export const acceptDegree: RequestHandler = async (req: Request, res: Response):
  */
 export const denyDegree: RequestHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    if (req.user?.role !== 'individual') {
-      res.status(403).json({ error: 'Only individual can deny degrees' });
-      return;
-    }
+    validateUserRole(req.user, 'individual');
+    const userInfo = getUserInfo(req);
 
     const { docId } = req.body;
     if (!docId) {
@@ -231,21 +269,17 @@ export const denyDegree: RequestHandler = async (req: Request, res: Response): P
       return;
     }
 
+    // Check DB ownership
     const doc = await prisma.document.findUnique({
       where: { id: docId },
     });
-    if (!doc || doc.issuedTo !== req.user.uid) {
+    if (!doc || doc.issuedTo !== userInfo.uid) {
       res.status(404).json({ error: 'Document not found or not owned by you' });
       return;
     }
 
-    // Interact with ledger
-    const gateway = await getGateway(req.user.uid, req.user.orgName?.toLowerCase() || '');
-    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifychannel');
-    const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
-
-    await contract.submitTransaction('DenyDegree', docId);
-    gateway.disconnect();
+    // Update Fabric ledger
+    await submitFabricTransaction(userInfo.uid, userInfo.orgName, 'DenyDegree', docId);
 
     // Update DB status
     await prisma.document.update({
@@ -261,14 +295,15 @@ export const denyDegree: RequestHandler = async (req: Request, res: Response): P
 };
 
 /**
- * Employer requests access to a degree document.
+ * Requests access to a degree document. Only accessible by users with role 'employer'.
  */
-export const requestAccess: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+export const requestAccess: RequestHandler = async (
+  req: RequestWithUser,
+  res: Response,
+): Promise<void> => {
   try {
-    if (req.user?.role !== 'employer') {
-      res.status(403).json({ error: 'Only employer can request access' });
-      return;
-    }
+    validateUserRole(req.user, 'employer');
+    const userInfo = getUserInfo(req);
 
     const { docId } = req.body;
     if (!docId) {
@@ -276,26 +311,47 @@ export const requestAccess: RequestHandler = async (req: Request, res: Response)
       return;
     }
 
-    // Check doc existence
+    // Check if document exists and is accepted
     const doc = await prisma.document.findUnique({
       where: { id: docId },
     });
+
     if (!doc) {
       res.status(404).json({ error: 'Document not found' });
       return;
     }
 
-    const requestId = uuidv4();
-    await prisma.request.create({
+    if (doc.status !== 'accepted') {
+      res.status(400).json({ error: 'Document must be accepted by the individual first' });
+      return;
+    }
+
+    // Check if request already exists
+    const existingRequest = await prisma.request.findFirst({
+      where: {
+        documentId: docId,
+        requesterId: userInfo.uid,
+      },
+    });
+
+    if (existingRequest) {
+      res.status(400).json({ error: 'Access request already exists' });
+      return;
+    }
+
+    // Create request
+    const request = await prisma.request.create({
       data: {
-        id: requestId,
-        requesterId: req.user.uid,
+        requesterId: userInfo.uid,
         documentId: docId,
         status: 'pending',
       },
     });
 
-    res.status(201).json({ message: 'Access requested', requestId });
+    res.status(201).json({
+      message: 'Access request created',
+      requestId: request.id,
+    });
   } catch (error: any) {
     console.error('requestAccess error:', error);
     res.status(500).json({ error: error.message });
@@ -303,67 +359,58 @@ export const requestAccess: RequestHandler = async (req: Request, res: Response)
 };
 
 /**
- * Individual grants or denies an employer's access request.
+ * Grants or denies access to a degree document. Only accessible by users with role 'individual'.
  */
-export const grantAccess: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+export const grantAccess: RequestHandler = async (
+  req: RequestWithUser,
+  res: Response,
+): Promise<void> => {
   try {
-    if (req.user?.role !== 'individual') {
-      res.status(403).json({ error: 'Only individual can grant/deny access' });
-      return;
-    }
+    validateUserRole(req.user, 'individual');
+    const userInfo = getUserInfo(req);
 
     const { requestId, granted } = req.body;
-    console.log(
-      `Grant access request: requestId=${requestId}, granted=${granted}, userId=${req.user.uid}`,
-    );
-
-    if (!requestId || granted === undefined) {
-      res.status(400).json({ error: 'Missing requestId or granted flag' });
+    if (!requestId || typeof granted !== 'boolean') {
+      res.status(400).json({ error: 'Missing requestId or granted status' });
       return;
     }
 
-    // Find access request with additional logging
-    console.log('Looking for access request:', requestId);
-    const accessRequest = await prisma.request.findUnique({
+    // Check if request exists and document belongs to user
+    const request = await prisma.request.findUnique({
       where: { id: requestId },
       include: { document: true },
     });
 
-    if (!accessRequest) {
-      console.log('Access request not found:', requestId);
+    if (!request) {
       res.status(404).json({ error: 'Request not found' });
       return;
     }
 
-    console.log('Found access request:', {
-      requestId: accessRequest.id,
-      documentId: accessRequest.documentId,
-      requesterId: accessRequest.requesterId,
-      documentOwnerId: accessRequest.document.issuedTo,
-    });
-
-    // Check if user owns the document
-    if (accessRequest.document.issuedTo !== req.user.uid) {
-      console.log(
-        `Ownership mismatch: document owner=${accessRequest.document.issuedTo}, current user=${req.user.uid}`,
-      );
-      res.status(403).json({ error: 'You do not own this document' });
+    if (request.document.issuedTo !== userInfo.uid) {
+      res.status(403).json({ error: 'Not authorized to grant access to this document' });
       return;
     }
 
     // Update request status
-    const newStatus = granted ? 'granted' : 'denied';
-    console.log(`Updating access request ${requestId} status to: ${newStatus}`);
-
-    await prisma.request.update({
+    const updatedRequest = await prisma.request.update({
       where: { id: requestId },
-      data: { status: newStatus },
+      data: { status: granted ? 'granted' : 'denied' },
     });
 
-    console.log(`Access request ${requestId} successfully updated to ${newStatus}`);
+    // If granted, update Fabric ledger
+    if (granted) {
+      await submitFabricTransaction(
+        userInfo.uid,
+        userInfo.orgName,
+        'GrantAccess',
+        request.documentId,
+        request.requesterId,
+      );
+    }
 
     res.json({
-      message: `Access ${granted ? 'granted' : 'denied'} for request ${requestId}`,
+      message: `Access ${granted ? 'granted' : 'denied'}`,
+      request: updatedRequest,
     });
   } catch (error: any) {
     console.error('grantAccess error:', error);
