@@ -42,6 +42,7 @@ model University {
   affiliations Affiliation[] @relation("UniversityAffiliation")
   joinRequests UniversityJoinRequest[] @relation("UniversityJoinTarget")
   members      User[]       @relation("UniversityMembers")
+  documents    Document[]   @relation("UniversityDocuments")
 
   @@unique([name, ownerId])
 }
@@ -53,6 +54,7 @@ model Affiliation {
   universityId String
   role         String    @default("student") // student, admin, etc.
   status       AffiliationStatus @default(pending)
+  initiatedBy  String?   @default("student") // Who initiated: "student" or "university"
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -74,6 +76,7 @@ model Document {
   
   // University that issued the degree
   universityId     String?
+  university       University?    @relation("UniversityDocuments", fields: [universityId], references: [id])
   
   // Academic detail fields
   degreeTitle      String?        // e.g., "Bachelor of Science"

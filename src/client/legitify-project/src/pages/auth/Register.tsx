@@ -302,7 +302,7 @@ const Register = () => {
       return (
         <>
           <Text mb="md">
-            You can request to join universities. This is optional and can be done later.
+            You can request to join universities now or do it later from your dashboard.
           </Text>
 
           <MultiSelect
@@ -310,7 +310,7 @@ const Register = () => {
               value: uni.id,
               label: `${uni.displayName} (by ${uni.owner?.username || 'Unknown'})`,
             }))}
-            label="Request to Join Universities"
+            label="Request to Join Universities (Optional)"
             placeholder={
               isLoadingUniversities ? 'Loading universities...' : 'Select one or more universities'
             }
@@ -323,7 +323,8 @@ const Register = () => {
           />
 
           <Text size="sm" color="dimmed" mb="lg">
-            Your requests will need to be approved by university administrators.
+            Your requests will need to be approved by university administrators. You can also make
+            these requests later from your dashboard.
           </Text>
         </>
       );

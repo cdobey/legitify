@@ -541,17 +541,25 @@ export const getMyDegrees: RequestHandler = async (req: Request, res: Response):
             orgName: true,
           },
         },
+        university: {
+          select: {
+            displayName: true,
+            name: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
       },
     });
 
-    const formattedDocs = documents.map((doc: any) => ({
+    const formattedDocs = documents.map(doc => ({
       docId: doc.id,
-      issuer: doc.issuerUser.orgName,
+      // Use the university name if available, otherwise fallback to issuer organization name
+      issuer: doc.university?.displayName || doc.issuerUser.orgName,
       status: doc.status,
       issueDate: doc.createdAt,
+      universityId: doc.universityId,
     }));
 
     res.json(formattedDocs);
@@ -658,7 +666,7 @@ export const verifyDegreeDocument: RequestHandler = async (
 };
 
 /**
- * Get all records from the blockchain ledger
+ * Get all records from the blockchain ledger for a specific university
  */
 export const getAllLedgerRecords: RequestHandler = async (
   req: Request,
@@ -670,15 +678,37 @@ export const getAllLedgerRecords: RequestHandler = async (
       return;
     }
 
+    // Get the university ID for the current user
+    const university = await prisma.university.findFirst({
+      where: {
+        ownerId: req.user.uid,
+      },
+    });
+
+    if (!university) {
+      res.status(404).json({ error: 'University not found for this user' });
+      return;
+    }
+
     const gateway = await getGateway(req.user.uid, req.user.orgName?.toLowerCase() || '');
     const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifychannel');
     const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
 
-    const result = await contract.evaluateTransaction('GetAllRecords');
+    // Call the GetUniversityRecords function with the university ID
+    // instead of GetAllRecords to get only records for this university
+    const result = await contract.evaluateTransaction('GetUniversityRecords', university.id);
     const records = JSON.parse(result.toString());
     gateway.disconnect();
 
-    res.json(records);
+    // Enrich the records with university display names, but use only the current university
+    const enrichedRecords = records.map((record: any) => {
+      return {
+        ...record,
+        universityName: university?.displayName || 'Unknown University',
+      };
+    });
+
+    res.json(enrichedRecords);
   } catch (error: any) {
     console.error('getAllLedgerRecords error:', error);
     res.status(500).json({ error: error.message });
@@ -764,7 +794,7 @@ export const getAccessibleDegrees: RequestHandler = async (
 
     console.log(`Fetching accessible degrees for employer: ${req.user.uid}`);
 
-    // Get all the requests where this employer has been granted access
+    // Now we can directly include the university relation
     const accessRequests = await prisma.request.findMany({
       where: {
         requesterId: req.user.uid,
@@ -784,6 +814,11 @@ export const getAccessibleDegrees: RequestHandler = async (
                 email: true,
               },
             },
+            university: {
+              select: {
+                displayName: true,
+              },
+            },
           },
         },
       },
@@ -791,11 +826,11 @@ export const getAccessibleDegrees: RequestHandler = async (
 
     console.log(`Found ${accessRequests.length} accessible documents for employer ${req.user.uid}`);
 
-    // Format the response
+    // Format the response, using university name when available
     const accessibleDocs = accessRequests.map(request => ({
       requestId: request.id,
       docId: request.documentId,
-      issuer: request.document.issuerUser.orgName,
+      issuer: request.document.university?.displayName || request.document.issuerUser.orgName,
       owner: {
         name: request.document.issuedToUser.username,
         email: request.document.issuedToUser.email,
@@ -825,9 +860,22 @@ export const getRecentIssuedDegrees: RequestHandler = async (
       return;
     }
 
+    // Get the university ID for the current user
+    const university = await prisma.university.findFirst({
+      where: {
+        ownerId: req.user.uid,
+      },
+    });
+
+    if (!university) {
+      res.status(404).json({ error: 'University not found for this user' });
+      return;
+    }
+
+    // Now we can directly include the university relation
     const recentDegrees = await prisma.document.findMany({
       where: {
-        issuer: req.user.uid,
+        universityId: university.id,
       },
       include: {
         issuedToUser: {
@@ -836,19 +884,26 @@ export const getRecentIssuedDegrees: RequestHandler = async (
             email: true,
           },
         },
+        university: {
+          select: {
+            displayName: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
       },
-      take: 10, // Limit to 10 most recent
+      take: 10,
     });
 
-    const formattedDocs = recentDegrees.map((doc: any) => ({
+    const formattedDocs = recentDegrees.map(doc => ({
       docId: doc.id,
       issuedTo: doc.issuedToUser.email,
       recipientName: doc.issuedToUser.username,
       status: doc.status,
       issueDate: doc.createdAt,
+      // Now we can get the display name directly from the relation
+      university: doc.university?.displayName || 'Unknown University',
     }));
 
     res.json(formattedDocs);

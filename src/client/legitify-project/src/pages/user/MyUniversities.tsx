@@ -8,13 +8,22 @@ import {
   Grid,
   Group,
   LoadingOverlay,
-  Modal,
-  Table,
+  Select,
+  Stack,
   Text,
   Title,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconAlertCircle, IconCheck, IconSchool, IconX } from '@tabler/icons-react';
+import { modals } from '@mantine/modals';
+import { notifications } from '@mantine/notifications';
+import {
+  IconAlertCircle,
+  IconCheck,
+  IconClockHour4,
+  IconPlus,
+  IconSchool,
+  IconX,
+} from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -33,6 +42,7 @@ interface Affiliation {
   userId: string;
   universityId: string;
   status: 'pending' | 'active' | 'rejected';
+  initiatedBy?: 'student' | 'university'; // Add this field to track who initiated
   university: University;
 }
 
@@ -41,8 +51,13 @@ export default function MyUniversities() {
   const [pendingAffiliations, setPendingAffiliations] = useState<Affiliation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [selectedUniversity, setSelectedUniversity] = useState<University | null>(null);
   const [detailsOpened, detailsHandlers] = useDisclosure(false);
+  const [joinModalOpened, joinModalHandlers] = useDisclosure(false);
+  const [availableUniversities, setAvailableUniversities] = useState<University[]>([]);
+  const [selectedUniversityId, setSelectedUniversityId] = useState<string | null>(null);
+  const [joinRequestLoading, setJoinRequestLoading] = useState(false);
   const { api, refreshSession } = useAuth();
 
   useEffect(() => {
@@ -112,100 +127,258 @@ export default function MyUniversities() {
     }
   };
 
-  const openDetails = (university: University) => {
-    setSelectedUniversity(university);
-    detailsHandlers.open();
+  // Add function to fetch available universities for join modal
+  const fetchAvailableUniversities = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/universities');
+
+      // Filter out universities the user is already affiliated with or has pending requests to
+      const alreadyAffiliatedIds = new Set([
+        ...universities.map(uni => uni.id),
+        ...pendingAffiliations.map(aff => aff.universityId),
+      ]);
+
+      const filteredUniversities = response.data.filter(
+        (uni: University) => !alreadyAffiliatedIds.has(uni.id),
+      );
+
+      setAvailableUniversities(filteredUniversities);
+    } catch (err: any) {
+      console.error('Failed to fetch universities:', err);
+      setError('Failed to load available universities');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const renderUniversityCard = (university: University) => {
-    // Add null check to prevent errors
-    if (!university) return null;
-
-    return (
-      <Grid.Col key={university.id} span={{ base: 12, md: 6, lg: 4 }}>
-        <Card p="lg" radius="md" withBorder shadow="sm">
-          <Group justify="space-between" mb="xs">
-            <Group>
-              <IconSchool size={24} color="var(--mantine-color-blue-6)" />
-              <Title order={4}>{university.displayName || 'University Name Unavailable'}</Title>
-            </Group>
-          </Group>
-
-          <Text size="sm" color="dimmed" mb="md">
-            {university.description || 'No description available'}
+  // Open join modal and fetch available universities
+  const openJoinModal = () => {
+    fetchAvailableUniversities();
+    modals.open({
+      title: 'Request to Join University',
+      size: 'md',
+      children: (
+        <Stack>
+          <Text size="sm" mb="md">
+            Select a university to request affiliation with. Your request will need to be approved
+            by the university administrator.
           </Text>
 
-          <Button variant="outline" fullWidth onClick={() => openDetails(university)}>
-            View Details
-          </Button>
-        </Card>
-      </Grid.Col>
-    );
+          <Select
+            label="Select University"
+            placeholder="Choose a university"
+            data={availableUniversities.map(uni => ({
+              value: uni.id,
+              label: `${uni.displayName} (by ${uni.owner?.username || 'Unknown'})`,
+            }))}
+            value={selectedUniversityId}
+            onChange={setSelectedUniversityId}
+            searchable
+            nothingFoundMessage="No universities found"
+            mb="xl"
+          />
+
+          <Group justify="flex-end">
+            <Button variant="subtle" onClick={() => modals.closeAll()}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleJoinRequest}
+              loading={joinRequestLoading}
+              disabled={!selectedUniversityId}
+            >
+              Submit Request
+            </Button>
+          </Group>
+        </Stack>
+      ),
+    });
   };
+
+  // Handle join request submission
+  const handleJoinRequest = async () => {
+    if (!selectedUniversityId) {
+      notifications.show({
+        title: 'Error',
+        message: 'Please select a university',
+        color: 'red',
+      });
+      return;
+    }
+
+    try {
+      setJoinRequestLoading(true);
+      setError(null);
+
+      await refreshSession();
+      await api.post('/university/request-join', {
+        universityId: selectedUniversityId,
+      });
+
+      notifications.show({
+        title: 'Success',
+        message: 'Join request submitted successfully. Waiting for approval.',
+        color: 'green',
+      });
+
+      // Refresh pending affiliations to show the new request
+      const pendingResponse = await api.get('/university/pending-affiliations');
+      if (Array.isArray(pendingResponse.data)) {
+        setPendingAffiliations(pendingResponse.data.filter(Boolean));
+      }
+
+      modals.closeAll();
+      setSelectedUniversityId(null);
+    } catch (err: any) {
+      console.error('Failed to send join request:', err);
+      notifications.show({
+        title: 'Error',
+        message: err.message || 'Failed to send join request',
+        color: 'red',
+      });
+    } finally {
+      setJoinRequestLoading(false);
+    }
+  };
+
+  const openDetailsModal = (university: University) => {
+    modals.open({
+      title: university.displayName,
+      size: 'lg',
+      children: (
+        <Stack>
+          <Text size="sm" c="dimmed">
+            Description
+          </Text>
+          <Text>{university.description || 'No description available.'}</Text>
+
+          <Text size="sm" c="dimmed" mt="md">
+            Administrator
+          </Text>
+          <Text>{university.owner?.username || 'Unknown'}</Text>
+        </Stack>
+      ),
+    });
+  };
+
+  // Add a function to get status badge color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'green';
+      case 'pending':
+        return 'yellow';
+      case 'rejected':
+        return 'red';
+      default:
+        return 'gray';
+    }
+  };
+
+  // Add a function to get status icon
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <IconCheck size={16} />;
+      case 'pending':
+        return <IconClockHour4 size={16} />;
+      case 'rejected':
+        return <IconX size={16} />;
+      default:
+        return null;
+    }
+  };
+
+  const renderUniversityCard = (university: University) => (
+    <Grid.Col span={{ base: 12, sm: 6, md: 4 }} key={university.id}>
+      <Card shadow="sm" padding="lg" radius="md" withBorder>
+        <Card.Section bg="gray.1" p="md">
+          <Group justify="space-between" align="flex-start">
+            <Box>
+              <Text fw={500} size="lg" mb={5}>
+                {university.displayName}
+              </Text>
+              <Badge color="blue" variant="light">
+                Active Member
+              </Badge>
+            </Box>
+            <IconSchool size={24} color="var(--mantine-color-blue-6)" />
+          </Group>
+        </Card.Section>
+
+        <Text mt="md" size="sm" c="dimmed" lineClamp={2}>
+          {university.description || 'No description available.'}
+        </Text>
+
+        <Button
+          variant="light"
+          color="blue"
+          fullWidth
+          mt="md"
+          radius="md"
+          onClick={() => openDetailsModal(university)}
+        >
+          View Details
+        </Button>
+      </Card>
+    </Grid.Col>
+  );
 
   const renderPendingAffiliations = () => {
     if (!pendingAffiliations.length) return null;
 
     return (
-      <Box mt="xl">
-        <Title order={3} mb="md">
-          Pending Affiliation Requests
+      <>
+        <Title order={3} mt="xl" mb="md">
+          Pending Affiliations
         </Title>
         <Grid>
-          {pendingAffiliations.map(affiliation => {
-            // Add null check to prevent errors
-            if (!affiliation || !affiliation.university) return null;
-
-            return (
-              <Grid.Col key={affiliation.id} span={{ base: 12, md: 6, lg: 4 }}>
-                <Card p="lg" radius="md" withBorder shadow="sm">
-                  <Group justify="apart" mb="xs">
-                    <Group>
-                      <IconSchool size={24} color="var(--mantine-color-gray-6)" />
-                      <Title order={4}>
-                        {affiliation.university.displayName || 'University Name Unavailable'}
-                      </Title>
-                    </Group>
-                    <Badge color="yellow">Pending</Badge>
+          {pendingAffiliations.map(affiliation => (
+            <Grid.Col span={{ base: 12, sm: 6, md: 4 }} key={affiliation.id}>
+              <Card shadow="sm" padding="lg" radius="md" withBorder>
+                <Card.Section bg="gray.1" p="md">
+                  <Group justify="space-between" align="flex-start">
+                    <Box>
+                      <Text fw={500} size="lg" mb={5}>
+                        {affiliation.university.displayName}
+                      </Text>
+                      <Badge
+                        color={getStatusColor(affiliation.status)}
+                        variant="light"
+                        leftSection={getStatusIcon(affiliation.status)}
+                      >
+                        {affiliation.status.charAt(0).toUpperCase() + affiliation.status.slice(1)}
+                      </Badge>
+                    </Box>
+                    <IconSchool size={24} color="var(--mantine-color-yellow-6)" />
                   </Group>
+                </Card.Section>
 
-                  <Text size="sm" color="dimmed" mb="md">
-                    {affiliation.university.owner
-                      ? `Request from ${affiliation.university.owner.username}`
-                      : 'University has requested to add you'}
-                  </Text>
-
-                  <Group grow>
-                    <Button
-                      color="red"
-                      variant="light"
-                      leftSection={<IconX size={16} />}
-                      onClick={() => handleAffiliationResponse(affiliation.id, false)}
-                    >
-                      Decline
-                    </Button>
-                    <Button
-                      color="green"
-                      leftSection={<IconCheck size={16} />}
-                      onClick={() => handleAffiliationResponse(affiliation.id, true)}
-                    >
-                      Accept
-                    </Button>
-                  </Group>
-                </Card>
-              </Grid.Col>
-            );
-          })}
+                <Text mt="md" size="sm" c="dimmed" lineClamp={2}>
+                  {affiliation.university.description || 'No description available.'}
+                </Text>
+              </Card>
+            </Grid.Col>
+          ))}
         </Grid>
-      </Box>
+      </>
     );
   };
 
   return (
     <Container size="lg">
-      <Title order={2} mb="xl">
-        My Universities
-      </Title>
+      <Group justify="space-between" align="center" mb="xl">
+        <Title order={2}>My Universities</Title>
+        <Button
+          leftSection={<IconPlus size={16} />}
+          onClick={openJoinModal}
+          variant="light"
+          color="blue"
+        >
+          Request to Join University
+        </Button>
+      </Group>
 
       <Box style={{ position: 'relative' }}>
         <LoadingOverlay visible={loading} />
@@ -216,9 +389,16 @@ export default function MyUniversities() {
           </Alert>
         )}
 
+        {success && (
+          <Alert icon={<IconCheck size="1rem" />} title="Success" color="green" mb="md">
+            {success}
+          </Alert>
+        )}
+
         {!loading && !error && universities.length === 0 && !pendingAffiliations.length && (
           <Alert icon={<IconSchool size="1rem" />} title="No Universities" color="blue">
-            You are not affiliated with any universities yet.
+            You are not affiliated with any universities yet. Use the button above to request to
+            join a university.
           </Alert>
         )}
 
@@ -233,56 +413,6 @@ export default function MyUniversities() {
 
         {renderPendingAffiliations()}
       </Box>
-
-      {/* University Details Modal */}
-      <Modal
-        opened={detailsOpened}
-        onClose={detailsHandlers.close}
-        title={selectedUniversity?.displayName || 'University Details'}
-        size="lg"
-      >
-        {selectedUniversity && (
-          <>
-            <Group mb="md">
-              <IconSchool size={24} color="var(--mantine-color-blue-6)" />
-              <Title order={3}>{selectedUniversity.displayName}</Title>
-            </Group>
-
-            {selectedUniversity.description && (
-              <Text mb="lg">{selectedUniversity.description}</Text>
-            )}
-
-            <Table mb="md">
-              <Table.Tbody>
-                <Table.Tr>
-                  <Table.Td>
-                    <strong>University ID</strong>
-                  </Table.Td>
-                  <Table.Td>{selectedUniversity.id}</Table.Td>
-                </Table.Tr>
-                <Table.Tr>
-                  <Table.Td>
-                    <strong>Identifier</strong>
-                  </Table.Td>
-                  <Table.Td>{selectedUniversity.name}</Table.Td>
-                </Table.Tr>
-                {selectedUniversity.owner && (
-                  <Table.Tr>
-                    <Table.Td>
-                      <strong>Managed By</strong>
-                    </Table.Td>
-                    <Table.Td>{selectedUniversity.owner.username}</Table.Td>
-                  </Table.Tr>
-                )}
-              </Table.Tbody>
-            </Table>
-
-            <Text size="sm" color="dimmed" mb="md">
-              You are currently affiliated with this university and can receive degrees from them.
-            </Text>
-          </>
-        )}
-      </Modal>
     </Container>
   );
 }

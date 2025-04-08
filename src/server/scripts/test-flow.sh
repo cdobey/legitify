@@ -380,17 +380,29 @@ ISSUE_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/degree/issue" \
     \"gpa\": 3.8,
     \"additionalNotes\": \"Test degree for integration testing\"
 }")
-echo "Issue Response: $ISSUE_RESPONSE"
+echo "Issue response: $ISSUE_RESPONSE"
+
+# Extract the document ID from the response
 DOC_ID=$(extract_doc_id "$ISSUE_RESPONSE")
 echo "Degree issued with DOC_ID: $DOC_ID"
 
+# Check if DOC_ID was successfully extracted
 if [ -z "$DOC_ID" ]; then
-    echo -e "${RED}Failed to issue degree. Response: $ISSUE_RESPONSE${NC}"
-    echo -e "${YELLOW}This could be due to:${NC}"
-    echo -e "${YELLOW}1. Database permissions issues${NC}"
-    echo -e "${YELLOW}2. Invalid user token${NC}"
-    echo -e "${YELLOW}3. Missing wallet identity setup${NC}"
-    echo -e "${YELLOW}Check server logs for details.${NC}"
+    # Try an alternative extraction method if the first one failed
+    DOC_ID=$(echo $ISSUE_RESPONSE | grep -o '"docId":"[^"]*' | grep -o '[^"]*$')
+    echo "Extracted DOC_ID using alternative method: $DOC_ID"
+    
+    # If still empty, try another format that might appear in the response
+    if [ -z "$DOC_ID" ]; then
+        DOC_ID=$(echo $ISSUE_RESPONSE | grep -o '"docId":[^,}]*' | cut -d':' -f2 | tr -d ' "')
+        echo "Extracted DOC_ID using second alternative method: $DOC_ID"
+    fi
+fi
+
+# Final check to ensure we have a document ID
+if [ -z "$DOC_ID" ]; then
+    echo -e "${RED}Failed to extract document ID from response:${NC} $ISSUE_RESPONSE"
+    echo -e "${YELLOW}Skipping remaining steps that require the document ID.${NC}"
     exit 1
 fi
 
@@ -461,6 +473,19 @@ if [[ "$VERIFY_RESPONSE" == *"error"* ]]; then
     echo -e "${YELLOW}Check server logs for more details.${NC}"
 else
     echo -e "${GREEN}Degree verified successfully!${NC}"
+fi
+
+# The test is complete, let's also check if university names display correctly
+echo -e "\n${BLUE}8. Checking university information in degree records...${NC}"
+MY_DEGREES_RESPONSE=$(curl -s -X GET "$LEGITIFY_API_URL/degree/list" \
+-H "Authorization: Bearer $INDIVIDUAL_TOKEN")
+echo "Individual's degrees: $MY_DEGREES_RESPONSE"
+
+# Verify the university info is properly displayed
+if [[ "$MY_DEGREES_RESPONSE" == *"Test University"* ]]; then
+    echo -e "${GREEN}University name displayed correctly in degree records!${NC}"
+else
+    echo -e "${YELLOW}Note: University name might not be showing up correctly in degree records${NC}"
 fi
 
 echo -e "\n${GREEN}Test flow completed successfully!${NC}"

@@ -21,12 +21,15 @@ import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
 import {
   IconAlertCircle,
-  IconBuildingBank,
   IconCheck,
+  IconInfoCircle,
   IconPlus,
   IconSchool,
+  IconSend,
   IconUpload,
   IconUser,
+  IconUserPlus,
+  IconX,
 } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -59,12 +62,26 @@ interface RegisterStudentForm {
   password: string;
 }
 
+interface Affiliation {
+  id: string;
+  userId: string;
+  status: string;
+  initiatedBy?: 'student' | 'university';
+  createdAt: string;
+  user: {
+    id: string;
+    username: string;
+    email: string;
+  };
+}
+
 export default function ManageUniversities() {
   const [university, setUniversity] = useState<University | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [allUniversities, setAllUniversities] = useState<University[]>([]);
+  const [pendingAffiliations, setPendingAffiliations] = useState<Affiliation[]>([]);
   const [createModalOpened, { open: openCreateModal, close: closeCreateModal }] =
     useDisclosure(false);
   const [joinModalOpened, { open: openJoinModal, close: closeJoinModal }] = useDisclosure(false);
@@ -133,6 +150,9 @@ export default function ManageUniversities() {
             university.affiliations = [];
           }
           setUniversity(university);
+
+          // Fetch pending affiliations for this university after loading university
+          fetchPendingAffiliations(university.id);
         } else {
           setError('No university found. Please create one.');
         }
@@ -146,6 +166,18 @@ export default function ManageUniversities() {
 
     fetchUniversity();
   }, []);
+
+  // Function to fetch pending affiliations
+  const fetchPendingAffiliations = async (universityId: string) => {
+    try {
+      const { data } = await api.get(`/university/${universityId}/pending-affiliations`);
+      setPendingAffiliations(data || []);
+    } catch (err: any) {
+      console.error('Failed to fetch pending affiliations:', err);
+      // Don't set error - this isn't a critical error, just show empty
+      setPendingAffiliations([]);
+    }
+  };
 
   // Create a new university
   const handleCreateUniversity = async (values: {
@@ -287,6 +319,231 @@ export default function ManageUniversities() {
     closeCsvModal();
   };
 
+  const renderDashboardInfo = () => {
+    if (!university) return null;
+
+    return (
+      <Group>
+        <Card withBorder shadow="sm" p="lg" mb="xl" style={{ flex: 1 }}>
+          <Title order={3} mb="md">
+            University Dashboard
+          </Title>
+          <Group>
+            <Text fw={600}>University name:</Text>
+            <Text>{university.displayName}</Text>
+          </Group>
+          <Group>
+            <Text fw={600}>ID:</Text>
+            <Text>{university.id}</Text>
+          </Group>
+          <Group>
+            <Text fw={600}>Students:</Text>
+            <Text>{university.affiliations?.filter(a => a.status === 'active')?.length || 0}</Text>
+          </Group>
+          <Group>
+            <Text fw={600}>Pending Requests:</Text>
+            <Text>{university.affiliations?.filter(a => a.status === 'pending')?.length || 0}</Text>
+          </Group>
+        </Card>
+
+        <Card withBorder shadow="sm" p="lg" mb="xl" style={{ flex: 1 }}>
+          <Title order={3} mb="md">
+            Recent Activity
+          </Title>
+          {/* You can add recent activity here - like degrees issued */}
+          <Text c="dimmed">Recent degree issuance will display here</Text>
+        </Card>
+      </Group>
+    );
+  };
+
+  // Add these functions to separate different types of requests
+
+  const renderStudentJoinRequests = () => {
+    if (!university || !pendingAffiliations) return null;
+
+    // Filter for only student-initiated requests
+    const studentInitiatedRequests = pendingAffiliations.filter(
+      affiliation => affiliation.initiatedBy === 'student' || !affiliation.initiatedBy,
+    );
+
+    if (studentInitiatedRequests.length === 0) {
+      return (
+        <Alert color="blue" icon={<IconInfoCircle size={16} />} title="No Join Requests">
+          No students have requested to join your university.
+        </Alert>
+      );
+    }
+
+    return (
+      <>
+        <Text mb="md">
+          These students have requested to join your university. Review and respond to their
+          requests.
+        </Text>
+
+        <Table>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Student</Table.Th>
+              <Table.Th>Email</Table.Th>
+              <Table.Th>Requested On</Table.Th>
+              <Table.Th>Actions</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {studentInitiatedRequests.map(affiliation => (
+              <Table.Tr key={affiliation.id}>
+                <Table.Td>{affiliation.user.username}</Table.Td>
+                <Table.Td>{affiliation.user.email}</Table.Td>
+                <Table.Td>{new Date(affiliation.createdAt).toLocaleDateString()}</Table.Td>
+                <Table.Td>
+                  <Group>
+                    <Button
+                      size="xs"
+                      color="green"
+                      leftSection={<IconCheck size={16} />}
+                      onClick={() => handleAffiliationResponse(affiliation.id, true)}
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      size="xs"
+                      color="red"
+                      variant="outline"
+                      leftSection={<IconX size={16} />}
+                      onClick={() => handleAffiliationResponse(affiliation.id, false)}
+                    >
+                      Reject
+                    </Button>
+                  </Group>
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </>
+    );
+  };
+
+  const renderPendingInvitations = () => {
+    if (!university || !pendingAffiliations) return null;
+
+    // Filter for only university-initiated requests
+    const universityInitiatedRequests = pendingAffiliations.filter(
+      affiliation => affiliation.initiatedBy === 'university',
+    );
+
+    if (universityInitiatedRequests.length === 0) {
+      return (
+        <Alert color="blue" icon={<IconInfoCircle size={16} />} title="No Pending Invitations">
+          You haven't sent any invitations that are still pending.
+        </Alert>
+      );
+    }
+
+    return (
+      <>
+        <Text mb="md">
+          You've invited these students to join your university. They haven't responded yet.
+        </Text>
+
+        <Table>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Student</Table.Th>
+              <Table.Th>Email</Table.Th>
+              <Table.Th>Invited On</Table.Th>
+              <Table.Th>Status</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {universityInitiatedRequests.map(affiliation => (
+              <Table.Tr key={affiliation.id}>
+                <Table.Td>{affiliation.user.username}</Table.Td>
+                <Table.Td>{affiliation.user.email}</Table.Td>
+                <Table.Td>{new Date(affiliation.createdAt).toLocaleDateString()}</Table.Td>
+                <Table.Td>
+                  <Badge color="yellow">Awaiting Response</Badge>
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </>
+    );
+  };
+
+  // Handle responding to an affiliation request
+  const handleAffiliationResponse = async (affiliationId: string, accept: boolean) => {
+    try {
+      setLoading(true);
+      setError(null);
+      setSuccess(null);
+
+      await api.post('/university/respond-affiliation', {
+        affiliationId,
+        accept,
+      });
+
+      // Show success message
+      setSuccess(`Request ${accept ? 'approved' : 'rejected'} successfully`);
+
+      // Refresh pending affiliations
+      if (university) {
+        fetchPendingAffiliations(university.id);
+      }
+    } catch (err: any) {
+      console.error('Failed to respond to affiliation:', err);
+      setError(err.message || 'Failed to respond to affiliation');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to render the form for adding students
+  const renderAddStudentForm = () => (
+    <Box mb="xl">
+      <Title order={4} mb="md">
+        Add Student
+      </Title>
+      <form onSubmit={newStudentForm.onSubmit(handleAddStudent)}>
+        <Group align="flex-end">
+          <TextInput
+            label="Student Email"
+            placeholder="Enter student's email address"
+            required
+            style={{ flex: 1 }}
+            {...newStudentForm.getInputProps('email')}
+          />
+          <Button type="submit">Invite Student</Button>
+        </Group>
+      </form>
+
+      <Divider my="xl" />
+
+      <Group justify="space-between" mb="md">
+        <Title order={4}>Register New Students</Title>
+        <Group>
+          <Button
+            leftSection={<IconUserPlus size={16} />}
+            onClick={openRegisterModal}
+            variant="light"
+          >
+            Register Individual
+          </Button>
+          <Button leftSection={<IconUpload size={16} />} onClick={openCsvModal} variant="light">
+            Batch Upload
+          </Button>
+        </Group>
+      </Group>
+
+      <Text size="sm" c="dimmed">
+        Register students with new accounts that are automatically affiliated with your university.
+      </Text>
+    </Box>
+  );
+
   // If no university exists yet, show options to create or join
   if (!loading && !university) {
     return (
@@ -393,7 +650,7 @@ export default function ManageUniversities() {
         <LoadingOverlay visible={loading} />
 
         <Title order={2} mb="lg">
-          Manage University
+          Manage University: {university?.displayName || ''}
         </Title>
 
         {error && (
@@ -410,52 +667,36 @@ export default function ManageUniversities() {
 
         {university && (
           <>
-            <Card withBorder shadow="sm" p="lg" mb="xl">
-              <Group mb="md">
-                <IconBuildingBank size={24} />
-                <Title order={3}>{university.displayName}</Title>
-              </Group>
-
-              <Text c="dimmed" mb="lg">
-                {university.description}
-              </Text>
-
-              <Table>
-                <Table.Tbody>
-                  <Table.Tr>
-                    <Table.Td>
-                      <strong>Internal ID</strong>
-                    </Table.Td>
-                    <Table.Td>{university.id}</Table.Td>
-                  </Table.Tr>
-                  <Table.Tr>
-                    <Table.Td>
-                      <strong>Identifier</strong>
-                    </Table.Td>
-                    <Table.Td>{university.name}</Table.Td>
-                  </Table.Tr>
-                  <Table.Tr>
-                    <Table.Td>
-                      <strong>Students</strong>
-                    </Table.Td>
-                    <Table.Td>
-                      {university.affiliations?.filter(a => a.status === 'active')?.length || 0}
-                    </Table.Td>
-                  </Table.Tr>
-                </Table.Tbody>
-              </Table>
-            </Card>
+            {renderDashboardInfo()}
 
             <Tabs defaultValue="students">
               <Tabs.List mb="md">
                 <Tabs.Tab value="students" leftSection={<IconUser size={14} />}>
                   Students
                 </Tabs.Tab>
-                <Tabs.Tab value="pending" leftSection={<IconSchool size={14} />}>
-                  Pending Requests
+                <Tabs.Tab
+                  value="join-requests"
+                  leftSection={<IconSchool size={14} />}
+                  rightSection={
+                    pendingAffiliations?.filter(a => a.initiatedBy === 'student' || !a.initiatedBy)
+                      .length > 0 ? (
+                      <Badge size="sm" color="red">
+                        {
+                          pendingAffiliations.filter(
+                            a => a.initiatedBy === 'student' || !a.initiatedBy,
+                          ).length
+                        }
+                      </Badge>
+                    ) : null
+                  }
+                >
+                  Join Requests
                 </Tabs.Tab>
-                <Tabs.Tab value="register" leftSection={<IconPlus size={14} />}>
-                  Register Students
+                <Tabs.Tab value="sent-invitations" leftSection={<IconSend size={14} />}>
+                  Sent Invitations
+                </Tabs.Tab>
+                <Tabs.Tab value="add-student" leftSection={<IconUserPlus size={14} />}>
+                  Add Student
                 </Tabs.Tab>
               </Tabs.List>
 
@@ -508,59 +749,16 @@ export default function ManageUniversities() {
                 )}
               </Tabs.Panel>
 
-              <Tabs.Panel value="pending">
-                <Title order={4} mb="md">
-                  Pending Affiliation Requests
-                </Title>
-                {!university.affiliations ||
-                university.affiliations.filter(a => a.status === 'pending').length === 0 ? (
-                  <Text c="dimmed">No pending requests.</Text>
-                ) : (
-                  <Table>
-                    <Table.Thead>
-                      <Table.Tr>
-                        <Table.Th>Username</Table.Th>
-                        <Table.Th>Email</Table.Th>
-                        <Table.Th>Status</Table.Th>
-                      </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
-                      {university.affiliations
-                        .filter(a => a.status === 'pending')
-                        .map(affiliation => (
-                          <Table.Tr key={affiliation.id}>
-                            <Table.Td>{affiliation.user.username}</Table.Td>
-                            <Table.Td>{affiliation.user.email}</Table.Td>
-                            <Table.Td>Pending</Table.Td>
-                          </Table.Tr>
-                        ))}
-                    </Table.Tbody>
-                  </Table>
-                )}
+              <Tabs.Panel value="join-requests" pt="md">
+                {renderStudentJoinRequests()}
               </Tabs.Panel>
 
-              <Tabs.Panel value="register">
-                <Title order={4} mb="md">
-                  Register New Students
-                </Title>
+              <Tabs.Panel value="sent-invitations" pt="md">
+                {renderPendingInvitations()}
+              </Tabs.Panel>
 
-                <Group mb="xl">
-                  <Button leftSection={<IconPlus size={16} />} onClick={openRegisterModal}>
-                    Register Individual Student
-                  </Button>
-                  <Button
-                    leftSection={<IconUpload size={16} />}
-                    variant="outline"
-                    onClick={openCsvModal}
-                  >
-                    Batch Upload via CSV
-                  </Button>
-                </Group>
-
-                <Text c="dimmed" size="sm" mb="md">
-                  Students registered directly will be automatically affiliated with your
-                  university.
-                </Text>
+              <Tabs.Panel value="add-student" pt="md">
+                {renderAddStudentForm()}
               </Tabs.Panel>
             </Tabs>
 

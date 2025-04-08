@@ -1,8 +1,9 @@
-import FabricCAServices from "fabric-ca-client";
-import { X509Identity } from "fabric-network";
-import fs from "fs";
-import path from "path";
-import { DatabaseWallet } from "./db-wallet";
+import { OrgName } from '@prisma/client';
+import FabricCAServices from 'fabric-ca-client';
+import { X509Identity } from 'fabric-network';
+import fs from 'fs';
+import path from 'path';
+import { DatabaseWallet } from './db-wallet';
 
 interface OrgConfig {
   name: string;
@@ -12,38 +13,49 @@ interface OrgConfig {
 
 const orgConfigs: { [key: string]: OrgConfig } = {
   orguniversity: {
-    name: "orguniversity",
-    mspId: "OrgUniversityMSP",
-    caName: "ca.orguniversity.com",
+    name: 'orguniversity',
+    mspId: 'OrgUniversityMSP',
+    caName: 'ca.orguniversity.com',
   },
   orgemployer: {
-    name: "orgemployer",
-    mspId: "OrgEmployerMSP",
-    caName: "ca.orgemployer.com",
+    name: 'orgemployer',
+    mspId: 'OrgEmployerMSP',
+    caName: 'ca.orgemployer.com',
   },
   orgindividual: {
-    name: "orgindividual",
-    mspId: "OrgIndividualMSP",
-    caName: "ca.orgindividual.com",
+    name: 'orgindividual',
+    mspId: 'OrgIndividualMSP',
+    caName: 'ca.orgindividual.com',
   },
 };
 
-export async function enrollUser(
+// Enroll user with CA, optionally adding university attributes
+export const enrollUser = async (
   userId: string,
-  orgName: string
-): Promise<void> {
+  orgName: OrgName,
+  universityId?: string,
+): Promise<void> => {
   try {
+    console.log(`Enrolling user ${userId} with org ${orgName}...`);
+
+    // For university users, we'll add university ID as an attribute
+    const attributes = [];
+    if (orgName === OrgName.orguniversity && universityId) {
+      attributes.push({
+        name: 'universityId',
+        value: universityId,
+        ecert: true,
+      });
+    }
+
     const org = orgConfigs[orgName.toLowerCase()];
     if (!org) {
       throw new Error(`Invalid organization: ${orgName}`);
     }
 
     // Load the network configuration
-    const ccpPath = path.resolve(
-      __dirname,
-      `../connectionProfiles/connection-${org.name}.json`
-    );
-    const ccp = JSON.parse(fs.readFileSync(ccpPath, "utf8"));
+    const ccpPath = path.resolve(__dirname, `../connectionProfiles/connection-${org.name}.json`);
+    const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));
 
     // Create a new CA client for interacting with the CA
     const caURL = ccp.certificateAuthorities[org.caName].url;
@@ -55,44 +67,63 @@ export async function enrollUser(
     // Check if user already exists in wallet
     const userIdentity = await wallet.get(userId);
     if (userIdentity) {
-      console.log(
-        `Identity for ${userId} already exists in ${org.name} wallet`
-      );
+      console.log(`Identity for ${userId} already exists in ${org.name} wallet`);
       return;
     }
 
     // Get admin identity for registering user
     const adminIdentity = await wallet.get(`${org.name}admin`);
     if (!adminIdentity) {
-      throw new Error(
-        `Admin for ${org.name} must be enrolled before registering users`
-      );
+      throw new Error(`Admin for ${org.name} must be enrolled before registering users`);
     }
 
     // Register and enroll the user
-    const provider = wallet
-      .getProviderRegistry()
-      .getProvider(adminIdentity.type);
-    const adminUser = await provider.getUserContext(
-      adminIdentity,
-      `${org.name}admin`
-    );
+    const provider = wallet.getProviderRegistry().getProvider(adminIdentity.type);
+    const adminUser = await provider.getUserContext(adminIdentity, `${org.name}admin`);
 
-    // Register user with CA
-    const secret = await ca.register(
-      {
-        affiliation: `${org.name}.department1`,
-        enrollmentID: userId,
-        role: "client",
-      },
-      adminUser
-    );
+    // Register the user using the admin identity
+    // First let's check if we need to handle attributes
+    const registrationRequest: {
+      enrollmentID: string;
+      enrollmentSecret: string;
+      role: string;
+      affiliation: string;
+      maxEnrollments: number;
+      attrs?: { name: string; value: string; ecert: boolean }[];
+    } = {
+      enrollmentID: userId,
+      enrollmentSecret: '',
+      role: 'client',
+      affiliation: org.name,
+      maxEnrollments: -1,
+    };
 
-    // Enroll user with CA
-    const enrollment = await ca.enroll({
+    // Add attributes if needed
+    if (attributes.length > 0) {
+      registrationRequest['attrs'] = attributes;
+    }
+
+    // Register the user with the CA
+    const secret = await ca.register(registrationRequest, adminUser);
+
+    // When enrolling, include the requested attributes in the certificate
+    const enrollmentRequest: FabricCAServices.IEnrollmentRequest = {
       enrollmentID: userId,
       enrollmentSecret: secret,
-    });
+    };
+
+    // If we have university attributes, request them to be included in the certificate
+    if (attributes.length > 0) {
+      enrollmentRequest.attr_reqs = [
+        {
+          name: 'universityId',
+          optional: false,
+        },
+      ];
+    }
+
+    // Enroll the user with the attribute request
+    const enrollment = await ca.enroll(enrollmentRequest);
 
     // Create user identity
     const x509Identity: X509Identity = {
@@ -101,20 +132,35 @@ export async function enrollUser(
         privateKey: enrollment.key.toBytes(),
       },
       mspId: org.mspId,
-      type: "X.509",
+      type: 'X.509',
     };
 
     // Import identity into wallet
     await wallet.put(userId, x509Identity);
 
     console.log(
-      `Successfully enrolled user ${userId} with ${org.name} and imported into database wallet`
+      `Successfully enrolled user ${userId} with ${org.name} and imported into database wallet`,
     );
   } catch (error) {
     console.error(`Failed to enroll user ${userId}: ${error}`);
     throw error;
   }
-}
+};
+
+// Add a utility function to update university-specific identity when a university is created
+export const updateUniversityIdentity = async (
+  userId: string,
+  universityId: string,
+): Promise<void> => {
+  try {
+    // Re-enroll the user with the university ID attribute
+    await enrollUser(userId, OrgName.orguniversity, universityId);
+    console.log(`Updated identity for user ${userId} with universityId ${universityId}`);
+  } catch (error) {
+    console.error(`Failed to update university identity: ${error}`);
+    throw error;
+  }
+};
 
 /**
  * Validates that all prerequisites for Fabric connectivity are in place
@@ -129,7 +175,7 @@ export function validateFabricPrerequisites(orgName: string): {
     // Check if connection profile exists
     const connectionProfilePath = path.resolve(
       __dirname,
-      `../connectionProfiles/connection-${orgName}.json`
+      `../connectionProfiles/connection-${orgName}.json`,
     );
 
     if (!fs.existsSync(connectionProfilePath)) {
@@ -151,7 +197,7 @@ export function validateFabricPrerequisites(orgName: string): {
 
     // Parse connection profile to validate content
     try {
-      const ccp = JSON.parse(fs.readFileSync(connectionProfilePath, "utf8"));
+      const ccp = JSON.parse(fs.readFileSync(connectionProfilePath, 'utf8'));
 
       // Check for required elements
       if (!ccp.peers || !ccp.orderers || !ccp.certificateAuthorities) {
@@ -163,7 +209,7 @@ export function validateFabricPrerequisites(orgName: string): {
 
       // Check that EC2 IP is used, not localhost
       const peerKey = Object.keys(ccp.peers)[0];
-      if (peerKey && ccp.peers[peerKey].url.includes("test")) {
+      if (peerKey && ccp.peers[peerKey].url.includes('test')) {
         return {
           success: false,
           error: `Connection profile contains test URLs. Run fetch-fabric-resources.js with proper EC2_IP environment variable.`,
@@ -172,9 +218,7 @@ export function validateFabricPrerequisites(orgName: string): {
     } catch (e) {
       return {
         success: false,
-        error: `Failed to parse connection profile: ${
-          e instanceof Error ? e.message : String(e)
-        }`,
+        error: `Failed to parse connection profile: ${e instanceof Error ? e.message : String(e)}`,
       };
     }
 
@@ -182,9 +226,7 @@ export function validateFabricPrerequisites(orgName: string): {
   } catch (error) {
     return {
       success: false,
-      error: `Validation failed: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
+      error: `Validation failed: ${error instanceof Error ? error.message : String(error)}`,
     };
   }
 }
@@ -195,7 +237,7 @@ export function validateFabricPrerequisites(orgName: string): {
  * @returns Promise resolving to connection status
  */
 export async function testFabricConnection(
-  orgName: string
+  orgName: string,
 ): Promise<{ connected: boolean; error?: string }> {
   try {
     // Validate prerequisites
@@ -206,24 +248,19 @@ export async function testFabricConnection(
 
     // First try to ping the organizations's peer
     let peerPort;
-    if (orgName === "orguniversity") peerPort = 7051;
-    else if (orgName === "orgemployer") peerPort = 8051;
-    else if (orgName === "orgindividual") peerPort = 9051;
-    else return { connected: false, error: "Unknown organization" };
+    if (orgName === 'orguniversity') peerPort = 7051;
+    else if (orgName === 'orgemployer') peerPort = 8051;
+    else if (orgName === 'orgindividual') peerPort = 9051;
+    else return { connected: false, error: 'Unknown organization' };
 
     // Use node's built-in DNS to check hostname resolution
-    const dns = require("dns");
+    const dns = require('dns');
     try {
       // Try to resolve peer hostname
       const peerHostname = `peer0.${orgName}.com`;
       await new Promise((resolve, reject) => {
         dns.lookup(peerHostname, (err: Error, address: string) => {
-          if (err)
-            reject(
-              new Error(
-                `Cannot resolve hostname ${peerHostname}: ${err.message}`
-              )
-            );
+          if (err) reject(new Error(`Cannot resolve hostname ${peerHostname}: ${err.message}`));
           else resolve(address);
         });
       });
@@ -233,8 +270,7 @@ export async function testFabricConnection(
         error:
           `Hostname resolution issue: ${
             dnsErr instanceof Error ? dnsErr.message : String(dnsErr)
-          }\n` +
-          `Add entries to /etc/hosts using: node src/server/scripts/update-hosts.js`,
+          }\n` + `Add entries to /etc/hosts using: node src/server/scripts/update-hosts.js`,
       };
     }
 
@@ -255,10 +291,7 @@ export async function testFabricConnection(
  * @returns The path to the connection profile
  */
 export function getConnectionProfilePath(orgName: string): string {
-  return path.resolve(
-    __dirname,
-    `../connectionProfiles/connection-${orgName}.json`
-  );
+  return path.resolve(__dirname, `../connectionProfiles/connection-${orgName}.json`);
 }
 
 /**
@@ -267,9 +300,6 @@ export function getConnectionProfilePath(orgName: string): string {
  * @param certType The certificate type (ca or tlsca)
  * @returns The path to the certificate
  */
-export function getCertificatePath(
-  orgName: string,
-  certType: "ca" | "tlsca"
-): string {
+export function getCertificatePath(orgName: string, certType: 'ca' | 'tlsca'): string {
   return path.resolve(__dirname, `../certificates/${orgName}/${certType}.pem`);
 }

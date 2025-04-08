@@ -62,6 +62,17 @@ export const createUniversity: RequestHandler = async (
       },
     });
 
+    // Import necessary functions for fabric identity update
+    const { updateUniversityIdentity } = await import('../utils/fabric-helpers');
+
+    // Update the user's fabric identity to include this university ID
+    try {
+      await updateUniversityIdentity(req.user.uid, university.id);
+    } catch (fabricError) {
+      console.error('Failed to update Fabric identity with university attribute:', fabricError);
+      // Continue anyway as the university was created in the database
+    }
+
     res.status(201).json({
       message: 'University created successfully',
       university,
@@ -187,120 +198,77 @@ export const addStudentToUniversity: RequestHandler = async (
   res: Response,
 ): Promise<void> => {
   try {
-    // This endpoint can now be used by both university users OR individuals joining a university
-    const { universityId, studentId, studentEmail } = req.body;
-
-    if (!universityId) {
-      res.status(400).json({ error: 'University ID is required' });
+    if (req.user?.role !== 'university') {
+      res.status(403).json({ error: 'Only university users can add students' });
       return;
     }
 
-    // If university user is adding a student
-    if (req.user?.role === 'university') {
-      // Determine student ID - either directly provided or looked up by email
-      let actualStudentId = studentId;
-
-      // If studentId is not provided but studentEmail is, look up the student by email
-      if (!actualStudentId && studentEmail) {
-        const student = await prisma.user.findUnique({
-          where: { email: studentEmail },
-        });
-
-        if (!student) {
-          res.status(404).json({ error: 'Student with this email not found' });
-          return;
-        }
-
-        if (student.role !== 'individual') {
-          res.status(400).json({ error: 'User is not an individual/student' });
-          return;
-        }
-
-        actualStudentId = student.id;
-      }
-
-      // If we still don't have a student ID, return an error
-      if (!actualStudentId) {
-        res.status(400).json({ error: 'Student ID or email is required' });
-        return;
-      }
-
-      // Check if the university exists and is owned by this user
-      const university = await prisma.university.findFirst({
-        where: {
-          id: universityId,
-          ownerId: req.user.uid,
-        },
-      });
-
-      if (!university) {
-        res.status(404).json({ error: 'University not found or not owned by you' });
-        return;
-      }
-
-      // CHANGE: Create a pending affiliation that requires approval
-      // instead of automatically activating it
-      const affiliation = await prisma.affiliation.upsert({
-        where: {
-          userId_universityId: {
-            userId: actualStudentId,
-            universityId,
-          },
-        },
-        update: {
-          status: 'pending', // Changed from 'active' to 'pending'
-        },
-        create: {
-          userId: actualStudentId,
-          universityId,
-          status: 'pending', // Changed from 'active' to 'pending'
-        },
-      });
-
-      res.json({
-        message: 'Affiliation request sent to student',
-        affiliation,
-      });
+    const { universityId, studentEmail } = req.body;
+    if (!universityId || !studentEmail) {
+      res.status(400).json({ error: 'Missing universityId or studentEmail' });
+      return;
     }
-    // If individual user is joining a university
-    else if (req.user?.role === 'individual') {
-      // Check if the university exists
-      const university = await prisma.university.findUnique({
-        where: {
-          id: universityId,
-        },
-      });
 
-      if (!university) {
-        res.status(404).json({ error: 'University not found' });
-        return;
-      }
+    // Check if university exists and is owned by this user
+    const university = await prisma.university.findFirst({
+      where: {
+        id: universityId,
+        ownerId: req.user.uid,
+      },
+    });
 
-      // Create or update the affiliation
-      const affiliation = await prisma.affiliation.upsert({
-        where: {
-          userId_universityId: {
-            userId: req.user.uid,
-            universityId,
-          },
-        },
-        update: {
-          status: 'pending', // Set to pending for university approval
-        },
-        create: {
-          userId: req.user.uid,
-          universityId,
-          status: 'pending', // Pending university approval
-        },
-      });
-
-      res.json({
-        message: 'University affiliation request submitted',
-        affiliation,
-      });
-    } else {
-      res.status(403).json({ error: 'Only university users or individuals can use this endpoint' });
+    if (!university) {
+      res.status(404).json({ error: 'University not found or not owned by you' });
+      return;
     }
+
+    // Find student by email
+    const student = await prisma.user.findFirst({
+      where: {
+        email: studentEmail,
+        role: 'individual',
+      },
+    });
+
+    if (!student) {
+      res.status(404).json({ error: 'Student not found' });
+      return;
+    }
+
+    // Check if affiliation already exists
+    const existingAffiliation = await prisma.affiliation.findFirst({
+      where: {
+        userId: student.id,
+        universityId,
+      },
+    });
+
+    if (existingAffiliation) {
+      // Return appropriate message based on status
+      if (existingAffiliation.status === 'active') {
+        res.status(400).json({ error: 'Student is already affiliated with this university' });
+      } else if (existingAffiliation.status === 'pending') {
+        res.status(400).json({ error: 'Affiliation request is already pending' });
+      } else {
+        res.status(400).json({ error: 'Previous affiliation request was rejected' });
+      }
+      return;
+    }
+
+    // Create the affiliation request with university as initiator
+    const affiliation = await prisma.affiliation.create({
+      data: {
+        userId: student.id,
+        universityId,
+        status: 'pending',
+        initiatedBy: 'university', // Add this field to track who initiated the request
+      },
+    });
+
+    res.status(201).json({
+      message: 'Student affiliation request sent successfully',
+      affiliation,
+    });
   } catch (error: any) {
     console.error('addStudentToUniversity error:', error);
     res.status(500).json({ error: error.message });
@@ -526,25 +494,24 @@ export const getPendingAffiliations: RequestHandler = async (
       return;
     }
 
-    const affiliations = await prisma.affiliation.findMany({
+    const pendingAffiliations = await prisma.affiliation.findMany({
       where: {
         userId: req.user.uid,
         status: 'pending',
       },
       include: {
         university: {
-          include: {
-            owner: {
-              select: {
-                username: true,
-              },
-            },
+          select: {
+            id: true,
+            name: true,
+            displayName: true,
+            description: true,
           },
         },
       },
     });
 
-    res.json(affiliations);
+    res.json(pendingAffiliations);
   } catch (error: any) {
     console.error('getPendingAffiliations error:', error);
     res.status(500).json({ error: error.message });
@@ -553,58 +520,70 @@ export const getPendingAffiliations: RequestHandler = async (
 
 /**
  * Respond to a university affiliation request
+ * This function now properly handles authorization based on who initiated the request
  */
 export const respondToAffiliation: RequestHandler = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
-    if (req.user?.role !== 'individual') {
-      res.status(403).json({ error: 'Only individual users can respond to affiliation requests' });
-      return;
-    }
-
     const { affiliationId, accept } = req.body;
-    console.log(
-      `Handling affiliation response: affiliationId=${affiliationId}, accept=${accept}, userId=${req.user.uid}`,
-    );
+    const userId = req.user?.uid;
 
-    if (!affiliationId) {
-      res.status(400).json({ error: 'Affiliation ID is required' });
+    if (!affiliationId || accept === undefined || !userId) {
+      res.status(400).json({ error: 'Missing required fields' });
       return;
     }
 
-    // Find the affiliation and verify it belongs to this user
-    console.log(`Looking for affiliation with id=${affiliationId} for user=${req.user.uid}`);
-    const affiliation = await prisma.affiliation.findFirst({
-      where: {
-        id: affiliationId,
-        userId: req.user.uid,
-        status: 'pending',
+    // Find the affiliation request first
+    const affiliationRequest = await prisma.affiliation.findUnique({
+      where: { id: affiliationId },
+      include: {
+        university: true,
       },
     });
 
-    if (!affiliation) {
-      console.log(`No pending affiliation found for id=${affiliationId} and user=${req.user.uid}`);
-      res.status(404).json({ error: 'Pending affiliation request not found' });
+    if (!affiliationRequest) {
+      res.status(404).json({ error: 'Affiliation request not found' });
       return;
     }
 
-    console.log(`Found affiliation: ${JSON.stringify(affiliation)}`);
+    // FIX THE AUTHORIZATION LOGIC HERE
 
-    // Update the affiliation status
+    // Case 1: If university initiated the request, student should be able to respond
+    if (affiliationRequest.initiatedBy === 'university') {
+      // Verify responder is the student who received the invitation
+      if (req.user?.role !== 'individual' || affiliationRequest.userId !== req.user.uid) {
+        res.status(403).json({
+          error: 'Only the invited student can respond to this invitation',
+        });
+        return;
+      }
+    }
+
+    // Case 2: If student initiated the request, university should be able to respond
+    else if (affiliationRequest.initiatedBy === 'student' || !affiliationRequest.initiatedBy) {
+      // Verify responder is the university owner
+      if (
+        req.user?.role !== 'university' ||
+        affiliationRequest.university.ownerId !== req.user.uid
+      ) {
+        res.status(403).json({
+          error: 'Only the university owner can respond to this join request',
+        });
+        return;
+      }
+    }
+
+    // Update the status based on the response
     const newStatus = accept ? 'active' : 'rejected';
-    console.log(`Updating affiliation ${affiliationId} status to: ${newStatus}`);
-
     const updatedAffiliation = await prisma.affiliation.update({
       where: { id: affiliationId },
       data: { status: newStatus },
     });
 
-    console.log(`Affiliation updated: ${JSON.stringify(updatedAffiliation)}`);
-
-    // Record this on the blockchain if accepted
-    if (accept) {
+    // If accepted, record this affiliation on the blockchain
+    if (accept && req.user) {
       try {
         const gateway = await getGateway(req.user.uid, req.user.orgName?.toLowerCase() || '');
         const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifychannel');
@@ -612,22 +591,78 @@ export const respondToAffiliation: RequestHandler = async (
 
         await contract.submitTransaction(
           'AddUniversityAffiliation',
-          req.user.uid,
-          affiliation.universityId,
+          affiliationRequest.userId,
+          affiliationRequest.universityId,
         );
         gateway.disconnect();
       } catch (fabricError) {
         console.error('Failed to record affiliation on blockchain:', fabricError);
+        // Continue anyway since the database update was successful
       }
     }
 
     res.json({
-      message: accept ? 'Affiliation accepted' : 'Affiliation rejected',
-      status: newStatus,
+      message: `Affiliation request ${accept ? 'accepted' : 'rejected'}`,
       affiliation: updatedAffiliation,
     });
   } catch (error: any) {
     console.error('respondToAffiliation error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
+ * Get pending affiliation requests for a university
+ * Only university owners should be able to see these
+ */
+export const getUniversityPendingAffiliations: RequestHandler = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    if (req.user?.role !== 'university') {
+      res.status(403).json({ error: 'Only university users can access this endpoint' });
+      return;
+    }
+
+    const universityId = req.params.universityId;
+    if (!universityId) {
+      res.status(400).json({ error: 'Missing universityId parameter' });
+      return;
+    }
+
+    // Check if user owns this university
+    const university = await prisma.university.findFirst({
+      where: {
+        id: universityId,
+        ownerId: req.user.uid,
+      },
+    });
+
+    if (!university) {
+      res.status(403).json({ error: 'You do not own this university' });
+      return;
+    }
+
+    // Get pending affiliations for this university
+    const pendingAffiliations = await prisma.affiliation.findMany({
+      where: {
+        universityId,
+        status: 'pending',
+      },
+      include: {
+        user: {
+          select: {
+            username: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    res.json(pendingAffiliations);
+  } catch (error: any) {
+    console.error('getUniversityPendingAffiliations error:', error);
     res.status(500).json({ error: error.message });
   }
 };

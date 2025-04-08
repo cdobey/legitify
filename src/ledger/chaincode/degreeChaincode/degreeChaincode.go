@@ -78,6 +78,19 @@ func (dc *DegreeChaincode) IssueDegree(ctx contractapi.TransactionContextInterfa
 		AdditionalNotes: additionalNotes,
 	}
 	data, _ := json.Marshal(record)
+	
+	// Create a composite key for university-based indexing
+	uniDocKey, err := ctx.GetStub().CreateCompositeKey("university~doc", []string{universityId, docID})
+	if err != nil {
+		return fmt.Errorf("failed to create composite key: %v", err)
+	}
+	
+	// Store the university index key
+	if err := ctx.GetStub().PutState(uniDocKey, []byte{0}); err != nil {
+		return fmt.Errorf("failed to put university index: %v", err)
+	}
+	
+	// Store the main document record
 	return ctx.GetStub().PutState(docID, data)
 }
 
@@ -224,30 +237,51 @@ func (dc *DegreeChaincode) GetAllRecords(ctx contractapi.TransactionContextInter
     return records, nil
 }
 
-// GetUniversityRecords retrieves all degree records for a specific university
+// GetUniversityRecords retrieves all degree records for a specific university using composite keys
 func (dc *DegreeChaincode) GetUniversityRecords(ctx contractapi.TransactionContextInterface, universityId string) ([]*DegreeRecord, error) {
-    resultsIterator, err := ctx.GetStub().GetStateByRange("", "")
+    // Use composite key to efficiently query documents by university
+    iterator, err := ctx.GetStub().GetStateByPartialCompositeKey("university~doc", []string{universityId})
     if err != nil {
-        return nil, fmt.Errorf("failed to get records: %v", err)
+        return nil, fmt.Errorf("failed to get university records: %v", err)
     }
-    defer resultsIterator.Close()
+    defer iterator.Close()
 
     var records []*DegreeRecord
-    for resultsIterator.HasNext() {
-        queryResult, err := resultsIterator.Next()
+    for iterator.HasNext() {
+        queryResult, err := iterator.Next()
         if err != nil {
             return nil, fmt.Errorf("failed to get next record: %v", err)
         }
-
+        
+        // Extract the document ID from the composite key
+        _, compositeKeyParts, err := ctx.GetStub().SplitCompositeKey(queryResult.Key)
+        if err != nil {
+            return nil, fmt.Errorf("failed to split composite key: %v", err)
+        }
+        
+        if len(compositeKeyParts) < 2 {
+            continue // Skip if we couldn't extract the document ID
+        }
+        
+        docID := compositeKeyParts[1]
+        
+        // Get the actual document
+        docBytes, err := ctx.GetStub().GetState(docID)
+        if err != nil {
+            return nil, fmt.Errorf("failed to get document %s: %v", docID, err)
+        }
+        
+        // Skip if document doesn't exist (shouldn't happen, but just in case)
+        if len(docBytes) == 0 {
+            continue
+        }
+        
         var record DegreeRecord
-        if err := json.Unmarshal(queryResult.Value, &record); err != nil {
+        if err := json.Unmarshal(docBytes, &record); err != nil {
             return nil, fmt.Errorf("failed to unmarshal record: %v", err)
         }
         
-        // Filter by university ID
-        if record.UniversityID == universityId {
-            records = append(records, &record)
-        }
+        records = append(records, &record)
     }
 
     return records, nil

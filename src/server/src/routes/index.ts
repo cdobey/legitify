@@ -32,6 +32,7 @@ import {
   getMyUniversities,
   getPendingAffiliations,
   getStudentUniversities,
+  getUniversityPendingAffiliations,
   getUniversityStudents,
   registerStudent,
   requestJoinUniversity,
@@ -1063,6 +1064,37 @@ router.post('/university/request-join', authMiddleware, requestJoinUniversity);
  *         description: Internal server error
  */
 router.post('/university/respond-join', authMiddleware, respondToJoinRequest);
+
+/**
+ * @openapi
+ * /university/{universityId}/pending-affiliations:
+ *   get:
+ *     summary: Get pending affiliations for a specific university
+ *     tags:
+ *       - University
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: universityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of pending affiliations for this university
+ *       403:
+ *         description: Forbidden - only university owners can view pending requests
+ *       404:
+ *         description: University not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get(
+  '/university/:universityId/pending-affiliations',
+  authMiddleware,
+  getUniversityPendingAffiliations,
+);
 
 // Swagger Documentation Route
 router.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
