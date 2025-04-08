@@ -1,13 +1,16 @@
 import {
   addStudentToUniversity,
-  createUniversity,
-  getMyUniversities,
   getPendingAffiliations,
   getStudentUniversities,
   getUniversityStudents,
   registerStudent,
-  requestJoinUniversity,
   respondToAffiliation,
+} from '@/controllers/university-affiliation.controller';
+import {
+  createUniversity,
+  getAllUniversities, // Import the new controller function
+  getMyUniversities,
+  requestJoinUniversity,
 } from '@/controllers/university.controller';
 import { authMiddleware } from '@/middleware/auth';
 import { Router } from 'express';
@@ -288,5 +291,20 @@ router.post('/respond-affiliation', authMiddleware, respondToAffiliation);
  *         description: Internal server error
  */
 router.post('/request-join', authMiddleware, requestJoinUniversity);
+
+/**
+ * @openapi
+ * /university/all:
+ *   get:
+ *     summary: Get all universities
+ *     tags:
+ *       - University
+ *     responses:
+ *       200:
+ *         description: List of all universities
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/all', getAllUniversities); // Changed from '/' to '/all' for better naming
 
 export default router;

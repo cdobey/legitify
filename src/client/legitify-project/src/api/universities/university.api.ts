@@ -38,7 +38,7 @@ export const requestJoinUniversity = (params: JoinUniversityParams) =>
 export const getAllUniversities = () =>
   apiCall<UniversitiesResponse>({
     method: 'get',
-    path: '/universities',
+    path: '/university/all',
   });
 
 export const addStudentToUniversity = (params: AddStudentParams) =>

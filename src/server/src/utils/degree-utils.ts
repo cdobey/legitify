@@ -1,0 +1,69 @@
+import { getGateway } from '@/config/gateway';
+import { AuthUser } from '@/types/user.types';
+import crypto from 'crypto';
+
+// Constants
+export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+export const FABRIC_CHANNEL = process.env.FABRIC_CHANNEL || 'legitifychannel';
+export const FABRIC_CHAINCODE = process.env.FABRIC_CHAINCODE || 'degreeCC';
+
+// Helper to compute SHA256
+export function sha256(buffer: Buffer): string {
+  return crypto.createHash('sha256').update(buffer).digest('hex');
+}
+
+// Helper function to interact with Fabric network
+export async function submitFabricTransaction(
+  userId: string,
+  orgName: string,
+  transactionName: string,
+  ...args: string[]
+): Promise<void> {
+  const gateway = await getGateway(userId, orgName.toLowerCase());
+  try {
+    const network = await gateway.getNetwork(FABRIC_CHANNEL);
+    const contract = network.getContract(FABRIC_CHAINCODE);
+    await contract.submitTransaction(transactionName, ...args);
+  } finally {
+    gateway.disconnect();
+  }
+}
+
+// Helper function to validate and process degree file
+export function processDegreeFile(base64File: string): { fileData: Buffer; docHash: string } {
+  const decodedFile = Buffer.from(base64File, 'base64');
+  if (decodedFile.length > MAX_FILE_SIZE) {
+    throw new Error('File size must be less than 5MB');
+  }
+  const fileData = Buffer.from(base64File, 'base64');
+  const docHash = sha256(fileData);
+  return { fileData, docHash };
+}
+
+// Helper function to validate user role
+export function validateUserRole(user: AuthUser | undefined, requiredRole: string): void {
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+  if (!user.role) {
+    throw new Error('User role not found');
+  }
+  if (user.role !== requiredRole) {
+    throw new Error(`Only ${requiredRole} can perform this action`);
+  }
+}
+
+// Helper function to get user info safely
+export function getUserInfo(req: any): { uid: string; role: string; orgName: string } {
+  if (!req.user) {
+    throw new Error('User not authenticated');
+  }
+  if (!req.user.role) {
+    throw new Error('User role not found');
+  }
+  return {
+    uid: req.user.uid,
+    role: req.user.role,
+    orgName: req.user.orgName || '',
+  };
+}

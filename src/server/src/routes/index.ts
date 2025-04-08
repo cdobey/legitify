@@ -16,6 +16,5 @@ router.use('/docs', docsRoutes);
 
 // Special routes that don't fit the pattern
 router.use('/', userRoutes);
-router.get('/universities', universityRoutes);
 
 export default router;

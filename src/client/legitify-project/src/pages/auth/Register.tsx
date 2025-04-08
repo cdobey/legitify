@@ -85,7 +85,7 @@ const Register = () => {
         try {
           setIsLoadingUniversities(true);
           const baseUrl = import.meta.env.VITE_API_URL || '/api';
-          const response = await axios.get(`${baseUrl}/universities`);
+          const response = await axios.get(`${baseUrl}/university/all`);
           setUniversities(response.data);
         } catch (error) {
           console.error('Failed to fetch universities:', error);
