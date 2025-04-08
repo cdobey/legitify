@@ -1,4 +1,4 @@
-import {
+/*import {
   Alert,
   Button,
   Card,
@@ -77,6 +77,159 @@ const Login = () => {
             onChange={e => setFormData({ ...formData, password: e.target.value })}
             required
             mb="lg"
+          />
+
+          {error && (
+            <Alert
+              color="red"
+              mb="md"
+              radius="md"
+              icon={<IconAlertCircle size={16} />}
+              title="Authentication Error"
+            >
+              {error}
+            </Alert>
+          )}
+
+          <Button
+            type="submit"
+            fullWidth
+            loading={isLoading}
+            color="primaryBlue"
+            size="md"
+            rightSection={<IconArrowRight size={18} />}
+          >
+            Sign In
+          </Button>
+
+          <Group justify="center" mt="md">
+            <Text size="sm" c="dimmed">
+              Don't have an account?
+            </Text>
+            <Text
+              component={Link}
+              to="/register"
+              size="sm"
+              fw={500}
+              style={{ color: 'var(--primary-blue)' }}
+            >
+              Register now
+            </Text>
+          </Group>
+        </form>
+      </Card>
+    </Container>
+  );
+};
+
+export default Login;*/
+
+import {
+  Alert,
+  Button,
+  Card,
+  Container,
+  Group,
+  PasswordInput,
+  Select,
+  Text,
+  TextInput,
+  Title,
+} from '@mantine/core';
+import { IconAlertCircle, IconArrowRight, IconBuilding, IconLock, IconMail } from '@tabler/icons-react';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+
+const Login = () => {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    organization: '',
+  });
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
+  // This would typically come from an API call
+  const organizations = [
+    { value: 'org1', label: 'Organization 1' },
+    { value: 'org2', label: 'Organization 2' },
+    { value: 'org3', label: 'Organization 3' },
+  ];
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    try {
+
+      if (formData.organization) {
+        localStorage.setItem('selectedOrganization', formData.organization);
+      }
+      // Pass the organization ID along with email and password
+      await login(formData.email, formData.password);
+
+      // Let the auth context handle setting the token and user info
+      console.log('Login successful');
+      navigate('/');
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setError(err.message || 'Failed to login');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Container size="xs" py="xl">
+      <Card
+        shadow="md"
+        padding="xl"
+        radius="lg"
+        withBorder
+        style={{ maxWidth: 450, margin: '0 auto' }}
+      >
+        <Title order={2} ta="center" mb="sm" c="primaryBlue">
+          Welcome Back
+        </Title>
+        <Text size="sm" c="dimmed" ta="center" mb="lg">
+          Enter your credentials to access the system
+        </Text>
+
+        <form onSubmit={handleSubmit}>
+          <TextInput
+            label="Email"
+            placeholder="your@email.com"
+            leftSection={<IconMail size={16} />}
+            value={formData.email}
+            onChange={e => setFormData({ ...formData, email: e.target.value })}
+            required
+            mb="md"
+          />
+          
+          <PasswordInput
+            label="Password"
+            placeholder="Your password"
+            leftSection={<IconLock size={16} />}
+            value={formData.password}
+            onChange={e => setFormData({ ...formData, password: e.target.value })}
+            required
+            mb="md"
+          />
+          
+          <Select
+            label="Organization"
+            placeholder="Select your organization"
+            leftSection={<IconBuilding size={16} />}
+            data={organizations}
+            value={formData.organization}
+            onChange={(value) => setFormData({ ...formData, organization: value || '' })}
+            required
+            mb="lg"
+            searchable
           />
 
           {error && (
