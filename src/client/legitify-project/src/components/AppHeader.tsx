@@ -15,22 +15,22 @@ export default function AppHeader() {
 
   // Just the auth controls, simplified for logged-in users with right alignment
   return (
-    <Group style={{ margin: 0, padding: '0 6px 0 0', justifyContent: 'flex-end', width: '100%' }}>
+    <Group style={{ margin: 0, padding: 0, justifyContent: 'flex-end', width: '100%' }}>
       {user ? (
         <Menu position="bottom-end" shadow="md" withArrow={false}>
           <Menu.Target>
             <Avatar
               color="primaryBlue"
               radius="xl"
-              size={40} // Custom size between md and lg
+              size={40}
               style={{
                 border: `1px solid ${theme.colors.primaryBlue[3]}`,
                 boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                 cursor: 'pointer',
-                marginRight: 0, // Ensure no right margin
+                marginRight: 0,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center', // Center content vertically and horizontally
+                justifyContent: 'center',
               }}
             >
               {user.username.charAt(0).toUpperCase()}
@@ -61,7 +61,7 @@ export default function AppHeader() {
           color="primaryBlue"
           style={{
             padding: '8px 16px',
-            minWidth: '100px', // Ensures minimum width for the button
+            minWidth: '100px',
           }}
         >
           Register

@@ -1,4 +1,4 @@
-import { OrgName, UserRole } from '../users/user.models';
+import { OrgName, User, UserRole } from '../users/user.models';
 
 export interface LoginParams {
   email: string;
@@ -25,3 +25,5 @@ export interface RegisterParams {
   joinUniversityId?: string;
   universityIds?: string[];
 }
+
+export type UserProfile = User;

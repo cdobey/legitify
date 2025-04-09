@@ -1,4 +1,11 @@
 import {
+  useAccessRequestsQuery,
+  useAccessibleDegreesQuery,
+  useLedgerRecordsQuery,
+  useMyDegreesQuery,
+} from '@/api/degrees/degree.queries';
+import { useMyUniversitiesQuery } from '@/api/universities/university.queries';
+import {
   Alert,
   Avatar,
   Badge,
@@ -31,10 +38,25 @@ import {
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
-export default function ProfilePage() {
+export default function SettingsPage() {
   const { user, refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string | null>('profile');
+
+  const { data: userDegrees } = useMyDegreesQuery({ enabled: user?.role === 'individual' });
+  const { data: accessRequests } = useAccessRequestsQuery({ enabled: user?.role === 'individual' });
+  const { data: ledgerRecords } = useLedgerRecordsQuery({
+    enabled: user?.role === 'university',
+  });
+  const { data: universities } = useMyUniversitiesQuery({
+    enabled: user?.role === 'university',
+  });
+  const { data: accessibleDegrees } = useAccessibleDegreesQuery({
+    enabled: user?.role === 'employer',
+  });
+
+  const pendingAccessRequestsCount =
+    accessRequests?.filter(request => request.status === 'pending').length ?? 0;
 
   // Profile form
   const profileForm = useForm({
@@ -139,22 +161,62 @@ export default function ProfilePage() {
       case 'individual':
         return (
           <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-            <StatCard title="My Degrees" value="0" icon={<IconBadge size={24} />} />
-            <StatCard title="Pending Requests" value="0" icon={<IconAlertCircle size={24} />} />
+            <StatCard
+              title="My Degrees"
+              value={userDegrees?.length.toString() || '0'}
+              icon={<IconBadge size={24} />}
+            />
+            <StatCard
+              title="Pending Requests"
+              value={pendingAccessRequestsCount.toString()}
+              icon={<IconAlertCircle size={24} />}
+            />
           </SimpleGrid>
         );
       case 'university':
+        // Count issued degrees from ledger records
+        const issuedDegreesCount = ledgerRecords?.length || 0;
+
+        // Get student count from university affiliations
+        const university = universities?.[0];
+        const studentsCount =
+          university?.affiliations?.filter(a => a.status === 'active')?.length || 0;
+
         return (
           <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-            <StatCard title="Issued Degrees" value="0" icon={<IconBadge size={24} />} />
-            <StatCard title="Students" value="0" icon={<IconUser size={24} />} />
+            <StatCard
+              title="Issued Degrees"
+              value={issuedDegreesCount.toString()}
+              icon={<IconBadge size={24} />}
+            />
+            <StatCard
+              title="Students"
+              value={studentsCount.toString()}
+              icon={<IconUser size={24} />}
+            />
           </SimpleGrid>
         );
       case 'employer':
+        // Get real count of accessible degrees
+        const accessibleDegreesCount = accessibleDegrees?.length || 0;
+
+        // Calculate number of unique individuals (credential owners)
+        const uniqueIndividuals = new Set(
+          accessibleDegrees?.map(degree => degree.owner?.email) || [],
+        ).size;
+
         return (
           <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-            <StatCard title="Verifications" value="0" icon={<IconCheck size={24} />} />
-            <StatCard title="Accessible Degrees" value="0" icon={<IconBadge size={24} />} />
+            <StatCard
+              title="Unique Individuals"
+              value={uniqueIndividuals.toString()}
+              icon={<IconUser size={24} />}
+            />
+            <StatCard
+              title="Accessible Degrees"
+              value={accessibleDegreesCount.toString()}
+              icon={<IconBadge size={24} />}
+            />
           </SimpleGrid>
         );
       default:
@@ -166,7 +228,7 @@ export default function ProfilePage() {
     return (
       <Container size="md" py="xl">
         <Alert color="red" title="Not Authenticated">
-          You need to be logged in to access your profile.
+          You need to be logged in to access your settings.
         </Alert>
       </Container>
     );

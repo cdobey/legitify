@@ -130,7 +130,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (response.token) {
       sessionStorage.setItem('token', response.token);
-      await fetchUserProfile();
+
+      // Wait for profile to be fetched and user to be set
+      try {
+        const { data } = await userProfileQuery.refetch();
+
+        if (data) {
+          // Update state directly to avoid timing issues
+          setUser(data);
+          sessionStorage.setItem('user', JSON.stringify(data));
+        } else {
+          throw new Error('Failed to fetch user profile');
+        }
+      } catch (error) {
+        console.error('Error fetching user profile during login:', error);
+        throw new Error('Failed to complete login process');
+      }
     }
   };
 

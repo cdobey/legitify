@@ -19,6 +19,7 @@ import {
   IconLogout,
   IconSchool,
   IconSearch,
+  IconSettings,
   IconUser,
   IconUserPlus,
 } from '@tabler/icons-react';
@@ -40,7 +41,7 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
     {
       label: 'Home',
       to: user ? '/dashboard' : '/',
-      icon: <IconHome size={collapsed ? 20 : 16} />,
+      icon: <IconHome size={collapsed ? 22 : 18} />,
     },
   ];
 
@@ -49,26 +50,26 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
     {
       label: 'Issue Degree',
       to: '/degree/issue',
-      icon: <IconCertificate size={collapsed ? 20 : 16} />,
+      icon: <IconCertificate size={collapsed ? 22 : 18} />,
     },
     {
-      label: 'Manage University', // Changed from plural to singular
+      label: 'Manage University',
       to: '/universities/manage',
-      icon: <IconSchool size={collapsed ? 20 : 16} />,
+      icon: <IconSchool size={collapsed ? 22 : 18} />,
     },
   ];
 
   const individualLinks = [
-    { label: 'My Degrees', to: '/degree/manage', icon: <IconFiles size={collapsed ? 20 : 16} /> },
+    { label: 'My Degrees', to: '/degree/manage', icon: <IconFiles size={collapsed ? 22 : 18} /> },
     {
       label: 'My Universities',
       to: '/universities',
-      icon: <IconSchool size={collapsed ? 20 : 16} />,
+      icon: <IconSchool size={collapsed ? 22 : 18} />,
     },
     {
       label: 'Access Requests',
       to: '/degree/requests',
-      icon: <IconInbox size={collapsed ? 20 : 16} />,
+      icon: <IconInbox size={collapsed ? 22 : 18} />,
     },
   ];
 
@@ -76,23 +77,23 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
     {
       label: 'Verify Degree',
       to: '/degree/verify',
-      icon: <IconSearch size={collapsed ? 20 : 16} />,
+      icon: <IconSearch size={collapsed ? 22 : 18} />,
     },
     {
       label: 'Search Users',
       to: '/users/search',
-      icon: <IconUserPlus size={collapsed ? 20 : 16} />,
+      icon: <IconUserPlus size={collapsed ? 22 : 18} />,
     },
     {
       label: 'Accessible Degrees',
       to: '/degree/accessible',
-      icon: <IconFileCheck size={collapsed ? 20 : 16} />,
+      icon: <IconFileCheck size={collapsed ? 22 : 18} />,
     },
   ];
 
   // Authentication links
   const authLinks = !user
-    ? [{ label: 'Login', to: '/login', icon: <IconUser size={collapsed ? 20 : 16} /> }]
+    ? [{ label: 'Login', to: '/login', icon: <IconUser size={collapsed ? 22 : 18} /> }]
     : [];
 
   // Determine which links to show based on user role
@@ -140,6 +141,16 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
     </Box>
   );
 
+  const collapsedNavLinkStyle = {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '12px 0',
+    borderRadius: '8px',
+    marginBottom: '8px',
+    transition: 'all 0.2s ease',
+  };
+
   // Render a link in collapsed or expanded mode
   const renderNavLink = (
     link: { label: string; to: string; icon: JSX.Element },
@@ -152,16 +163,24 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
           to={link.to}
           key={link.label}
           style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: '12px 0',
-            borderRadius: '8px',
+            ...collapsedNavLinkStyle,
             backgroundColor: active ? 'rgba(60, 106, 195, 0.1)' : 'transparent',
             color: active ? theme.colors.primaryBlue[6] : 'inherit',
-            marginBottom: '8px',
           }}
-          data-active={active || undefined} // Fix the data attribute
+          onMouseEnter={e => {
+            const target = e.currentTarget;
+            target.style.backgroundColor = active
+              ? 'rgba(60, 106, 195, 0.2)'
+              : 'rgba(0, 0, 0, 0.05)';
+            target.style.transform = 'scale(1.05)';
+            target.style.color = theme.colors.primaryBlue[6];
+          }}
+          onMouseLeave={e => {
+            const target = e.currentTarget;
+            target.style.backgroundColor = active ? 'rgba(60, 106, 195, 0.1)' : 'transparent';
+            target.style.transform = 'scale(1)';
+            target.style.color = active ? theme.colors.primaryBlue[6] : 'inherit';
+          }}
         >
           {link.icon}
         </Box>
@@ -208,7 +227,7 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
             component={Link}
             to="/login"
             variant="outline"
-            leftSection={<IconKey size={16} />}
+            leftSection={<IconKey size={18} />}
             size="sm"
           >
             Login
@@ -216,7 +235,7 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
           <Button
             component={Link}
             to="/register"
-            leftSection={<IconUserPlus size={16} />}
+            leftSection={<IconUserPlus size={18} />}
             size="sm"
           >
             Register
@@ -242,13 +261,12 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
           }}
         >
           <Button variant="subtle" color="red" onClick={() => logout()} style={{ padding: 8 }}>
-            <IconLogout size={20} />
+            <IconLogout size={22} />
           </Button>
         </Box>
       );
     }
 
-    // For expanded mode - handled in renderProfileMenu
     return null;
   };
 
@@ -284,7 +302,7 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
           variant="subtle"
           color="red"
           onClick={() => logout()}
-          leftSection={<IconLogout size={16} />}
+          leftSection={<IconLogout size={18} />}
           size="xs"
         >
           Logout
@@ -295,10 +313,8 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
 
   return (
     <Stack gap={0} h="100%" py={0} style={{ display: 'flex', flexDirection: 'column' }}>
-      {/* App logo with hamburger/X at the top */}
       <AppLogo />
 
-      {/* Navigation links container with overflow visible for tooltips */}
       <Box p={collapsed ? 'xs' : 'md'} style={{ flexGrow: 1, overflow: 'visible' }}>
         {!collapsed && !user && renderSectionHeader('NAVIGATION')}
         {commonLinks.map(link => renderNavLink(link, location.pathname === link.to))}
@@ -310,17 +326,19 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
 
             {!collapsed && renderSectionHeader('ACCOUNT')}
             {renderNavLink(
-              { label: 'Profile', to: '/profile', icon: <IconUser size={collapsed ? 20 : 16} /> },
-              location.pathname === '/profile',
+              {
+                label: 'Settings',
+                to: '/settings',
+                icon: <IconSettings size={collapsed ? 22 : 18} />,
+              },
+              location.pathname === '/settings',
             )}
           </>
         )}
       </Box>
 
-      {/* Add spacer to push user section to bottom */}
       <Box style={{ flexGrow: 1 }} />
 
-      {/* User section at bottom with logout button */}
       {user && (
         <Box
           style={{
@@ -331,7 +349,6 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
         </Box>
       )}
 
-      {/* Auth links at the bottom for non-logged in users */}
       {!user && renderAuthLinks()}
     </Stack>
   );

@@ -32,7 +32,7 @@ const Login = () => {
     try {
       await login(formData.email, formData.password);
 
-      // Let the auth context handle setting the token and user info
+      // Letting the auth context handle setting the token and user info
       console.log('Login successful');
       navigate('/');
     } catch (err: any) {
