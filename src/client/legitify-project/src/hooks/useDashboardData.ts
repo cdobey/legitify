@@ -1,3 +1,4 @@
+import { User } from '@/api/users/user.models';
 import { UseQueryOptions, useQueries, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import {
@@ -12,7 +13,6 @@ import {
   DegreeDocumentsResponse,
 } from '../api/degrees/degree.models';
 import { degreeKeys } from '../api/degrees/degree.queries';
-import { AuthUser } from '../api/users/user.models';
 import { useAuth } from '../contexts/AuthContext';
 
 interface DashboardStats {
@@ -51,7 +51,7 @@ interface CombinedQueryResult {
 }
 
 export const useDashboardData = () => {
-  const { user } = useAuth() as { user: AuthUser | null };
+  const { user } = useAuth() as { user: User | null };
   const queryClient = useQueryClient();
 
   // Prefetch data when the component mounts or user changes
@@ -116,7 +116,7 @@ export const useDashboardData = () => {
 };
 
 // Helper function to generate the appropriate queries based on user role
-const generateQueriesForRole = (user: AuthUser | null): UseQueryOptions[] => {
+const generateQueriesForRole = (user: User | null): UseQueryOptions[] => {
   if (!user) return [];
 
   const commonOptions = {

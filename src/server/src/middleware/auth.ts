@@ -1,18 +1,10 @@
-import { NextFunction, Request, Response } from 'express';
+import { RequestWithUser } from '@/types/user.types';
+import { NextFunction, Response } from 'express';
 import supabase from '../config/supabase';
 import prisma from '../prisma/client';
-import { AuthUser } from '../types/user.types';
-
-declare global {
-  namespace Express {
-    interface Request {
-      user?: AuthUser;
-    }
-  }
-}
 
 export const authMiddleware = async (
-  req: Request,
+  req: RequestWithUser,
   res: Response,
   next: NextFunction,
 ): Promise<void> => {
@@ -49,13 +41,13 @@ export const authMiddleware = async (
     }
 
     req.user = {
-      uid: user.id,
+      id: user.id,
       role: dbUser.role,
       orgName: dbUser.orgName,
     };
 
     console.log('Authenticated user:', {
-      uid: req.user.uid,
+      id: req.user.id,
       role: req.user.role,
       orgName: req.user.orgName,
     });

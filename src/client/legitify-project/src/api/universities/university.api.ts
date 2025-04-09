@@ -15,12 +15,6 @@ import {
 export const getMyUniversities = () =>
   apiCall<UniversitiesResponse>({ method: 'get', path: '/university/my' });
 
-export const getUniversityPendingAffiliations = (universityId: string) =>
-  apiCall<AffiliationsResponse>({
-    method: 'get',
-    path: `/university/${universityId}/pending-affiliations`,
-  });
-
 export const createUniversity = (params: CreateUniversityParams) =>
   apiCall<CreateUniversityResponse>({
     method: 'post',

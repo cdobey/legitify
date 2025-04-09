@@ -1,5 +1,5 @@
 import { getGateway } from '@/config/gateway';
-import { AuthUser } from '@/types/user.types';
+import { RequestUser, RequestWithUser } from '@/types/user.types';
 import crypto from 'crypto';
 
 // Constants
@@ -41,12 +41,9 @@ export function processDegreeFile(base64File: string): { fileData: Buffer; docHa
 }
 
 // Helper function to validate user role
-export function validateUserRole(user: AuthUser | undefined, requiredRole: string): void {
+export function validateUserRole(user: RequestUser | undefined, requiredRole: string): void {
   if (!user) {
     throw new Error('User not authenticated');
-  }
-  if (!user.role) {
-    throw new Error('User role not found');
   }
   if (user.role !== requiredRole) {
     throw new Error(`Only ${requiredRole} can perform this action`);
@@ -54,15 +51,12 @@ export function validateUserRole(user: AuthUser | undefined, requiredRole: strin
 }
 
 // Helper function to get user info safely
-export function getUserInfo(req: any): { uid: string; role: string; orgName: string } {
+export function getUserInfo(req: RequestWithUser): { id: string; role: string; orgName: string } {
   if (!req.user) {
     throw new Error('User not authenticated');
   }
-  if (!req.user.role) {
-    throw new Error('User role not found');
-  }
   return {
-    uid: req.user.uid,
+    id: req.user.id,
     role: req.user.role,
     orgName: req.user.orgName || '',
   };

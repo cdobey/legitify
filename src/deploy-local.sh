@@ -11,6 +11,9 @@ YELLOW='\033[0;33m'
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo -e "${BLUE}Current directory: ${BASE_DIR}${NC}"
 
+# Global status flags
+SERVER_RUNNING=false
+
 # Function to check if a program is installed
 check_dependency() {
     if ! command -v $1 &> /dev/null; then
@@ -146,9 +149,18 @@ start_server() {
     # Check if server is running
     if ps -p $SERVER_PID > /dev/null; then
         echo -e "${GREEN}Server started successfully with PID: ${SERVER_PID}${NC}"
+        SERVER_RUNNING=true
     else
-        echo -e "${RED}Failed to start the server. Check server.log for details. Exiting.${NC}"
-        exit 1
+        echo -e "${RED}Failed to start the server. Check server.log for details.${NC}"
+        echo -e "${YELLOW}You can fix the issues and restart the server later using the 's' key.${NC}"
+        echo -e "${YELLOW}Would you like to continue with the rest of the deployment? (y/n)${NC}"
+        read -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo -e "${RED}Exiting deployment.${NC}"
+            exit 1
+        fi
+        SERVER_RUNNING=false
     fi
     
     cd "${BASE_DIR}"
@@ -260,7 +272,33 @@ restart_server() {
     sleep 3
     
     # Start the server
-    start_server
+    cd "${BASE_DIR}/server"
+    
+    echo -e "${YELLOW}Starting the server with npm run dev...${NC}"
+    echo -e "${YELLOW}The server will run in the background. Logs will be saved to server.log${NC}"
+    
+    # Start server in the background and redirect output to server.log
+    npm run dev > server.log 2>&1 &
+    SERVER_PID=$!
+    
+    # Save the PID to a file for later teardown
+    echo $SERVER_PID > "${BASE_DIR}/server.pid"
+    
+    # Wait a moment for the server to start
+    echo -e "${YELLOW}Waiting for server to start...${NC}"
+    sleep 20
+    
+    # Check if server is running
+    if ps -p $SERVER_PID > /dev/null; then
+        echo -e "${GREEN}Server started successfully with PID: ${SERVER_PID}${NC}"
+        SERVER_RUNNING=true
+    else
+        echo -e "${RED}Failed to start the server. Check server.log for details.${NC}"
+        echo -e "${YELLOW}You can fix the issues and restart the server again using the 's' key.${NC}"
+        SERVER_RUNNING=false
+    fi
+    
+    cd "${BASE_DIR}"
 }
 
 # Function to restart Hyperledger Fabric network
@@ -318,12 +356,17 @@ restart_supabase() {
 interactive_mode() {
     print_header "Interactive Mode"
     echo -e "${BLUE}The application is now running.${NC}"
+    if [ "$SERVER_RUNNING" = false ]; then
+        echo -e "${RED}WARNING: The server is not running! Fix any issues and press 's' to restart it.${NC}"
+        echo -e "${YELLOW}Check server.log for error details.${NC}"
+    fi
     echo -e "${YELLOW}You can interact with it in your browser.${NC}"
     echo -e "\n${BLUE}Interactive Controls:${NC}"
     echo -e "${YELLOW}Press 'c' to restart the client${NC}"
     echo -e "${YELLOW}Press 's' to restart the server${NC}"
     echo -e "${YELLOW}Press 'n' to restart the Hyperledger Fabric network${NC}"
     echo -e "${YELLOW}Press 'd' to restart the Supabase database${NC}"
+    echo -e "${YELLOW}Press 'l' to view the last 20 lines of server.log${NC}"
     echo -e "${YELLOW}Press 'q' to quit and teardown everything${NC}"
     
     # Main interactive loop
@@ -344,6 +387,10 @@ interactive_mode() {
             d)
                 restart_supabase
                 ;;
+            l)
+                print_header "Last 20 lines of server.log"
+                tail -n 20 "${BASE_DIR}/server.log"
+                ;;
             q)
                 print_header "Quitting and tearing down"
                 teardown
@@ -353,6 +400,11 @@ interactive_mode() {
                 # Do nothing for other keys
                 ;;
         esac
+        
+        # Remind user if server is down after any operation
+        if [ "$SERVER_RUNNING" = false ]; then
+            echo -e "${RED}REMINDER: The server is not running! Fix any issues and press 's' to restart it.${NC}"
+        fi
     done
 }
 

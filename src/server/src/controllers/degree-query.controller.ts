@@ -1,16 +1,20 @@
 import { getGateway } from '@/config/gateway';
 import prisma from '@/prisma/client';
+import { RequestWithUser } from '@/types/user.types';
 import { FABRIC_CHAINCODE, FABRIC_CHANNEL } from '@/utils/degree-utils';
-import { Request, RequestHandler, Response } from 'express';
+import { RequestHandler, Response } from 'express';
 
 /**
  * Get all degrees issued to the logged-in user
  */
-export const getMyDegrees: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+export const getMyDegrees: RequestHandler = async (
+  req: RequestWithUser,
+  res: Response,
+): Promise<void> => {
   try {
     const documents = await prisma.document.findMany({
       where: {
-        issuedTo: req.user!.uid,
+        issuedTo: req.user!.id,
       },
       include: {
         issuerUser: {
@@ -50,7 +54,7 @@ export const getMyDegrees: RequestHandler = async (req: Request, res: Response):
  * Get all records from the blockchain ledger for a specific university
  */
 export const getAllLedgerRecords: RequestHandler = async (
-  req: Request,
+  req: RequestWithUser,
   res: Response,
 ): Promise<void> => {
   try {
@@ -62,7 +66,7 @@ export const getAllLedgerRecords: RequestHandler = async (
     // Get the university ID for the current user
     const university = await prisma.university.findFirst({
       where: {
-        ownerId: req.user.uid,
+        ownerId: req.user.id,
       },
     });
 
@@ -71,7 +75,7 @@ export const getAllLedgerRecords: RequestHandler = async (
       return;
     }
 
-    const gateway = await getGateway(req.user.uid, req.user.orgName?.toLowerCase() || '');
+    const gateway = await getGateway(req.user.id, req.user.orgName?.toLowerCase() || '');
     const network = await gateway.getNetwork(FABRIC_CHANNEL);
     const contract = network.getContract(FABRIC_CHAINCODE);
 
@@ -101,7 +105,7 @@ export const getAllLedgerRecords: RequestHandler = async (
  * Only accessible by users with role 'employer'.
  */
 export const getUserDegrees: RequestHandler = async (
-  req: Request,
+  req: RequestWithUser,
   res: Response,
 ): Promise<void> => {
   try {
@@ -164,7 +168,7 @@ export const getUserDegrees: RequestHandler = async (
  * Only accessible by users with role 'university'.
  */
 export const getRecentIssuedDegrees: RequestHandler = async (
-  req: Request,
+  req: RequestWithUser,
   res: Response,
 ): Promise<void> => {
   try {
@@ -176,7 +180,7 @@ export const getRecentIssuedDegrees: RequestHandler = async (
     // Get the university ID for the current user
     const university = await prisma.university.findFirst({
       where: {
-        ownerId: req.user.uid,
+        ownerId: req.user.id,
       },
     });
 

@@ -1,14 +1,14 @@
+import { LoginParams } from '@/api/auth/auth.models';
+import { useLoginMutation } from '@/api/auth/auth.mutations';
+import { useUserProfileQuery } from '@/api/auth/auth.queries';
+import { User } from '@/api/users/user.models';
 import axios, { AxiosInstance } from 'axios';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LoginParams } from '../api/auth/auth.models';
-import { useLoginMutation } from '../api/auth/auth.mutations';
-import { useUserProfileQuery } from '../api/auth/auth.queries';
-import { AuthUser } from '../api/users/user.models';
 
 // Simplified context type
 interface AuthContextType {
-  user: AuthUser | null;
+  user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -21,7 +21,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  console.log('AuthProvider user:', user);
   const [isLoading, setIsLoading] = useState(true);
 
   const loginMutation = useLoginMutation();
@@ -65,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const savedUser = sessionStorage.getItem('user');
       if (savedUser) {
         try {
-          setUser(JSON.parse(savedUser) as AuthUser);
+          setUser(JSON.parse(savedUser) as User);
         } catch (e) {
           console.error('Failed to parse saved user data:', e);
           sessionStorage.removeItem('user');

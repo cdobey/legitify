@@ -10,7 +10,7 @@ import {
 import {
   useAllUniversitiesQuery,
   useMyUniversitiesQuery,
-  useUniversityPendingAffiliationsQuery,
+  usePendingAffiliationsQuery,
 } from '@/api/universities/university.queries';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -90,7 +90,7 @@ export default function ManageUniversities() {
     });
 
   const { data: pendingAffiliations = [], isLoading: isLoadingPendingAffiliations } =
-    useUniversityPendingAffiliationsQuery(university?.id || '', {
+    usePendingAffiliationsQuery({
       enabled: !!university?.id,
     });
 

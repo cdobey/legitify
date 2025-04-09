@@ -1,18 +1,18 @@
 import { getGateway } from '@/config/gateway';
 import prisma from '@/prisma/client';
+import { RequestWithUser } from '@/types/user.types';
 import { sha256 } from '@/utils/degree-utils';
-import { Request, RequestHandler, Response } from 'express';
+import { RequestHandler, Response } from 'express';
 
 /**
  * Verify a degree document. Only accessible by users with role 'employer'.
  */
 export const verifyDegreeDocument: RequestHandler = async (
-  req: Request,
+  req: RequestWithUser,
   res: Response,
 ): Promise<void> => {
   try {
-    const user = req.user as { uid: string; role: string; orgName?: string };
-    if (user.role !== 'employer') {
+    if (req.user?.role !== 'employer') {
       res.status(403).json({ error: 'Only employers can verify documents' });
       return;
     }
@@ -63,7 +63,7 @@ export const verifyDegreeDocument: RequestHandler = async (
     });
 
     // Create gateway connection
-    const gateway = await getGateway(user.uid, user.orgName?.toLowerCase() || '');
+    const gateway = await getGateway(req.user.id, req.user.orgName?.toLowerCase() || '');
     const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifychannel');
     const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
 

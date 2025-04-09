@@ -5,7 +5,6 @@ import {
   getMyUniversities,
   getPendingAffiliations,
   getStudentUniversities,
-  getUniversityPendingAffiliations,
 } from './university.api';
 import { AffiliationsResponse, UniversitiesResponse } from './university.models';
 
@@ -37,18 +36,6 @@ export const useAllUniversitiesQuery = (
     queryKey: universityKeys.all_universities(),
     queryFn: () => getAllUniversities(),
     staleTime: 5 * 60 * 1000, // 5 minutes
-    ...options,
-  });
-
-export const useUniversityPendingAffiliationsQuery = (
-  universityId: string,
-  options?: Partial<UseQueryOptions<AffiliationsResponse, AxiosError>>,
-) =>
-  useQuery<AffiliationsResponse, AxiosError>({
-    queryKey: universityKeys.pending(universityId),
-    queryFn: () => getUniversityPendingAffiliations(universityId),
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    enabled: !!universityId,
     ...options,
   });
 

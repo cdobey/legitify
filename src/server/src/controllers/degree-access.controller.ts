@@ -7,7 +7,7 @@ import {
   submitFabricTransaction,
   validateUserRole,
 } from '@/utils/degree-utils';
-import { Request, RequestHandler, Response } from 'express';
+import { RequestHandler, Response } from 'express';
 
 /**
  * Requests access to a degree document. Only accessible by users with role 'employer'.
@@ -45,7 +45,7 @@ export const requestAccess: RequestHandler = async (
     const existingRequest = await prisma.request.findFirst({
       where: {
         documentId: docId,
-        requesterId: userInfo.uid,
+        requesterId: userInfo.id,
       },
     });
 
@@ -57,7 +57,7 @@ export const requestAccess: RequestHandler = async (
     // Create request
     const request = await prisma.request.create({
       data: {
-        requesterId: userInfo.uid,
+        requesterId: userInfo.id,
         documentId: docId,
         status: 'pending',
       },
@@ -101,7 +101,7 @@ export const grantAccess: RequestHandler = async (
       return;
     }
 
-    if (request.document.issuedTo !== userInfo.uid) {
+    if (request.document.issuedTo !== userInfo.id) {
       res.status(403).json({ error: 'Not authorized to grant access to this document' });
       return;
     }
@@ -115,7 +115,7 @@ export const grantAccess: RequestHandler = async (
     // If granted, update Fabric ledger
     if (granted) {
       await submitFabricTransaction(
-        userInfo.uid,
+        userInfo.id,
         userInfo.orgName,
         'GrantAccess',
         request.documentId,
@@ -136,7 +136,10 @@ export const grantAccess: RequestHandler = async (
 /**
  * Employer views a degree document if access is granted and verifies its hash.
  */
-export const viewDegree: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+export const viewDegree: RequestHandler = async (
+  req: RequestWithUser,
+  res: Response,
+): Promise<void> => {
   try {
     if (req.user?.role !== 'employer') {
       res.status(403).json({ error: 'Only employer can view documents' });
@@ -144,7 +147,7 @@ export const viewDegree: RequestHandler = async (req: Request, res: Response): P
     }
 
     const docId = req.params.docId;
-    console.log(`Employer ${req.user.uid} attempting to view document ${docId}`);
+    console.log(`Employer ${req.user.id} attempting to view document ${docId}`);
 
     if (!docId) {
       res.status(400).json({ error: 'Missing docId parameter' });
@@ -152,23 +155,23 @@ export const viewDegree: RequestHandler = async (req: Request, res: Response): P
     }
 
     // Check if access is granted with enhanced logging
-    console.log(`Checking if access is granted for document ${docId} to user ${req.user.uid}`);
+    console.log(`Checking if access is granted for document ${docId} to user ${req.user.id}`);
     const grantedRequest = await prisma.request.findFirst({
       where: {
         documentId: docId,
-        requesterId: req.user.uid,
+        requesterId: req.user.id,
         status: 'granted',
       },
     });
 
     if (!grantedRequest) {
-      console.log(`No granted access found for document ${docId} and user ${req.user.uid}`);
+      console.log(`No granted access found for document ${docId} and user ${req.user.id}`);
 
       // Check if there are any requests (for better error messages)
       const anyRequest = await prisma.request.findFirst({
         where: {
           documentId: docId,
-          requesterId: req.user.uid,
+          requesterId: req.user.id,
         },
       });
 
@@ -183,7 +186,7 @@ export const viewDegree: RequestHandler = async (req: Request, res: Response): P
       return;
     }
 
-    console.log(`Access granted for document ${docId} to user ${req.user.uid}`);
+    console.log(`Access granted for document ${docId} to user ${req.user.id}`);
 
     const doc = await prisma.document.findUnique({
       where: { id: docId },
@@ -194,7 +197,7 @@ export const viewDegree: RequestHandler = async (req: Request, res: Response): P
     }
 
     // Get hash from Fabric
-    const gateway = await getGateway(req.user.uid, req.user.orgName?.toLowerCase() || '');
+    const gateway = await getGateway(req.user.id, req.user.orgName?.toLowerCase() || '');
     const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifychannel');
     const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
 
@@ -223,7 +226,7 @@ export const viewDegree: RequestHandler = async (req: Request, res: Response): P
  * Get all access requests for a user's degrees
  */
 export const getAccessRequests: RequestHandler = async (
-  req: Request,
+  req: RequestWithUser,
   res: Response,
 ): Promise<void> => {
   try {
@@ -232,12 +235,12 @@ export const getAccessRequests: RequestHandler = async (
       return;
     }
 
-    console.log('Fetching requests for user:', req.user.uid);
+    console.log('Fetching requests for user:', req.user.id);
 
     // First, get all documents for debugging
     const allDocs = await prisma.document.findMany({
       where: {
-        issuedTo: req.user.uid,
+        issuedTo: req.user.id,
       },
     });
     console.log('All user documents:', allDocs);
@@ -245,7 +248,7 @@ export const getAccessRequests: RequestHandler = async (
     // Get all requests, with less restrictive filtering
     const userDocuments = await prisma.document.findMany({
       where: {
-        issuedTo: req.user.uid,
+        issuedTo: req.user.id,
       },
       select: {
         id: true,
@@ -291,7 +294,7 @@ export const getAccessRequests: RequestHandler = async (
  * Only accessible by users with role 'employer'.
  */
 export const getAccessibleDegrees: RequestHandler = async (
-  req: Request,
+  req: RequestWithUser,
   res: Response,
 ): Promise<void> => {
   try {
@@ -300,12 +303,12 @@ export const getAccessibleDegrees: RequestHandler = async (
       return;
     }
 
-    console.log(`Fetching accessible degrees for employer: ${req.user.uid}`);
+    console.log(`Fetching accessible degrees for employer: ${req.user.id}`);
 
     // Now we can directly include the university relation
     const accessRequests = await prisma.request.findMany({
       where: {
-        requesterId: req.user.uid,
+        requesterId: req.user.id,
         status: 'granted',
       },
       include: {
@@ -332,7 +335,7 @@ export const getAccessibleDegrees: RequestHandler = async (
       },
     });
 
-    console.log(`Found ${accessRequests.length} accessible documents for employer ${req.user.uid}`);
+    console.log(`Found ${accessRequests.length} accessible documents for employer ${req.user.id}`);
 
     // Format the response, using university name when available
     const accessibleDocs = accessRequests.map(request => ({

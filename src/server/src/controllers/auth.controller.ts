@@ -1,8 +1,8 @@
+import supabase from '@/config/supabase';
+import prisma from '@/prisma/client';
+import { enrollUser } from '@/utils/fabric-helpers';
 import { OrgName, Role } from '@prisma/client';
 import { Request, RequestHandler, Response } from 'express';
-import supabase from '../config/supabase';
-import prisma from '../prisma/client';
-import { enrollUser } from '../utils/fabric-helpers';
 import { createUniversityHelper } from './university.controller';
 
 // Helper function to handle Supabase user creation

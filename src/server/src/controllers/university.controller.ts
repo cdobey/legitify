@@ -1,5 +1,6 @@
 import prisma from '@/prisma/client';
-import { Request, RequestHandler, Response } from 'express';
+import { RequestWithUser } from '@/types/user.types';
+import { RequestHandler, Response } from 'express';
 
 // Helper function to create a university
 export async function createUniversityHelper(
@@ -61,7 +62,7 @@ export async function createUniversityHelper(
  * Create a new university sub-organization
  */
 export const createUniversity: RequestHandler = async (
-  req: Request,
+  req: RequestWithUser,
   res: Response,
 ): Promise<void> => {
   try {
@@ -78,7 +79,7 @@ export const createUniversity: RequestHandler = async (
       return;
     }
 
-    const university = await createUniversityHelper(req.user.uid, name, displayName, description);
+    const university = await createUniversityHelper(req.user.id, name, displayName, description);
 
     res.status(201).json({
       message: 'University created successfully',
@@ -105,7 +106,7 @@ export const createUniversity: RequestHandler = async (
  * or get universities a student is affiliated with (for individual users)
  */
 export const getMyUniversities: RequestHandler = async (
-  req: Request,
+  req: RequestWithUser,
   res: Response,
 ): Promise<void> => {
   try {
@@ -113,7 +114,7 @@ export const getMyUniversities: RequestHandler = async (
     if (req.user?.role === 'university') {
       const university = await prisma.university.findFirst({
         where: {
-          ownerId: req.user.uid,
+          ownerId: req.user.id,
         },
         include: {
           affiliations: {
@@ -130,14 +131,12 @@ export const getMyUniversities: RequestHandler = async (
         },
       });
 
-      // Always return an array, even if no university is found
-      // This prevents 404 errors and lets the client handle empty data
       if (!university) {
-        res.json([]); // Return empty array rather than 404
+        res.json([]); // Return empty array rather than 404 so client can handle emopty data
         return;
       }
 
-      res.json([university]); // Return as array for consistent API
+      res.json([university]);
       return;
     }
 
@@ -145,7 +144,7 @@ export const getMyUniversities: RequestHandler = async (
     else if (req.user?.role === 'individual') {
       const affiliations = await prisma.affiliation.findMany({
         where: {
-          userId: req.user.uid,
+          userId: req.user.id,
           status: 'active',
         },
         include: {
@@ -169,7 +168,7 @@ export const getMyUniversities: RequestHandler = async (
  * Get all available universities for student registration
  */
 export const getAllUniversities: RequestHandler = async (
-  req: Request,
+  req: RequestWithUser,
   res: Response,
 ): Promise<void> => {
   try {
@@ -201,7 +200,7 @@ export const getAllUniversities: RequestHandler = async (
  * Request to join a university (for university users)
  */
 export const requestJoinUniversity: RequestHandler = async (
-  req: Request,
+  req: RequestWithUser,
   res: Response,
 ): Promise<void> => {
   try {
@@ -229,7 +228,7 @@ export const requestJoinUniversity: RequestHandler = async (
     // Check if user already has a university
     const existingUniversity = await prisma.university.findFirst({
       where: {
-        ownerId: req.user.uid,
+        ownerId: req.user.id,
       },
     });
 
@@ -244,7 +243,7 @@ export const requestJoinUniversity: RequestHandler = async (
     // Create a university join request
     await prisma.universityJoinRequest.create({
       data: {
-        requesterId: req.user.uid,
+        requesterId: req.user.id,
         universityId,
         status: 'pending',
       },

@@ -1,13 +1,13 @@
 import '@/config/env';
 import prisma from '@/prisma/client';
-import { AuthUser } from '@/types/user.types';
+import { RequestWithUser } from '@/types/user.types';
 import {
   getUserInfo,
   processDegreeFile,
   submitFabricTransaction,
   validateUserRole,
 } from '@/utils/degree-utils';
-import { Request, RequestHandler, Response } from 'express';
+import { RequestHandler, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 
 interface DegreeDetails {
@@ -26,10 +26,17 @@ interface DegreeDetails {
 /**
  * Issues a degree to an individual. Only accessible by users with role 'university'.
  */
-export const issueDegree: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+export const issueDegree: RequestHandler = async (
+  req: RequestWithUser,
+  res: Response,
+): Promise<void> => {
   try {
-    const user = req.user as AuthUser;
-    validateUserRole(user, 'university');
+    if (!req.user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    validateUserRole(req.user, 'university');
 
     const {
       email,
@@ -54,7 +61,7 @@ export const issueDegree: RequestHandler = async (req: Request, res: Response): 
     const university = await prisma.university.findFirst({
       where: {
         id: universityId,
-        ownerId: user.uid,
+        ownerId: req.user.id,
       },
     });
 
@@ -98,13 +105,13 @@ export const issueDegree: RequestHandler = async (req: Request, res: Response): 
 
     // Store hash in Fabric
     await submitFabricTransaction(
-      user.uid,
-      user.orgName || '',
+      req.user.id,
+      req.user.orgName || '',
       'IssueDegree',
       docId,
       docHash,
       individual.id,
-      user.uid,
+      req.user.id,
       universityId,
       degreeTitle,
       fieldOfStudy,
@@ -121,7 +128,7 @@ export const issueDegree: RequestHandler = async (req: Request, res: Response): 
       data: {
         id: docId,
         issuedTo: individual.id,
-        issuer: user.uid,
+        issuer: req.user.id,
         universityId,
         fileData,
         status: 'issued',
@@ -152,8 +159,16 @@ export const issueDegree: RequestHandler = async (req: Request, res: Response): 
 /**
  * Accepts a degree. Only accessible by users with role 'individual'.
  */
-export const acceptDegree: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+export const acceptDegree: RequestHandler = async (
+  req: RequestWithUser,
+  res: Response,
+): Promise<void> => {
   try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
     validateUserRole(req.user, 'individual');
     const userInfo = getUserInfo(req);
 
@@ -167,13 +182,13 @@ export const acceptDegree: RequestHandler = async (req: Request, res: Response):
     const doc = await prisma.document.findUnique({
       where: { id: docId },
     });
-    if (!doc || doc.issuedTo !== userInfo.uid) {
+    if (!doc || doc.issuedTo !== userInfo.id) {
       res.status(404).json({ error: 'Document not found or not owned by you' });
       return;
     }
 
     // Update Fabric ledger
-    await submitFabricTransaction(userInfo.uid, userInfo.orgName, 'AcceptDegree', docId);
+    await submitFabricTransaction(userInfo.id, userInfo.orgName, 'AcceptDegree', docId);
 
     // Update DB status
     await prisma.document.update({
@@ -191,8 +206,16 @@ export const acceptDegree: RequestHandler = async (req: Request, res: Response):
 /**
  * Denies a degree. Only accessible by users with role 'individual'.
  */
-export const denyDegree: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+export const denyDegree: RequestHandler = async (
+  req: RequestWithUser,
+  res: Response,
+): Promise<void> => {
   try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
     validateUserRole(req.user, 'individual');
     const userInfo = getUserInfo(req);
 
@@ -206,13 +229,13 @@ export const denyDegree: RequestHandler = async (req: Request, res: Response): P
     const doc = await prisma.document.findUnique({
       where: { id: docId },
     });
-    if (!doc || doc.issuedTo !== userInfo.uid) {
+    if (!doc || doc.issuedTo !== userInfo.id) {
       res.status(404).json({ error: 'Document not found or not owned by you' });
       return;
     }
 
     // Update Fabric ledger
-    await submitFabricTransaction(userInfo.uid, userInfo.orgName, 'DenyDegree', docId);
+    await submitFabricTransaction(userInfo.id, userInfo.orgName, 'DenyDegree', docId);
 
     // Update DB status
     await prisma.document.update({

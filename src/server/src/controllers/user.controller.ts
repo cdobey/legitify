@@ -1,13 +1,17 @@
-import { Role } from '@prisma/client'; // Import the Role enum for proper typing
-import { Request, RequestHandler, Response } from 'express';
-import prisma from '../prisma/client';
+import prisma from '@/prisma/client';
+import { RequestWithUser } from '@/types/user.types';
+import { Role } from '@prisma/client';
+import { RequestHandler, Response } from 'express';
 
 /**
  * Retrieves user profile information.
  */
-export const getProfile: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+export const getProfile: RequestHandler = async (
+  req: RequestWithUser,
+  res: Response,
+): Promise<void> => {
   try {
-    const uid = req.user?.uid;
+    const uid = req.user?.id;
     if (!uid) {
       res.status(401).json({ error: 'Not authenticated' });
       return;
@@ -38,7 +42,10 @@ export const getProfile: RequestHandler = async (req: Request, res: Response): P
   }
 };
 
-export const searchUsers: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+export const searchUsers: RequestHandler = async (
+  req: RequestWithUser,
+  res: Response,
+): Promise<void> => {
   try {
     const { email } = req.query;
     if (!email) {
@@ -49,7 +56,7 @@ export const searchUsers: RequestHandler = async (req: Request, res: Response): 
     const user = await prisma.user.findFirst({
       where: {
         email: email.toString(),
-        role: Role.individual, // Use Role enum instead of string
+        role: Role.individual,
       },
       select: {
         id: true,

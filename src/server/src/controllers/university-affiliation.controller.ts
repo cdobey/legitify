@@ -1,12 +1,13 @@
 import { getGateway } from '@/config/gateway';
 import prisma from '@/prisma/client';
-import { Request, RequestHandler, Response } from 'express';
+import { RequestWithUser } from '@/types/user.types';
+import { RequestHandler, Response } from 'express';
 
 /**
  * Add a student to a university (create affiliation)
  */
 export const addStudentToUniversity: RequestHandler = async (
-  req: Request,
+  req: RequestWithUser,
   res: Response,
 ): Promise<void> => {
   try {
@@ -25,7 +26,7 @@ export const addStudentToUniversity: RequestHandler = async (
     const university = await prisma.university.findFirst({
       where: {
         id: universityId,
-        ownerId: req.user.uid,
+        ownerId: req.user.id,
       },
     });
 
@@ -73,7 +74,7 @@ export const addStudentToUniversity: RequestHandler = async (
         userId: student.id,
         universityId,
         status: 'pending',
-        initiatedBy: 'university', // Add this field to track who initiated the request
+        initiatedBy: 'university',
       },
     });
 
@@ -91,7 +92,7 @@ export const addStudentToUniversity: RequestHandler = async (
  * Get all students affiliated with a university
  */
 export const getUniversityStudents: RequestHandler = async (
-  req: Request,
+  req: RequestWithUser,
   res: Response,
 ): Promise<void> => {
   try {
@@ -111,7 +112,7 @@ export const getUniversityStudents: RequestHandler = async (
     const university = await prisma.university.findFirst({
       where: {
         id: universityId,
-        ownerId: req.user.uid,
+        ownerId: req.user.id,
       },
     });
 
@@ -150,7 +151,7 @@ export const getUniversityStudents: RequestHandler = async (
  * Get all universities that a student is affiliated with
  */
 export const getStudentUniversities: RequestHandler = async (
-  req: Request,
+  req: RequestWithUser,
   res: Response,
 ): Promise<void> => {
   try {
@@ -161,7 +162,7 @@ export const getStudentUniversities: RequestHandler = async (
 
     const affiliations = await prisma.affiliation.findMany({
       where: {
-        userId: req.user.uid,
+        userId: req.user.id,
         status: 'active',
       },
       include: {
@@ -180,35 +181,73 @@ export const getStudentUniversities: RequestHandler = async (
 
 /**
  * Get pending university affiliations for the current user
+ * This function handles both individual users and university users
  */
 export const getPendingAffiliations: RequestHandler = async (
-  req: Request,
+  req: RequestWithUser,
   res: Response,
 ): Promise<void> => {
   try {
-    if (req.user?.role !== 'individual') {
-      res.status(403).json({ error: 'Only individual users can access this endpoint' });
+    // For individual users - return their pending affiliations
+    if (req.user?.role === 'individual') {
+      const pendingAffiliations = await prisma.affiliation.findMany({
+        where: {
+          userId: req.user.id,
+          status: 'pending',
+        },
+        include: {
+          university: {
+            select: {
+              id: true,
+              name: true,
+              displayName: true,
+              description: true,
+            },
+          },
+        },
+      });
+
+      res.json(pendingAffiliations);
       return;
     }
 
-    const pendingAffiliations = await prisma.affiliation.findMany({
-      where: {
-        userId: req.user.uid,
-        status: 'pending',
-      },
-      include: {
-        university: {
-          select: {
-            id: true,
-            name: true,
-            displayName: true,
-            description: true,
-          },
+    // For university users - return pending affiliations for their university
+    else if (req.user?.role === 'university') {
+      // Find the university owned by this user
+      const university = await prisma.university.findFirst({
+        where: {
+          ownerId: req.user.id,
         },
-      },
-    });
+      });
 
-    res.json(pendingAffiliations);
+      if (!university) {
+        res.status(404).json({ error: 'No university found for this user' });
+        return;
+      }
+
+      // Get pending affiliations for this university
+      const pendingAffiliations = await prisma.affiliation.findMany({
+        where: {
+          universityId: university.id,
+          status: 'pending',
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+            },
+          },
+          university: true,
+        },
+      });
+
+      res.json(pendingAffiliations);
+      return;
+    }
+
+    res.status(403).json({ error: 'Unauthorized access' });
   } catch (error: any) {
     console.error('getPendingAffiliations error:', error);
     res.status(500).json({ error: error.message });
@@ -220,12 +259,12 @@ export const getPendingAffiliations: RequestHandler = async (
  * This function now properly handles authorization based on who initiated the request
  */
 export const respondToAffiliation: RequestHandler = async (
-  req: Request,
+  req: RequestWithUser,
   res: Response,
 ): Promise<void> => {
   try {
     const { affiliationId, accept } = req.body;
-    const userId = req.user?.uid;
+    const userId = req.user?.id;
 
     if (!affiliationId || accept === undefined || !userId) {
       res.status(400).json({ error: 'Missing required fields' });
@@ -248,7 +287,7 @@ export const respondToAffiliation: RequestHandler = async (
     // Case 1: If university initiated the request, student should be able to respond
     if (affiliationRequest.initiatedBy === 'university') {
       // Verify responder is the student who received the invitation
-      if (req.user?.role !== 'individual' || affiliationRequest.userId !== req.user.uid) {
+      if (req.user?.role !== 'individual' || affiliationRequest.userId !== req.user.id) {
         res.status(403).json({
           error: 'Only the invited student can respond to this invitation',
         });
@@ -261,7 +300,7 @@ export const respondToAffiliation: RequestHandler = async (
       // Verify responder is the university owner
       if (
         req.user?.role !== 'university' ||
-        affiliationRequest.university.ownerId !== req.user.uid
+        affiliationRequest.university.ownerId !== req.user.id
       ) {
         res.status(403).json({
           error: 'Only the university owner can respond to this join request',
@@ -280,7 +319,7 @@ export const respondToAffiliation: RequestHandler = async (
     // If accepted, record this affiliation on the blockchain
     if (accept && req.user) {
       try {
-        const gateway = await getGateway(req.user.uid, req.user.orgName?.toLowerCase() || '');
+        const gateway = await getGateway(req.user.id, req.user.orgName?.toLowerCase() || '');
         const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifychannel');
         const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
 
@@ -310,7 +349,7 @@ export const respondToAffiliation: RequestHandler = async (
  * Register a new student and affiliate them with a university
  */
 export const registerStudent: RequestHandler = async (
-  req: Request,
+  req: RequestWithUser,
   res: Response,
 ): Promise<void> => {
   try {
@@ -330,7 +369,7 @@ export const registerStudent: RequestHandler = async (
     const university = await prisma.university.findFirst({
       where: {
         id: universityId,
-        ownerId: req.user.uid,
+        ownerId: req.user.id,
       },
     });
 
@@ -366,7 +405,7 @@ export const registerStudent: RequestHandler = async (
         role: 'individual',
         orgName: 'orgindividual',
       },
-      email_confirm: true, // Auto-confirm the email
+      email_confirm: true, // Auto-confirm the email for testing purposes
     });
 
     if (authError || !authData.user) {
@@ -400,7 +439,7 @@ export const registerStudent: RequestHandler = async (
 
     // Record this affiliation on the blockchain
     try {
-      const gateway = await getGateway(req.user.uid, req.user.orgName?.toLowerCase() || '');
+      const gateway = await getGateway(req.user.id, req.user.orgName?.toLowerCase() || '');
       const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifychannel');
       const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'degreeCC');
 
