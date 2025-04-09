@@ -1,5 +1,5 @@
 import { useAccessibleDegreesQuery } from '@/api/degrees/degree.queries';
-import { Alert, Badge, Button, Card, Container, Group, Stack, Text, Title } from '@mantine/core';
+import { Alert, Badge, Button, Card, Container, Group, Stack, Text } from '@mantine/core';
 import { Link } from 'react-router-dom';
 
 export default function AccessibleDegrees() {
@@ -15,10 +15,6 @@ export default function AccessibleDegrees() {
 
   return (
     <Container size="md">
-      <Title order={2} mb="xl">
-        Accessible Degrees
-      </Title>
-
       {error && (
         <Alert color="red" mb="lg">
           {(error as Error).message}

@@ -1,5 +1,5 @@
 import { useViewDegreeQuery } from '@/api/degrees/degree.queries';
-import { Alert, Container, Text, Title } from '@mantine/core';
+import { Alert, Container, Text } from '@mantine/core';
 import { useParams } from 'react-router-dom';
 
 export default function ViewDegree() {
@@ -12,9 +12,6 @@ export default function ViewDegree() {
 
   return (
     <Container size="md">
-      <Title order={2} mb="xl">
-        View Degree
-      </Title>
       {degree && (
         <>
           <Text>Document ID: {degree.docId}</Text>

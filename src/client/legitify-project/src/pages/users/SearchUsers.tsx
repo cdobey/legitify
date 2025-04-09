@@ -14,7 +14,6 @@ import {
   Stack,
   Text,
   TextInput,
-  Title,
 } from '@mantine/core';
 import { IconSearch, IconUserCheck } from '@tabler/icons-react';
 import { useState } from 'react';
@@ -54,10 +53,6 @@ export default function SearchUsers() {
 
   return (
     <Container size="md">
-      <Title order={2} mb="xl">
-        Search Users
-      </Title>
-
       <Paper p="md" withBorder mb="xl">
         <form onSubmit={handleSearch}>
           <TextInput

@@ -6,22 +6,13 @@ import {
   Card,
   Container,
   FileInput,
-  Group,
   Stack,
   Text,
   TextInput,
-  Title,
   useMantineTheme,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import {
-  IconCertificate,
-  IconCheck,
-  IconFileUpload,
-  IconMail,
-  IconSearch,
-  IconX,
-} from '@tabler/icons-react';
+import { IconCheck, IconFileUpload, IconMail, IconSearch, IconX } from '@tabler/icons-react';
 import { useState } from 'react';
 
 export default function VerifyDegree() {
@@ -73,11 +64,6 @@ export default function VerifyDegree() {
   return (
     <Container size="sm" py="xl">
       <Stack gap="xl">
-        <Group justify="center">
-          <IconCertificate size={40} color="var(--primary-blue)" />
-          <Title order={2}>Verify Degree</Title>
-        </Group>
-
         <form onSubmit={handleVerification}>
           <Card shadow="sm" p="lg" radius="md" withBorder>
             <Stack gap="md">

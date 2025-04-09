@@ -102,14 +102,13 @@ button:focus-visible {
 /* Header Styles */
 .mantine-AppShell-header {
   position: fixed !important;
-  background-color: var(--background-light) !important;
   z-index: 300 !important;
-  border-bottom: none !important;
-  transition: left 0.3s ease;
+  transition: transform 0.3s ease, left 0.3s ease !important;
   height: var(--header-height) !important;
-  box-shadow: none !important;
-  display: flex !important;
-  align-items: center !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-bottom: 1px solid rgba(234, 236, 239, 0.5) !important;
 }
 
 .mantine-AppShell-header .mantine-Group-root {
@@ -119,15 +118,17 @@ button:focus-visible {
 }
 
 .mantine-AppShell-header .mantine-Title-root {
-  flex: 1;
-  text-align: center;
   margin: 0;
+  letter-spacing: -0.2px;
 }
 
-.mantine-AppShell-header .mantine-Group-root > div:last-child {
-  margin-left: auto;
-  display: flex;
-  justify-content: flex-end;
+.mantine-AppShell-header .mantine-ThemeIcon-root {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+}
+
+.mantine-AppShell-header .mantine-ThemeIcon-root:hover {
+  transform: scale(1.05);
 }
 
 .mantine-AppShell-main {
@@ -136,6 +137,18 @@ button:focus-visible {
   padding: 0 !important;
   min-height: calc(100vh - var(--header-height));
   background-color: var(--background-light) !important;
+  animation: content-fade-in 0.3s ease-out;
+}
+
+@keyframes content-fade-in {
+  from {
+    opacity: 0.8;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Navigation Links */
@@ -224,4 +237,80 @@ button:focus-visible {
   background-size: 20px 20px;
   opacity: 0.3;
   pointer-events: none;
+}
+
+/* Page icon styles */
+.header-icon {
+  background: linear-gradient(135deg, #3c6ac3 0%, #2455b2 100%) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 3px 10px rgba(60, 106, 195, 0.3) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+}
+
+.header-icon:hover {
+  box-shadow: 0 5px 15px rgba(60, 106, 195, 0.4) !important;
+  filter: brightness(1.05) !important;
+}
+
+/* Page title styles */
+.header-title {
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: #1a202c;
+  line-height: 1.2;
+}
+
+.header-subtitle {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+/* Container styles for consistent page layouts */
+.mantine-Container-root {
+  padding-top: calc(var(--mantine-spacing-xl) * 1.5);
+  padding-bottom: var(--mantine-spacing-xl);
+}
+
+/* Ensure consistent spacing in all pages */
+.page-content {
+  margin-top: var(--mantine-spacing-md);
+}
+
+/* Card styling for better visual hierarchy */
+.mantine-Card-root {
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.03);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.mantine-Card-root:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+}
+
+/* Ensure content is never hidden by header */
+.mantine-Paper-root,
+.mantine-Card-root,
+.mantine-Alert-root {
+  position: relative;
+  z-index: 1;
+}
+
+/* Profile avatar styles */
+.profile-avatar {
+  background: linear-gradient(135deg, #1a4696 0%, #0d2d69 100%) !important;
+  border: 2px solid white !important;
+  color: white !important;
+  font-weight: 800 !important;
+  font-size: 18px !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15) !important;
+  transition: all 0.2s ease !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+.profile-avatar:hover {
+  box-shadow: 0 2px 12px rgba(36, 85, 178, 0.4) !important;
+  border: 2px solid #e6f0ff !important;
+  filter: brightness(1.1) !important;
 }

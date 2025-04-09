@@ -465,10 +465,6 @@ export default function AccessRequests() {
   };
   return (
     <Container size="lg" py="xl">
-      <Title order={2} mb="lg">
-        Access Requests
-      </Title>
-
       <Paper p="md" withBorder radius="md" mb="xl">
         <Group>
           <ThemeIcon size={42} radius="md" color="primaryBlue" variant="light">

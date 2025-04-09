@@ -1,4 +1,4 @@
-import { Alert, Badge, Container, Paper, Stack, Table, Text, Title } from '@mantine/core';
+import { Alert, Badge, Container, Paper, Stack, Table, Text } from '@mantine/core';
 import { useLedgerRecordsQuery } from '../../api/degrees/degree.queries';
 
 export default function AllRecords() {
@@ -6,7 +6,7 @@ export default function AllRecords() {
 
   if (isLoading) {
     return (
-      <Container size="md" style={{ textAlign: 'center', padding: '2rem' }}>
+      <Container size="md" py="xl" style={{ textAlign: 'center', padding: '2rem' }}>
         <Text>Loading all blockchain records...</Text>
       </Container>
     );
@@ -14,7 +14,7 @@ export default function AllRecords() {
 
   if (error) {
     return (
-      <Container size="md">
+      <Container size="md" py="xl">
         <Alert color="red" mb="lg">
           {(error as Error).message}
         </Alert>
@@ -23,11 +23,7 @@ export default function AllRecords() {
   }
 
   return (
-    <Container size="xl" py="xl">
-      <Title order={2} mb="xl">
-        Blockchain Ledger Records
-      </Title>
-
+    <Container size="xl" py="xl" className="page-content">
       <Paper withBorder radius="md" p="md" mb="xl">
         <Text mb="md">
           This page displays all degree records stored on the blockchain ledger. These records

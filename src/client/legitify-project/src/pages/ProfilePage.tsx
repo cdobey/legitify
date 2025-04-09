@@ -248,7 +248,9 @@ export default function SettingsPage() {
           </Avatar>
 
           <Box>
-            <Title order={2}>{user.username}</Title>
+            <Text fw={700} size="xl">
+              {user.username}
+            </Text>
             <Text c="dimmed">{user.email}</Text>
             <Group mt="xs">
               <Badge color="primaryBlue">

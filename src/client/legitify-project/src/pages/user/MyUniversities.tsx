@@ -291,7 +291,6 @@ export default function MyUniversities() {
   return (
     <Container size="lg">
       <Group justify="space-between" align="center" mb="xl">
-        <Title order={2}>My Universities</Title>
         <Button
           leftSection={<IconPlus size={16} />}
           onClick={openJoinModal}

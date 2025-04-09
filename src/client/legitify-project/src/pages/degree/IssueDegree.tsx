@@ -13,7 +13,6 @@ import {
   Text,
   TextInput,
   Textarea,
-  Title,
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useState } from 'react';
@@ -165,10 +164,7 @@ export default function IssueDegree() {
   };
 
   return (
-    <Container size="md">
-      <Title order={2} mb="xl">
-        Issue New Degree
-      </Title>
+    <Container size="md" py="xl">
       <form onSubmit={handleSubmit}>
         <Grid>
           <Grid.Col span={12}>

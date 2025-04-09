@@ -1,5 +1,17 @@
-import { AppShell, Group, Title, useMantineTheme } from '@mantine/core';
+import { AppShell, useMantineTheme } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import {
+  IconCertificate,
+  IconCheck,
+  IconFileCheck,
+  IconFiles,
+  IconHome,
+  IconInbox,
+  IconSchool,
+  IconSettings,
+  IconUser,
+  IconUserPlus,
+} from '@tabler/icons-react';
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import AppHeader from './AppHeader';
@@ -25,10 +37,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
     const handleScroll = () => {
       const currentScrollPos = window.scrollY;
 
-      // Determine if we should show or hide the header
-      // When scrolling up OR at the top of the page, show the header
-      // Otherwise hide it when scrolling down
-      const shouldBeVisible = prevScrollPos > currentScrollPos || currentScrollPos < 50;
+      // Make header hide immediately when scrolling down (any amount)
+      // Show header only when scrolling up or at the very top
+      const shouldBeVisible =
+        prevScrollPos > currentScrollPos || // Scrolling up
+        currentScrollPos < 10; // At the very top (more sensitive)
 
       setVisible(shouldBeVisible);
       setPrevScrollPos(currentScrollPos);
@@ -66,18 +79,40 @@ export default function MainLayout({ children }: MainLayoutProps) {
     setNavCollapsed(!navCollapsed);
   };
 
-  // Add function to get page title
+  // Add function to get page icon
+  const getPageIcon = () => {
+    const path = location.pathname;
+    if (path === '/') return <IconHome size={28} stroke={1.5} />;
+    if (path.includes('/degree/issue')) return <IconCertificate size={28} stroke={1.5} />;
+    if (path.includes('/degree/manage')) return <IconFiles size={28} stroke={1.5} />;
+    if (path.includes('/degree/requests')) return <IconInbox size={28} stroke={1.5} />;
+    if (path.includes('/degree/verify')) return <IconCheck size={28} stroke={1.5} />;
+    if (path.includes('/degree/accessible')) return <IconFileCheck size={28} stroke={1.5} />;
+    if (path.includes('/profile')) return <IconUser size={28} stroke={1.5} />;
+    if (path.includes('/dashboard')) return <IconHome size={28} stroke={1.5} />;
+    if (path.includes('/settings')) return <IconSettings size={28} stroke={1.5} />;
+    if (path.includes('/universities')) return <IconSchool size={28} stroke={1.5} />;
+    if (path.includes('/users/search')) return <IconUserPlus size={28} stroke={1.5} />;
+    return <IconHome size={28} stroke={1.5} />;
+  };
+
+  // Update function to get page title
   const getPageTitle = () => {
     const path = location.pathname;
     if (path === '/') {
-      return <img src="/header-image.png" alt="Header" style={{ height: '40px', marginTop: 10 }} />;
+      return 'Home';
     }
+    if (path === '/dashboard') return 'Dashboard';
     if (path === '/degree/issue') return 'Issue Degree';
     if (path === '/degree/manage') return 'Manage Degrees';
     if (path === '/degree/requests') return 'Access Requests';
     if (path === '/degree/verify') return 'Verify Degree';
     if (path === '/degree/accessible') return 'Accessible Degrees';
     if (path === '/profile') return 'Profile';
+    if (path === '/settings') return 'Settings';
+    if (path.includes('/universities')) return 'Universities';
+    if (path.includes('/users/search')) return 'Search Users';
+
     // Convert path to title case
     return (
       path
@@ -87,6 +122,24 @@ export default function MainLayout({ children }: MainLayoutProps) {
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ') || 'Dashboard'
     );
+  };
+
+  // Add function to get page description
+  const getPageDescription = () => {
+    const path = location.pathname;
+    if (path === '/') return 'Welcome to LegiTify';
+    if (path === '/dashboard') return 'Manage your academic credentials';
+    if (path === '/degree/issue') return 'Issue new academic credentials securely';
+    if (path === '/degree/manage') return 'Manage and view your academic credentials';
+    if (path === '/degree/requests') return 'Manage access requests for your credentials';
+    if (path === '/degree/verify') return 'Verify the authenticity of credentials';
+    if (path === '/degree/accessible') return 'View credentials you have access to';
+    if (path === '/profile') return 'View and manage your profile information';
+    if (path === '/settings') return 'Manage your account settings';
+    if (path.includes('/universities')) return 'Manage your university affiliations';
+    if (path.includes('/users/search')) return 'Search for users to request credential access';
+
+    return '';
   };
 
   return (
@@ -127,33 +180,89 @@ export default function MainLayout({ children }: MainLayoutProps) {
           right: 0,
           left: navCollapsed ? 80 : 280,
           transform: visible ? 'translateY(0)' : 'translateY(-100%)',
-          transition: 'transform 0.3s ease, left 0.3s ease',
-          backgroundColor: 'var(--background-light)',
-          borderBottom: 'none',
-          boxShadow: visible ? '0 2px 8px rgba(0, 0, 0, 0.05)' : 'none',
+          transition: 'transform 0.25s ease-in-out, left 0.3s ease',
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(234, 236, 239, 0.5)',
+          boxShadow: visible ? '0 4px 20px rgba(0, 0, 0, 0.03)' : 'none',
         }}
       >
-        <Group h="100%" px="md" style={{ justifyContent: 'space-between' }}>
-          <div style={{ width: 80 }}></div>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            height: '100%',
+            padding: '0 16px',
+          }}
+        >
+          {/* Left side with page title */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+            }}
+          >
+            <div
+              className="header-icon"
+              style={{
+                width: '44px',
+                height: '44px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                background: 'linear-gradient(135deg, #3c6ac3 0%, #2455b2 100%)',
+                borderRadius: '10px',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+              }}
+            >
+              {getPageIcon()}
+            </div>
 
-          <Title order={3} c="primaryBlue">
-            {getPageTitle()}
-          </Title>
+            <div>
+              <div
+                className="header-title"
+                style={{
+                  margin: 0,
+                  padding: 0,
+                  fontSize: '18px',
+                }}
+              >
+                {getPageTitle()}
+              </div>
 
-          <div style={{ width: 100, display: 'flex', justifyContent: 'flex-end', paddingRight: 0 }}>
+              {location.pathname !== '/' && (
+                <div
+                  className="header-subtitle"
+                  style={{
+                    marginTop: 2,
+                  }}
+                >
+                  {getPageDescription()}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right side with user controls */}
+          <div>
             <AppHeader />
           </div>
-        </Group>
+        </div>
       </AppShell.Header>
 
       <AppShell.Main
         className="bg-pattern"
         style={{
           marginLeft: navCollapsed ? 80 : 280,
-          marginTop: 60, // Add back margin for the header
+          marginTop: 70, // Increase margin for the header
           width: 'auto',
           transition: 'margin-left 0.3s ease',
           backgroundColor: 'var(--background-light)',
+          padding: '24px 0', // Add consistent vertical padding
         }}
       >
         {children}

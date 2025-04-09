@@ -346,8 +346,6 @@ export default function ManageDegrees() {
   return (
     <Container size="lg" py="xl">
       <Group justify="space-between" mb="xl">
-        <Title order={2}>Manage Degrees</Title>
-
         <Popover width={300} position="bottom-end" shadow="md">
           <Popover.Target>
             <Button variant="subtle" leftSection={<IconFilter size={16} />}>
