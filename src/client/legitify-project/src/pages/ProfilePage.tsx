@@ -20,6 +20,7 @@ import {
   PasswordInput,
   SimpleGrid,
   Stack,
+  Switch,
   Tabs,
   Text,
   TextInput,
@@ -32,14 +33,18 @@ import {
   IconBadge,
   IconCheck,
   IconLock,
+  IconMoonStars,
   IconSettings,
+  IconSun,
   IconUser,
 } from '@tabler/icons-react';
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function SettingsPage() {
   const { user, refreshUser } = useAuth();
+  const { isDarkMode, toggleTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string | null>('profile');
 
@@ -340,6 +345,21 @@ export default function SettingsPage() {
                     placeholder="Your email"
                     {...profileForm.getInputProps('email')}
                   />
+
+                  <Divider my="md" />
+
+                  <Title order={5}>Theme Preferences</Title>
+
+                  <Group justify="space-between">
+                    <Text>Dark Mode</Text>
+                    <Switch
+                      checked={isDarkMode}
+                      onChange={toggleTheme}
+                      size="lg"
+                      onLabel={<IconSun size={16} stroke={2.5} />}
+                      offLabel={<IconMoonStars size={16} stroke={2.5} />}
+                    />
+                  </Group>
 
                   <Button type="submit" loading={loading} mt="md">
                     Update Profile

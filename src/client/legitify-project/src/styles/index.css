@@ -1,9 +1,9 @@
 :root {
   /* Colors */
-  --primary-blue: #3c6ac3;
-  --accent-teal: #1ee7b8;
-  --accent-amber: #ffc107;
-  --background-light: #f4f7fa;
+  --primary-blue: #2291d6;
+  --accent-teal: #1ac6ad;
+  --accent-orange: #fb8500;
+  --background-light: #f4f8fa;
   --text-dark: #1a202c;
   --text-muted: #64748b;
   --border-light: #eaecef;
@@ -29,6 +29,25 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Dark theme variables */
+[data-theme='dark'] {
+  /* Colors */
+  --primary-blue: #2ca6d3;
+  --accent-teal: #15e2b5;
+  --accent-orange: #ff9913;
+  --background-light: #1f2128;
+  --text-dark: #e9ecef;
+  --text-muted: #a0aec0;
+  --border-light: #32343e;
+  --card-bg: #2a2d36;
+  --header-bg: #2a2d36;
+  --sidebar-bg: #2a2d36;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* Base Styles */
@@ -111,6 +130,13 @@ button:focus-visible {
   border-bottom: 1px solid rgba(234, 236, 239, 0.5) !important;
 }
 
+/* Dark mode header */
+[data-theme='dark'] .mantine-AppShell-header {
+  background-color: rgba(42, 45, 54, 0.85) !important;
+  border-bottom: 1px solid rgba(50, 52, 62, 0.5) !important;
+  backdrop-filter: blur(16px) !important;
+}
+
 .mantine-AppShell-header .mantine-Group-root {
   width: 100%;
   justify-content: space-between;
@@ -164,8 +190,16 @@ button:focus-visible {
   font-weight: 500;
 }
 
+[data-theme='dark'] .mantine-NavLink-root[data-active] {
+  background-color: rgba(60, 106, 195, 0.3) !important;
+}
+
 .mantine-NavLink-root:hover {
   background-color: rgba(60, 106, 195, 0.05);
+}
+
+[data-theme='dark'] .mantine-NavLink-root:hover {
+  background-color: rgba(60, 106, 195, 0.15);
 }
 
 /* Background Patterns */
@@ -248,9 +282,20 @@ button:focus-visible {
   border: 1px solid rgba(255, 255, 255, 0.6) !important;
 }
 
+[data-theme='dark'] .header-icon {
+  background: linear-gradient(135deg, #2ca6d3 0%, #1991bd 100%) !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
 .header-icon:hover {
   box-shadow: 0 5px 15px rgba(60, 106, 195, 0.4) !important;
   filter: brightness(1.05) !important;
+}
+
+[data-theme='dark'] .header-icon:hover {
+  box-shadow: 0 5px 15px rgba(44, 166, 211, 0.3) !important;
+  filter: brightness(1.1) !important;
 }
 
 /* Page title styles */
@@ -299,7 +344,7 @@ button:focus-visible {
 
 /* Profile avatar styles */
 .profile-avatar {
-  background: linear-gradient(135deg, #1a4696 0%, #0d2d69 100%) !important;
+  background: linear-gradient(135deg, #2291d6 0%, #147cc4 100%) !important;
   border: 2px solid white !important;
   color: white !important;
   font-weight: 800 !important;
@@ -309,8 +354,586 @@ button:focus-visible {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
 }
 
+[data-theme='dark'] .profile-avatar {
+  background: linear-gradient(135deg, #2ca6d3 0%, #1991bd 100%) !important;
+  border: 2px solid #2a2d36 !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+}
+
 .profile-avatar:hover {
-  box-shadow: 0 2px 12px rgba(36, 85, 178, 0.4) !important;
-  border: 2px solid #e6f0ff !important;
+  box-shadow: 0 2px 12px rgba(35, 145, 214, 0.4) !important;
+  border: 2px solid #e6f7ff !important;
   filter: brightness(1.1) !important;
+}
+
+[data-theme='dark'] .profile-avatar:hover {
+  box-shadow: 0 2px 12px rgba(44, 166, 211, 0.4) !important;
+  border: 2px solid #32343e !important;
+  filter: brightness(1.1) !important;
+}
+
+/* Fix for header title in dark mode */
+[data-theme='dark'] .header-title {
+  color: #e9ecef;
+}
+
+[data-theme='dark'] .header-subtitle {
+  color: #a0aec0;
+}
+
+/* Orange accent styles for buttons and links */
+.accent-orange {
+  color: var(--accent-orange) !important;
+}
+
+.bg-accent-orange {
+  background-color: var(--accent-orange) !important;
+}
+
+/* Accent button styles */
+button.accent-orange {
+  background: linear-gradient(135deg, #ff9100 0%, #fb8500 100%) !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(251, 133, 0, 0.3) !important;
+}
+
+[data-theme='dark'] button.accent-orange {
+  background: linear-gradient(135deg, #ff9913 0%, #ee8800 100%) !important;
+  box-shadow: 0 2px 8px rgba(255, 153, 19, 0.3) !important;
+}
+
+button.accent-orange:hover {
+  filter: brightness(1.1) !important;
+  box-shadow: 0 3px 10px rgba(251, 133, 0, 0.4) !important;
+}
+
+[data-theme='dark'] button.accent-orange:hover {
+  filter: brightness(1.1) !important;
+  box-shadow: 0 3px 10px rgba(255, 153, 19, 0.4) !important;
+}
+
+/* Modern badges and tags */
+.badge-accent {
+  background-color: rgba(251, 133, 0, 0.15) !important;
+  color: var(--accent-orange) !important;
+  border: 1px solid rgba(251, 133, 0, 0.3) !important;
+  border-radius: 4px !important;
+  padding: 2px 8px !important;
+  font-weight: 500 !important;
+}
+
+[data-theme='dark'] .badge-accent {
+  background-color: rgba(255, 153, 19, 0.15) !important;
+  border: 1px solid rgba(255, 153, 19, 0.3) !important;
+}
+
+/* Enhanced Card and Paper styling in dark mode */
+[data-theme='dark'] .mantine-Card-root {
+  background-color: #323642;
+  border-color: #3f4356;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+[data-theme='dark'] .mantine-Paper-root {
+  background-color: #323642;
+  border-color: #3f4356;
+}
+
+/* Subtle highlight on top of cards */
+[data-theme='dark'] .mantine-Card-root::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(76, 82, 107, 0.1),
+    rgba(76, 82, 107, 0.6),
+    rgba(76, 82, 107, 0.1)
+  );
+}
+
+/* Better inner card separation */
+[data-theme='dark'] .inner-card {
+  background-color: #282b36;
+  border: 1px solid #3f4356;
+  border-radius: 6px;
+  padding: 12px;
+  margin: 8px 0;
+}
+
+/* Create inset panel effect for form fields */
+[data-theme='dark'] .mantine-InputWrapper-root .mantine-Input-wrapper {
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+/* Subtle gradient backgrounds for section headers */
+[data-theme='dark'] .section-header {
+  background: linear-gradient(180deg, #2d303c 0%, #282b36 100%);
+  padding: 12px 16px;
+  border-radius: 6px 6px 0 0;
+  border-bottom: 1px solid #3f4356;
+}
+
+/* Highlight card on hover */
+[data-theme='dark'] .highlight-on-hover:hover {
+  box-shadow: 0 6px 20px rgba(44, 166, 211, 0.15);
+  border-color: rgba(44, 166, 211, 0.3);
+}
+
+/* Better active state for interactive card elements */
+[data-theme='dark'] .interactive-card:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* Improve form inputs in dark mode */
+[data-theme='dark'] .mantine-TextInput-input,
+[data-theme='dark'] .mantine-PasswordInput-input,
+[data-theme='dark'] .mantine-Textarea-input,
+[data-theme='dark'] .mantine-Select-input {
+  background-color: #292b36;
+  border-color: #3f4356;
+  color: #e9ecef;
+}
+
+[data-theme='dark'] .mantine-TextInput-input:focus,
+[data-theme='dark'] .mantine-PasswordInput-input:focus,
+[data-theme='dark'] .mantine-Textarea-input:focus,
+[data-theme='dark'] .mantine-Select-input:focus {
+  border-color: #2ca6d3;
+}
+
+[data-theme='dark'] .mantine-InputWrapper-label {
+  color: #c1c2c5;
+}
+
+/* Fancy card hover effects */
+.hoverable-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hoverable-card:hover {
+  transform: translateY(-4px);
+}
+
+[data-theme='light'] .hoverable-card:hover {
+  box-shadow: 0 8px 15px rgba(34, 145, 214, 0.15);
+}
+
+[data-theme='dark'] .hoverable-card:hover {
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Make primary buttons more consistent with theme */
+[data-theme='dark'] .mantine-Button-root {
+  border-color: transparent;
+}
+
+[data-theme='dark'] .mantine-Button-filled[data-variant='filled'] {
+  background: linear-gradient(135deg, #2ca6d3 0%, #1991bd 100%);
+}
+
+[data-theme='dark'] .mantine-Button-filled[data-variant='filled']:hover {
+  background: linear-gradient(135deg, #38b6e0 0%, #1a9dcb 100%);
+}
+
+/* Accent buttons with orange styling */
+.mantine-Button-root.accent-button {
+  background: linear-gradient(135deg, #ff9100 0%, #fb8500 100%);
+  color: white;
+  border: none;
+}
+
+[data-theme='dark'] .mantine-Button-root.accent-button {
+  background: linear-gradient(135deg, #ff9913 0%, #ee8800 100%);
+}
+
+/* Card headers in dark mode */
+[data-theme='dark'] .card-header {
+  background-color: #282b36;
+  border-bottom: 1px solid #3f4356;
+}
+
+/* Badge styling improvements */
+[data-theme='dark'] .mantine-Badge-root {
+  background-color: #282b36;
+}
+
+[data-theme='dark'] .mantine-Badge-root[data-variant='filled'] {
+  color: white;
+}
+
+/* Green success badges */
+[data-theme='dark'] .mantine-Badge-root[data-color='green'] {
+  background-color: rgba(21, 226, 181, 0.15);
+  color: #15e2b5;
+  border: 1px solid rgba(21, 226, 181, 0.3);
+}
+
+[data-theme='dark'] .mantine-Badge-root[data-color='green'][data-variant='filled'] {
+  background-color: #15e2b5;
+  color: #1f2128;
+  border: none;
+}
+
+/* Blue info badges */
+[data-theme='dark'] .mantine-Badge-root[data-color='blue'] {
+  background-color: rgba(44, 166, 211, 0.15);
+  color: #2ca6d3;
+  border: 1px solid rgba(44, 166, 211, 0.3);
+}
+
+[data-theme='dark'] .mantine-Badge-root[data-color='blue'][data-variant='filled'] {
+  background-color: #2ca6d3;
+  color: white;
+  border: none;
+}
+
+/* Orange accent badges */
+[data-theme='dark'] .mantine-Badge-root[data-color='orange'] {
+  background-color: rgba(255, 153, 19, 0.15);
+  color: #ff9913;
+  border: 1px solid rgba(255, 153, 19, 0.3);
+}
+
+[data-theme='dark'] .mantine-Badge-root[data-color='orange'][data-variant='filled'] {
+  background-color: #ff9913;
+  color: white;
+  border: none;
+}
+
+/* Divider styling */
+[data-theme='dark'] .mantine-Divider-root {
+  border-color: #3f4356;
+  opacity: 0.6;
+}
+
+/* Scrollbar styling */
+[data-theme='dark'] ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+[data-theme='dark'] ::-webkit-scrollbar-track {
+  background: #232631;
+}
+
+[data-theme='dark'] ::-webkit-scrollbar-thumb {
+  background: #3f4356;
+  border-radius: 5px;
+}
+
+[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
+  background: #4a4f66;
+}
+
+/* Light mode scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f4f8fa;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d0d5dd;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #bbc1cc;
+}
+
+/* Card content styling improvements */
+.card-section {
+  padding: 12px 16px;
+}
+
+[data-theme='dark'] .card-section {
+  background-color: #282b36;
+  border-bottom: 1px solid #3f4356;
+}
+
+/* Nested cards inside cards (better contrast) */
+[data-theme='dark'] .mantine-Card-root .mantine-Card-root {
+  background-color: #282b36;
+  border: 1px solid #3f4356;
+}
+
+/* Form elements inside cards - create better contrast */
+[data-theme='dark'] .mantine-Card-root .mantine-TextInput-input,
+[data-theme='dark'] .mantine-Card-root .mantine-PasswordInput-input,
+[data-theme='dark'] .mantine-Card-root .mantine-Textarea-input,
+[data-theme='dark'] .mantine-Card-root .mantine-Select-input,
+[data-theme='dark'] .mantine-Card-root .mantine-NumberInput-input,
+[data-theme='dark'] .mantine-Card-root .mantine-DateInput-input,
+[data-theme='dark'] .mantine-Paper-root .mantine-TextInput-input,
+[data-theme='dark'] .mantine-Paper-root .mantine-PasswordInput-input,
+[data-theme='dark'] .mantine-Paper-root .mantine-Textarea-input,
+[data-theme='dark'] .mantine-Paper-root .mantine-Select-input,
+[data-theme='dark'] .mantine-Paper-root .mantine-NumberInput-input,
+[data-theme='dark'] .mantine-Paper-root .mantine-DateInput-input {
+  background-color: #252731;
+  border-color: #3a3e4e;
+}
+
+/* Hover state for inputs in cards */
+[data-theme='dark'] .mantine-Card-root .mantine-TextInput-input:hover,
+[data-theme='dark'] .mantine-Card-root .mantine-PasswordInput-input:hover,
+[data-theme='dark'] .mantine-Card-root .mantine-Textarea-input:hover,
+[data-theme='dark'] .mantine-Card-root .mantine-Select-input:hover,
+[data-theme='dark'] .mantine-Card-root .mantine-NumberInput-input:hover,
+[data-theme='dark'] .mantine-Card-root .mantine-DateInput-input:hover,
+[data-theme='dark'] .mantine-Paper-root .mantine-TextInput-input:hover,
+[data-theme='dark'] .mantine-Paper-root .mantine-PasswordInput-input:hover,
+[data-theme='dark'] .mantine-Paper-root .mantine-Textarea-input:hover,
+[data-theme='dark'] .mantine-Paper-root .mantine-Select-input:hover,
+[data-theme='dark'] .mantine-Paper-root .mantine-NumberInput-input:hover,
+[data-theme='dark'] .mantine-Paper-root .mantine-DateInput-input:hover {
+  border-color: #4a4f66;
+}
+
+/* Enhanced buttons inside cards */
+[data-theme='dark'] .mantine-Card-root .mantine-Button-root,
+[data-theme='dark'] .mantine-Paper-root .mantine-Button-root {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Secondary and outline buttons inside cards for better visibility */
+[data-theme='dark'] .mantine-Card-root .mantine-Button-root[data-variant='light'],
+[data-theme='dark'] .mantine-Card-root .mantine-Button-root[data-variant='outline'],
+[data-theme='dark'] .mantine-Paper-root .mantine-Button-root[data-variant='light'],
+[data-theme='dark'] .mantine-Paper-root .mantine-Button-root[data-variant='outline'] {
+  background-color: #282b36;
+  border-color: #3f4356;
+}
+
+/* Table styling in dark mode */
+[data-theme='dark'] .mantine-Table-root {
+  border-color: #3f4356;
+}
+
+[data-theme='dark'] .mantine-Table-root th {
+  background-color: #282b36;
+  color: #e9ecef;
+  border-color: #3f4356;
+}
+
+[data-theme='dark'] .mantine-Table-root td {
+  border-color: #3f4356;
+}
+
+[data-theme='dark'] .mantine-Table-root tr:nth-of-type(odd) {
+  background-color: #2d303c;
+}
+
+[data-theme='dark'] .mantine-Table-root tr:hover {
+  background-color: #2a2d36;
+}
+
+/* Card Section styling */
+.mantine-Card-section {
+  padding: 16px;
+}
+
+[data-theme='dark'] .mantine-Card-section {
+  background-color: #282b36;
+  border-color: #3f4356;
+}
+
+/* Card header and footer sections */
+[data-theme='dark'] .mantine-Card-section:first-of-type {
+  background-color: #282b36;
+  border-bottom: 1px solid #3f4356;
+}
+
+[data-theme='dark'] .mantine-Card-section:last-of-type {
+  background-color: #282b36;
+  border-top: 1px solid #3f4356;
+}
+
+/* Accordion styling for better contrast */
+[data-theme='dark'] .mantine-Accordion-item {
+  border-color: #3f4356;
+}
+
+[data-theme='dark'] .mantine-Accordion-control {
+  background-color: #282b36;
+}
+
+[data-theme='dark'] .mantine-Accordion-content {
+  background-color: #323642;
+}
+
+/* Fix for accordion focus outline */
+.no-focus-outline:focus-within {
+  outline: none !important;
+}
+
+/* Menu styling for better contrast */
+[data-theme='dark'] .mantine-Menu-dropdown {
+  background-color: #2d303c;
+  border-color: #3f4356;
+}
+
+[data-theme='dark'] .mantine-Menu-item:hover {
+  background-color: #282b36;
+}
+
+/* File input styling for better contrast */
+[data-theme='dark'] .mantine-FileInput-input {
+  background-color: #252731;
+  border-color: #3a3e4e;
+}
+
+/* Accent Border Cards */
+.accent-card {
+  border-left: 3px solid var(--accent-orange) !important;
+  transition: all 0.2s ease;
+}
+
+[data-theme='dark'] .accent-card {
+  border-left: 3px solid var(--accent-orange) !important;
+  box-shadow: 0 4px 15px rgba(255, 153, 19, 0.1) !important;
+}
+
+.accent-card:hover {
+  box-shadow: 0 6px 20px rgba(251, 133, 0, 0.15) !important;
+}
+
+/* Accent Top Border Cards */
+.accent-top-card {
+  border-top: 3px solid var(--accent-orange) !important;
+  border-radius: 0 0 8px 8px !important;
+}
+
+/* Accent Progress Bar */
+.accent-progress .mantine-Progress-root .mantine-Progress-bar {
+  background-color: var(--accent-orange) !important;
+}
+
+/* Accent Icon */
+.accent-icon {
+  color: var(--accent-orange) !important;
+}
+
+[data-theme='dark'] .accent-icon {
+  color: var(--accent-orange) !important;
+}
+
+/* Accent ThemeIcon */
+.accent-theme-icon {
+  background: linear-gradient(135deg, #ff9100 0%, #fb8500 100%) !important;
+  color: white !important;
+}
+
+[data-theme='dark'] .accent-theme-icon {
+  background: linear-gradient(135deg, #ff9913 0%, #ee8800 100%) !important;
+  color: white !important;
+}
+
+/* Accent Link */
+.accent-link {
+  color: var(--accent-orange) !important;
+  transition: all 0.2s ease;
+}
+
+.accent-link:hover {
+  text-decoration: underline;
+  filter: brightness(1.1);
+}
+
+/* Accent Alert */
+[data-theme='dark'] .mantine-Alert-root[data-color='orange'] {
+  background-color: rgba(255, 153, 19, 0.15);
+  border-color: rgba(255, 153, 19, 0.3);
+}
+
+[data-theme='dark'] .mantine-Alert-icon[data-color='orange'] {
+  color: var(--accent-orange);
+}
+
+/* Accent Text */
+.accent-text {
+  color: var(--accent-orange) !important;
+}
+
+/* Accent Gradients for Headings */
+.accent-gradient-text {
+  background: linear-gradient(90deg, var(--primary-blue), var(--accent-orange));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 700;
+}
+
+/* Accent Focus */
+[data-theme='dark'] .accent-focus:focus {
+  border-color: var(--accent-orange) !important;
+  box-shadow: 0 0 0 2px rgba(255, 153, 19, 0.2) !important;
+}
+
+/* Highlight Important Cards */
+.highlight-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.highlight-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 15px;
+  height: 15px;
+  background: linear-gradient(135deg, transparent 50%, var(--accent-orange) 50%);
+  border-radius: 0 0 0 4px;
+}
+
+/* Animated Orange Pulse for Notifications */
+@keyframes orangePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(251, 133, 0, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(251, 133, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(251, 133, 0, 0);
+  }
+}
+
+.pulse-orange {
+  animation: orangePulse 2s infinite;
+}
+
+/* Orange Accent Tab */
+[data-theme='dark'] .mantine-Tabs-tab[data-active='true'] {
+  border-color: var(--accent-orange) !important;
+  color: var(--accent-orange) !important;
+}
+
+/* Orange Button Group */
+.orange-segment .mantine-SegmentedControl-indicator {
+  background-color: var(--accent-orange) !important;
+}
+
+/* Orange Switch */
+.orange-switch .mantine-Switch-track[data-checked] {
+  background-color: var(--accent-orange) !important;
+}
+
+/* Orange Chip */
+.orange-chip {
+  background-color: rgba(251, 133, 0, 0.1) !important;
+  color: var(--accent-orange) !important;
+  border: 1px solid rgba(251, 133, 0, 0.2) !important;
 }

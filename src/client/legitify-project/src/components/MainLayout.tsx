@@ -14,6 +14,7 @@ import {
 } from '@tabler/icons-react';
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useTheme } from '../contexts/ThemeContext';
 import AppHeader from './AppHeader';
 import AppNavigation from './AppNavigation';
 
@@ -25,6 +26,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const [opened, { toggle, close }] = useDisclosure(false);
   const [navCollapsed, setNavCollapsed] = useState(true);
   const theme = useMantineTheme();
+  const { isDarkMode } = useTheme();
   const location = useLocation();
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -142,6 +144,23 @@ export default function MainLayout({ children }: MainLayoutProps) {
     return '';
   };
 
+  // Style for header background based on theme
+  const getHeaderBackground = () => {
+    return isDarkMode ? 'rgba(42, 45, 54, 0.85)' : 'rgba(255, 255, 255, 0.9)';
+  };
+
+  // Style for border based on theme
+  const getHeaderBorder = () => {
+    return isDarkMode ? '1px solid rgba(50, 52, 62, 0.5)' : '1px solid rgba(234, 236, 239, 0.5)';
+  };
+
+  // Get main content background
+  const getMainBackground = () => {
+    return isDarkMode
+      ? 'linear-gradient(180deg, #1f2128 0%, #232631 100%)'
+      : 'linear-gradient(180deg, #f4f8fa 0%, #edf1f5 100%)';
+  };
+
   return (
     <AppShell
       header={{ height: 60 }}
@@ -181,10 +200,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
           left: navCollapsed ? 80 : 280,
           transform: visible ? 'translateY(0)' : 'translateY(-100%)',
           transition: 'transform 0.25s ease-in-out, left 0.3s ease',
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          backgroundColor: getHeaderBackground(),
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(234, 236, 239, 0.5)',
+          borderBottom: getHeaderBorder(),
           boxShadow: visible ? '0 4px 20px rgba(0, 0, 0, 0.03)' : 'none',
         }}
       >
@@ -214,9 +233,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'white',
-                background: 'linear-gradient(135deg, #3c6ac3 0%, #2455b2 100%)',
+                background: isDarkMode
+                  ? 'linear-gradient(135deg, #2ca6d3 0%, #1991bd 100%)'
+                  : 'linear-gradient(135deg, #2291d6 0%, #147cc4 100%)',
                 borderRadius: '10px',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
+                border: isDarkMode
+                  ? '1px solid rgba(255, 255, 255, 0.15)'
+                  : '1px solid rgba(255, 255, 255, 0.3)',
               }}
             >
               {getPageIcon()}
@@ -248,21 +271,16 @@ export default function MainLayout({ children }: MainLayoutProps) {
           </div>
 
           {/* Right side with user controls */}
-          <div>
-            <AppHeader />
-          </div>
+          <AppHeader />
         </div>
       </AppShell.Header>
 
       <AppShell.Main
-        className="bg-pattern"
         style={{
           marginLeft: navCollapsed ? 80 : 280,
-          marginTop: 70, // Increase margin for the header
-          width: 'auto',
           transition: 'margin-left 0.3s ease',
-          backgroundColor: 'var(--background-light)',
-          padding: '24px 0', // Add consistent vertical padding
+          background: getMainBackground(),
+          padding: '24px 0',
         }}
       >
         {children}

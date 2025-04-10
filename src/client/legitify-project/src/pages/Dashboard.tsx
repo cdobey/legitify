@@ -97,7 +97,14 @@ export default function Dashboard() {
   }
 
   const renderWelcomeCard = () => (
-    <Card shadow="sm" p="lg" radius="md" withBorder mb="xl">
+    <Card
+      shadow="sm"
+      p="lg"
+      radius="md"
+      withBorder
+      mb="xl"
+      className="accent-card highlight-on-hover"
+    >
       <Group justify="space-between" mb="md">
         <div>
           <Title order={3} fw={500}>
@@ -111,7 +118,7 @@ export default function Dashboard() {
               : 'Verify and access academic credentials'}
           </Text>
         </div>
-        <ThemeIcon size={50} radius="md" color="primaryBlue">
+        <ThemeIcon size={50} radius="md" className="accent-theme-icon">
           {user.role === 'university' ? (
             <IconSchool size={30} />
           ) : user.role === 'individual' ? (
@@ -131,14 +138,14 @@ export default function Dashboard() {
             {
               title: 'Issue New Degree',
               icon: <IconCertificate size={22} />,
-              color: theme.colors.primaryBlue[5],
+              color: theme.colors.primaryBlue?.[5] || theme.colors.blue[5],
               link: '/degree/issue',
               description: 'Issue a new credential to a student',
             },
             {
               title: 'View All Records',
               icon: <IconEye size={22} />,
-              color: theme.colors.accentTeal[5],
+              color: theme.colors.accentTeal?.[5] || theme.colors.teal[5],
               link: '/degree/all-records',
               description: 'View all records on the blockchain',
             },
@@ -148,37 +155,38 @@ export default function Dashboard() {
             {
               title: 'Manage Degrees',
               icon: <IconFiles size={22} />,
-              color: theme.colors.primaryBlue[5],
+              color: theme.colors.primaryBlue?.[5] || theme.colors.blue[5],
               link: '/degree/manage',
               description: 'View and manage your credentials',
             },
             {
               title: 'Access Requests',
               icon: <IconInbox size={22} />,
-              color: theme.colors.accentTeal[5],
+              color: theme.colors.accentOrange?.[5] || theme.colors.orange[5],
               link: '/degree/requests',
               description: `View access requests (${pendingRequests.length} pending)`,
+              accent: pendingRequests.length > 0,
             },
           ]
         : [
             {
               title: 'Verify Degree',
               icon: <IconCheck size={22} />,
-              color: theme.colors.primaryBlue[5],
+              color: theme.colors.primaryBlue?.[5] || theme.colors.blue[5],
               link: '/degree/verify',
               description: 'Verify a credential document',
             },
             {
               title: 'Search Users',
               icon: <IconUserPlus size={22} />,
-              color: theme.colors.accentTeal[5],
+              color: theme.colors.accentTeal?.[5] || theme.colors.teal[5],
               link: '/users/search',
               description: 'Find users and request access',
             },
             {
               title: 'Accessible Degrees',
               icon: <IconFileCheck size={22} />,
-              color: theme.colors.accentAmber[5],
+              color: theme.colors.accentOrange?.[5] || theme.colors.orange[5],
               link: '/degree/accessible',
               description: 'View credentials you have access to',
             },
@@ -198,14 +206,10 @@ export default function Dashboard() {
               withBorder
               radius="md"
               p="sm"
+              className={`hoverable-card ${action.accent ? 'highlight-card' : ''}`}
               style={{
                 textDecoration: 'none',
                 color: 'inherit',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                '&:hover': {
-                  transform: 'translateY(-5px)',
-                  boxShadow: '0 5px 15px rgba(0,0,0,0.1)',
-                },
               }}
             >
               <Group>

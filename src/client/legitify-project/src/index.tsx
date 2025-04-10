@@ -1,4 +1,3 @@
-import { MantineProvider } from '@mantine/core';
 import '@mantine/core/styles.css';
 import { Notifications } from '@mantine/notifications';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -10,8 +9,8 @@ import App from './App';
 import { queryClient } from './config/queryClient';
 import { AuthProvider } from './contexts/AuthContext';
 import { ModalsProvider } from './contexts/ModalsContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import './styles/index.css';
-import { theme } from './styles/theme';
 
 const interFontLink = document.createElement('link');
 interFontLink.rel = 'stylesheet';
@@ -29,7 +28,7 @@ if (initialLoader) {
 root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <MantineProvider theme={theme}>
+      <ThemeProvider>
         <ModalsProvider>
           <Notifications />
           <BrowserRouter>
@@ -38,7 +37,7 @@ root.render(
             </AuthProvider>
           </BrowserRouter>
         </ModalsProvider>
-      </MantineProvider>
+      </ThemeProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   </React.StrictMode>,

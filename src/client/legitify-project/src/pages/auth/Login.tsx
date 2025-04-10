@@ -50,9 +50,10 @@ const Login = () => {
         padding="xl"
         radius="lg"
         withBorder
+        className="accent-top-card"
         style={{ maxWidth: 450, margin: '0 auto' }}
       >
-        <Title order={2} ta="center" mb="sm" c="primaryBlue">
+        <Title order={2} ta="center" mb="sm" className="accent-gradient-text">
           Welcome Back
         </Title>
         <Text size="sm" c="dimmed" ta="center" mb="lg">
@@ -63,20 +64,22 @@ const Login = () => {
           <TextInput
             label="Email"
             placeholder="your@email.com"
-            leftSection={<IconMail size={16} />}
+            leftSection={<IconMail size={16} className="accent-icon" />}
             value={formData.email}
             onChange={e => setFormData({ ...formData, email: e.target.value })}
             required
             mb="md"
+            className="accent-focus"
           />
           <PasswordInput
             label="Password"
             placeholder="Your password"
-            leftSection={<IconLock size={16} />}
+            leftSection={<IconLock size={16} className="accent-icon" />}
             value={formData.password}
             onChange={e => setFormData({ ...formData, password: e.target.value })}
             required
             mb="lg"
+            className="accent-focus"
           />
 
           {error && (
@@ -95,7 +98,7 @@ const Login = () => {
             type="submit"
             fullWidth
             loading={isLoading}
-            color="primaryBlue"
+            className="accent-button"
             size="md"
             rightSection={<IconArrowRight size={18} />}
           >
@@ -106,13 +109,7 @@ const Login = () => {
             <Text size="sm" c="dimmed">
               Don't have an account?
             </Text>
-            <Text
-              component={Link}
-              to="/register"
-              size="sm"
-              fw={500}
-              style={{ color: 'var(--primary-blue)' }}
-            >
+            <Text component={Link} to="/register" size="sm" fw={500} className="accent-link">
               Register now
             </Text>
           </Group>

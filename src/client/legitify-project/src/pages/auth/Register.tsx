@@ -1,16 +1,20 @@
 import { register } from '@/api/auth/auth.api';
+import { UserRole } from '@/api/users/user.models';
 import {
   Alert,
+  Anchor,
   Button,
   Card,
+  Checkbox,
   Container,
   Group,
   LoadingOverlay,
-  MultiSelect,
   PasswordInput,
-  Radio,
+  SegmentedControl,
   Select,
+  SimpleGrid,
   Stepper,
+  Switch,
   Text,
   TextInput,
   Title,
@@ -18,18 +22,18 @@ import {
 import { useForm } from '@mantine/form';
 import {
   IconAlertCircle,
+  IconArrowLeft,
   IconArrowRight,
-  IconAt,
-  IconBuildingBank,
-  IconDeviceFloppy,
+  IconBriefcase,
   IconLock,
-  IconSchool,
+  IconLockCheck,
+  IconMail,
+  IconSend,
   IconUser,
-  IconUserCircle,
 } from '@tabler/icons-react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface University {
@@ -40,6 +44,36 @@ interface University {
   owner: {
     username: string;
   };
+}
+
+// Define registration data type
+interface RegistrationData {
+  username: string;
+  email: string;
+  password: string;
+  role: string;
+  country: string;
+  termsAccepted: boolean;
+  orgName?: string;
+}
+
+// Define form values interface
+interface FormValues {
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  firstName: string;
+  lastName: string;
+  role: UserRole;
+  country: string;
+  organizationName: string;
+  universityName: string;
+  universityDisplayName: string;
+  universityDescription: string;
+  termsAccepted: boolean;
+  provideOrgInfoLater: boolean;
+  joinUniversityId: string;
 }
 
 const Register = () => {
@@ -54,33 +88,34 @@ const Register = () => {
   // Create a comprehensive form with all fields for both steps
   const form = useForm({
     initialValues: {
+      username: '',
       email: '',
       password: '',
-      passwordConfirm: '',
-      username: '',
-      role: 'individual' as 'individual' | 'university' | 'employer',
-      universityAction: 'create' as 'create' | 'join' | 'later',
+      confirmPassword: '',
+      firstName: '',
+      lastName: '',
+      role: 'individual' as UserRole,
+      country: '',
+      organizationName: '',
       universityName: '',
       universityDisplayName: '',
       universityDescription: '',
-      selectedUniversities: [] as string[],
-      organizationName: '',
+      termsAccepted: false,
+      provideOrgInfoLater: false,
+      joinUniversityId: '',
     },
     validate: {
       email: value => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
       username: value => (value.length >= 3 ? null : 'Username must be at least 3 characters'),
       password: value => (value.length >= 8 ? null : 'Password must be at least 8 characters'),
-      passwordConfirm: (value, values) =>
+      confirmPassword: (value, values) =>
         value === values.password ? null : 'Passwords do not match',
     },
   });
 
   // Fetch universities for individual registration or when joining a university
   useEffect(() => {
-    if (
-      (form.values.role === 'individual' && active === 1) ||
-      (form.values.role === 'university' && form.values.universityAction === 'join' && active === 1)
-    ) {
+    if (active === 1 && form.values.role === 'individual') {
       const fetchUniversities = async () => {
         try {
           setIsLoadingUniversities(true);
@@ -88,19 +123,60 @@ const Register = () => {
           const response = await axios.get(`${baseUrl}/university/all`);
           setUniversities(response.data);
         } catch (error) {
-          console.error('Failed to fetch universities:', error);
+          console.error('Error fetching universities:', error);
           setError('Failed to load universities. Please try again.');
         } finally {
           setIsLoadingUniversities(false);
         }
       };
-
       fetchUniversities();
     }
-  }, [form.values.role, active, form.values.universityAction]);
+  }, [form.values.role, active]);
 
-  const nextStep = () => setActive(current => current + 1);
-  const prevStep = () => setActive(current => Math.max(0, current - 1));
+  const handleRegistration = (data: RegistrationData) => {
+    // This function would handle the API call to register the user
+    console.log('Registration data:', data);
+    // Example: api.post('/auth/register', data)
+    //   .then(response => navigate('/auth/login'))
+    //   .catch(error => console.error('Registration failed:', error));
+  };
+
+  const nextStep = () => {
+    if (active === 0) {
+      form.validate();
+      if (!form.isValid()) return;
+    } else if (active === 1) {
+      form.validate();
+      if (!form.isValid()) return;
+    }
+
+    if (active < 1) {
+      setActive(current => current + 1);
+    } else {
+      // Format registration data
+      let registrationData: RegistrationData = {
+        username: form.values.username,
+        email: form.values.email,
+        password: form.values.password,
+        role: form.values.role,
+        country: form.values.country,
+        termsAccepted: form.values.termsAccepted,
+      };
+
+      // Add role-specific data
+      if (form.values.role === 'university' || form.values.role === 'employer') {
+        registrationData.orgName = form.values.organizationName;
+      }
+
+      // Send registration data
+      console.log('Submitting registration:', registrationData);
+      handleRegistration(registrationData);
+    }
+  };
+
+  const prevStep = () => {
+    setActive(prev => prev - 1);
+  };
 
   const handleSubmit = async () => {
     setError('');
@@ -115,28 +191,17 @@ const Register = () => {
       };
 
       // Add role-specific data
-      if (form.values.role === 'university') {
-        if (form.values.universityAction === 'create') {
-          // For university creating a new university, make sure to send the correct fields
-          registrationData = {
-            ...registrationData,
-            universityName: form.values.universityName,
-            universityDisplayName: form.values.universityDisplayName,
-            universityDescription: form.values.universityDescription,
-          };
-        } else if (form.values.universityAction === 'join') {
-          // For university joining an existing university
-          registrationData.joinUniversityId = form.values.selectedUniversities[0]; // Only allow joining one
-        }
-        // If "later" is selected, no additional data needed
-      } else if (form.values.role === 'individual') {
-        // For individuals who want to join universities
-        if (form.values.selectedUniversities.length > 0) {
-          registrationData.universityIds = form.values.selectedUniversities;
-        }
+      if (form.values.role === 'university' && !form.values.provideOrgInfoLater) {
+        registrationData.universityName = form.values.universityName;
+        registrationData.universityDisplayName = form.values.universityDisplayName;
+        registrationData.universityDescription = form.values.universityDescription;
       } else if (form.values.role === 'employer') {
-        // For employers
         registrationData.orgName = form.values.organizationName;
+      }
+
+      // Add university join request for individuals
+      if (form.values.role === 'individual' && form.values.joinUniversityId) {
+        registrationData.joinUniversityId = form.values.joinUniversityId;
       }
 
       // Register the user
@@ -153,231 +218,198 @@ const Register = () => {
     }
   };
 
-  // Render step 1 content (basic account info)
-  const renderStep1 = () => (
-    <>
-      <TextInput
-        label="Email"
-        placeholder="your@email.com"
-        leftSection={<IconAt size={16} />}
-        required
-        {...form.getInputProps('email')}
-        mb="md"
-      />
+  const isStep1Valid = () => {
+    const { username, email, password, confirmPassword, role } = form.values;
+    const basicFieldsValid =
+      username.trim() !== '' &&
+      email.trim() !== '' &&
+      password.trim() !== '' &&
+      confirmPassword.trim() !== '' &&
+      password === confirmPassword;
 
-      <TextInput
-        label="Username"
-        placeholder="Choose a username"
-        leftSection={<IconUser size={16} />}
-        required
-        {...form.getInputProps('username')}
-        mb="md"
-      />
+    return basicFieldsValid;
+  };
 
-      <PasswordInput
-        label="Password"
-        placeholder="Your password"
-        leftSection={<IconLock size={16} />}
-        required
-        {...form.getInputProps('password')}
-        mb="md"
-      />
+  const isStep2Valid = () => {
+    const {
+      role,
+      country,
+      termsAccepted,
+      universityName,
+      universityDisplayName,
+      provideOrgInfoLater,
+    } = form.values;
 
-      <PasswordInput
-        label="Confirm Password"
-        placeholder="Confirm your password"
-        leftSection={<IconLock size={16} />}
-        required
-        {...form.getInputProps('passwordConfirm')}
-        mb="md"
-      />
+    // Basic validation that applies to all roles
+    const basicValid = !!role && country !== '' && termsAccepted;
 
-      <Select
-        label="Role"
-        placeholder="Select your role"
-        leftSection={<IconUserCircle size={16} />}
-        required
-        data={[
-          { value: 'university', label: 'University' },
-          { value: 'individual', label: 'Individual' },
-          { value: 'employer', label: 'Employer' },
-        ]}
-        {...form.getInputProps('role')}
-        mb="lg"
-      />
+    // Additional validation for university role when not choosing to provide info later
+    if (role === 'university' && !provideOrgInfoLater) {
+      return basicValid && !!universityName && !!universityDisplayName;
+    }
 
-      <Group justify="flex-end">
-        <Button
-          onClick={() => {
-            // Validate step 1 fields
-            const errors = form.validate();
-            if (!errors.hasErrors) {
-              nextStep();
-            }
-          }}
-          rightSection={<IconArrowRight size={18} />}
-        >
-          Next Step
-        </Button>
-      </Group>
-    </>
-  );
+    return basicValid;
+  };
 
-  // Render step 2 content (role-specific options)
-  const renderStep2 = () => {
-    if (form.values.role === 'university') {
-      return (
-        <>
-          <Text mb="md">Please select what you would like to do with your university account:</Text>
-
-          <Radio.Group {...form.getInputProps('universityAction')} mb="lg">
-            <Group mb="sm">
-              <Radio value="create" label="Create a new university" />
-            </Group>
-            <Group mb="sm">
-              <Radio value="join" label="Request to join an existing university" />
-            </Group>
-            <Group mb="sm">
-              <Radio value="later" label="I'll do this later" />
-            </Group>
-          </Radio.Group>
-
-          {form.values.universityAction === 'create' && (
-            <>
-              <TextInput
-                label="University Name (Identifier)"
-                description="Used as a unique identifier (e.g., dublin-city-university)"
-                placeholder="Enter a unique name"
-                required
-                {...form.getInputProps('universityName')}
-                mb="md"
-              />
-
-              <TextInput
-                label="Display Name"
-                description="Full name shown to users (e.g., Dublin City University)"
-                placeholder="Enter university display name"
-                required
-                leftSection={<IconBuildingBank size={16} />}
-                {...form.getInputProps('universityDisplayName')}
-                mb="md"
-              />
-
-              <TextInput
-                label="Description"
-                description="A brief description of your university"
-                placeholder="Enter description"
-                {...form.getInputProps('universityDescription')}
-                mb="lg"
-              />
-            </>
-          )}
-
-          {form.values.universityAction === 'join' && (
-            <>
+  // In the renderFormStep function, fix the references to countries and PasswordStrength
+  const renderFormStep = (step: number) => {
+    switch (step) {
+      case 0:
+        return (
+          <SimpleGrid cols={1} mt="xl">
+            <TextInput
+              label="Username"
+              placeholder="Username"
+              required
+              leftSection={<IconUser size={16} className="accent-icon" />}
+              {...form.getInputProps('username')}
+            />
+            <TextInput
+              label="Email"
+              placeholder="Email"
+              required
+              leftSection={<IconMail size={16} className="accent-icon" />}
+              {...form.getInputProps('email')}
+            />
+            <PasswordInput
+              label="Password"
+              placeholder="Password"
+              required
+              leftSection={<IconLock size={16} className="accent-icon" />}
+              {...form.getInputProps('password')}
+            />
+            <PasswordInput
+              mt="md"
+              required
+              label="Confirm password"
+              placeholder="Confirm password"
+              leftSection={<IconLockCheck size={16} className="accent-icon" />}
+              {...form.getInputProps('confirmPassword')}
+            />
+            <SegmentedControl
+              mt="md"
+              value={form.values.role}
+              onChange={value =>
+                form.setFieldValue('role', value as 'individual' | 'university' | 'employer')
+              }
+              data={[
+                { value: 'individual', label: 'Individual' },
+                { value: 'employer', label: 'Employer' },
+                { value: 'university', label: 'University' },
+              ]}
+              fullWidth
+              className="orange-segment"
+            />
+          </SimpleGrid>
+        );
+      case 1:
+        return (
+          <>
+            <SimpleGrid cols={1} mt="xl">
               <Select
-                label="Select University to Join"
-                description="You can request to join an existing university"
-                placeholder={
-                  isLoadingUniversities ? 'Loading universities...' : 'Select a university'
-                }
-                searchable
-                nothingFoundMessage="No universities found"
-                data={universities.map(uni => ({
-                  value: uni.id,
-                  label: `${uni.displayName} (by ${uni.owner?.username || 'Unknown'})`,
-                }))}
-                {...form.getInputProps('selectedUniversities[0]')}
-                disabled={isLoadingUniversities}
-                mb="lg"
+                required
+                label="Role"
+                placeholder="Select your role"
+                data={[
+                  { value: 'individual', label: 'Individual' },
+                  { value: 'university', label: 'University' },
+                  { value: 'employer', label: 'Employer' },
+                ]}
+                leftSection={<IconBriefcase size={16} className="accent-icon" />}
+                {...form.getInputProps('role')}
               />
-              <Text size="sm" color="dimmed" mb="md">
-                Your request will need to be approved by the university administrator.
-              </Text>
-            </>
-          )}
-        </>
-      );
-    } else if (form.values.role === 'individual') {
-      return (
-        <>
-          <Text mb="md">
-            You can request to join universities now or do it later from your dashboard.
-          </Text>
 
-          <MultiSelect
-            data={universities.map(uni => ({
-              value: uni.id,
-              label: `${uni.displayName} (by ${uni.owner?.username || 'Unknown'})`,
-            }))}
-            label="Request to Join Universities (Optional)"
-            placeholder={
-              isLoadingUniversities ? 'Loading universities...' : 'Select one or more universities'
-            }
-            searchable
-            nothingFoundMessage="No universities found"
-            {...form.getInputProps('selectedUniversities')}
-            leftSection={<IconSchool size={16} />}
-            disabled={isLoadingUniversities}
-            mb="lg"
-          />
+              <Select
+                required
+                label="Country"
+                placeholder="Select your country"
+                data={[
+                  { value: 'us', label: 'United States' },
+                  { value: 'uk', label: 'United Kingdom' },
+                  { value: 'ca', label: 'Canada' },
+                  // Add more countries as needed
+                ]}
+                searchable
+                {...form.getInputProps('country')}
+              />
 
-          <Text size="sm" color="dimmed" mb="lg">
-            Your requests will need to be approved by university administrators. You can also make
-            these requests later from your dashboard.
-          </Text>
-        </>
-      );
-    } else if (form.values.role === 'employer') {
-      return (
-        <>
-          <TextInput
-            label="Organization Name"
-            placeholder="Your organization's name"
-            leftSection={<IconBuildingBank size={16} />}
-            required
-            {...form.getInputProps('organizationName')}
-            mb="xl"
-          />
-        </>
-      );
+              {form.values.role === 'employer' && (
+                <TextInput
+                  label="Organization Name (Optional)"
+                  placeholder="Organization Name"
+                  {...form.getInputProps('organizationName')}
+                />
+              )}
+
+              {form.values.role === 'university' && (
+                <>
+                  <Switch
+                    label="I'll provide university information later"
+                    checked={form.values.provideOrgInfoLater}
+                    onChange={event =>
+                      form.setFieldValue('provideOrgInfoLater', event.currentTarget.checked)
+                    }
+                    mt="md"
+                  />
+
+                  {!form.values.provideOrgInfoLater && (
+                    <>
+                      <TextInput
+                        label="University Name"
+                        placeholder="Official university name"
+                        required
+                        mt="md"
+                        {...form.getInputProps('universityName')}
+                      />
+                      <TextInput
+                        label="Display Name"
+                        placeholder="Name to display to users"
+                        required
+                        mt="md"
+                        {...form.getInputProps('universityDisplayName')}
+                      />
+                      <TextInput
+                        label="Description"
+                        placeholder="Brief description of the university"
+                        mt="md"
+                        {...form.getInputProps('universityDescription')}
+                      />
+                    </>
+                  )}
+                </>
+              )}
+
+              {form.values.role === 'individual' && (
+                <Select
+                  label="Join a University (Optional)"
+                  description="Request to join an existing university"
+                  placeholder={
+                    isLoadingUniversities ? 'Loading universities...' : 'Select a university'
+                  }
+                  data={universities.map(uni => ({
+                    value: uni.id,
+                    label: uni.displayName || uni.name,
+                  }))}
+                  searchable
+                  clearable
+                  mt="md"
+                  disabled={isLoadingUniversities}
+                  {...form.getInputProps('joinUniversityId')}
+                />
+              )}
+
+              <Checkbox
+                mt="xl"
+                label="I accept the terms and conditions"
+                {...form.getInputProps('termsAccepted', { type: 'checkbox' })}
+              />
+            </SimpleGrid>
+          </>
+        );
+      default:
+        return null;
     }
-    return null;
   };
-
-  // Validate step 2 before submission
-  const validateStep2 = () => {
-    if (form.values.role === 'university') {
-      if (form.values.universityAction === 'create') {
-        return form.values.universityName && form.values.universityDisplayName;
-      }
-      if (form.values.universityAction === 'join') {
-        return form.values.selectedUniversities.length > 0;
-      }
-      return true; // 'later' option requires no validation
-    }
-    if (form.values.role === 'employer') {
-      return !!form.values.organizationName;
-    }
-    return true; // individual requires no validation at this step
-  };
-
-  // Render the step 2 submission button
-  const renderStep2Button = () => (
-    <Group justify="space-between">
-      <Button variant="light" onClick={prevStep}>
-        Back
-      </Button>
-      <Button
-        type="submit"
-        loading={isLoading}
-        disabled={!validateStep2()}
-        leftSection={<IconDeviceFloppy size={18} />}
-      >
-        Register
-      </Button>
-    </Group>
-  );
 
   return (
     <Container size="xs" py="xl">
@@ -386,15 +418,16 @@ const Register = () => {
         padding="xl"
         radius="lg"
         withBorder
-        style={{ maxWidth: 500, margin: '0 auto', position: 'relative' }}
+        className="accent-top-card"
+        style={{ maxWidth: 600, margin: '0 auto' }}
       >
         <LoadingOverlay visible={isLoading} />
 
-        <Title order={2} ta="center" mb="sm" c="primaryBlue">
-          Create Account
+        <Title order={2} ta="center" mb="sm" className="accent-gradient-text">
+          Join LegiTify
         </Title>
-        <Text size="sm" c="dimmed" ta="center" mb="lg">
-          Join LegiTify to access our blockchain-powered degree verification system
+        <Text size="sm" c="dimmed" ta="center" mb="xl">
+          Create your account to start using the platform
         </Text>
 
         <Stepper active={active} onStepClick={setActive} mb="xl">
@@ -415,24 +448,47 @@ const Register = () => {
         )}
 
         <form onSubmit={form.onSubmit(handleSubmit)}>
-          {active === 0 ? renderStep1() : renderStep2()}
-          {active === 1 && renderStep2Button()}
+          {renderFormStep(active)}
+
+          <Group justify="center" mt="xl">
+            {active > 0 && (
+              <Button
+                variant="light"
+                onClick={prevStep}
+                leftSection={<IconArrowLeft size={14} />}
+                className="accent-secondary-button"
+              >
+                Back
+              </Button>
+            )}
+            {active === 0 ? (
+              <Button
+                onClick={nextStep}
+                disabled={!isStep1Valid()}
+                rightSection={<IconArrowRight size={14} />}
+                className="accent-button"
+              >
+                Next
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                disabled={!isStep2Valid()}
+                className="accent-button"
+                rightSection={<IconSend size={14} />}
+              >
+                Register
+              </Button>
+            )}
+          </Group>
         </form>
 
-        <Group justify="center" mt="md">
-          <Text size="sm" c="dimmed">
-            Already have an account?
-          </Text>
-          <Text
-            component={Link}
-            to="/login"
-            size="sm"
-            fw={500}
-            style={{ color: 'var(--primary-blue)' }}
-          >
-            Sign in
-          </Text>
-        </Group>
+        <Text mt="md" ta="center" size="sm">
+          Already have an account?{' '}
+          <Anchor href="/login" fw={700} className="accent-link">
+            Login
+          </Anchor>
+        </Text>
       </Card>
     </Container>
   );

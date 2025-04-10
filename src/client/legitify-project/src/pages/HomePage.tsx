@@ -27,10 +27,12 @@ import {
 } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function HomePage() {
   const { user } = useAuth();
   const theme = useMantineTheme();
+  const { isDarkMode } = useTheme();
 
   const renderHeroSection = () => (
     <Box
@@ -84,7 +86,7 @@ export default function HomePage() {
                   span
                   inherit
                   variant="gradient"
-                  gradient={{ from: theme.colors.accentAmber[5], to: 'white' }}
+                  gradient={{ from: theme.colors.accentOrange[5], to: 'white' }}
                 >
                   Using Blockchain
                 </Text>
@@ -275,18 +277,18 @@ export default function HomePage() {
             withBorder
             h="100%"
             style={{
-              borderTop: `4px solid ${theme.colors.accentAmber[6]}`,
+              borderTop: `4px solid ${theme.colors.accentOrange[6]}`,
             }}
           >
-            <ThemeIcon size={70} radius="md" variant="light" color="accentAmber" mb="md">
-              <IconCheck size={36} />
+            <ThemeIcon size={70} radius="md" variant="light" color="accentOrange" mb="md">
+              <IconReceipt size={36} />
             </ThemeIcon>
-            <Title order={3} mb="sm" fw={600} c={theme.colors.accentAmber[7]}>
-              Verify Degrees
+            <Title order={3} mb="sm" fw={600} c={theme.colors.accentOrange[7]}>
+              Verify Documents
             </Title>
             <Text c="dimmed" size="md" lh={1.6}>
-              Employers can instantly verify the authenticity of degrees using our blockchain-based
-              verification system, saving time and ensuring credential integrity.
+              Employers can instantly verify degrees with our secure platform, ensuring that
+              candidates' credentials are legitimate and trustworthy.
             </Text>
           </Card>
         </Grid.Col>
@@ -298,7 +300,7 @@ export default function HomePage() {
     <Box
       py={80}
       style={{
-        backgroundColor: 'rgb(236, 242, 250)',
+        backgroundColor: isDarkMode ? theme.colors.dark[6] : 'rgb(236, 242, 250)',
         borderRadius: '30px',
         margin: '0 20px',
         position: 'relative',
@@ -322,7 +324,7 @@ export default function HomePage() {
       <Container size="xl" style={{ position: 'relative', zIndex: 2 }}>
         <Grid gutter={60} align="center">
           <Grid.Col span={{ base: 12, md: 6 }}>
-            <Title order={2} mb={30} c="primaryBlue" size={36} fw={700}>
+            <Title order={2} mb={30} size={36} fw={700} c={isDarkMode ? 'gray.3' : 'primaryBlue'}>
               Why Choose LegiTify?
             </Title>
 
@@ -473,11 +475,11 @@ export default function HomePage() {
                 }}
               >
                 <Group>
-                  <ThemeIcon size={56} radius="xl" color="accentAmber" variant="light">
+                  <ThemeIcon size={56} radius="xl" color="accentOrange" variant="light">
                     <IconLock size={28} />
                   </ThemeIcon>
                   <Box>
-                    <Text fw={600} size="lg" c={theme.colors.accentAmber[7]}>
+                    <Text fw={600} size="lg" c={theme.colors.accentOrange[7]}>
                       Privacy First
                     </Text>
                     <Text size="md" c="dimmed" lh={1.6}>
@@ -523,90 +525,79 @@ export default function HomePage() {
         </div>
       </Box>
 
-      <Accordion
-        variant="separated"
-        radius="md"
-        styles={{
-          item: {
-            marginBottom: 16,
-            borderRadius: 12,
-            border: `1px solid ${theme.colors.gray[2]}`,
-            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.03)',
+      <Box>
+        {[
+          {
+            id: 'what-is-legitify',
+            title: 'What is LegiTify?',
+            content:
+              'LegiTify is a blockchain-based degree verification system that allows universities to issue digital degrees, graduates to manage and share them, and employers to instantly verify their authenticity. Our platform eliminates credential fraud and streamlines the verification process using secure, tamper-proof blockchain technology.',
           },
-          control: {
-            padding: '16px 20px',
+          {
+            id: 'how-secure',
+            title: 'How secure are the digital credentials?',
+            content:
+              'Our system uses blockchain technology to create tamper-proof records of credentials. Once a degree is issued, it cannot be altered, providing the highest level of security and trust for all parties involved. We employ multiple layers of encryption and secure access controls to ensure your credentials remain protected at all times.',
           },
-          content: {
-            padding: '0 20px 20px',
+          {
+            id: 'who-can-use',
+            title: 'Who can use LegiTify?',
+            content:
+              "LegiTify serves three main user types: universities that issue degrees, individuals who receive and manage their credentials, and employers who need to verify the authenticity of applicants' degrees. Each user type has a dedicated interface designed to address their specific needs, creating a seamless experience across the credential ecosystem.",
           },
-        }}
-      >
-        <Accordion.Item value="what-is-legitify">
-          <Accordion.Control>
-            <Text fw={600} size="lg">
-              What is LegiTify?
-            </Text>
-          </Accordion.Control>
-          <Accordion.Panel>
-            <Text size="md" c="dimmed" lh={1.6}>
-              LegiTify is a blockchain-based degree verification system that allows universities to
-              issue digital degrees, graduates to manage and share them, and employers to instantly
-              verify their authenticity. Our platform eliminates credential fraud and streamlines
-              the verification process using secure, tamper-proof blockchain technology.
-            </Text>
-          </Accordion.Panel>
-        </Accordion.Item>
-
-        <Accordion.Item value="how-secure">
-          <Accordion.Control>
-            <Text fw={600} size="lg">
-              How secure are the digital credentials?
-            </Text>
-          </Accordion.Control>
-          <Accordion.Panel>
-            <Text size="md" c="dimmed" lh={1.6}>
-              Our system uses blockchain technology to create tamper-proof records of credentials.
-              Once a degree is issued, it cannot be altered, providing the highest level of security
-              and trust for all parties involved. We employ multiple layers of encryption and secure
-              access controls to ensure your credentials remain protected at all times.
-            </Text>
-          </Accordion.Panel>
-        </Accordion.Item>
-
-        <Accordion.Item value="who-can-use">
-          <Accordion.Control>
-            <Text fw={600} size="lg">
-              Who can use LegiTify?
-            </Text>
-          </Accordion.Control>
-          <Accordion.Panel>
-            <Text size="md" c="dimmed" lh={1.6}>
-              LegiTify serves three main user types: universities that issue degrees, individuals
-              who receive and manage their credentials, and employers who need to verify the
-              authenticity of applicants' degrees. Each user type has a dedicated interface designed
-              to address their specific needs, creating a seamless experience across the credential
-              ecosystem.
-            </Text>
-          </Accordion.Panel>
-        </Accordion.Item>
-
-        <Accordion.Item value="how-verify">
-          <Accordion.Control>
-            <Text fw={600} size="lg">
-              How does degree verification work?
-            </Text>
-          </Accordion.Control>
-          <Accordion.Panel>
-            <Text size="md" c="dimmed" lh={1.6}>
-              Employers can request access to a candidate's degree. Once granted, they can view the
-              degree details and verify its authenticity through our blockchain verification system,
-              which confirms the credential was legitimately issued by the university. The entire
-              process takes seconds rather than days or weeks required by traditional verification
-              methods.
-            </Text>
-          </Accordion.Panel>
-        </Accordion.Item>
-      </Accordion>
+          {
+            id: 'how-verify',
+            title: 'How does degree verification work?',
+            content:
+              "Employers can request access to a candidate's degree. Once granted, they can view the degree details and verify its authenticity through our blockchain verification system, which confirms the credential was legitimately issued by the university. The entire process takes seconds rather than days or weeks required by traditional verification methods.",
+          },
+        ].map(item => (
+          <Accordion
+            key={item.id}
+            variant="contained"
+            radius="md"
+            className="no-focus-outline"
+            styles={{
+              item: {
+                marginBottom: 16,
+                borderRadius: 12,
+                border: `1px solid ${isDarkMode ? theme.colors.dark[4] : theme.colors.gray[2]}`,
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.03)',
+                overflow: 'hidden',
+              },
+              control: {
+                padding: '16px 20px',
+                backgroundColor: isDarkMode ? theme.colors.dark[6] : 'white',
+                borderRadius: 0,
+                borderBottom: 'none',
+                '&:hover': {
+                  backgroundColor: isDarkMode ? theme.colors.dark[5] : theme.colors.gray[0],
+                },
+              },
+              content: {
+                padding: '0 20px 20px',
+                backgroundColor: isDarkMode ? theme.colors.dark[6] : 'white',
+              },
+              chevron: {
+                color: isDarkMode ? theme.colors.gray[5] : theme.colors.primaryBlue[6],
+              },
+            }}
+          >
+            <Accordion.Item value={item.id} className="no-focus-outline">
+              <Accordion.Control className="no-focus-outline">
+                <Text fw={600} size="lg">
+                  {item.title}
+                </Text>
+              </Accordion.Control>
+              <Accordion.Panel>
+                <Text size="md" c="dimmed" lh={1.6}>
+                  {item.content}
+                </Text>
+              </Accordion.Panel>
+            </Accordion.Item>
+          </Accordion>
+        ))}
+      </Box>
     </Container>
   );
 

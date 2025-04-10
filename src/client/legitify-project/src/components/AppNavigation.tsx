@@ -25,6 +25,7 @@ import {
 } from '@tabler/icons-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface AppNavigationProps {
   collapsed: boolean;
@@ -33,6 +34,7 @@ interface AppNavigationProps {
 
 export default function AppNavigation({ collapsed, onToggleCollapse }: AppNavigationProps) {
   const { user, logout } = useAuth();
+  const { isDarkMode } = useTheme();
   const location = useLocation();
   const theme = useMantineTheme();
 
@@ -125,11 +127,11 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
           onClick={onToggleCollapse}
           size="sm"
           aria-label="Toggle navigation"
-          color={theme.colors.primaryBlue[6]}
+          color={isDarkMode ? theme.colors.primaryBlue[4] : theme.colors.primaryBlue[6]}
         />
         {!collapsed && (
           <img
-            src="/header-image.png"
+            src={isDarkMode ? '/dark-mode-header-logo.png' : '/header-image.png'}
             alt="LegiTify Logo"
             style={{
               maxHeight: '35px',
