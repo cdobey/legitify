@@ -1,6 +1,7 @@
 image: node:18-bullseye
 
 stages:
+  - cleanup
   - test
   - deploy
   - post-deploy
@@ -13,6 +14,38 @@ variables:
   SKIP_DEPLOY: 'false'
   SKIP_DB_INIT: 'false'
 
+cleanup_repo:
+  stage: cleanup
+  tags:
+    - shell
+  script:
+    - |
+      echo "Starting repository cleanup..."
+      # Display disk space before cleanup
+      df -h /
+
+      # Reset ownership of the entire project directory
+      sudo chown -R gitlab-runner:gitlab-runner $CI_PROJECT_DIR || true
+
+      # Force remove problematic directories with sudo
+      echo "Cleaning up Fabric CA directories..."
+      for org in ordererOrg orgemployer orgindividual orguniversity; do
+        sudo rm -rf $CI_PROJECT_DIR/src/ledger/legitify-network/organizations/fabric-ca/$org/msp || true
+      done
+
+      # Clean up other potentially problematic directories
+      sudo rm -rf $CI_PROJECT_DIR/src/ledger/legitify-network/organizations/ordererOrganizations || true
+      sudo rm -rf $CI_PROJECT_DIR/src/ledger/legitify-network/organizations/peerOrganizations || true
+      sudo rm -rf $CI_PROJECT_DIR/src/server/pgdata || true
+      sudo rm -rf $CI_PROJECT_DIR/src/server/src/wallet || true
+
+      # Clean up Docker resources
+      docker system prune -af --volumes || echo "Docker prune command failed, but continuing..."
+
+      echo "Repository cleanup completed"
+      df -h /
+  when: always
+
 test_flow:
   stage: test
   rules:
@@ -23,6 +56,9 @@ test_flow:
     - if: $CI_COMMIT_BRANCH == "master"
   tags:
     - shell
+  needs:
+    - job: cleanup_repo
+      optional: true
   before_script:
     - |
       # Add disk usage monitoring
@@ -49,6 +85,15 @@ test_flow:
     - cd $CI_PROJECT_DIR
     - git clean -fdx
     - sudo chown -R gitlab-runner:gitlab-runner .
+
+    # Add an additional safety check to handle problematic directories
+    - |
+      echo "Ensuring fabric-ca directories are accessible..."
+      for org in ordererOrg orgemployer orgindividual orguniversity; do
+        if [ -d "$CI_PROJECT_DIR/src/ledger/legitify-network/organizations/fabric-ca/$org/msp" ]; then
+          sudo chmod -R 755 $CI_PROJECT_DIR/src/ledger/legitify-network/organizations/fabric-ca/$org/msp || true
+        fi
+      done
 
   script:
     - cd $CI_PROJECT_DIR/src/server
