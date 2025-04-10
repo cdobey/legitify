@@ -188,9 +188,33 @@ export const viewDegree: RequestHandler = async (
 
     console.log(`Access granted for document ${docId} to user ${req.user.id}`);
 
+    // Fetch document with more detailed includes
     const doc = await prisma.document.findUnique({
       where: { id: docId },
+      include: {
+        university: {
+          select: {
+            displayName: true,
+            name: true,
+            description: true,
+          },
+        },
+        issuedToUser: {
+          select: {
+            username: true,
+            email: true,
+          },
+        },
+        issuerUser: {
+          select: {
+            username: true,
+            email: true,
+            orgName: true,
+          },
+        },
+      },
     });
+
     if (!doc) {
       res.status(404).json({ error: 'Document not found' });
       return;
@@ -208,13 +232,64 @@ export const viewDegree: RequestHandler = async (
     const currentHash = sha256(Buffer.from(doc.fileData!));
     const isVerified = currentHash === degreeRecord.docHash;
 
+    // Format date strings for better readability
+    const formatDate = (dateString: string | Date | null) => {
+      if (!dateString) return null;
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    };
+
+    // Return enriched document data
     res.json({
+      // Basic document info
       docId: doc.id,
       verified: isVerified,
-      issuer: degreeRecord.issuer,
-      issuedAt: degreeRecord.issuedAt,
-      fileData: doc.fileData ? Buffer.from(doc.fileData).toString('base64') : null,
       status: doc.status,
+      issuedAt: degreeRecord.issuedAt,
+      issueDate: formatDate(doc.createdAt),
+      verificationHash: currentHash,
+
+      // Academic information
+      degreeTitle: doc.degreeTitle || 'Not specified',
+      fieldOfStudy: doc.fieldOfStudy || 'Not specified',
+      graduationDate: formatDate(doc.graduationDate),
+      honors: doc.honors || 'None',
+      studentId: doc.studentId || 'Not provided',
+      programDuration: doc.programDuration || 'Not specified',
+      gpa: doc.gpa || null,
+      additionalNotes: doc.additionalNotes || null,
+
+      // University information
+      issuer: doc.university?.displayName || doc.issuerUser.orgName,
+      universityInfo: doc.university
+        ? {
+            name: doc.university.name,
+            displayName: doc.university.displayName,
+            description: doc.university.description,
+          }
+        : null,
+
+      // Owner information
+      owner: {
+        name: doc.issuedToUser.username,
+        email: doc.issuedToUser.email,
+      },
+
+      // Blockchain record information
+      blockchainInfo: {
+        recordCreated: formatDate(degreeRecord.issuedAt),
+        txId: degreeRecord.txId || 'Not available',
+        lastUpdated: formatDate(degreeRecord.updatedAt),
+      },
+
+      // Document file data
+      fileData: doc.fileData ? Buffer.from(doc.fileData).toString('base64') : null,
+
+      // Access information
+      accessGrantedOn: formatDate(grantedRequest.updatedAt),
     });
   } catch (error: any) {
     console.error('viewDegree error:', error);

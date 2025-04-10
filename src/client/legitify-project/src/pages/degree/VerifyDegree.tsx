@@ -17,6 +17,7 @@ import {
   useMantineTheme,
 } from '@mantine/core';
 import { Dropzone, FileWithPath, PDF_MIME_TYPE } from '@mantine/dropzone';
+import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 import {
   IconCheck,
@@ -32,14 +33,27 @@ import { useState } from 'react';
 export default function VerifyDegree() {
   const theme = useMantineTheme();
   const { isDarkMode } = useTheme();
-  const [email, setEmail] = useState('');
   const [file, setFile] = useState<FileWithPath | null>(null);
   const [result, setResult] = useState<VerificationResult | null>(null);
   const { mutateAsync: verifyDegree, isPending: isVerifying } = useVerifyDegreeMutation();
 
-  const handleVerification = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!email.trim() || !file) return;
+  const form = useForm({
+    initialValues: {
+      email: '',
+    },
+    validate: {
+      email: value => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
+    },
+    validateInputOnBlur: true,
+    validateInputOnChange: false,
+  });
+
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+
+  const handleVerification = async (values: { email: string }) => {
+    setFormSubmitted(true);
+    if (!values.email.trim() || !file) return;
 
     try {
       setResult(null);
@@ -49,7 +63,7 @@ export default function VerifyDegree() {
         try {
           const base64File = (reader.result as string).split(',')[1];
           const verificationResult = await verifyDegree({
-            email: email,
+            email: values.email,
             base64File: base64File,
           });
 
@@ -99,18 +113,18 @@ export default function VerifyDegree() {
         </Text>
       </Paper>
 
-      <form onSubmit={handleVerification}>
+      <form onSubmit={form.onSubmit(handleVerification)}>
         <Card shadow="sm" p="lg" radius="md" withBorder>
           <Stack gap="md">
             <TextInput
               label="Email Address"
               description="Enter the graduate's email address"
               placeholder="graduate@example.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
+              {...form.getInputProps('email')}
+              onFocus={() => setEmailTouched(true)}
+              error={emailTouched || formSubmitted ? form.getInputProps('email').error : null}
               leftSection={<IconMail size={16} />}
               required
-              error={email.trim() === '' ? 'Email is required' : null}
             />
 
             <Stack gap="xs">
@@ -199,7 +213,7 @@ export default function VerifyDegree() {
               type="submit"
               loading={isVerifying}
               leftSection={isVerifying ? <Loader size="xs" /> : <IconSearch size={18} />}
-              disabled={!email.trim() || !file}
+              disabled={!form.values.email.trim() || !file}
               mt="md"
               fullWidth
             >

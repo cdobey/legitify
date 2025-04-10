@@ -2,6 +2,7 @@ import { AppShell, useMantineTheme } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import {
   IconCertificate,
+  IconCertificate2,
   IconCheck,
   IconFileCheck,
   IconFiles,
@@ -90,6 +91,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
     if (path.includes('/degree/requests')) return <IconInbox size={28} stroke={1.5} />;
     if (path.includes('/degree/verify')) return <IconCheck size={28} stroke={1.5} />;
     if (path.includes('/degree/accessible')) return <IconFileCheck size={28} stroke={1.5} />;
+    if (path.includes('/degree/view/')) return <IconCertificate2 size={28} stroke={1.5} />;
     if (path.includes('/profile')) return <IconUser size={28} stroke={1.5} />;
     if (path.includes('/dashboard')) return <IconHome size={28} stroke={1.5} />;
     if (path.includes('/settings')) return <IconSettings size={28} stroke={1.5} />;
@@ -110,6 +112,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
     if (path === '/degree/requests') return 'Access Requests';
     if (path === '/degree/verify') return 'Verify Degree';
     if (path === '/degree/accessible') return 'Accessible Degrees';
+    if (path.includes('/degree/view/')) return 'Degree Certificate';
     if (path === '/profile') return 'Profile';
     if (path === '/settings') return 'Settings';
     if (path.includes('/universities')) return 'Universities';
@@ -136,6 +139,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
     if (path === '/degree/requests') return 'Manage access requests for your credentials';
     if (path === '/degree/verify') return 'Verify the authenticity of credentials';
     if (path === '/degree/accessible') return 'View credentials you have access to';
+    if (path.includes('/degree/view/')) return 'View verified certificate details';
     if (path === '/profile') return 'View and manage your profile information';
     if (path === '/settings') return 'Manage your account settings';
     if (path.includes('/universities')) return 'Manage your university affiliations';

@@ -13,12 +13,47 @@ export interface PaginatedResponse<T> {
 export interface DegreeDocument {
   docId: string;
   issuer: string;
-  issuedTo: string;
-  status: 'issued' | 'accepted' | 'denied';
+  status: string;
   issueDate: string;
+  verified?: boolean;
+  issuedAt?: string;
+  verificationHash?: string;
+
+  // Academic information
+  degreeTitle?: string;
+  fieldOfStudy?: string;
+  graduationDate?: string;
+  honors?: string;
+  studentId?: string;
+  programDuration?: string;
+  gpa?: number | null;
+  additionalNotes?: string | null;
+
+  // University information
+  universityInfo?: {
+    name: string;
+    displayName: string;
+    description?: string;
+  } | null;
+
+  // Owner information
+  owner?: {
+    name: string;
+    email: string;
+  };
+
+  // Blockchain information
+  blockchainInfo?: {
+    recordCreated: string;
+    txId: string;
+    lastUpdated?: string;
+  };
+
+  // File data
   fileData?: string;
-  recipientName?: string;
-  university?: string;
+
+  // Access information
+  accessGrantedOn?: string;
 }
 
 export type DegreeDocumentsResponse = DegreeDocument[];
