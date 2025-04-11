@@ -19,6 +19,9 @@ export interface DegreeDocument {
   issuedAt?: string;
   verificationHash?: string;
 
+  issuedTo?: string;
+  recipientName?: string;
+
   // Academic information
   degreeTitle?: string;
   fieldOfStudy?: string;
@@ -35,6 +38,8 @@ export interface DegreeDocument {
     displayName: string;
     description?: string;
   } | null;
+
+  university?: string;
 
   // Owner information
   owner?: {
