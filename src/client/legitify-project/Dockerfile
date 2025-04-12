@@ -16,6 +16,8 @@ ARG VITE_API_URL
 
 # Set build environment variables (these won't persist in the final image)
 ENV VITE_API_URL=${VITE_API_URL}
+# Increase Node.js memory limit to prevent out of memory errors
+ENV NODE_OPTIONS="--max-old-space-size=4096"
     
 # Build the app
 RUN npm run build
