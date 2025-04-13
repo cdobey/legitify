@@ -3,9 +3,11 @@ import { AxiosError } from 'axios';
 import {
   addStudentToUniversity,
   createUniversity,
+  deleteUniversityLogo,
   registerStudent,
   requestJoinUniversity,
   respondToAffiliation,
+  uploadUniversityLogo,
 } from './university.api';
 import {
   AddStudentParams,
@@ -16,6 +18,7 @@ import {
   JoinUniversityParams,
   RegisterStudentParams,
   RegisterStudentResponse,
+  University,
 } from './university.models';
 import { universityKeys } from './university.queries';
 
@@ -75,6 +78,34 @@ export const useRespondToAffiliationMutation = () => {
       }
       queryClient.invalidateQueries({ queryKey: universityKeys.pendingAffiliations() });
       queryClient.invalidateQueries({ queryKey: universityKeys.my() });
+    },
+  });
+};
+
+export const useUploadUniversityLogoMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    { message: string; university: University },
+    AxiosError,
+    { universityId: string; logoFile: File }
+  >({
+    mutationFn: ({ universityId, logoFile }) => uploadUniversityLogo(universityId, logoFile),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: universityKeys.my() });
+      queryClient.invalidateQueries({ queryKey: universityKeys.all_universities() });
+    },
+  });
+};
+
+export const useDeleteUniversityLogoMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<{ message: string; university: University }, AxiosError, string>({
+    mutationFn: universityId => deleteUniversityLogo(universityId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: universityKeys.my() });
+      queryClient.invalidateQueries({ queryKey: universityKeys.all_universities() });
     },
   });
 };

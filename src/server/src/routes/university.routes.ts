@@ -6,9 +6,10 @@ import {
   registerStudent,
   respondToAffiliation,
 } from '@/controllers/university-affiliation.controller';
+import { deleteLogo, upload, uploadLogo } from '@/controllers/university-logo.controller';
 import {
   createUniversity,
-  getAllUniversities, // Import the new controller function
+  getAllUniversities,
   getMyUniversities,
   requestJoinUniversity,
 } from '@/controllers/university.controller';
@@ -305,6 +306,79 @@ router.post('/request-join', authMiddleware, requestJoinUniversity);
  *       500:
  *         description: Internal server error
  */
-router.get('/all', getAllUniversities); // Changed from '/' to '/all' for better naming
+router.get('/all', getAllUniversities);
+
+/**
+ * @openapi
+ * /university/{universityId}/logo:
+ *   post:
+ *     summary: Upload a logo for a university
+ *     tags:
+ *       - University
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: universityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the university
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - file
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: Logo image file (max 2MB, formats: jpeg, jpg, png, gif, webp)
+ *     responses:
+ *       200:
+ *         description: Logo uploaded successfully
+ *       400:
+ *         description: Bad request
+ *       403:
+ *         description: Forbidden - only university owners can upload logos
+ *       404:
+ *         description: University not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/:universityId/logo', authMiddleware, upload, uploadLogo);
+
+/**
+ * @openapi
+ * /university/{universityId}/logo:
+ *   delete:
+ *     summary: Delete a university logo
+ *     tags:
+ *       - University
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: universityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the university
+ *     responses:
+ *       200:
+ *         description: Logo deleted successfully
+ *       400:
+ *         description: Bad request
+ *       403:
+ *         description: Forbidden - only university owners can delete logos
+ *       404:
+ *         description: University not found or no logo exists
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/:universityId/logo', authMiddleware, deleteLogo);
 
 export default router;

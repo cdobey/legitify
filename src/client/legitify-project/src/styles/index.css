@@ -937,3 +937,13 @@ button.accent-orange:hover {
   color: var(--accent-orange) !important;
   border: 1px solid rgba(251, 133, 0, 0.2) !important;
 }
+
+/* Tab Styles */
+.mantine-Tabs-tab:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.mantine-Tabs-tab:focus-visible {
+  outline: 2px solid var(--primary-blue);
+  outline-offset: 2px;
+}

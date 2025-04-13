@@ -2,7 +2,9 @@ import { useViewDegreeQuery } from '@/api/degrees/degree.queries';
 import { useTheme } from '@/contexts/ThemeContext';
 import {
   Alert,
+  Anchor,
   Badge,
+  Box,
   Card,
   Container,
   Divider,
@@ -42,11 +44,15 @@ export default function ViewDegree() {
   if (isLoading) {
     return (
       <Container size="lg" py="xl">
-        <Skeleton height={50} mb="md" />
-        <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-          <Skeleton height={300} />
-          <Skeleton height={300} />
-        </SimpleGrid>
+        <Paper shadow="md" p="lg" radius="md" withBorder>
+          <Skeleton height={60} mb="lg" width="60%" />
+          <Skeleton height={30} mb="md" width="40%" />
+          <Divider my="lg" />
+          <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+            <Skeleton height={300} radius="md" />
+            <Skeleton height={300} radius="md" />
+          </SimpleGrid>
+        </Paper>
       </Container>
     );
   }
@@ -58,6 +64,7 @@ export default function ViewDegree() {
           icon={<IconAlertTriangle size="1.1rem" />}
           title="Error loading document"
           color="red"
+          radius="md"
         >
           {(error as Error).message}
         </Alert>
@@ -92,25 +99,45 @@ export default function ViewDegree() {
     switch (status) {
       case 'accepted':
         return (
-          <Badge color={colorMap.accepted.color} style={{ backgroundColor: colorMap.accepted.bg }}>
+          <Badge
+            size="md"
+            radius="md"
+            color={colorMap.accepted.color}
+            style={{ backgroundColor: colorMap.accepted.bg }}
+          >
             Verified & Accepted
           </Badge>
         );
       case 'denied':
         return (
-          <Badge color={colorMap.denied.color} style={{ backgroundColor: colorMap.denied.bg }}>
+          <Badge
+            size="md"
+            radius="md"
+            color={colorMap.denied.color}
+            style={{ backgroundColor: colorMap.denied.bg }}
+          >
             Rejected
           </Badge>
         );
       case 'issued':
         return (
-          <Badge color={colorMap.issued.color} style={{ backgroundColor: colorMap.issued.bg }}>
+          <Badge
+            size="md"
+            radius="md"
+            color={colorMap.issued.color}
+            style={{ backgroundColor: colorMap.issued.bg }}
+          >
             Pending Acceptance
           </Badge>
         );
       default:
         return (
-          <Badge color={colorMap.default.color} style={{ backgroundColor: colorMap.default.bg }}>
+          <Badge
+            size="md"
+            radius="md"
+            color={colorMap.default.color}
+            style={{ backgroundColor: colorMap.default.bg }}
+          >
             {status}
           </Badge>
         );
@@ -123,11 +150,16 @@ export default function ViewDegree() {
 
   return (
     <Container size="lg" py="xl">
-      <Paper shadow="xs" p="md" mb="xl">
-        <Group justify="space-between" mb={5}>
+      <Paper shadow="md" p="xl" radius="md" withBorder>
+        <Group justify="space-between" mb="md">
           <Group>
-            <ThemeIcon size="lg" radius="md" variant="light" color="blue">
-              <IconCertificate size={rem(20)} />
+            <ThemeIcon
+              size="xl"
+              radius="md"
+              variant="light"
+              color={isDarkMode ? '#2ca6d3' : 'blue'}
+            >
+              <IconCertificate size={rem(24)} />
             </ThemeIcon>
             <div>
               <Title order={2}>{displayTitle}</Title>
@@ -141,7 +173,9 @@ export default function ViewDegree() {
             {verified && (
               <Tooltip label="Document verified on blockchain">
                 <Badge
-                  leftSection={<IconCheck size={14} />}
+                  size="md"
+                  radius="md"
+                  leftSection={<IconCheck size={16} />}
                   color={isDarkMode ? '#15e2b5' : 'teal'}
                   style={{
                     backgroundColor: isDarkMode ? 'rgba(21, 226, 181, 0.15)' : undefined,
@@ -154,136 +188,163 @@ export default function ViewDegree() {
           </Group>
         </Group>
 
-        <Divider my="md" />
+        <Divider size="sm" my="lg" />
 
-        <Tabs defaultValue="document">
-          <Tabs.List mb="md">
-            <Tabs.Tab value="document" leftSection={<IconFileText size={16} />}>
+        <Tabs defaultValue="document" variant="outline" radius="md">
+          <Tabs.List mb="lg">
+            <Tabs.Tab value="document" leftSection={<IconFileText size={18} />} fw={500}>
               Document
             </Tabs.Tab>
-            <Tabs.Tab value="details" leftSection={<IconInfoCircle size={16} />}>
+            <Tabs.Tab value="details" leftSection={<IconInfoCircle size={18} />} fw={500}>
               Details
             </Tabs.Tab>
-            <Tabs.Tab value="verification" leftSection={<IconGrain size={16} />}>
+            <Tabs.Tab value="verification" leftSection={<IconGrain size={18} />} fw={500}>
               Verification Info
             </Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel value="document">
-            <Card shadow="sm" padding="lg" mb="md">
+            <Card shadow="sm" radius="md" padding="xl" mb="md" withBorder>
               {degree.fileData ? (
-                <embed
-                  src={`data:application/pdf;base64,${degree.fileData}`}
-                  type="application/pdf"
-                  width="100%"
-                  height="600px"
-                />
+                <Box py={5}>
+                  <embed
+                    src={`data:application/pdf;base64,${degree.fileData}`}
+                    type="application/pdf"
+                    width="100%"
+                    height="600px"
+                    style={{ borderRadius: '8px', border: `1px solid ${theme.colors.gray[3]}` }}
+                  />
+                </Box>
               ) : (
-                <Alert color="yellow">The original document file is not available.</Alert>
+                <Alert color="yellow" radius="md" title="No Document Available">
+                  The original document file is not available.
+                </Alert>
               )}
             </Card>
           </Tabs.Panel>
 
           <Tabs.Panel value="details">
-            <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-              <Card shadow="sm" padding="lg">
+            <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
+              <Card shadow="sm" radius="md" padding="lg" withBorder>
                 <Group mb="md">
-                  <ThemeIcon size="lg" radius="md" variant="light" color="blue">
+                  <ThemeIcon
+                    size="lg"
+                    radius="md"
+                    variant="filled"
+                    color={isDarkMode ? '#2ca6d3' : 'blue'}
+                  >
                     <IconCertificate size={rem(20)} />
                   </ThemeIcon>
-                  <Text fw={600} size="lg">
+                  <Text fw={700} size="lg">
                     Certificate Information
                   </Text>
                 </Group>
-                <Stack gap="xs">
+                <Divider mb="md" />
+                <Stack gap="sm">
                   <Group gap="xs">
-                    <Text fw={500}>Degree Title:</Text>
+                    <Text fw={600}>Degree Title:</Text>
                     <Text>{degree.degreeTitle || 'Not specified'}</Text>
                   </Group>
                   <Group gap="xs">
-                    <Text fw={500}>Field of Study:</Text>
+                    <Text fw={600}>Field of Study:</Text>
                     <Text>{degree.fieldOfStudy || 'Not specified'}</Text>
                   </Group>
                   <Group gap="xs">
-                    <Text fw={500}>Graduation Date:</Text>
+                    <Text fw={600}>Graduation Date:</Text>
                     <Text>{degree.graduationDate || 'Not specified'}</Text>
                   </Group>
                   <Group gap="xs">
-                    <Text fw={500}>Honors:</Text>
+                    <Text fw={600}>Honors:</Text>
                     <Text>{degree.honors || 'None'}</Text>
                   </Group>
                   <Group gap="xs">
-                    <Text fw={500}>Program Duration:</Text>
+                    <Text fw={600}>Program Duration:</Text>
                     <Text>{degree.programDuration || 'Not specified'}</Text>
                   </Group>
                   {degree.gpa && (
                     <Group gap="xs">
-                      <Text fw={500}>GPA:</Text>
+                      <Text fw={600}>GPA:</Text>
                       <Text>{degree.gpa}</Text>
                     </Group>
                   )}
                   {degree.studentId && (
                     <Group gap="xs">
-                      <Text fw={500}>Student ID:</Text>
+                      <Text fw={600}>Student ID:</Text>
                       <Text>{degree.studentId}</Text>
                     </Group>
                   )}
                 </Stack>
               </Card>
 
-              <Card shadow="sm" padding="lg">
+              <Card shadow="sm" radius="md" padding="lg" withBorder>
                 <Group mb="md">
-                  <ThemeIcon size="lg" radius="md" variant="light" color="indigo">
+                  <ThemeIcon
+                    size="lg"
+                    radius="md"
+                    variant="filled"
+                    color={isDarkMode ? '#6741d9' : 'indigo'}
+                  >
                     <IconSchool size={rem(20)} />
                   </ThemeIcon>
-                  <Text fw={600} size="lg">
+                  <Text fw={700} size="lg">
                     Issuing Institution
                   </Text>
                 </Group>
-                <Stack gap="xs">
+                <Divider mb="md" />
+                <Stack gap="sm">
                   <Group gap="xs">
-                    <Text fw={500}>Name:</Text>
+                    <Text fw={600}>Name:</Text>
                     <Text>{degree.issuer}</Text>
                   </Group>
                   {degree.universityInfo && (
                     <>
                       <Group gap="xs">
-                        <Text fw={500}>Institution ID:</Text>
+                        <Text fw={600}>Institution ID:</Text>
                         <Text>{degree.universityInfo.name}</Text>
                       </Group>
                       {degree.universityInfo.description && (
                         <Group gap="xs" align="flex-start">
-                          <Text fw={500}>Description:</Text>
+                          <Text fw={600}>Description:</Text>
                           <Text>{degree.universityInfo.description}</Text>
                         </Group>
                       )}
                     </>
                   )}
                   <Group gap="xs">
-                    <Text fw={500}>Issue Date:</Text>
+                    <Text fw={600}>Issue Date:</Text>
                     <Text>{degree.issueDate || 'Not available'}</Text>
                   </Group>
                 </Stack>
               </Card>
 
-              <Card shadow="sm" padding="lg">
+              <Card shadow="sm" radius="md" padding="lg" withBorder>
                 <Group mb="md">
-                  <ThemeIcon size="lg" radius="md" variant="light" color="green">
+                  <ThemeIcon
+                    size="lg"
+                    radius="md"
+                    variant="filled"
+                    color={isDarkMode ? '#37b24d' : 'green'}
+                  >
                     <IconUserCircle size={rem(20)} />
                   </ThemeIcon>
-                  <Text fw={600} size="lg">
+                  <Text fw={700} size="lg">
                     Certificate Owner
                   </Text>
                 </Group>
+                <Divider mb="md" />
                 {degree.owner ? (
-                  <Stack gap="xs">
+                  <Stack gap="sm">
                     <Group gap="xs">
-                      <Text fw={500}>Name:</Text>
+                      <Text fw={600}>Name:</Text>
                       <Text>{degree.owner.name}</Text>
                     </Group>
                     <Group gap="xs">
-                      <Text fw={500}>Email:</Text>
-                      <Text>{degree.owner.email}</Text>
+                      <Text fw={600}>Email:</Text>
+                      <Text>
+                        <Anchor href={`mailto:${degree.owner.email}`} target="_blank">
+                          {degree.owner.email}
+                        </Anchor>
+                      </Text>
                     </Group>
                   </Stack>
                 ) : (
@@ -291,27 +352,33 @@ export default function ViewDegree() {
                 )}
               </Card>
 
-              <Card shadow="sm" padding="lg">
+              <Card shadow="sm" radius="md" padding="lg" withBorder>
                 <Group mb="md">
-                  <ThemeIcon size="lg" radius="md" variant="light" color="orange">
+                  <ThemeIcon
+                    size="lg"
+                    radius="md"
+                    variant="filled"
+                    color={isDarkMode ? '#e8590c' : 'orange'}
+                  >
                     <IconCalendar size={rem(20)} />
                   </ThemeIcon>
-                  <Text fw={600} size="lg">
+                  <Text fw={700} size="lg">
                     Access Information
                   </Text>
                 </Group>
-                <Stack gap="xs">
+                <Divider mb="md" />
+                <Stack gap="sm">
                   <Group gap="xs">
-                    <Text fw={500}>Status:</Text>
+                    <Text fw={600}>Status:</Text>
                     {getStatusBadge()}
                   </Group>
                   <Group gap="xs">
-                    <Text fw={500}>Access Granted On:</Text>
+                    <Text fw={600}>Access Granted On:</Text>
                     <Text>{degree.accessGrantedOn || 'Not available'}</Text>
                   </Group>
                   {degree.additionalNotes && (
                     <Group gap="xs" align="flex-start">
-                      <Text fw={500}>Additional Notes:</Text>
+                      <Text fw={600}>Additional Notes:</Text>
                       <Text>{degree.additionalNotes}</Text>
                     </Group>
                   )}
@@ -321,27 +388,30 @@ export default function ViewDegree() {
           </Tabs.Panel>
 
           <Tabs.Panel value="verification">
-            <Card shadow="sm" padding="lg">
+            <Card shadow="sm" radius="md" padding="lg" withBorder>
               <Group mb="md">
                 <ThemeIcon
                   size="lg"
                   radius="md"
-                  variant="light"
+                  variant="filled"
                   color={isDarkMode ? '#22b8cf' : 'cyan'}
                 >
                   <IconGrain size={rem(20)} />
                 </ThemeIcon>
-                <Text fw={600} size="lg">
+                <Text fw={700} size="lg">
                   Blockchain Verification
                 </Text>
               </Group>
+              <Divider mb="md" />
 
               <Alert
-                mb="md"
+                mb="lg"
+                radius="md"
+                title={verified ? 'Verification Successful' : 'Verification Failed'}
                 color={
                   verified ? (isDarkMode ? '#15e2b5' : 'green') : isDarkMode ? '#ff5c5c' : 'red'
                 }
-                icon={verified ? <IconCheck /> : <IconAlertTriangle />}
+                icon={verified ? <IconCheck size={18} /> : <IconAlertTriangle size={18} />}
                 styles={{
                   root: {
                     backgroundColor: verified
@@ -359,39 +429,47 @@ export default function ViewDegree() {
                   : 'Document verification failed'}
               </Alert>
 
-              <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-                <Stack gap="xs">
-                  <Group gap="xs">
-                    <Text fw={500}>Document Hash:</Text>
-                    <Text size="sm" ff="monospace">
-                      {degree.verificationHash?.substring(0, 20)}
-                      {degree.verificationHash && degree.verificationHash.length > 20 ? '...' : ''}
-                    </Text>
-                  </Group>
-                  {degree.blockchainInfo && (
-                    <>
-                      <Group gap="xs">
-                        <Text fw={500}>Record Created:</Text>
-                        <Text>{degree.blockchainInfo.recordCreated || 'Not available'}</Text>
-                      </Group>
-                      <Group gap="xs">
-                        <Text fw={500}>Transaction ID:</Text>
-                        <Text size="sm" ff="monospace">
-                          {degree.blockchainInfo.txId?.substring(0, 20)}
-                          {degree.blockchainInfo.txId && degree.blockchainInfo.txId.length > 20
-                            ? '...'
-                            : ''}
-                        </Text>
-                      </Group>
-                      {degree.blockchainInfo.lastUpdated && (
+              <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
+                <Card
+                  p="md"
+                  radius="md"
+                  bg={isDarkMode ? theme.colors.dark[6] : theme.colors.gray[0]}
+                >
+                  <Stack gap="md">
+                    <Group gap="xs">
+                      <Text fw={600}>Document Hash:</Text>
+                      <Text size="sm" ff="monospace">
+                        {degree.verificationHash?.substring(0, 20)}
+                        {degree.verificationHash && degree.verificationHash.length > 20
+                          ? '...'
+                          : ''}
+                      </Text>
+                    </Group>
+                    {degree.blockchainInfo && (
+                      <>
                         <Group gap="xs">
-                          <Text fw={500}>Last Updated:</Text>
-                          <Text>{degree.blockchainInfo.lastUpdated}</Text>
+                          <Text fw={600}>Record Created:</Text>
+                          <Text>{degree.blockchainInfo.recordCreated || 'Not available'}</Text>
                         </Group>
-                      )}
-                    </>
-                  )}
-                </Stack>
+                        <Group gap="xs">
+                          <Text fw={600}>Transaction ID:</Text>
+                          <Text size="sm" ff="monospace">
+                            {degree.blockchainInfo.txId?.substring(0, 20)}
+                            {degree.blockchainInfo.txId && degree.blockchainInfo.txId.length > 20
+                              ? '...'
+                              : ''}
+                          </Text>
+                        </Group>
+                        {degree.blockchainInfo.lastUpdated && (
+                          <Group gap="xs">
+                            <Text fw={600}>Last Updated:</Text>
+                            <Text>{degree.blockchainInfo.lastUpdated}</Text>
+                          </Group>
+                        )}
+                      </>
+                    )}
+                  </Stack>
+                </Card>
               </SimpleGrid>
             </Card>
           </Tabs.Panel>

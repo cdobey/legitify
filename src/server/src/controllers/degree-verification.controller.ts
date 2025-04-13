@@ -57,6 +57,14 @@ export const verifyDegreeDocument: RequestHandler = async (
         issuerUser: {
           select: {
             orgName: true,
+            id: true,
+          },
+        },
+        university: {
+          select: {
+            id: true,
+            displayName: true,
+            logoUrl: true,
           },
         },
       },
@@ -75,10 +83,34 @@ export const verifyDegreeDocument: RequestHandler = async (
 
         if (isVerified) {
           gateway.disconnect();
+
+          // Format graduation date if it exists
+          const graduationDateStr = doc.graduationDate
+            ? new Date(doc.graduationDate).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })
+            : 'Not specified';
+
           res.json({
             verified: true,
             message: 'Document verified successfully',
             docId: doc.id,
+            fileData: doc.fileData ? Buffer.from(doc.fileData).toString('base64') : null, // Include the file data in base64 format
+            details: {
+              studentName: doc.issuedToUser.username,
+              university: doc.university?.displayName || doc.issuerUser.orgName,
+              universityLogoUrl: doc.university?.logoUrl || null,
+              universityId: doc.university?.id || null,
+              degreeTitle: doc.degreeTitle || 'Not specified',
+              fieldOfStudy: doc.fieldOfStudy || 'Not specified',
+              honors: doc.honors || null,
+              studentId: doc.studentId || null,
+              graduationDate: graduationDateStr,
+              issuer: doc.issuerUser.orgName,
+              issuedAt: doc.createdAt.toISOString(),
+            },
           });
           return;
         }

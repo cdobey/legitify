@@ -1,3 +1,4 @@
+import axios from 'axios';
 import apiCall from '../apiCall';
 import {
   AddStudentParams,
@@ -10,6 +11,7 @@ import {
   RegisterStudentParams,
   RegisterStudentResponse,
   UniversitiesResponse,
+  University,
 } from './university.models';
 
 export const getMyUniversities = () =>
@@ -66,4 +68,37 @@ export const getPendingAffiliations = () =>
   apiCall<AffiliationsResponse>({
     method: 'get',
     path: '/university/pending-affiliations',
+  });
+
+export const getUniversityStudents = (universityId: string) =>
+  apiCall<{ affiliations: AffiliationsResponse }>({
+    method: 'get',
+    path: `/university/${universityId}/students`,
+  });
+
+export const uploadUniversityLogo = async (universityId: string, logoFile: File) => {
+  // Simple direct implementation for file uploads
+  const formData = new FormData();
+  formData.append('file', logoFile);
+
+  const token = sessionStorage.getItem('token');
+  const baseURL = import.meta.env.VITE_API_URL || '/api';
+
+  try {
+    const response = await axios.post(`${baseURL}/university/${universityId}/logo`, formData, {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : '',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Logo upload failed:', error);
+    throw error;
+  }
+};
+
+export const deleteUniversityLogo = (universityId: string) =>
+  apiCall<{ message: string; university: University }>({
+    method: 'delete',
+    path: `/university/${universityId}/logo`,
   });

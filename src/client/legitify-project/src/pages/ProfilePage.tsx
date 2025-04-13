@@ -4,6 +4,10 @@ import {
   useLedgerRecordsQuery,
   useMyDegreesQuery,
 } from '@/api/degrees/degree.queries';
+import {
+  useDeleteUniversityLogoMutation,
+  useUploadUniversityLogoMutation,
+} from '@/api/universities/university.mutations';
 import { useMyUniversitiesQuery } from '@/api/universities/university.queries';
 import {
   Alert,
@@ -14,8 +18,11 @@ import {
   Card,
   Container,
   Divider,
+  FileButton,
   Grid,
   Group,
+  Image,
+  Modal,
   Paper,
   PasswordInput,
   SimpleGrid,
@@ -27,15 +34,19 @@ import {
   Title,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import {
   IconAlertCircle,
   IconBadge,
   IconCheck,
+  IconCloudUpload,
   IconLock,
   IconMoonStars,
+  IconPhoto,
   IconSettings,
   IconSun,
+  IconTrash,
   IconUser,
 } from '@tabler/icons-react';
 import { useState } from 'react';
@@ -47,6 +58,10 @@ export default function SettingsPage() {
   const { isDarkMode, toggleTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string | null>('profile');
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [logoModalOpened, { open: openLogoModal, close: closeLogoModal }] = useDisclosure(false);
 
   const { data: userDegrees } = useMyDegreesQuery({ enabled: user?.role === 'individual' });
   const { data: accessRequests } = useAccessRequestsQuery({ enabled: user?.role === 'individual' });
@@ -59,6 +74,13 @@ export default function SettingsPage() {
   const { data: accessibleDegrees } = useAccessibleDegreesQuery({
     enabled: user?.role === 'employer',
   });
+
+  // Logo management mutations
+  const uploadLogoMutation = useUploadUniversityLogoMutation();
+  const deleteLogoMutation = useDeleteUniversityLogoMutation();
+
+  // Get the university for university users
+  const university = universities?.[0];
 
   const pendingAccessRequestsCount =
     accessRequests?.filter(request => request.status === 'pending').length ?? 0;
@@ -95,8 +117,6 @@ export default function SettingsPage() {
   const handleProfileUpdate = async (values: typeof profileForm.values) => {
     setLoading(true);
     try {
-      // Here you would implement the API call to update the user profile
-      // For now, we'll just simulate a successful update
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       notifications.show({
@@ -106,7 +126,6 @@ export default function SettingsPage() {
         icon: <IconCheck size={16} />,
       });
 
-      // Refresh user data after update
       await refreshUser();
     } catch (error) {
       notifications.show({
@@ -124,8 +143,6 @@ export default function SettingsPage() {
   const handlePasswordChange = async (values: typeof passwordForm.values) => {
     setLoading(true);
     try {
-      // Here you would implement the API call to change the password
-      // For now, we'll just simulate a successful update
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       notifications.show({
@@ -148,6 +165,63 @@ export default function SettingsPage() {
     }
   };
 
+  // Handle logo upload
+  const handleLogoUpload = async () => {
+    try {
+      setError(null);
+      setSuccess(null);
+
+      if (!university) {
+        setError('No university found');
+        return;
+      }
+
+      if (!logoFile) {
+        setError('No file selected');
+        return;
+      }
+
+      if (logoFile.size > 2 * 1024 * 1024) {
+        setError('Logo file must be less than 2MB');
+        return;
+      }
+
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validTypes.includes(logoFile.type)) {
+        setError('Logo must be an image file (JPEG, PNG, GIF, or WEBP)');
+        return;
+      }
+
+      await uploadLogoMutation.mutateAsync({
+        universityId: university.id,
+        logoFile,
+      });
+
+      setSuccess('University logo uploaded successfully');
+      setLogoFile(null);
+      closeLogoModal();
+    } catch (err: any) {
+      console.error('Failed to upload logo:', err);
+      setError(err.message || 'Failed to upload university logo');
+    }
+  };
+
+  // Handle logo delete
+  const handleLogoDelete = async () => {
+    try {
+      if (!university) {
+        setError('No university found');
+        return;
+      }
+
+      await deleteLogoMutation.mutateAsync(university.id);
+      setSuccess('University logo deleted successfully');
+    } catch (err: any) {
+      console.error('Failed to delete logo:', err);
+      setError(err.message || 'Failed to delete university logo');
+    }
+  };
+
   // Format date for display
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
@@ -156,6 +230,69 @@ export default function SettingsPage() {
       month: 'long',
       day: 'numeric',
     });
+  };
+
+  // Logo management section for university users
+  const renderLogoSection = () => {
+    if (!university) return null;
+
+    return (
+      <Paper shadow="xs" withBorder p="md" mt="md">
+        <Title order={4} mb="lg">
+          University Logo
+        </Title>
+        <Group align="flex-start">
+          {university.logoUrl ? (
+            <Card withBorder p="md" style={{ width: '200px', height: '200px' }}>
+              <Image
+                src={university.logoUrl}
+                alt={`${university.displayName} logo`}
+                fit="contain"
+                height={140}
+                mb="xs"
+              />
+              <Group justify="center">
+                <Button
+                  leftSection={<IconTrash size={16} />}
+                  color="red"
+                  variant="outline"
+                  size="xs"
+                  onClick={handleLogoDelete}
+                  loading={deleteLogoMutation.isPending}
+                >
+                  Remove Logo
+                </Button>
+              </Group>
+            </Card>
+          ) : (
+            <Card withBorder p="md" style={{ width: '200px', height: '200px' }}>
+              <Group justify="center" style={{ height: '140px' }} mb="xs">
+                <IconPhoto size={64} opacity={0.3} />
+              </Group>
+              <Group justify="center">
+                <Text size="sm" c="dimmed">
+                  No logo uploaded
+                </Text>
+              </Group>
+            </Card>
+          )}
+
+          <Box>
+            <Text size="sm" mb="md">
+              Upload a logo for your university. This logo will be displayed on certificates and
+              when employers verify degrees issued by your university.
+            </Text>
+            <Button
+              leftSection={<IconCloudUpload size={16} />}
+              onClick={openLogoModal}
+              disabled={uploadLogoMutation.isPending}
+            >
+              {university.logoUrl ? 'Change Logo' : 'Upload Logo'}
+            </Button>
+          </Box>
+        </Group>
+      </Paper>
+    );
   };
 
   // Role-specific stats (placeholder)
@@ -179,11 +316,7 @@ export default function SettingsPage() {
           </SimpleGrid>
         );
       case 'university':
-        // Count issued degrees from ledger records
         const issuedDegreesCount = ledgerRecords?.length || 0;
-
-        // Get student count from university affiliations
-        const university = universities?.[0];
         const studentsCount =
           university?.affiliations?.filter(a => a.status === 'active')?.length || 0;
 
@@ -202,10 +335,7 @@ export default function SettingsPage() {
           </SimpleGrid>
         );
       case 'employer':
-        // Get real count of accessible degrees
         const accessibleDegreesCount = accessibleDegrees?.length || 0;
-
-        // Calculate number of unique individuals (credential owners)
         const uniqueIndividuals = new Set(
           accessibleDegrees?.map(degree => degree.owner?.email) || [],
         ).size;
@@ -241,6 +371,18 @@ export default function SettingsPage() {
 
   return (
     <Container size="md" py="xl">
+      {error && (
+        <Alert color="red" icon={<IconAlertCircle size="1rem" />} mb="lg">
+          {error}
+        </Alert>
+      )}
+
+      {success && (
+        <Alert color="green" icon={<IconCheck size="1rem" />} mb="lg">
+          {success}
+        </Alert>
+      )}
+
       <Paper shadow="xs" p="md" withBorder radius="md" mb="xl">
         <Group align="flex-start" mb="md">
           <Avatar
@@ -269,7 +411,9 @@ export default function SettingsPage() {
         {getRoleStats()}
       </Paper>
 
-      <Paper shadow="xs" withBorder>
+      {user.role === 'university' && renderLogoSection()}
+
+      <Paper shadow="xs" withBorder mt="md">
         <Tabs value={activeTab} onChange={setActiveTab}>
           <Tabs.List>
             <Tabs.Tab value="profile" leftSection={<IconUser size={16} />}>
@@ -401,6 +545,74 @@ export default function SettingsPage() {
           </Box>
         </Tabs>
       </Paper>
+
+      {user.role === 'university' && (
+        <Modal opened={logoModalOpened} onClose={closeLogoModal} title="Upload University Logo">
+          <Text size="sm" mb="md">
+            Upload a logo image for your university. The logo should be square and less than 2MB in
+            size. Supported formats: JPEG, PNG, GIF, WEBP.
+          </Text>
+
+          <Group justify="center" mb="md">
+            {logoFile ? (
+              <Box style={{ width: '150px', height: '150px', position: 'relative' }}>
+                <Image
+                  src={URL.createObjectURL(logoFile)}
+                  alt="Logo preview"
+                  fit="contain"
+                  h={150}
+                />
+              </Box>
+            ) : (
+              <Box
+                style={{
+                  width: '150px',
+                  height: '150px',
+                  border: '2px dashed #ccc',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <IconPhoto size={48} opacity={0.3} />
+              </Box>
+            )}
+          </Group>
+
+          <Group justify="center" mb="xl">
+            <FileButton
+              onChange={setLogoFile}
+              accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+            >
+              {props => (
+                <Button {...props} variant="outline">
+                  Select image
+                </Button>
+              )}
+            </FileButton>
+
+            {logoFile && (
+              <Button variant="outline" color="red" onClick={() => setLogoFile(null)}>
+                Remove
+              </Button>
+            )}
+          </Group>
+
+          <Group justify="flex-end">
+            <Button variant="subtle" onClick={closeLogoModal}>
+              Cancel
+            </Button>
+            <Button
+              disabled={!logoFile}
+              onClick={handleLogoUpload}
+              loading={uploadLogoMutation.isPending}
+            >
+              Upload Logo
+            </Button>
+          </Group>
+        </Modal>
+      )}
     </Container>
   );
 }

@@ -33,6 +33,7 @@ model University {
   name        String
   displayName String      
   description String?
+  logoUrl     String?
   ownerId     String
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt

@@ -41,7 +41,6 @@ import {
   IconPlus,
   IconSchool,
   IconSend,
-  IconUpload,
   IconUser,
   IconUserPlus,
   IconX,
@@ -71,7 +70,6 @@ export default function ManageUniversities() {
   const [csvModalOpened, { open: openCsvModal, close: closeCsvModal }] = useDisclosure(false);
   const { refreshSession } = useAuth();
 
-  // Replace direct API calls with React Query hooks
   const {
     data: universities,
     isLoading: isLoadingUniversities,
@@ -94,7 +92,11 @@ export default function ManageUniversities() {
       enabled: !!university?.id,
     });
 
-  // Form definitions remain the same
+  const { data: recentIssuedDegrees, isLoading: isLoadingRecentDegrees } =
+    useRecentIssuedDegreesQuery({
+      enabled: !!university,
+    });
+
   const newStudentForm = useForm({
     initialValues: {
       email: '',
@@ -138,10 +140,8 @@ export default function ManageUniversities() {
     },
   });
 
-  // Set the university from the query results
   useEffect(() => {
     if (universities && universities.length > 0) {
-      // Create a new object with affiliations as an empty array if it's undefined
       const uni = universities[0];
       setUniversity({
         ...uni,
@@ -150,7 +150,6 @@ export default function ManageUniversities() {
     }
   }, [universities]);
 
-  // Create a new university
   const handleCreateUniversity = async (values: {
     name: string;
     displayName: string;
@@ -169,7 +168,6 @@ export default function ManageUniversities() {
     }
   };
 
-  // Request to join a university
   const handleJoinUniversity = async (values: { universityId: string }) => {
     try {
       setError(null);
@@ -183,7 +181,6 @@ export default function ManageUniversities() {
     }
   };
 
-  // Handle adding a new student to the university
   const handleAddStudent = async (values: NewStudentForm) => {
     try {
       setSuccess(null);
@@ -208,7 +205,6 @@ export default function ManageUniversities() {
     }
   };
 
-  // Handle registering a new student directly in the university
   const handleRegisterStudent = async (values: RegisterStudentForm) => {
     try {
       setSuccess(null);
@@ -239,12 +235,10 @@ export default function ManageUniversities() {
   };
 
   const handleCsvUpload = () => {
-    // This is just a placeholder for now
     setSuccess('CSV upload functionality coming soon!');
     closeCsvModal();
   };
 
-  // Handle responding to an affiliation request
   const handleAffiliationResponse = async (affiliationId: string, accept: boolean) => {
     try {
       setError(null);
@@ -256,7 +250,6 @@ export default function ManageUniversities() {
         accept,
       });
 
-      // Show success message
       setSuccess(`Request ${accept ? 'approved' : 'rejected'} successfully`);
     } catch (err: any) {
       console.error('Failed to respond to affiliation:', err);
@@ -264,13 +257,6 @@ export default function ManageUniversities() {
     }
   };
 
-  // Add this query for recent issued degrees
-  const { data: recentIssuedDegrees, isLoading: isLoadingRecentDegrees } =
-    useRecentIssuedDegreesQuery({
-      enabled: !!university,
-    });
-
-  // Determine overall loading state
   const isLoading =
     isLoadingUniversities ||
     createUniversityMutation.isPending ||
@@ -355,7 +341,6 @@ export default function ManageUniversities() {
   const renderStudentJoinRequests = () => {
     if (!university || !pendingAffiliations) return null;
 
-    // Filter for only student-initiated requests
     const studentInitiatedRequests = pendingAffiliations.filter(
       affiliation => affiliation.initiatedBy === 'student' || !affiliation.initiatedBy,
     );
@@ -422,7 +407,6 @@ export default function ManageUniversities() {
   const renderPendingInvitations = () => {
     if (!university || !pendingAffiliations) return null;
 
-    // Filter for only university-initiated requests
     const universityInitiatedRequests = pendingAffiliations.filter(
       affiliation => affiliation.initiatedBy === 'university',
     );
@@ -467,7 +451,6 @@ export default function ManageUniversities() {
     );
   };
 
-  // Function to render the form for adding students
   const renderAddStudentForm = () => (
     <Box mb="xl">
       <Title order={4} mb="md">
@@ -498,7 +481,7 @@ export default function ManageUniversities() {
           >
             Register Individual
           </Button>
-          <Button leftSection={<IconUpload size={16} />} onClick={openCsvModal} variant="light">
+          <Button leftSection={<IconSend size={16} />} onClick={openCsvModal} variant="light">
             Batch Upload
           </Button>
         </Group>
@@ -510,7 +493,6 @@ export default function ManageUniversities() {
     </Box>
   );
 
-  // If no university exists yet, show options to create or join
   if (!isLoading && !university) {
     return (
       <Container size="lg">
@@ -531,7 +513,6 @@ export default function ManageUniversities() {
           </Button>
         </Group>
 
-        {/* Create University Modal */}
         <Modal opened={createModalOpened} onClose={closeCreateModal} title="Create University">
           <form onSubmit={createUniversityForm.onSubmit(handleCreateUniversity)}>
             <TextInput
@@ -567,7 +548,6 @@ export default function ManageUniversities() {
           </form>
         </Modal>
 
-        {/* Join University Modal */}
         <Modal opened={joinModalOpened} onClose={closeJoinModal} title="Join University">
           <form onSubmit={joinUniversityForm.onSubmit(handleJoinUniversity)}>
             <Select
@@ -592,20 +572,6 @@ export default function ManageUniversities() {
             </Group>
           </form>
         </Modal>
-      </Container>
-    );
-  }
-
-  // If no university exists yet, show message
-  if (!isLoading && !university) {
-    return (
-      <Container size="lg">
-        <Title order={2} mb="xl">
-          Manage University
-        </Title>
-        <Alert icon={<IconAlertCircle size="1rem" />} color="yellow" mb="lg">
-          You don't have a university yet. Please contact the administrator.
-        </Alert>
       </Container>
     );
   }
@@ -728,7 +694,6 @@ export default function ManageUniversities() {
               </Tabs.Panel>
             </Tabs>
 
-            {/* Register Individual Student Modal */}
             <Modal
               opened={registerModalOpened}
               onClose={closeRegisterModal}
@@ -773,7 +738,6 @@ export default function ManageUniversities() {
               </form>
             </Modal>
 
-            {/* CSV Upload Modal */}
             <Modal opened={csvModalOpened} onClose={closeCsvModal} title="Batch Register Students">
               <Text mb="md">
                 Upload a CSV file with student information to register multiple students at once.
@@ -784,7 +748,7 @@ export default function ManageUniversities() {
                 p="md"
                 style={{ border: '2px dashed #ccc', borderRadius: '8px', textAlign: 'center' }}
               >
-                <IconUpload size={32} style={{ marginBottom: '8px', opacity: 0.5 }} />
+                <IconSend size={32} style={{ marginBottom: '8px', opacity: 0.5 }} />
                 <Text>CSV Upload Feature Coming Soon</Text>
                 <Text size="xs" c="dimmed" mt="xs">
                   The CSV should contain columns for email, username, and password

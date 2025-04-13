@@ -10,6 +10,7 @@ export type ApiCallParams<T> = {
   };
   cancelToken?: CancelToken;
   axiosInstance?: AxiosInstance;
+  headers?: Record<string, string>;
 };
 
 export type ApiResponse<T> = {
@@ -58,15 +59,67 @@ export default async function apiCall<T, U = any>({
   path,
   params,
   cancelToken,
-  config,
+  config = {},
+  headers,
 }: ApiCallParams<U>): Promise<T> {
+  // Special handling for FormData (file uploads)
+  if (params instanceof FormData) {
+    console.log('FormData detected in apiCall', { path });
+
+    // For FormData, we need to completely skip any Content-Type header
+    // to allow the browser to set it properly with boundary
+    const formDataConfig = {
+      ...config,
+      headers: {
+        ...config.headers,
+        ...headers,
+        // Explicitly remove Content-Type header
+      },
+    };
+
+    // Delete Content-Type header to let the browser handle it
+    if (formDataConfig.headers) {
+      delete formDataConfig.headers['Content-Type'];
+    }
+
+    try {
+      console.log('Sending FormData request');
+      const response: AxiosResponse<T> = await axiosInstance({
+        url: path,
+        method,
+        data: params,
+        cancelToken,
+        ...formDataConfig,
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('FormData request failed:', error);
+      // Handle errors for FormData requests
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        error.message ||
+        'Unknown API error with file upload';
+      throw new Error(errorMessage);
+    }
+  }
+
+  // Regular API call flow for non-FormData requests
   const parameters = method === 'get' ? { params } : { data: params };
+
+  const mergedConfig = {
+    ...config,
+    headers: {
+      ...config.headers,
+      ...headers,
+    },
+  };
 
   const requestConfig = {
     url: path,
     method,
     cancelToken,
-    ...config,
+    ...mergedConfig,
     ...parameters,
   };
 

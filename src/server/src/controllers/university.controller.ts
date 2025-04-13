@@ -8,6 +8,7 @@ export async function createUniversityHelper(
   name: string,
   displayName: string,
   description?: string,
+  logoUrl?: string,
 ) {
   // Check if the user already has a university
   const existingUniversity = await prisma.university.findFirst({
@@ -40,6 +41,7 @@ export async function createUniversityHelper(
       name,
       displayName,
       description: description || '',
+      logoUrl,
       ownerId: userId,
     },
   });
@@ -72,14 +74,20 @@ export const createUniversity: RequestHandler = async (
       return;
     }
 
-    const { name, displayName, description } = req.body;
+    const { name, displayName, description, logoUrl } = req.body;
 
     if (!name || !displayName) {
       res.status(400).json({ error: 'Name and display name are required' });
       return;
     }
 
-    const university = await createUniversityHelper(req.user.id, name, displayName, description);
+    const university = await createUniversityHelper(
+      req.user.id,
+      name,
+      displayName,
+      description,
+      logoUrl,
+    );
 
     res.status(201).json({
       message: 'University created successfully',
@@ -178,6 +186,7 @@ export const getAllUniversities: RequestHandler = async (
         name: true,
         displayName: true,
         description: true,
+        logoUrl: true,
         owner: {
           select: {
             username: true,

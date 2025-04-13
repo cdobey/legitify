@@ -3,6 +3,7 @@ export interface University {
   name: string;
   displayName: string;
   description: string;
+  logoUrl?: string;
   ownerId: string;
   owner?: {
     username: string;
@@ -38,6 +39,7 @@ export interface CreateUniversityParams {
   name: string;
   displayName: string;
   description?: string;
+  logoUrl?: string;
 }
 
 export interface CreateUniversityResponse {

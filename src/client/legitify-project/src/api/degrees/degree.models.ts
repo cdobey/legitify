@@ -72,6 +72,7 @@ export interface VerificationResult {
   verified: boolean;
   message: string;
   docId?: string;
+  fileData?: string;
   details?: {
     studentName?: string;
     university?: string;
@@ -79,6 +80,11 @@ export interface VerificationResult {
     graduationDate?: string;
     issuer?: string;
     issuedAt?: string;
+    universityLogoUrl?: string;
+    universityId?: string;
+    fieldOfStudy?: string;
+    honors?: string;
+    studentId?: string;
   };
 }
 
