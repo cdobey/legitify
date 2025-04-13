@@ -13,7 +13,7 @@ import ManageDegrees from './pages/degree/ManageDegrees';
 import VerifyDegree from './pages/degree/VerifyDegree';
 import ViewDegree from './pages/degree/ViewDegree';
 import HomePage from './pages/HomePage';
-import ProfilePage from './pages/ProfilePage';
+import Settings from './pages/Settings';
 import ManageUniversities from './pages/university/ManageUniversities';
 import MyUniversities from './pages/user/MyUniversities';
 import SearchUsers from './pages/users/SearchUsers';
@@ -116,7 +116,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/settings" element={<ProfilePage />} />
+        <Route path="/settings" element={<Settings />} />
       </Routes>
     </MainLayout>
   );
