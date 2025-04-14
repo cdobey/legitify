@@ -947,3 +947,50 @@ button.accent-orange:hover {
   outline: 2px solid var(--primary-blue);
   outline-offset: 2px;
 }
+
+/* Breadcrumbs styling */
+.breadcrumbs-container {
+  height: 40px;
+  margin: 0;
+  transition: all 0.3s ease;
+}
+
+.breadcrumb-link {
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.breadcrumb-link:hover {
+  color: var(--primary-blue);
+  transform: translateY(-1px);
+}
+
+[data-theme='dark'] .breadcrumb-link:hover {
+  color: var(--primary-blue);
+}
+
+/* Add subtle shadow to separate breadcrumbs from content */
+[data-theme='light'] .breadcrumbs-container {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme='dark'] .breadcrumbs-container {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Animate breadcrumb appearance */
+.breadcrumbs-container {
+  animation: breadcrumb-fade-in 0.3s ease-out;
+}
+
+@keyframes breadcrumb-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

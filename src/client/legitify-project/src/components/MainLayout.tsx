@@ -18,6 +18,7 @@ import { useLocation } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import AppHeader from './AppHeader';
 import AppNavigation from './AppNavigation';
+import Breadcrumbs from './Breadcrumbs';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -209,6 +210,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           WebkitBackdropFilter: 'blur(12px)',
           borderBottom: getHeaderBorder(),
           boxShadow: visible ? '0 4px 20px rgba(0, 0, 0, 0.03)' : 'none',
+          height: '60px',
         }}
       >
         <div
@@ -282,12 +284,29 @@ export default function MainLayout({ children }: MainLayoutProps) {
       <AppShell.Main
         style={{
           marginLeft: navCollapsed ? 80 : 280,
+          marginTop: 100,
           transition: 'margin-left 0.3s ease',
           background: getMainBackground(),
-          padding: '24px 0',
+          padding: location.pathname === '/' ? 0 : '24px 0',
         }}
       >
-        {children}
+        {/* Breadcrumbs integrated into the normal document flow */}
+        {location.pathname !== '/' && (
+          <div
+            style={{
+              backgroundColor: isDarkMode ? 'rgba(37, 39, 48, 0.7)' : 'rgba(249, 250, 251, 0.7)',
+              backdropFilter: 'blur(8px)',
+              borderBottom: isDarkMode
+                ? '1px solid rgba(50, 52, 62, 0.5)'
+                : '1px solid rgba(234, 236, 239, 0.5)',
+              marginBottom: '24px',
+            }}
+          >
+            <Breadcrumbs />
+          </div>
+        )}
+
+        <div style={{ padding: location.pathname === '/' ? 0 : '0 24px' }}>{children}</div>
       </AppShell.Main>
     </AppShell>
   );
