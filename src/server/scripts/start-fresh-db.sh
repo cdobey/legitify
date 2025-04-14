@@ -109,6 +109,10 @@ $PRISMA_CMD generate || {
 echo "🗑️  Clearing all authorized users from Supabase Auth..."
 npx ts-node ./scripts/delete-auth-users.ts
 
+# Delete all contents from storage buckets (empty them)
+echo "🗑️  Emptying all storage buckets in Supabase..."
+node ./scripts/empty-storage-buckets.js
+
 echo "🗑️  Clearing all data from Supabase database..."
 
 # Use Prisma to reset the database (drops all tables and recreates them)
@@ -129,6 +133,12 @@ $PRISMA_CMD migrate deploy || {
   node ./node_modules/prisma/build/index.js migrate deploy || {
     echo "All migration methods failed. Database may not be properly initialized."
   }
+}
+
+# Set up Supabase storage bucket policies
+echo "🔒 Setting up Supabase storage bucket policies..."
+node ./scripts/setup-storage-policies.js || {
+  echo "Failed to set up storage bucket policies. File uploads may not work properly."
 }
 
 echo "🔑 Running enrollment script..."

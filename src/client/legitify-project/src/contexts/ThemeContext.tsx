@@ -5,11 +5,15 @@ import { darkTheme, lightTheme } from '../styles/theme';
 type ThemeContextType = {
   isDarkMode: boolean;
   toggleTheme: () => void;
+  setLightTheme: () => void;
+  setDarkTheme: () => void;
 };
 
 const ThemeContext = createContext<ThemeContextType>({
   isDarkMode: false,
   toggleTheme: () => {},
+  setLightTheme: () => {},
+  setDarkTheme: () => {},
 });
 
 interface ThemeProviderProps {
@@ -28,6 +32,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     setIsDarkMode(prev => !prev);
   };
 
+  const setLightTheme = () => setIsDarkMode(false);
+  const setDarkTheme = () => setIsDarkMode(true);
+
   // Persist theme preference to localStorage
   useEffect(() => {
     localStorage.setItem('legitify-theme', isDarkMode ? 'dark' : 'light');
@@ -37,7 +44,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   }, [isDarkMode]);
 
   return (
-    <ThemeContext.Provider value={{ isDarkMode, toggleTheme }}>
+    <ThemeContext.Provider value={{ isDarkMode, toggleTheme, setLightTheme, setDarkTheme }}>
       <ColorSchemeScript forceColorScheme={isDarkMode ? 'dark' : 'light'} />
       <MantineProvider
         theme={isDarkMode ? darkTheme : lightTheme}

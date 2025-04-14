@@ -280,6 +280,7 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
       <Group style={{ padding: '12px', justifyContent: 'space-between' }}>
         <Group style={{ cursor: 'pointer' }}>
           <Avatar
+            src={user.profilePictureUrl}
             color="primaryBlue"
             radius="xl"
             size="md"
@@ -288,7 +289,7 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
               boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
             }}
           >
-            {user.username.charAt(0).toUpperCase()}
+            {!user.profilePictureUrl && user.username.charAt(0).toUpperCase()}
           </Avatar>
           <Box>
             <Text size="sm" fw={500}>

@@ -3,6 +3,7 @@ import { OrgName, User, UserRole } from '../users/user.models';
 export interface LoginParams {
   email: string;
   password: string;
+  twoFactorCode?: string;
 }
 
 export interface LoginResponse {
@@ -10,6 +11,9 @@ export interface LoginResponse {
   expiresIn: number;
   refreshToken: string;
   uid: string;
+  requiresTwoFactor?: boolean;
+  tempToken?: string;
+  userId?: string;
 }
 
 export interface RegisterParams {
