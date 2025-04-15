@@ -1,5 +1,5 @@
 import axios from 'axios';
-import apiCall from '../apiCall';
+import { apiCall } from '../apiCall';
 import {
   AddStudentParams,
   AffiliationResponse,

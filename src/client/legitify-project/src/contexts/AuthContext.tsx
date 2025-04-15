@@ -1,12 +1,11 @@
 import { LoginParams } from '@/api/auth/auth.models';
 import { useLoginMutation } from '@/api/auth/auth.mutations';
 import { useUserProfileQuery } from '@/api/auth/auth.queries';
-import { User } from '@/api/users/user.models';
+import { TwoFactorState, User } from '@/api/users/user.models';
 import axios, { AxiosInstance } from 'axios';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// Simplified context type
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
@@ -15,6 +14,9 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
   refreshSession: () => Promise<boolean>;
   api: AxiosInstance;
+  twoFactorState: TwoFactorState;
+  verifyTwoFactor: (code: string) => Promise<void>;
+  clearTwoFactorState: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   console.log('AuthProvider user:', user);
   const [isLoading, setIsLoading] = useState(true);
+  const [twoFactorState, setTwoFactorState] = useState<TwoFactorState>({ required: false });
 
   const loginMutation = useLoginMutation();
 
@@ -128,6 +131,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const params: LoginParams = { email, password };
     const response = await loginMutation.mutateAsync(params);
 
+    // Handle two-factor authentication
+    if (response.requiresTwoFactor && response.tempToken && response.userId) {
+      setTwoFactorState({
+        required: true,
+        tempToken: response.tempToken,
+        userId: response.userId,
+        email: email,
+        password: password,
+      });
+      // Return without completing login - will be handled by verifyTwoFactor
+      return;
+    }
+
+    // Regular login flow
     if (response.token) {
       sessionStorage.setItem('token', response.token);
 
@@ -149,10 +166,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Verify two-factor authentication code
+  const verifyTwoFactor = async (code: string): Promise<void> => {
+    if (!twoFactorState.required || !twoFactorState.email || !twoFactorState.password) {
+      throw new Error('Two-factor authentication not initiated');
+    }
+
+    // Call login again with the verification code
+    const params: LoginParams = {
+      email: twoFactorState.email,
+      password: twoFactorState.password,
+      twoFactorCode: code,
+    };
+
+    const response = await loginMutation.mutateAsync(params);
+
+    if (response.token) {
+      // Clear two-factor state
+      setTwoFactorState({ required: false });
+
+      // Complete login
+      sessionStorage.setItem('token', response.token);
+
+      try {
+        const { data } = await userProfileQuery.refetch();
+
+        if (data) {
+          setUser(data);
+          sessionStorage.setItem('user', JSON.stringify(data));
+        } else {
+          throw new Error('Failed to fetch user profile');
+        }
+      } catch (error) {
+        console.error('Error fetching user profile during 2FA verification:', error);
+        throw new Error('Failed to complete login process');
+      }
+    }
+  };
+
+  const clearTwoFactorState = () => {
+    setTwoFactorState({ required: false });
+  };
+
   const logout = async (): Promise<void> => {
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('user');
     setUser(null);
+    clearTwoFactorState();
     navigate('/');
   };
 
@@ -164,6 +224,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshUser,
     refreshSession,
     api,
+    twoFactorState,
+    verifyTwoFactor,
+    clearTwoFactorState,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

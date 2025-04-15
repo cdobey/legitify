@@ -52,7 +52,7 @@ async function createDatabaseUser(
 
 export const login: RequestHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password } = req.body;
+    const { email, password, twoFactorCode } = req.body;
 
     if (!email || !password) {
       res.status(400).json({ error: 'Email and password are required' });
@@ -77,6 +77,39 @@ export const login: RequestHandler = async (req: Request, res: Response): Promis
     if (!data.session) {
       res.status(401).json({ error: 'No session returned from Supabase' });
       return;
+    }
+
+    // Check if user has 2FA enabled
+    const user = await prisma.user.findUnique({
+      where: { id: data.user?.id },
+      select: { twoFactorEnabled: true, twoFactorSecret: true },
+    });
+
+    // If 2FA is enabled but no code was provided, return a special response
+    if (user?.twoFactorEnabled && !twoFactorCode) {
+      res.status(200).json({
+        requiresTwoFactor: true,
+        userId: data.user?.id,
+        // Don't include the actual token yet, but include a temporary token for the 2FA step
+        tempToken: data.session.access_token,
+      });
+      return;
+    }
+
+    // If 2FA is enabled and code was provided, verify it
+    if (user?.twoFactorEnabled && twoFactorCode && user.twoFactorSecret) {
+      // Import the verification utility
+      const { verifyTOTP } = await import('@/utils/totp');
+
+      // Verify the code
+      const isCodeValid = verifyTOTP(user.twoFactorSecret, twoFactorCode);
+
+      if (!isCodeValid) {
+        res.status(401).json({ error: 'Invalid two-factor authentication code' });
+        return;
+      }
+
+      // If code is valid, continue with authentication
     }
 
     res.json({

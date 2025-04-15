@@ -5,12 +5,19 @@ import {
   Container,
   Group,
   PasswordInput,
+  Stack,
   Text,
   TextInput,
   Title,
 } from '@mantine/core';
-import { IconAlertCircle, IconArrowRight, IconLock, IconMail } from '@tabler/icons-react';
-import { useState } from 'react';
+import {
+  IconAlertCircle,
+  IconArrowRight,
+  IconFingerprint,
+  IconLock,
+  IconMail,
+} from '@tabler/icons-react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -20,10 +27,11 @@ const Login = () => {
     password: '',
     organization: '',
   });
+  const [twoFactorCode, setTwoFactorCode] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, twoFactorState, verifyTwoFactor, clearTwoFactorState, user } = useAuth();
 
   const organizations = [
     { value: 'Individual', label: 'Individual' },
@@ -42,10 +50,7 @@ const Login = () => {
       }
       
       await login(formData.email, formData.password);
-
-      // Letting the auth context handle setting the token and user info
-      console.log('Login successful');
-      navigate('/');
+      // Don't navigate here - let the useEffect handle it
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.message || 'Failed to login');
@@ -53,6 +58,93 @@ const Login = () => {
       setIsLoading(false);
     }
   };
+
+  // Handle two-factor verification
+  const handleVerifyTwoFactor = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    try {
+      await verifyTwoFactor(twoFactorCode);
+    } catch (err: any) {
+      console.error('Two-factor verification error:', err);
+      setError(err.message || 'Failed to verify two-factor code');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancelTwoFactor = () => {
+    clearTwoFactorState();
+    setTwoFactorCode('');
+  };
+
+  // Render the two-factor authentication form
+  if (twoFactorState.required) {
+    return (
+      <Container size="xs" py="xl">
+        <Card
+          shadow="md"
+          padding="xl"
+          radius="lg"
+          withBorder
+          className="accent-top-card"
+          style={{ maxWidth: 450, margin: '0 auto' }}
+        >
+          <Title order={2} ta="center" mb="sm" className="accent-gradient-text">
+            Two-Factor Authentication
+          </Title>
+          <Text size="sm" c="dimmed" ta="center" mb="lg">
+            Enter the verification code from your authenticator app
+          </Text>
+
+          <form onSubmit={handleVerifyTwoFactor}>
+            <Stack>
+              <TextInput
+                label="Verification Code"
+                placeholder="Enter 6-digit code"
+                leftSection={<IconFingerprint size={16} className="accent-icon" />}
+                value={twoFactorCode}
+                onChange={e => setTwoFactorCode(e.target.value)}
+                required
+                maxLength={6}
+                className="accent-focus"
+                autoFocus
+              />
+
+              {error && (
+                <Alert
+                  color="red"
+                  radius="md"
+                  icon={<IconAlertCircle size={16} />}
+                  title="Verification Error"
+                >
+                  {error}
+                </Alert>
+              )}
+
+              <Button
+                type="submit"
+                fullWidth
+                loading={isLoading}
+                className="accent-button"
+                size="md"
+                rightSection={<IconArrowRight size={18} />}
+                disabled={twoFactorCode.length !== 6}
+              >
+                Verify
+              </Button>
+
+              <Button variant="subtle" onClick={handleCancelTwoFactor} disabled={isLoading}>
+                Cancel
+              </Button>
+            </Stack>
+          </form>
+        </Card>
+      </Container>
+    );
+  }
 
   return (
     <Container size="xs" py="xl">

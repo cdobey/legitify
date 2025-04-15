@@ -1,4 +1,4 @@
-import apiCall from '../apiCall';
+import { apiCall } from '../apiCall';
 import { LoginParams, LoginResponse, RegisterParams, UserProfile } from './auth.models';
 
 export const login = (params: LoginParams): Promise<LoginResponse> => {

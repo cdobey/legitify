@@ -67,39 +67,55 @@ export const uploadLogo: RequestHandler = async (
       return;
     }
 
+    console.log(`Processing university logo upload for university ${universityId}`);
+    console.log(`File mimetype: ${req.file.mimetype}, size: ${req.file.size} bytes`);
+
     // Get the file extension
     const fileExt = path.extname(req.file.originalname).substring(1).toLowerCase();
-
-    // Upload the logo to storage
-    const logoUrl = await uploadUniversityLogo(universityId, req.file.buffer, fileExt);
-
-    if (!logoUrl) {
-      res.status(500).json({ error: 'Failed to upload logo' });
+    if (!fileExt) {
+      res.status(400).json({ error: 'Invalid file format' });
       return;
     }
 
-    // If there's an existing logo, delete it
-    if (university.logoUrl) {
-      await deleteUniversityLogo(university.logoUrl);
+    // Upload the logo to storage
+    try {
+      const logoUrl = await uploadUniversityLogo(universityId, req.file.buffer, fileExt);
+
+      if (!logoUrl) {
+        res.status(500).json({ error: 'Failed to upload logo' });
+        return;
+      }
+
+      // If there's an existing logo, delete it
+      if (university.logoUrl) {
+        await deleteUniversityLogo(university.logoUrl).catch(err =>
+          console.error(`Failed to delete old logo: ${err.message}`),
+        );
+      }
+
+      // Update the university in the database with the logo URL
+      const updatedUniversity = await prisma.university.update({
+        where: {
+          id: universityId,
+        },
+        data: {
+          logoUrl,
+        },
+      });
+
+      console.log(`Logo updated successfully for university ${universityId}: ${logoUrl}`);
+
+      res.status(200).json({
+        message: 'Logo uploaded successfully',
+        university: updatedUniversity,
+      });
+    } catch (uploadError: any) {
+      console.error(`Error uploading university logo: ${uploadError.message}`);
+      res.status(500).json({ error: `Error uploading logo: ${uploadError.message}` });
     }
-
-    // Update the university in the database with the logo URL
-    const updatedUniversity = await prisma.university.update({
-      where: {
-        id: universityId,
-      },
-      data: {
-        logoUrl,
-      },
-    });
-
-    res.status(200).json({
-      message: 'Logo uploaded successfully',
-      university: updatedUniversity,
-    });
   } catch (error: any) {
     console.error('uploadLogo error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message || 'Failed to upload logo' });
   }
 };
 
@@ -147,29 +163,36 @@ export const deleteLogo: RequestHandler = async (
     }
 
     // Delete the logo from storage
-    const deleted = await deleteUniversityLogo(university.logoUrl);
+    try {
+      const deleted = await deleteUniversityLogo(university.logoUrl);
 
-    if (!deleted) {
-      res.status(500).json({ error: 'Failed to delete logo' });
-      return;
+      if (!deleted) {
+        res.status(500).json({ error: 'Failed to delete logo' });
+        return;
+      }
+
+      // Update the university in the database to remove the logo URL
+      const updatedUniversity = await prisma.university.update({
+        where: {
+          id: universityId,
+        },
+        data: {
+          logoUrl: null,
+        },
+      });
+
+      console.log(`Logo deleted successfully for university ${universityId}`);
+
+      res.status(200).json({
+        message: 'Logo deleted successfully',
+        university: updatedUniversity,
+      });
+    } catch (deleteError: any) {
+      console.error(`Error deleting university logo: ${deleteError.message}`);
+      res.status(500).json({ error: `Error deleting logo: ${deleteError.message}` });
     }
-
-    // Update the university in the database to remove the logo URL
-    const updatedUniversity = await prisma.university.update({
-      where: {
-        id: universityId,
-      },
-      data: {
-        logoUrl: null,
-      },
-    });
-
-    res.status(200).json({
-      message: 'Logo deleted successfully',
-      university: updatedUniversity,
-    });
   } catch (error: any) {
     console.error('deleteLogo error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message || 'Failed to delete logo' });
   }
 };

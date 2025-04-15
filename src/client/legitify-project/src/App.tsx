@@ -13,6 +13,7 @@ import ManageDegrees from './pages/degree/ManageDegrees';
 import VerifyDegree from './pages/degree/VerifyDegree';
 import ViewDegree from './pages/degree/ViewDegree';
 import HomePage from './pages/HomePage';
+import ProfilePage from './pages/Profile';
 import Settings from './pages/Settings';
 import ManageUniversities from './pages/university/ManageUniversities';
 import MyUniversities from './pages/user/MyUniversities';
@@ -57,6 +58,14 @@ export default function App() {
           element={
             <ProtectedRoute requiredRole="individual">
               <ManageDegrees />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
             </ProtectedRoute>
           }
         />
