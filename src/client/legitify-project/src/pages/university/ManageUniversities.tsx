@@ -514,7 +514,7 @@ export default function ManageUniversities() {
         </Group>
 
         <Modal opened={createModalOpened} onClose={closeCreateModal} title="Create University">
-          <form onSubmit={createUniversityForm.onSubmit(handleCreateUniversity)}>
+          <form onSubmit={createUniversityForm.onSubmit(handleCreateUniversity)} noValidate>
             <TextInput
               label="University Identifier"
               description="Unique identifier for your university (no spaces)"
@@ -725,9 +725,10 @@ export default function ManageUniversities() {
                 />
 
                 <Group justify="space-between">
-                  <Text size="sm">
-                    <Badge color="green">Auto-affiliated</Badge> with {university.displayName}
-                  </Text>
+                  <Group gap="xs">
+                    <Badge color="green">Auto-affiliated</Badge>
+                    <Text size="sm">with {university.displayName}</Text>
+                  </Group>
                   <Group>
                     <Button variant="subtle" onClick={closeRegisterModal}>
                       Cancel

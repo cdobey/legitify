@@ -40,7 +40,7 @@ export default function App() {
         <Route
           path="/degree/issue"
           element={
-            <ProtectedRoute requiredRole="university">
+            <ProtectedRoute requiredRole="university" deniedMessage="Only universities can issue degrees.">
               <IssueDegree />
             </ProtectedRoute>
           }

@@ -275,6 +275,7 @@ export default function IssueDegree() {
               accept="application/pdf"
               value={formData.file}
               onChange={handleFileChange}
+              data-testid="file-input"
             />
           </Grid.Col>
 
@@ -288,7 +289,6 @@ export default function IssueDegree() {
             />
           </Grid.Col>
         </Grid>
-
         {isUploading && (
           <>
             <Text size="sm" mb="xs">
@@ -309,6 +309,7 @@ export default function IssueDegree() {
             {localError || (issueMutation.error as Error).message}
           </Alert>
         )}
+
         {success && (
           <Alert color="green" mb="md">
             {success}
