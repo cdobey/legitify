@@ -18,11 +18,18 @@ const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    organization: '',
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  const organizations = [
+    { value: 'Individual', label: 'Individual' },
+    { value: 'Employer', label: 'Employer' },
+    { value: 'University', label: 'University' },
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +37,10 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      if (formData.organization) {
+        localStorage.setItem('selectedOrganization', formData.organization);
+      }
+      
       await login(formData.email, formData.password);
 
       // Letting the auth context handle setting the token and user info
@@ -80,6 +91,17 @@ const Login = () => {
             required
             mb="lg"
             className="accent-focus"
+          />
+          <Select
+            label="Organization"
+            placeholder="Select your organization"
+            leftSection={<IconBuilding size={16} />}
+            data={organizations}
+            value={formData.organization}
+            onChange={(value) => setFormData({ ...formData, organization: value || '' })}
+            required
+            mb="lg"
+            searchable
           />
 
           {error && (
