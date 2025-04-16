@@ -261,10 +261,20 @@ export default function IssueDegree() {
               onChange={val =>
                 setFormData({ ...formData, gpa: typeof val === 'string' ? '' : val })
               }
-              placeholder="Enter GPA"
+              placeholder="Enter GPA (0.00 - 4.00)"
               min={0}
               max={4}
+              step={0.01}
               decimalScale={2}
+              fixedDecimalScale
+              clampBehavior="strict"
+              hideControls
+              description="Enter GPA on a 4.0 scale"
+              error={
+                typeof formData.gpa === 'number' && (formData.gpa > 4 || formData.gpa < 0)
+                  ? 'GPA must be between 0.00 and 4.00'
+                  : null
+              }
             />
           </Grid.Col>
 

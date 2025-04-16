@@ -1,4 +1,4 @@
-import { createTheme, MantineColorsTuple } from '@mantine/core';
+import { createTheme, MantineColorsTuple, MantineTheme } from '@mantine/core';
 
 // Modern blue with teal undertones for light mode
 const primaryBlue: MantineColorsTuple = [
@@ -248,6 +248,59 @@ const darkComponents = {
         color: '#c1c2c5',
       },
     },
+  },
+  DateInput: {
+    styles: {
+      input: {
+        backgroundColor: '#292b36',
+        borderColor: '#3f4356',
+        color: '#e9ecef',
+        '&:focus': {
+          borderColor: '#2ca6d3',
+        },
+      },
+      label: {
+        color: '#c1c2c5',
+      },
+    },
+  },
+  Calendar: {
+    styles: (theme: MantineTheme) => ({
+      calendarHeader: {
+        backgroundColor: '#292b36',
+        color: '#e9ecef',
+      },
+      calendarHeaderControl: {
+        color: '#c1c2c5',
+        '&:hover': {
+          backgroundColor: '#3f4356',
+        },
+      },
+      weekday: {
+        color: '#c1c2c5',
+      },
+      day: {
+        color: '#e9ecef',
+        '&:hover': {
+          backgroundColor: '#3f4356',
+        },
+        '&[data-selected]': {
+          backgroundColor: theme.colors.primaryBlue[5],
+          color: '#ffffff',
+        },
+        '&[data-current]': {
+          color: theme.colors.accentTeal[6],
+          fontWeight: 500,
+        },
+        '&[data-outside]': {
+          color: '#5c5f66',
+        },
+        '&[data-disabled]': {
+          color: '#5c5f66',
+          backgroundColor: 'transparent',
+        },
+      },
+    }),
   },
   AppShell: {
     styles: {

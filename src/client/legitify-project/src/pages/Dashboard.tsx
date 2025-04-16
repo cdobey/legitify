@@ -34,6 +34,7 @@ import {
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AccessRequest } from '../api/degrees/degree.models';
+import { DashboardSkeleton } from '../components/SkeletonLoaders';
 import { useAuth } from '../contexts/AuthContext';
 import { useDashboardData } from '../hooks/useDashboardData';
 
@@ -81,11 +82,7 @@ export default function Dashboard() {
   }
 
   if (isLoading) {
-    return (
-      <Container>
-        <Text>Loading dashboard data...</Text>
-      </Container>
-    );
+    return <DashboardSkeleton userRole={user?.role as 'university' | 'individual' | 'employer'} />;
   }
 
   if (error) {

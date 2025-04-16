@@ -496,7 +496,8 @@ button.accent-orange:hover {
 [data-theme='dark'] .mantine-TextInput-input,
 [data-theme='dark'] .mantine-PasswordInput-input,
 [data-theme='dark'] .mantine-Textarea-input,
-[data-theme='dark'] .mantine-Select-input {
+[data-theme='dark'] .mantine-Select-input,
+[data-theme='dark'] .mantine-NumberInput-input {
   background-color: #292b36;
   border-color: #3f4356;
   color: #e9ecef;
@@ -505,12 +506,9 @@ button.accent-orange:hover {
 [data-theme='dark'] .mantine-TextInput-input:focus,
 [data-theme='dark'] .mantine-PasswordInput-input:focus,
 [data-theme='dark'] .mantine-Textarea-input:focus,
-[data-theme='dark'] .mantine-Select-input:focus {
+[data-theme='dark'] .mantine-Select-input:focus,
+[data-theme='dark'] .mantine-NumberInput-input:focus {
   border-color: #2ca6d3;
-}
-
-[data-theme='dark'] .mantine-InputWrapper-label {
-  color: #c1c2c5;
 }
 
 /* Fancy card hover effects */
@@ -993,4 +991,158 @@ button.accent-orange:hover {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Date picker styling improvements */
+.mantine-DateInput-calendar {
+  border: 1px solid #e9ecef;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.mantine-DateInput-calendar * {
+  font-family: inherit;
+}
+
+/* Improved calendar header styling */
+.mantine-DateInput-calendarHeader {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mantine-DateInput-calendarHeaderControl {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #495057;
+  transition: all 0.2s ease;
+  padding: 0;
+  margin: 0 4px;
+}
+
+.mantine-DateInput-calendarHeaderControl svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+}
+
+.mantine-DateInput-calendarHeaderLevel {
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.mantine-DateInput-calendarHeaderLevel:hover {
+  background-color: #f1f3f5;
+}
+
+/* Dark mode adjustments */
+[data-theme='dark'] .mantine-DateInput-calendarHeaderControl svg {
+  color: #c1c2c5;
+}
+
+[data-theme='dark'] .mantine-DateInput-calendarHeaderLevel {
+  color: #e9ecef;
+}
+
+[data-theme='dark'] .mantine-DateInput-calendarHeaderLevel:hover {
+  background-color: #2d303c;
+}
+
+.mantine-DateInput-calendarHeaderLevel {
+  font-weight: 600;
+}
+
+.mantine-DateInput-calendarHeaderControl {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  color: #495057;
+  transition: all 0.2s ease;
+}
+
+.mantine-DateInput-calendarHeaderControl:hover {
+  background-color: #f1f3f5;
+}
+
+.mantine-DateInput-cell {
+  width: 36px;
+  height: 36px;
+  font-size: 0.875rem;
+}
+
+.mantine-DateInput-day {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  color: #495057;
+}
+
+.mantine-DateInput-day:hover {
+  background-color: #f1f3f5;
+}
+
+.mantine-DateInput-day[data-selected] {
+  background-color: #2291d6;
+  color: white;
+}
+
+.mantine-DateInput-day[data-selected]:hover {
+  background-color: #1991bd;
+}
+
+.mantine-DateInput-day[data-outside] {
+  color: #adb5bd;
+}
+
+/* Dark mode styles */
+[data-theme='dark'] .mantine-DateInput-calendar {
+  background-color: #252731;
+  border-color: #3f4356;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme='dark'] .mantine-DateInput-calendarHeader {
+  border-bottom-color: #3f4356;
+}
+
+[data-theme='dark'] .mantine-DateInput-calendarHeaderControl {
+  color: #c1c2c5;
+}
+
+[data-theme='dark'] .mantine-DateInput-calendarHeaderControl:hover {
+  background-color: #2d303c;
+}
+
+[data-theme='dark'] .mantine-DateInput-day {
+  color: #c1c2c5;
+}
+
+[data-theme='dark'] .mantine-DateInput-day:hover {
+  background-color: #2d303c;
+}
+
+[data-theme='dark'] .mantine-DateInput-day[data-selected] {
+  background-color: #2ca6d3;
+  color: white;
+}
+
+[data-theme='dark'] .mantine-DateInput-day[data-selected]:hover {
+  background-color: #1991bd;
+}
+
+[data-theme='dark'] .mantine-DateInput-day[data-outside] {
+  color: #4a4f66;
 }

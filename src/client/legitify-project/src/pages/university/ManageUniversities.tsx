@@ -13,6 +13,7 @@ import {
   usePendingAffiliationsQuery,
 } from '@/api/universities/university.queries';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import {
   Alert,
   Badge,
@@ -69,6 +70,34 @@ export default function ManageUniversities() {
     useDisclosure(false);
   const [csvModalOpened, { open: openCsvModal, close: closeCsvModal }] = useDisclosure(false);
   const { refreshSession } = useAuth();
+  const { isDarkMode } = useTheme();
+
+  // Modal styles based on theme
+  const modalStyles = {
+    header: {
+      background: 'transparent',
+      borderBottom: isDarkMode ? '1px solid #2C2E33' : '1px solid #e9ecef',
+      paddingBottom: 10,
+    },
+    title: {
+      fontSize: '1.1rem',
+      fontWeight: 600,
+    },
+    body: {
+      paddingTop: 15,
+      paddingBottom: 15,
+    },
+    close: {
+      color: isDarkMode ? '#909296' : '#495057',
+      '&:hover': {
+        background: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+      },
+    },
+    content: {
+      maxHeight: '90vh',
+      overflow: 'auto',
+    },
+  };
 
   const {
     data: universities,
@@ -513,7 +542,13 @@ export default function ManageUniversities() {
           </Button>
         </Group>
 
-        <Modal opened={createModalOpened} onClose={closeCreateModal} title="Create University">
+        <Modal
+          opened={createModalOpened}
+          onClose={closeCreateModal}
+          title="Create University"
+          styles={modalStyles}
+          centered
+        >
           <form onSubmit={createUniversityForm.onSubmit(handleCreateUniversity)} noValidate>
             <TextInput
               label="University Identifier"
@@ -548,7 +583,13 @@ export default function ManageUniversities() {
           </form>
         </Modal>
 
-        <Modal opened={joinModalOpened} onClose={closeJoinModal} title="Join University">
+        <Modal
+          opened={joinModalOpened}
+          onClose={closeJoinModal}
+          title="Join University"
+          styles={modalStyles}
+          centered
+        >
           <form onSubmit={joinUniversityForm.onSubmit(handleJoinUniversity)}>
             <Select
               label="Select University"
@@ -698,6 +739,8 @@ export default function ManageUniversities() {
               opened={registerModalOpened}
               onClose={closeRegisterModal}
               title="Register New Student"
+              styles={modalStyles}
+              centered
             >
               <form onSubmit={registerStudentForm.onSubmit(handleRegisterStudent)}>
                 <TextInput
@@ -739,7 +782,13 @@ export default function ManageUniversities() {
               </form>
             </Modal>
 
-            <Modal opened={csvModalOpened} onClose={closeCsvModal} title="Batch Register Students">
+            <Modal
+              opened={csvModalOpened}
+              onClose={closeCsvModal}
+              title="Batch Register Students"
+              styles={modalStyles}
+              centered
+            >
               <Text mb="md">
                 Upload a CSV file with student information to register multiple students at once.
               </Text>
