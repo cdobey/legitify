@@ -112,10 +112,11 @@ function Start-Server {
     # Create log file path
     $serverLogFile = Join-Path -Path $BASE_DIR -ChildPath "server.log"
     
-    # Start server as a background job
+    # Start server as a background job avoiding environment variable issues
     $job = Start-Job -ScriptBlock {
         param($dir, $logFile)
         Set-Location $dir
+        # Run npm directly without trying to set NODE_ENV
         npm run dev *> $logFile
     } -ArgumentList $serverPath, $serverLogFile
     
@@ -174,10 +175,11 @@ function Start-Client {
     # Create log file path
     $clientLogFile = Join-Path -Path $BASE_DIR -ChildPath "client.log"
     
-    # Start client as a background job
+    # Start client as a background job avoiding environment variable issues
     $job = Start-Job -ScriptBlock {
         param($dir, $logFile)
         Set-Location $dir
+        # Run npm directly without trying to set NODE_ENV
         npm run dev *> $logFile
     } -ArgumentList $clientPath, $clientLogFile
     
