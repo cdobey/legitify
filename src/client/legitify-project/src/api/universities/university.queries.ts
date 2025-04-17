@@ -4,9 +4,14 @@ import {
   getAllUniversities,
   getMyUniversities,
   getPendingAffiliations,
+  getPendingJoinRequests,
   getStudentUniversities,
 } from './university.api';
-import { AffiliationsResponse, UniversitiesResponse } from './university.models';
+import {
+  AffiliationsResponse,
+  JoinRequestsResponse,
+  UniversitiesResponse,
+} from './university.models';
 
 export const universityKeys = {
   all: ['universities'] as const,
@@ -16,6 +21,7 @@ export const universityKeys = {
   pending: (universityId: string) => [...universityKeys.all, 'pending', universityId] as const,
   studentAffiliations: () => [...universityKeys.all, 'student-affiliations'] as const,
   pendingAffiliations: () => [...universityKeys.all, 'pending-affiliations'] as const,
+  pendingJoinRequests: () => [...universityKeys.all, 'pending-join-requests'] as const,
 };
 
 export const useMyUniversitiesQuery = (
@@ -55,6 +61,16 @@ export const usePendingAffiliationsQuery = (
   useQuery<AffiliationsResponse, AxiosError>({
     queryKey: universityKeys.pendingAffiliations(),
     queryFn: () => getPendingAffiliations(),
+    staleTime: 3 * 60 * 1000, // 3 minutes
+    ...options,
+  });
+
+export const usePendingJoinRequestsQuery = (
+  options?: Partial<UseQueryOptions<JoinRequestsResponse, AxiosError>>,
+) =>
+  useQuery<JoinRequestsResponse, AxiosError>({
+    queryKey: universityKeys.pendingJoinRequests(),
+    queryFn: () => getPendingJoinRequests(),
     staleTime: 3 * 60 * 1000, // 3 minutes
     ...options,
   });

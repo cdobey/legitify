@@ -6,11 +6,14 @@ import {
   useJoinUniversityMutation,
   useRegisterStudentMutation,
   useRespondToAffiliationMutation,
+  useRespondToJoinRequestMutation,
 } from '@/api/universities/university.mutations';
 import {
+  universityKeys,
   useAllUniversitiesQuery,
   useMyUniversitiesQuery,
   usePendingAffiliationsQuery,
+  usePendingJoinRequestsQuery,
 } from '@/api/universities/university.queries';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -46,6 +49,7 @@ import {
   IconUserPlus,
   IconX,
 } from '@tabler/icons-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
 // Define only the form interfaces that aren't imported
@@ -69,8 +73,9 @@ export default function ManageUniversities() {
   const [registerModalOpened, { open: openRegisterModal, close: closeRegisterModal }] =
     useDisclosure(false);
   const [csvModalOpened, { open: openCsvModal, close: closeCsvModal }] = useDisclosure(false);
-  const { refreshSession } = useAuth();
+  const { refreshSession, user } = useAuth();
   const { isDarkMode } = useTheme();
+  const queryClient = useQueryClient();
 
   // Modal styles based on theme
   const modalStyles = {
@@ -110,6 +115,7 @@ export default function ManageUniversities() {
   const addStudentMutation = useAddStudentMutation();
   const registerStudentMutation = useRegisterStudentMutation();
   const respondToAffiliationMutation = useRespondToAffiliationMutation();
+  const respondToJoinRequestMutation = useRespondToJoinRequestMutation();
 
   const { data: allUniversities = [], isLoading: isLoadingAllUniversities } =
     useAllUniversitiesQuery({
@@ -125,6 +131,14 @@ export default function ManageUniversities() {
     useRecentIssuedDegreesQuery({
       enabled: !!university,
     });
+
+  const { data: pendingJoinRequests = [], isLoading: isLoadingPendingJoinRequests } =
+    usePendingJoinRequestsQuery({
+      enabled: !!university?.id,
+    });
+
+  const isLoading =
+    isLoadingUniversities || createUniversityMutation.isPending || joinUniversityMutation.isPending;
 
   const newStudentForm = useForm({
     initialValues: {
@@ -171,13 +185,34 @@ export default function ManageUniversities() {
 
   useEffect(() => {
     if (universities && universities.length > 0) {
-      const uni = universities[0];
-      setUniversity({
-        ...uni,
-        affiliations: uni.affiliations || [],
-      });
+      if (user?.role === 'university') {
+        const ownedUniversity = universities.find(uni => uni.ownerId === user.id);
+
+        if (ownedUniversity) {
+          setUniversity({
+            ...ownedUniversity,
+            affiliations: ownedUniversity.affiliations || [],
+          });
+        } else {
+          // If they don't own any universities, show the first one they're a member of
+          const memberUniversity = universities[0];
+          setUniversity({
+            ...memberUniversity,
+            affiliations: memberUniversity.affiliations || [],
+          });
+        }
+      } else {
+        // For individual users, show their affiliated university
+        const uni = universities[0];
+        setUniversity({
+          ...uni,
+          affiliations: uni.affiliations || [],
+        });
+      }
+    } else {
+      setUniversity(null);
     }
-  }, [universities]);
+  }, [universities, user]);
 
   const handleCreateUniversity = async (values: {
     name: string;
@@ -279,6 +314,15 @@ export default function ManageUniversities() {
         accept,
       });
 
+      // Manually refetchignn the universities data to update the view - not sure if this will make a difference or not?
+      await queryClient.invalidateQueries({ queryKey: universityKeys.my() });
+      await queryClient.invalidateQueries({ queryKey: universityKeys.pendingAffiliations() });
+
+      // For individual users, also invalidate student affiliations
+      if (user?.role === 'individual') {
+        await queryClient.invalidateQueries({ queryKey: universityKeys.studentAffiliations() });
+      }
+
       setSuccess(`Request ${accept ? 'approved' : 'rejected'} successfully`);
     } catch (err: any) {
       console.error('Failed to respond to affiliation:', err);
@@ -286,13 +330,30 @@ export default function ManageUniversities() {
     }
   };
 
-  const isLoading =
-    isLoadingUniversities ||
-    createUniversityMutation.isPending ||
-    joinUniversityMutation.isPending ||
-    addStudentMutation.isPending ||
-    registerStudentMutation.isPending ||
-    respondToAffiliationMutation.isPending;
+  const handleJoinRequestResponse = async (requestId: string, accept: boolean) => {
+    try {
+      setError(null);
+      setSuccess(null);
+      await refreshSession();
+
+      await respondToJoinRequestMutation.mutateAsync({
+        requestId,
+        accept,
+      });
+
+      await queryClient.invalidateQueries({ queryKey: universityKeys.my() });
+      await queryClient.invalidateQueries({ queryKey: universityKeys.pendingJoinRequests() });
+
+      if (user?.role === 'individual') {
+        await queryClient.invalidateQueries({ queryKey: universityKeys.studentAffiliations() });
+      }
+
+      setSuccess(`Join request ${accept ? 'approved' : 'rejected'} successfully`);
+    } catch (err: any) {
+      console.error('Failed to respond to join request:', err);
+      setError(err.message || 'Failed to respond to join request');
+    }
+  };
 
   const renderDashboardInfo = () => {
     if (!university) return null;
@@ -364,6 +425,70 @@ export default function ManageUniversities() {
           )}
         </Card>
       </Group>
+    );
+  };
+
+  const renderUniversityJoinRequests = () => {
+    if (isLoadingPendingJoinRequests) {
+      return <Text c="dimmed">Loading join requests...</Text>;
+    }
+
+    if (!pendingJoinRequests || pendingJoinRequests.length === 0) {
+      return (
+        <Alert color="blue" icon={<IconInfoCircle size={16} />} title="No Join Requests">
+          No universities have requested to join your institution.
+        </Alert>
+      );
+    }
+
+    return (
+      <>
+        <Text mb="md">
+          These universities have requested to join your institution. Review and respond to their
+          requests.
+        </Text>
+
+        <Table>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>University Admin</Table.Th>
+              <Table.Th>Email</Table.Th>
+              <Table.Th>Requested On</Table.Th>
+              <Table.Th>Actions</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {pendingJoinRequests.map(request => (
+              <Table.Tr key={request.id}>
+                <Table.Td>{request.requester.username}</Table.Td>
+                <Table.Td>{request.requester.email}</Table.Td>
+                <Table.Td>{new Date(request.createdAt).toLocaleDateString()}</Table.Td>
+                <Table.Td>
+                  <Group>
+                    <Button
+                      size="xs"
+                      color="green"
+                      leftSection={<IconCheck size={16} />}
+                      onClick={() => handleJoinRequestResponse(request.id, true)}
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      size="xs"
+                      color="red"
+                      variant="outline"
+                      leftSection={<IconX size={16} />}
+                      onClick={() => handleJoinRequestResponse(request.id, false)}
+                    >
+                      Reject
+                    </Button>
+                  </Group>
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </>
     );
   };
 
@@ -471,6 +596,71 @@ export default function ManageUniversities() {
                 <Table.Td>{new Date(affiliation.createdAt).toLocaleDateString()}</Table.Td>
                 <Table.Td>
                   <Badge color="yellow">Awaiting Response</Badge>
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </>
+    );
+  };
+
+  const renderInvitationsReceived = () => {
+    // Filter for invitations sent to the current user
+    const invitationsForCurrentUser = pendingAffiliations
+      ? pendingAffiliations.filter(
+          affiliation =>
+            affiliation.initiatedBy === 'university' && affiliation.userId === user?.id,
+        )
+      : [];
+
+    if (invitationsForCurrentUser.length === 0) {
+      return (
+        <Alert color="blue" icon={<IconInfoCircle size={16} />} title="No Invitations">
+          You don't have any pending invitations from other universities.
+        </Alert>
+      );
+    }
+
+    return (
+      <>
+        <Text mb="md">
+          These universities have invited you to join them. Accept to become affiliated with them.
+        </Text>
+
+        <Table>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>University</Table.Th>
+              <Table.Th>Invited On</Table.Th>
+              <Table.Th>Actions</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {invitationsForCurrentUser.map(affiliation => (
+              <Table.Tr key={affiliation.id}>
+                <Table.Td>{affiliation.university.displayName}</Table.Td>
+                <Table.Td>{new Date(affiliation.createdAt).toLocaleDateString()}</Table.Td>
+                <Table.Td>
+                  <Group>
+                    <Button
+                      size="xs"
+                      color="green"
+                      leftSection={<IconCheck size={16} />}
+                      onClick={() => handleAffiliationResponse(affiliation.id, true)}
+                    >
+                      Accept
+                    </Button>
+                    <Button
+                      size="xs"
+                      color="red"
+                      variant="outline"
+                      leftSection={<IconX size={16} />}
+                      onClick={() => handleAffiliationResponse(affiliation.id, false)}
+                    >
+                      Decline
+                    </Button>
+                  </Group>
                 </Table.Td>
               </Table.Tr>
             ))}
@@ -668,6 +858,38 @@ export default function ManageUniversities() {
                 <Tabs.Tab value="sent-invitations" leftSection={<IconSend size={14} />}>
                   Sent Invitations
                 </Tabs.Tab>
+                <Tabs.Tab
+                  value="invitations-received"
+                  leftSection={<IconSchool size={14} />}
+                  rightSection={
+                    pendingAffiliations?.filter(
+                      a => a.initiatedBy === 'university' && a.userId === user?.id,
+                    ).length > 0 ? (
+                      <Badge size="sm" color="red">
+                        {
+                          pendingAffiliations.filter(
+                            a => a.initiatedBy === 'university' && a.userId === user?.id,
+                          ).length
+                        }
+                      </Badge>
+                    ) : null
+                  }
+                >
+                  Invitations Received
+                </Tabs.Tab>
+                <Tabs.Tab
+                  value="university-join-requests"
+                  leftSection={<IconSchool size={14} />}
+                  rightSection={
+                    pendingJoinRequests?.length > 0 ? (
+                      <Badge size="sm" color="red">
+                        {pendingJoinRequests.length}
+                      </Badge>
+                    ) : null
+                  }
+                >
+                  University Join Requests
+                </Tabs.Tab>
                 <Tabs.Tab value="add-student" leftSection={<IconUserPlus size={14} />}>
                   Add Student
                 </Tabs.Tab>
@@ -728,6 +950,14 @@ export default function ManageUniversities() {
 
               <Tabs.Panel value="sent-invitations" pt="md">
                 {renderPendingInvitations()}
+              </Tabs.Panel>
+
+              <Tabs.Panel value="invitations-received" pt="md">
+                {renderInvitationsReceived()}
+              </Tabs.Panel>
+
+              <Tabs.Panel value="university-join-requests" pt="md">
+                {renderUniversityJoinRequests()}
               </Tabs.Panel>
 
               <Tabs.Panel value="add-student" pt="md">

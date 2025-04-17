@@ -1,18 +1,18 @@
 import {
+  getAllLedgerRecords,
+  getMyDegrees,
+  getRecentIssuedDegrees,
+  getUserDegrees,
+} from '@/controllers/degree-lookup.controller';
+import { acceptDegree, denyDegree, issueDegree } from '@/controllers/degree-management.controller';
+import {
   getAccessibleDegrees,
   getAccessRequests,
   grantAccess,
   requestAccess,
   viewDegree,
-} from '@/controllers/degree-access.controller';
-import {
-  getAllLedgerRecords,
-  getMyDegrees,
-  getRecentIssuedDegrees,
-  getUserDegrees,
-} from '@/controllers/degree-query.controller';
-import { verifyDegreeDocument } from '@/controllers/degree-verification.controller';
-import { acceptDegree, denyDegree, issueDegree } from '@/controllers/degree.controller';
+} from '@/controllers/degree-request.controller';
+import { verifyDegreeDocument } from '@/controllers/degree-verifier.controller';
 import { authMiddleware } from '@/middleware/auth';
 import { Router } from 'express';
 

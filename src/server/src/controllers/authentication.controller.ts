@@ -3,9 +3,8 @@ import prisma from '@/prisma/client';
 import { enrollUser } from '@/utils/fabric-helpers';
 import { OrgName, Role } from '@prisma/client';
 import { Request, RequestHandler, Response } from 'express';
-import { createUniversityHelper } from './university.controller';
+import { createUniversityHelper } from './university-management.controller';
 
-// Helper function to handle Supabase user creation
 async function createSupabaseUser(
   email: string,
   password: string,
@@ -31,7 +30,6 @@ async function createSupabaseUser(
   return authData.user;
 }
 
-// Helper function to handle user registration in database
 async function createDatabaseUser(
   userId: string,
   username: string,
@@ -59,7 +57,6 @@ export const login: RequestHandler = async (req: Request, res: Response): Promis
       return;
     }
 
-    // Sign in with Supabase
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -79,13 +76,11 @@ export const login: RequestHandler = async (req: Request, res: Response): Promis
       return;
     }
 
-    // Check if user has 2FA enabled
     const user = await prisma.user.findUnique({
       where: { id: data.user?.id },
       select: { twoFactorEnabled: true, twoFactorSecret: true },
     });
 
-    // If 2FA is enabled but no code was provided, return a special response
     if (user?.twoFactorEnabled && !twoFactorCode) {
       res.status(200).json({
         requiresTwoFactor: true,
@@ -98,18 +93,14 @@ export const login: RequestHandler = async (req: Request, res: Response): Promis
 
     // If 2FA is enabled and code was provided, verify it
     if (user?.twoFactorEnabled && twoFactorCode && user.twoFactorSecret) {
-      // Import the verification utility
       const { verifyTOTP } = await import('@/utils/totp');
 
-      // Verify the code
       const isCodeValid = verifyTOTP(user.twoFactorSecret, twoFactorCode);
 
       if (!isCodeValid) {
         res.status(401).json({ error: 'Invalid two-factor authentication code' });
         return;
       }
-
-      // If code is valid, continue with authentication
     }
 
     res.json({
@@ -132,7 +123,7 @@ export const login: RequestHandler = async (req: Request, res: Response): Promis
 
 export const register: RequestHandler = async (req: Request, res: Response): Promise<void> => {
   try {
-    console.log('Registration payload:', req.body); // Add debug logging
+    console.log('Registration payload:', req.body);
 
     const {
       email,
@@ -146,7 +137,6 @@ export const register: RequestHandler = async (req: Request, res: Response): Pro
       universityIds,
     } = req.body;
 
-    // Validate input
     if (!email || !password || !username || !role) {
       res.status(400).json({
         error: 'email, password, username, and role are required',
@@ -216,7 +206,7 @@ export const register: RequestHandler = async (req: Request, res: Response): Pro
           // Continue with user creation even if university creation fails
         }
       } else if (joinUniversityId) {
-        // Handle join request
+        // Handle join request - this will be processed as a university join request
         await prisma.universityJoinRequest.create({
           data: {
             requesterId: userId,
@@ -230,11 +220,12 @@ export const register: RequestHandler = async (req: Request, res: Response): Pro
     // Handle individual university affiliations
     if (role === 'individual' && universityIds?.length > 0) {
       const affiliationPromises = universityIds.map((universityId: string) =>
-        prisma.affiliation.create({
+        prisma.studentAffiliation.create({
           data: {
             userId,
             universityId,
             status: 'pending',
+            initiatedBy: 'student',
           },
         }),
       );

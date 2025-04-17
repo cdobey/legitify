@@ -346,7 +346,20 @@ export const lightTheme = createTheme({
     accentOrange,
   },
   shadows,
-  components: lightComponents,
+  components: {
+    ...lightComponents,
+    Modal: {
+      styles: {
+        root: { zIndex: 200 },
+        overlay: { zIndex: 199 },
+      },
+    },
+    Select: {
+      styles: {
+        dropdown: { zIndex: 300 },
+      },
+    },
+  },
 });
 
 // Base theme configuration for dark mode
@@ -362,7 +375,20 @@ export const darkTheme = createTheme({
     accentOrange: darkAccentOrange,
   },
   shadows: darkShadows,
-  components: darkComponents,
+  components: {
+    ...darkComponents,
+    Modal: {
+      styles: {
+        root: { zIndex: 200 },
+        overlay: { zIndex: 199 },
+      },
+    },
+    Select: {
+      styles: {
+        dropdown: { zIndex: 300 },
+      },
+    },
+  },
 });
 
 // For backward compatibility

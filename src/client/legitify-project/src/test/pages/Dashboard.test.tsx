@@ -1,12 +1,11 @@
-// src/test/pages/Dashboard.test.tsx
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { describe, expect, it } from 'vitest';
 import { AuthProvider } from '../../contexts/AuthContext';
 import { ModalsProvider } from '../../contexts/ModalsContext';
 import { ThemeProvider } from '../../contexts/ThemeContext';
 import Dashboard from '../../pages/Dashboard';
-import { describe, expect, it } from 'vitest';
 
 function renderDashboardWithProviders(route = '/dashboard') {
   const queryClient = new QueryClient();
@@ -21,7 +20,7 @@ function renderDashboardWithProviders(route = '/dashboard') {
           </MemoryRouter>
         </ModalsProvider>
       </ThemeProvider>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   );
 }
 
@@ -30,7 +29,9 @@ describe('Dashboard', () => {
     renderDashboardWithProviders();
     await waitFor(() => {
       // For unauthenticated users, an alert should be shown
-      expect(screen.getByRole('alert')).toHaveTextContent(/please log in to access your dashboard/i);
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        /please log in to access your dashboard/i,
+      );
     });
   });
 });

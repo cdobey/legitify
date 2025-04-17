@@ -7,6 +7,9 @@ import {
   AffiliationsResponse,
   CreateUniversityParams,
   CreateUniversityResponse,
+  JoinRequestResponse,
+  JoinRequestResponseParams,
+  JoinRequestsResponse,
   JoinUniversityParams,
   RegisterStudentParams,
   RegisterStudentResponse,
@@ -28,6 +31,13 @@ export const requestJoinUniversity = (params: JoinUniversityParams) =>
   apiCall<{ message: string }>({
     method: 'post',
     path: '/university/request-join',
+    params,
+  });
+
+export const requestStudentAffiliation = (params: JoinUniversityParams) =>
+  apiCall<{ message: string }>({
+    method: 'post',
+    path: '/university/request-student-affiliation',
     params,
   });
 
@@ -101,4 +111,17 @@ export const deleteUniversityLogo = (universityId: string) =>
   apiCall<{ message: string; university: University }>({
     method: 'delete',
     path: `/university/${universityId}/logo`,
+  });
+
+export const getPendingJoinRequests = () =>
+  apiCall<JoinRequestsResponse>({
+    method: 'get',
+    path: '/university/pending-join-requests',
+  });
+
+export const respondToJoinRequest = (params: JoinRequestResponseParams) =>
+  apiCall<{ message: string; request: JoinRequestResponse }>({
+    method: 'post',
+    path: '/university/respond-join-request',
+    params,
   });

@@ -4,15 +4,18 @@ import {
   getStudentUniversities,
   getUniversityStudents,
   registerStudent,
+  requestStudentAffiliation,
   respondToAffiliation,
-} from '@/controllers/university-affiliation.controller';
-import { deleteLogo, upload, uploadLogo } from '@/controllers/university-logo.controller';
+} from '@/controllers/student-affiliation.controller';
 import {
   createUniversity,
   getAllUniversities,
   getMyUniversities,
+  getPendingJoinRequests,
   requestJoinUniversity,
-} from '@/controllers/university.controller';
+  respondToJoinRequest,
+} from '@/controllers/university-management.controller';
+import { deleteLogo, upload, uploadLogo } from '@/controllers/university-media.controller';
 import { authMiddleware } from '@/middleware/auth';
 import { Router } from 'express';
 
@@ -292,6 +295,98 @@ router.post('/respond-affiliation', authMiddleware, respondToAffiliation);
  *         description: Internal server error
  */
 router.post('/request-join', authMiddleware, requestJoinUniversity);
+
+/**
+ * @openapi
+ * /university/request-student-affiliation:
+ *   post:
+ *     summary: Request affiliation with a university as a student
+ *     tags:
+ *       - University
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - universityId
+ *             properties:
+ *               universityId:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Student affiliation request submitted successfully
+ *       400:
+ *         description: Bad request
+ *       403:
+ *         description: Forbidden - only individual users can request student affiliations
+ *       404:
+ *         description: University not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/request-student-affiliation', authMiddleware, requestStudentAffiliation);
+
+/**
+ * @openapi
+ * /university/pending-join-requests:
+ *   get:
+ *     summary: Get all pending university join requests for the current university
+ *     tags:
+ *       - University
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of pending join requests
+ *       403:
+ *         description: Forbidden - only university users can access this endpoint
+ *       404:
+ *         description: University not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/pending-join-requests', authMiddleware, getPendingJoinRequests);
+
+/**
+ * @openapi
+ * /university/respond-join-request:
+ *   post:
+ *     summary: Respond to a university join request
+ *     tags:
+ *       - University
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - requestId
+ *               - accept
+ *             properties:
+ *               requestId:
+ *                 type: string
+ *               accept:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Successfully responded to join request
+ *       400:
+ *         description: Bad request
+ *       403:
+ *         description: Forbidden - only university owners can respond to join requests
+ *       404:
+ *         description: Join request not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/respond-join-request', authMiddleware, respondToJoinRequest);
 
 /**
  * @openapi

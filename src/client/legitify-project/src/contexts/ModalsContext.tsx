@@ -21,7 +21,7 @@ export function ModalsProvider({ children }: ModalsProviderProps) {
         padding: 'xl',
         shadow: 'xl',
         radius: 'md',
-        zIndex: 1000, // Ensure modals appear above all other elements
+        zIndex: 200,
       }}
     >
       {children}

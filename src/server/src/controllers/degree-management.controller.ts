@@ -7,6 +7,7 @@ import {
   submitFabricTransaction,
   validateUserRole,
 } from '@/utils/degree-utils';
+import { AffiliationStatus } from '@prisma/client';
 import { RequestHandler, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -57,18 +58,26 @@ export const issueDegree: RequestHandler = async (
       return;
     }
 
-    // Check if the university exists and is owned by this user
-    const university = await prisma.university.findFirst({
+    // Check if the university exists and if the user is a member with active status
+    const universityMembership = await prisma.universityMember.findFirst({
       where: {
-        id: universityId,
-        ownerId: req.user.id,
+        universityId,
+        userId: req.user.id,
+        status: 'active',
+      },
+      include: {
+        university: true,
       },
     });
 
-    if (!university) {
-      res.status(404).json({ error: 'University not found or not owned by you' });
+    if (!universityMembership) {
+      res.status(403).json({
+        error: 'You are not a member of this university or your membership is not active',
+      });
       return;
     }
+
+    const university = universityMembership.university;
 
     // Find the individual by email
     const individual = await prisma.user.findUnique({
@@ -85,16 +94,16 @@ export const issueDegree: RequestHandler = async (
       return;
     }
 
-    // Check if the individual is affiliated with this university
-    const affiliation = await prisma.affiliation.findFirst({
+    // Check if the individual is affiliated with this university as a student
+    const studentAffiliation = await prisma.studentAffiliation.findFirst({
       where: {
         userId: individual.id,
         universityId,
-        status: 'active',
+        status: AffiliationStatus.active,
       },
     });
 
-    if (!affiliation) {
+    if (!studentAffiliation) {
       res.status(403).json({ error: 'Individual is not affiliated with this university' });
       return;
     }
