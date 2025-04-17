@@ -6,6 +6,7 @@ import { AuthProvider } from '../../contexts/AuthContext';
 import { ModalsProvider } from '../../contexts/ModalsContext';
 import { ThemeProvider } from '../../contexts/ThemeContext';
 import Dashboard from '../../pages/Dashboard';
+import { describe, expect, it } from 'vitest';
 
 function renderDashboardWithProviders(route = '/dashboard') {
   const queryClient = new QueryClient();
