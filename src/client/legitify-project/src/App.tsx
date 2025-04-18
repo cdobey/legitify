@@ -96,14 +96,6 @@ export default function App() {
           }
         />
         <Route
-          path="/degree/accessible"
-          element={
-            <ProtectedRoute requiredRole="employer">
-              <AllRecords />
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/users/search"
           element={
             <ProtectedRoute requiredRole="employer">

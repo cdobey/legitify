@@ -12,6 +12,7 @@ import {
   AffiliationsResponse,
   JoinRequestsResponse,
   UniversitiesResponse,
+  University,
 } from './university.models';
 
 export const universityKeys = {
@@ -84,5 +85,29 @@ export const useMyPendingJoinRequestsQuery = (
     queryKey: universityKeys.myPendingJoinRequests(),
     queryFn: () => getMyPendingJoinRequests(),
     staleTime: 3 * 60 * 1000, // 3 minutes
+    ...options,
+  });
+
+export const usePrimaryUniversityQuery = (
+  userId?: string,
+  role?: 'university' | 'individual',
+  options?: Partial<UseQueryOptions<UniversitiesResponse, AxiosError, University | null>>,
+) =>
+  useQuery<UniversitiesResponse, AxiosError, University | null>({
+    queryKey: universityKeys.my(),
+    queryFn: getMyUniversities,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
+    enabled: Boolean(userId),
+    select: (universities): University | null => {
+      if (!universities || universities.length === 0) return null;
+
+      if (role === 'university') {
+        const owned = universities.find(u => u.ownerId === userId);
+        return owned ?? universities[0];
+      }
+
+      return universities[0];
+    },
     ...options,
   });

@@ -1,5 +1,4 @@
 import { useRecentIssuedDegreesQuery } from '@/api/degrees/degree.queries';
-import { University } from '@/api/universities/university.models';
 import {
   useAddStudentMutation,
   useCreateUniversityMutation,
@@ -12,9 +11,9 @@ import {
   universityKeys,
   useAllUniversitiesQuery,
   useMyPendingJoinRequestsQuery,
-  useMyUniversitiesQuery,
   usePendingAffiliationsQuery,
   usePendingJoinRequestsQuery,
+  usePrimaryUniversityQuery,
 } from '@/api/universities/university.queries';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -33,6 +32,7 @@ import {
   Paper,
   PasswordInput,
   Select,
+  Skeleton,
   Stack,
   Table,
   Tabs,
@@ -59,7 +59,7 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 interface NewStudentForm {
@@ -73,50 +73,45 @@ interface RegisterStudentForm {
 }
 
 export default function ManageUniversities() {
-  const [university, setUniversity] = useState<University | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
   const [createModalOpened, { open: openCreateModal, close: closeCreateModal }] =
     useDisclosure(false);
   const [joinModalOpened, { open: openJoinModal, close: closeJoinModal }] = useDisclosure(false);
   const [registerModalOpened, { open: openRegisterModal, close: closeRegisterModal }] =
     useDisclosure(false);
   const [csvModalOpened, { open: openCsvModal, close: closeCsvModal }] = useDisclosure(false);
+
   const { refreshSession, user } = useAuth();
   const { isDarkMode } = useTheme();
   const queryClient = useQueryClient();
 
-  const modalStyles = {
-    header: {
-      background: 'transparent',
-      borderBottom: isDarkMode ? '1px solid #2C2E33' : '1px solid #e9ecef',
-      paddingBottom: 10,
-    },
-    title: {
-      fontSize: '1.1rem',
-      fontWeight: 600,
-    },
-    body: {
-      paddingTop: 15,
-      paddingBottom: 15,
-    },
-    close: {
-      color: isDarkMode ? '#909296' : '#495057',
-      '&:hover': {
-        background: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-      },
-    },
-    content: {
-      maxHeight: '90vh',
-      overflow: 'auto',
-    },
-  };
+  const roleForQuery =
+    user?.role === 'university' || user?.role === 'individual' ? user.role : undefined;
+  const { data: university, isLoading: isLoadingUniversity } = usePrimaryUniversityQuery(
+    user?.id,
+    roleForQuery,
+  );
 
-  const {
-    data: universities,
-    isLoading: isLoadingUniversities,
-    error: universitiesError,
-  } = useMyUniversitiesQuery();
+  const { data: allUniversities = [], isLoading: isLoadingAllUniversities } =
+    useAllUniversitiesQuery({ enabled: joinModalOpened });
+
+  const { data: pendingAffiliations = [], isLoading: isLoadingPendingAffiliations } =
+    usePendingAffiliationsQuery({ enabled: !!university?.id });
+
+  const { data: recentIssuedDegrees = [], isLoading: isLoadingRecentDegrees } =
+    useRecentIssuedDegreesQuery({ enabled: !!university?.id });
+
+  const { data: pendingJoinRequests = [], isLoading: isLoadingPendingJoinRequests } =
+    usePendingJoinRequestsQuery({
+      enabled: !!university?.id && user?.id === university?.ownerId,
+    });
+
+  const { data: myPendingJoinRequests = [], isLoading: isLoadingMyPendingJoinRequests } =
+    useMyPendingJoinRequestsQuery({
+      enabled: !university && user?.role === 'university',
+    });
 
   const createUniversityMutation = useCreateUniversityMutation();
   const joinUniversityMutation = useJoinUniversityMutation();
@@ -125,50 +120,13 @@ export default function ManageUniversities() {
   const respondToAffiliationMutation = useRespondToAffiliationMutation();
   const respondToJoinRequestMutation = useRespondToJoinRequestMutation();
 
-  const { data: allUniversities = [], isLoading: isLoadingAllUniversities } =
-    useAllUniversitiesQuery({
-      enabled: joinModalOpened,
-    });
-
-  const { data: pendingAffiliations = [], isLoading: isLoadingPendingAffiliations } =
-    usePendingAffiliationsQuery({
-      enabled: !!university?.id,
-    });
-
-  const { data: recentIssuedDegrees, isLoading: isLoadingRecentDegrees } =
-    useRecentIssuedDegreesQuery({
-      enabled: !!university,
-    });
-
-  const { data: pendingJoinRequests = [], isLoading: isLoadingPendingJoinRequests } =
-    usePendingJoinRequestsQuery({
-      enabled: !!university?.id && user?.id === university.ownerId,
-    });
-
-  // Fetch pending join requests MADE BY the current user
-  const { data: myPendingJoinRequests = [], isLoading: isLoadingMyPendingJoinRequests } =
-    useMyPendingJoinRequestsQuery({
-      enabled: !university && user?.role === 'university', // Enable when no university and user is university role
-    });
-
-  const isLoading =
-    isLoadingUniversities || createUniversityMutation.isPending || joinUniversityMutation.isPending;
-
-  const newStudentForm = useForm({
-    initialValues: {
-      email: '',
-    },
-    validate: {
-      email: value => (value ? null : 'Email is required'),
-    },
+  const newStudentForm = useForm<NewStudentForm>({
+    initialValues: { email: '' },
+    validate: { email: value => (value ? null : 'Email is required') },
   });
 
   const createUniversityForm = useForm({
-    initialValues: {
-      name: '',
-      displayName: '',
-      description: '',
-    },
+    initialValues: { name: '', displayName: '', description: '' },
     validate: {
       name: value => (value ? null : 'Identifier is required'),
       displayName: value => (value ? null : 'Display name is required'),
@@ -176,57 +134,18 @@ export default function ManageUniversities() {
   });
 
   const joinUniversityForm = useForm({
-    initialValues: {
-      universityId: '',
-    },
-    validate: {
-      universityId: value => (value ? null : 'Please select a university'),
-    },
+    initialValues: { universityId: '' },
+    validate: { universityId: value => (value ? null : 'Please select a university') },
   });
 
-  const registerStudentForm = useForm({
-    initialValues: {
-      email: '',
-      username: '',
-      password: '',
-    },
+  const registerStudentForm = useForm<RegisterStudentForm>({
+    initialValues: { email: '', username: '', password: '' },
     validate: {
       email: value => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
       username: value => (value.length >= 3 ? null : 'Username must be at least 3 characters'),
       password: value => (value.length >= 8 ? null : 'Password must be at least 8 characters'),
     },
   });
-
-  useEffect(() => {
-    if (universities && universities.length > 0) {
-      if (user?.role === 'university') {
-        const ownedUniversity = universities.find(uni => uni.ownerId === user.id);
-
-        if (ownedUniversity) {
-          setUniversity({
-            ...ownedUniversity,
-            affiliations: ownedUniversity.affiliations || [],
-          });
-        } else {
-          // If they don't own any universities, show the first one they're a member of
-          const memberUniversity = universities[0];
-          setUniversity({
-            ...memberUniversity,
-            affiliations: memberUniversity.affiliations || [],
-          });
-        }
-      } else {
-        // For individual users, show their affiliated university
-        const uni = universities[0];
-        setUniversity({
-          ...uni,
-          affiliations: uni.affiliations || [],
-        });
-      }
-    } else {
-      setUniversity(null);
-    }
-  }, [universities, user]);
 
   const handleCreateUniversity = async (values: {
     name: string;
@@ -236,12 +155,10 @@ export default function ManageUniversities() {
     try {
       setError(null);
       await refreshSession();
-      const response = await createUniversityMutation.mutateAsync(values);
-      setUniversity(response.university);
+      await createUniversityMutation.mutateAsync(values);
       setSuccess('University created successfully');
       closeCreateModal();
     } catch (err: any) {
-      console.error('Failed to create university:', err);
       setError(err.message || 'Failed to create university');
     }
   };
@@ -252,64 +169,41 @@ export default function ManageUniversities() {
       await refreshSession();
       await joinUniversityMutation.mutateAsync({ universityId: values.universityId });
       await queryClient.invalidateQueries({ queryKey: universityKeys.myPendingJoinRequests() });
-
       setSuccess('Join request sent successfully. Waiting for approval.');
       closeJoinModal();
     } catch (err: any) {
-      console.error('Failed to send join request:', err);
       setError(err.message || 'Failed to send join request');
     }
   };
 
   const handleAddStudent = async (values: NewStudentForm) => {
     try {
-      setSuccess(null);
+      if (!university) return setError('No university found');
       setError(null);
-
-      if (!university) {
-        setError('No university found');
-        return;
-      }
-
       await refreshSession();
       await addStudentMutation.mutateAsync({
         universityId: university.id,
         studentEmail: values.email,
       });
-
       setSuccess(`Invitation sent to ${values.email}`);
       newStudentForm.reset();
     } catch (err: any) {
-      console.error('Failed to add student:', err);
       setError(err.message || 'Failed to add student');
     }
   };
 
   const handleRegisterStudent = async (values: RegisterStudentForm) => {
     try {
-      setSuccess(null);
+      if (!university) return setError('No university found');
       setError(null);
-
-      if (!university) {
-        setError('No university found');
-        return;
-      }
-
       await refreshSession();
-      await registerStudentMutation.mutateAsync({
-        email: values.email,
-        username: values.username,
-        password: values.password,
-        universityId: university.id,
-      });
-
+      await registerStudentMutation.mutateAsync({ ...values, universityId: university.id });
       setSuccess(
         `Student ${values.username} registered and automatically affiliated with ${university.displayName}`,
       );
       registerStudentForm.reset();
       closeRegisterModal();
     } catch (err: any) {
-      console.error('Failed to register student:', err);
       setError(err.message || 'Failed to register student');
     }
   };
@@ -322,26 +216,15 @@ export default function ManageUniversities() {
   const handleAffiliationResponse = async (affiliationId: string, accept: boolean) => {
     try {
       setError(null);
-      setSuccess(null);
       await refreshSession();
-
-      await respondToAffiliationMutation.mutateAsync({
-        affiliationId,
-        accept,
-      });
-
-      // Manually refetchignn the universities data to update the view - not sure if this will make a difference or not?
+      await respondToAffiliationMutation.mutateAsync({ affiliationId, accept });
       await queryClient.invalidateQueries({ queryKey: universityKeys.my() });
       await queryClient.invalidateQueries({ queryKey: universityKeys.pendingAffiliations() });
-
-      // For individual users, also invalidate student affiliations
       if (user?.role === 'individual') {
         await queryClient.invalidateQueries({ queryKey: universityKeys.studentAffiliations() });
       }
-
       setSuccess(`Request ${accept ? 'approved' : 'rejected'} successfully`);
     } catch (err: any) {
-      console.error('Failed to respond to affiliation:', err);
       setError(err.message || 'Failed to respond to affiliation');
     }
   };
@@ -349,26 +232,34 @@ export default function ManageUniversities() {
   const handleJoinRequestResponse = async (requestId: string, accept: boolean) => {
     try {
       setError(null);
-      setSuccess(null);
       await refreshSession();
-
-      await respondToJoinRequestMutation.mutateAsync({
-        requestId,
-        accept,
-      });
-
+      await respondToJoinRequestMutation.mutateAsync({ requestId, accept });
       await queryClient.invalidateQueries({ queryKey: universityKeys.my() });
       await queryClient.invalidateQueries({ queryKey: universityKeys.pendingJoinRequests() });
-
       if (user?.role === 'individual') {
         await queryClient.invalidateQueries({ queryKey: universityKeys.studentAffiliations() });
       }
-
       setSuccess(`Join request ${accept ? 'approved' : 'rejected'} successfully`);
     } catch (err: any) {
-      console.error('Failed to respond to join request:', err);
       setError(err.message || 'Failed to respond to join request');
     }
+  };
+
+  const modalStyles = {
+    header: {
+      background: 'transparent',
+      borderBottom: isDarkMode ? '1px solid #2C2E33' : '1px solid #e9ecef',
+      paddingBottom: 10,
+    },
+    title: { fontSize: '1.1rem', fontWeight: 600 },
+    body: { paddingTop: 15, paddingBottom: 15 },
+    close: {
+      color: isDarkMode ? '#909296' : '#495057',
+      '&:hover': {
+        background: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)',
+      },
+    },
+    content: { maxHeight: '90vh', overflow: 'auto' },
   };
 
   const renderUniversityOverview = () => {
@@ -377,7 +268,7 @@ export default function ManageUniversities() {
       university.affiliations?.filter(a => a.status === 'active')?.length || 0;
     const pendingStudentRequestsCount =
       pendingAffiliations?.filter(a => a.initiatedBy === 'student' || !a.initiatedBy).length || 0;
-    const pendingAdminRequestsCount = pendingJoinRequests?.length || 0;
+    const pendingAdminRequestsCount = pendingJoinRequests.length || 0;
 
     return (
       <Card withBorder shadow="sm" p="lg" mb="xl">
@@ -407,7 +298,6 @@ export default function ManageUniversities() {
               Pending Student Requests
             </Text>
           </Stack>
-          {/* Only show admin requests if user is owner/admin */}
           {user?.id === university.ownerId && (
             <Stack align="center" gap={0}>
               <Text size="xl" fw={700}>
@@ -444,7 +334,7 @@ export default function ManageUniversities() {
         </Group>
         {isLoadingRecentDegrees ? (
           <Text c="dimmed">Loading recent degrees...</Text>
-        ) : recentIssuedDegrees && recentIssuedDegrees.length > 0 ? (
+        ) : recentIssuedDegrees.length > 0 ? (
           <Table highlightOnHover>
             <Table.Thead>
               <Table.Tr>
@@ -485,6 +375,7 @@ export default function ManageUniversities() {
 
   const renderStudentManagement = () => {
     if (!university) return null;
+
     const activeStudents = university.affiliations?.filter(a => a.status === 'active') || [];
     const studentInitiatedRequests =
       pendingAffiliations?.filter(
@@ -717,10 +608,9 @@ export default function ManageUniversities() {
   };
 
   const renderUniversityAdministration = () => {
-    // Only show this section if the user is the owner/admin of the current university
     if (!university || user?.id !== university.ownerId) return null;
 
-    const adminJoinRequests = pendingJoinRequests || [];
+    const adminJoinRequests = pendingJoinRequests;
 
     return (
       <Card withBorder shadow="sm" p="lg" mb="xl">
@@ -819,13 +709,11 @@ export default function ManageUniversities() {
   };
 
   const renderMyInvitations = () => {
-    // Invitations sent TO the current user FROM other universities
     const invitationsForCurrentUser =
       pendingAffiliations?.filter(
         affiliation => affiliation.initiatedBy === 'university' && affiliation.userId === user?.id,
       ) || [];
 
-    // Don't show this section if there are no invitations for the current user
     if (invitationsForCurrentUser.length === 0 && !isLoadingPendingAffiliations) return null;
 
     return (
@@ -898,20 +786,26 @@ export default function ManageUniversities() {
     );
   };
 
-  if (isLoadingUniversities) {
+  const renderUniversitySkeletons = () => (
+    <>
+      <Skeleton height={180} radius="md" mb="xl" />
+      <Skeleton height={250} radius="md" mb="xl" />
+      <Skeleton height={400} radius="md" mb="xl" />
+    </>
+  );
+
+  if (isLoadingUniversity) {
     return (
       <Container size="lg">
-        <LoadingOverlay visible={true} />
         <Title order={2} mb="xl">
           Manage University
         </Title>
-        <Text>Loading your university information...</Text>
+        {renderUniversitySkeletons()}
       </Container>
     );
   }
 
-  // No University State (Create/Join + My Pending Requests)
-  if (!isLoadingUniversities && !university) {
+  if (!university) {
     return (
       <Container size="md">
         <Title order={2} mb="xl" ta="center">
@@ -936,14 +830,13 @@ export default function ManageUniversities() {
           </Group>
         </Paper>
 
-        {/* Display Pending Join Requests made by this user */}
         {user?.role === 'university' && (
           <Paper withBorder p="xl" radius="md" shadow="xs">
             <Title order={4} mb="md">
               My Pending Join Requests
             </Title>
             {isLoadingMyPendingJoinRequests ? (
-              <Text c="dimmed">Loading your pending requests...</Text>
+              <Skeleton height={100} />
             ) : myPendingJoinRequests.length === 0 ? (
               <Text c="dimmed">You have not requested to join any universities yet.</Text>
             ) : (
@@ -986,7 +879,7 @@ export default function ManageUniversities() {
             <Stack>
               <TextInput
                 label="University Identifier"
-                description="Unique identifier for your university (lowercase, no spaces, e.g., 'dublin-city-university')"
+                description="Unique identifier (lowercase, no spaces, e.g., 'dublin-city-university')"
                 placeholder="e.g. dublin-city-university"
                 required
                 {...createUniversityForm.getInputProps('name')}
@@ -1015,6 +908,7 @@ export default function ManageUniversities() {
             </Stack>
           </form>
         </Modal>
+
         <Modal
           opened={joinModalOpened}
           onClose={closeJoinModal}
@@ -1059,16 +953,9 @@ export default function ManageUniversities() {
       <Box style={{ position: 'relative' }}>
         <LoadingOverlay
           visible={
-            isLoadingUniversities ||
-            isLoadingPendingAffiliations ||
-            isLoadingPendingJoinRequests ||
-            isLoadingRecentDegrees
+            isLoadingPendingAffiliations || isLoadingPendingJoinRequests || isLoadingRecentDegrees
           }
         />
-
-        <Title order={2} mb="xl">
-          Manage University
-        </Title>
 
         {error && (
           <Alert title="Error" color="red" withCloseButton onClose={() => setError(null)} mb="md">
@@ -1088,11 +975,19 @@ export default function ManageUniversities() {
         )}
 
         <Stack gap="xl">
-          {renderUniversityOverview()}
-          {renderRecentActivity()}
-          {renderStudentManagement()}
-          {renderUniversityAdministration()}
-          {renderMyInvitations()}
+          {isLoadingRecentDegrees ||
+          isLoadingPendingAffiliations ||
+          isLoadingPendingJoinRequests ? (
+            renderUniversitySkeletons()
+          ) : (
+            <>
+              {renderUniversityOverview()}
+              {renderRecentActivity()}
+              {renderStudentManagement()}
+              {renderUniversityAdministration()}
+              {renderMyInvitations()}
+            </>
+          )}
         </Stack>
 
         <Modal

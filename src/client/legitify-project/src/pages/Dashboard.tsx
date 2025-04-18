@@ -161,7 +161,7 @@ export default function Dashboard() {
               title: 'Accessible Degrees',
               icon: <IconFileCheck size={22} />,
               color: theme.colors.accentOrange?.[5] || theme.colors.orange[5],
-              link: '/degree/accessible',
+              link: '/degrees',
               description: 'View credentials you have access to',
             },
           ];
@@ -510,7 +510,7 @@ export default function Dashboard() {
           <Paper withBorder radius="md" p="md">
             <Group justify="space-between" mb="md">
               <Title order={4}>Accessible Degrees</Title>
-              <Button variant="light" size="sm" component={Link} to="/degree/accessible">
+              <Button variant="light" size="sm" component={Link} to="/degrees">
                 View All
               </Button>
             </Group>
