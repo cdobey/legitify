@@ -22,13 +22,17 @@ model User {
   twoFactorSecret String? // Stored temporarily during setup or permanently when enabled
 
   // Relations
-  issuedDocuments     Document[] @relation("Issuer")
-  receivedDocuments   Document[] @relation("IssuedTo")
-  requests            Request[]  @relation("Requester")
-  ownedUniversities   University[] @relation("UniversityOwner")
-  affiliations        Affiliation[] @relation("UserAffiliation")
-  sentJoinRequests    UniversityJoinRequest[] @relation("UniversityJoinRequester")
-  memberOfUniversities University[] @relation("UniversityMembers")
+  issuedDocuments         Document[] @relation("Issuer")
+  receivedDocuments       Document[] @relation("IssuedTo")
+  requests                Request[]  @relation("Requester")
+  ownedUniversities       University[] @relation("UniversityOwner")
+  sentJoinRequests        UniversityJoinRequest[] @relation("UniversityJoinRequester")
+  
+  // University administration relationships
+  universityMemberships   UniversityMember[] @relation("UniversityMember")
+  
+  // University student relationships
+  studentAffiliations     StudentAffiliation[] @relation("StudentAffiliation")
 }
 
 // New model for University sub-organizations
@@ -43,29 +47,49 @@ model University {
   updatedAt   DateTime    @updatedAt
 
   // Relations
-  owner        User         @relation("UniversityOwner", fields: [ownerId], references: [id])
-  affiliations Affiliation[] @relation("UniversityAffiliation")
-  joinRequests UniversityJoinRequest[] @relation("UniversityJoinTarget")
-  members      User[]       @relation("UniversityMembers")
-  documents    Document[]   @relation("UniversityDocuments")
+  owner         User                  @relation("UniversityOwner", fields: [ownerId], references: [id])
+  joinRequests  UniversityJoinRequest[] @relation("UniversityJoinTarget")
+  documents     Document[]            @relation("UniversityDocuments")
+  
+  // University administrators relationship
+  members       UniversityMember[]    @relation("UniversityMembers")
+  
+  // Student affiliations relationship
+  students      StudentAffiliation[]  @relation("UniversityStudents")
 
   @@unique([name, ownerId])
 }
 
-// New model for User-University affiliations
-model Affiliation {
+// Model for University Members (university users who can administer the university)
+model UniversityMember {
   id           String    @id @default(uuid())
   userId       String
   universityId String
-  role         String    @default("student") // student, admin, etc.
+  role         String    @default("admin") // admin or other roles in the future
+  status       MembershipStatus @default(pending)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  user        User       @relation("UniversityMember", fields: [userId], references: [id])
+  university  University @relation("UniversityMembers", fields: [universityId], references: [id])
+
+  @@unique([userId, universityId])
+}
+
+// Model for Student-University affiliations
+model StudentAffiliation {
+  id           String    @id @default(uuid())
+  userId       String
+  universityId String
   status       AffiliationStatus @default(pending)
   initiatedBy  String?   @default("student") // Who initiated: "student" or "university"
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
   // Relations
-  user        User       @relation("UserAffiliation", fields: [userId], references: [id])
-  university  University @relation("UniversityAffiliation", fields: [universityId], references: [id])
+  student     User       @relation("StudentAffiliation", fields: [userId], references: [id])
+  university  University @relation("UniversityStudents", fields: [universityId], references: [id])
 
   @@unique([userId, universityId])
 }
@@ -149,14 +173,21 @@ enum RequestStatus {
   denied
 }
 
-// New enum for affiliation status
+// New enum for student affiliation status
 enum AffiliationStatus {
   pending
   active
   rejected
 }
 
-// New model for university join requests
+// New enum for university membership status
+enum MembershipStatus {
+  pending
+  active
+  rejected
+}
+
+// Model for university join requests
 model UniversityJoinRequest {
   id          String    @id @default(uuid())
   requesterId String

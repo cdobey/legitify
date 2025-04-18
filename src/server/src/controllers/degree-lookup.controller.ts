@@ -63,23 +63,29 @@ export const getAllLedgerRecords: RequestHandler = async (
       return;
     }
 
-    // Get the university ID for the current user
-    const university = await prisma.university.findFirst({
+    // Check if user is a member of any university
+    const universityMembership = await prisma.universityMember.findFirst({
       where: {
-        ownerId: req.user.id,
+        userId: req.user.id,
+        status: 'active',
+      },
+      include: {
+        university: true,
       },
     });
 
-    if (!university) {
-      res.status(404).json({ error: 'University not found for this user' });
+    if (!universityMembership) {
+      res.status(404).json({ error: 'No active university membership found for this user' });
       return;
     }
+
+    const university = universityMembership.university;
 
     const gateway = await getGateway(req.user.id, req.user.orgName?.toLowerCase() || '');
     const network = await gateway.getNetwork(FABRIC_CHANNEL);
     const contract = network.getContract(FABRIC_CHAINCODE);
 
-    // Call the GetUniversityRecords function with the university ID
+    // Calling the GetUniversityRecords function with the university ID
     // instead of GetAllRecords to get only records for this university
     const result = await contract.evaluateTransaction('GetUniversityRecords', university.id);
     const records = JSON.parse(result.toString());
@@ -177,17 +183,23 @@ export const getRecentIssuedDegrees: RequestHandler = async (
       return;
     }
 
-    // Get the university ID for the current user
-    const university = await prisma.university.findFirst({
+    // Check if user is a member of any university
+    const universityMembership = await prisma.universityMember.findFirst({
       where: {
-        ownerId: req.user.id,
+        userId: req.user.id,
+        status: 'active',
+      },
+      include: {
+        university: true,
       },
     });
 
-    if (!university) {
-      res.status(404).json({ error: 'University not found for this user' });
+    if (!universityMembership) {
+      res.status(404).json({ error: 'No active university membership found for this user' });
       return;
     }
+
+    const university = universityMembership.university;
 
     // Now we can directly include the university relation
     const recentDegrees = await prisma.document.findMany({

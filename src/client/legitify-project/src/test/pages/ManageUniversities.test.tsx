@@ -51,6 +51,23 @@ vi.mock('@/api/universities/university.queries', () => ({
   useMyUniversitiesQuery: (...args: any[]) => mockUseMyUniversitiesQuery(...args),
   useAllUniversitiesQuery: (...args: any[]) => mockUseAllUniversitiesQuery(...args),
   usePendingAffiliationsQuery: (...args: any[]) => mockUsePendingAffiliationsQuery(...args),
+  usePendingJoinRequestsQuery: vi.fn().mockReturnValue({
+    data: [
+      {
+        id: 'req-1',
+        status: 'pending',
+        createdAt: '2025-01-01T00:00:00Z',
+        requester: { username: 'universityAdmin1', email: 'admin1@example.com' },
+      },
+      {
+        id: 'req-2',
+        status: 'pending',
+        createdAt: '2025-01-02T00:00:00Z',
+        requester: { username: 'universityAdmin2', email: 'admin2@example.com' },
+      },
+    ],
+    isLoading: false,
+  }),
 }));
 
 // --- Mock University API Mutations ---
@@ -84,6 +101,13 @@ vi.mock('@/api/universities/university.mutations', () => ({
   }),
   useRespondToAffiliationMutation: () => ({
     mutateAsync: vi.fn().mockResolvedValue({ success: true }),
+    isPending: false,
+  }),
+  useRespondToJoinRequestMutation: () => ({
+    mutateAsync: vi.fn().mockResolvedValue({
+      message: 'Join request processed successfully',
+      request: { id: 'req-1', status: 'accepted' },
+    }),
     isPending: false,
   }),
 }));
@@ -269,9 +293,16 @@ describe('ManageUniversities component', () => {
       expect(screen.getByText(/recent activity/i)).toBeInTheDocument();
     });
 
-    // Should show tabs
     expect(screen.getByRole('tab', { name: /students/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /join requests/i })).toBeInTheDocument();
+
+    const tabs = screen.getAllByRole('tab');
+    expect(
+      tabs.some(tab => {
+        const label = tab.querySelector('.mantine-Tabs-tabLabel');
+        return label && label.textContent === 'Join Requests';
+      }),
+    ).toBe(true);
+
     expect(screen.getByRole('tab', { name: /sent invitations/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /add student/i })).toBeInTheDocument();
   });
@@ -296,8 +327,22 @@ describe('ManageUniversities component', () => {
   it('can switch to join requests tab and display pending requests', async () => {
     renderWithProviders(universityUser, [sampleUniversity]);
 
-    // Click on the join requests tab
-    await userEvent.click(screen.getByRole('tab', { name: /join requests/i }));
+    // Wait for tabs to be loaded
+    await waitFor(() => {
+      expect(screen.getByRole('tablist')).toBeInTheDocument();
+    });
+
+    const tabs = screen.getAllByRole('tab');
+    const joinRequestsTab = tabs.find(tab => {
+      const label = tab.querySelector('.mantine-Tabs-tabLabel');
+      return label && label.textContent === 'Join Requests';
+    });
+
+    // Check that we found the tab
+    expect(joinRequestsTab).toBeTruthy();
+
+    // Click the tab
+    await userEvent.click(joinRequestsTab!);
 
     // Should show the pending requests content
     const tabPanel = screen.getByRole('tabpanel');

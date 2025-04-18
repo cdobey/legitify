@@ -83,5 +83,27 @@ export interface AffiliationResponse {
   affiliation: Affiliation;
 }
 
+export interface JoinRequestResponse {
+  id: string;
+  requesterId: string;
+  universityId: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: string;
+  updatedAt: string;
+  requester: {
+    id: string;
+    username: string;
+    email: string;
+  };
+  university: University;
+}
+
+export interface JoinRequestResponseParams {
+  requestId: string;
+  accept: boolean;
+}
+
+export type JoinRequestsResponse = JoinRequestResponse[];
+
 export type UniversitiesResponse = University[];
 export type AffiliationsResponse = Affiliation[];

@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import authRoutes from './auth.routes';
-import degreeRoutes from './degree.routes';
+import authRoutes from './authentication.routes';
+import degreeRoutes from './degree-management.routes';
 import docsRoutes from './docs.routes';
-import universityRoutes from './university.routes';
-import userRoutes from './user.routes';
+import universityRoutes from './university-management.routes';
+import userRoutes from './user-management.routes';
 
 const router = Router();
 

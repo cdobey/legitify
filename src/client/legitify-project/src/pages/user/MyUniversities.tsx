@@ -1,7 +1,7 @@
 import { University } from '@/api/universities/university.models';
 import {
-  useJoinUniversityMutation,
   useRespondToAffiliationMutation,
+  useStudentJoinUniversityMutation,
 } from '@/api/universities/university.mutations';
 import {
   useAllUniversitiesQuery,
@@ -40,25 +40,24 @@ import { useState } from 'react';
 export default function MyUniversities() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [selectedUniversityId, setSelectedUniversityId] = useState<string | null>(null);
   const [detailsOpened, detailsHandlers] = useDisclosure(false);
   const [selectedUniversity, setSelectedUniversity] = useState<University | null>(null);
   const { refreshSession } = useAuth();
 
-  // Replace direct API calls with React Query hooks
   const { data: universities = [], isLoading: isLoadingUniversities } =
     useStudentUniversitiesQuery();
 
   const { data: pendingAffiliations = [], isLoading: isLoadingPendingAffiliations } =
     usePendingAffiliationsQuery();
 
-  const joinUniversityMutation = useJoinUniversityMutation();
+  const studentJoinMutation = useStudentJoinUniversityMutation();
   const respondToAffiliationMutation = useRespondToAffiliationMutation();
 
   const openJoinModal = () => {
     modals.open({
       title: 'Request to Join University',
       size: 'md',
+      zIndex: 200,
       children: (
         <JoinUniversityModalContent
           onSubmit={handleJoinRequest}
@@ -72,10 +71,11 @@ export default function MyUniversities() {
     onSubmit,
     onCancel,
   }: {
-    onSubmit: () => void;
+    onSubmit: (universityId: string) => void;
     onCancel: () => void;
   }) => {
     const { data: availableUniversities = [], isLoading: isLoadingAll } = useAllUniversitiesQuery();
+    const [localSelectedUniversityId, setLocalSelectedUniversityId] = useState<string | null>(null);
 
     // Filter out universities the user is already affiliated with
     const filteredUniversities = availableUniversities.filter(uni => {
@@ -85,6 +85,7 @@ export default function MyUniversities() {
       ]);
       return !alreadyAffiliatedIds.has(uni.id);
     });
+    console.log('Filtered Universities:', filteredUniversities);
 
     return (
       <Stack>
@@ -100,9 +101,8 @@ export default function MyUniversities() {
             value: uni.id,
             label: `${uni.displayName} (by ${uni.owner?.username || 'Unknown'})`,
           }))}
-          value={selectedUniversityId}
-          onChange={setSelectedUniversityId}
-          searchable
+          value={localSelectedUniversityId}
+          onChange={setLocalSelectedUniversityId}
           nothingFoundMessage="No universities found"
           mb="xl"
         />
@@ -112,9 +112,9 @@ export default function MyUniversities() {
             Cancel
           </Button>
           <Button
-            onClick={onSubmit}
-            loading={joinUniversityMutation.isPending}
-            disabled={!selectedUniversityId}
+            onClick={() => localSelectedUniversityId && onSubmit(localSelectedUniversityId)}
+            loading={studentJoinMutation.isPending}
+            disabled={!localSelectedUniversityId}
           >
             Submit Request
           </Button>
@@ -123,9 +123,8 @@ export default function MyUniversities() {
     );
   };
 
-  // Handle join request submission
-  const handleJoinRequest = async () => {
-    if (!selectedUniversityId) {
+  const handleJoinRequest = async (universityId: string) => {
+    if (!universityId) {
       notifications.show({
         title: 'Error',
         message: 'Please select a university',
@@ -136,8 +135,8 @@ export default function MyUniversities() {
 
     try {
       await refreshSession();
-      await joinUniversityMutation.mutateAsync({
-        universityId: selectedUniversityId,
+      await studentJoinMutation.mutateAsync({
+        universityId,
       });
 
       notifications.show({
@@ -147,7 +146,6 @@ export default function MyUniversities() {
       });
 
       modals.closeAll();
-      setSelectedUniversityId(null);
     } catch (err: any) {
       console.error('Failed to send join request:', err);
       notifications.show({
@@ -274,6 +272,69 @@ export default function MyUniversities() {
                 <Text mt="md" size="sm" c="dimmed" lineClamp={2}>
                   {affiliation.university.description || 'No description available.'}
                 </Text>
+
+                {affiliation.initiatedBy === 'university' && (
+                  <Group mt="md" gap="sm">
+                    <Button
+                      variant="light"
+                      color="green"
+                      radius="md"
+                      flex={1}
+                      onClick={async () => {
+                        try {
+                          await refreshSession();
+                          await respondToAffiliationMutation.mutateAsync({
+                            affiliationId: affiliation.id,
+                            accept: true,
+                          });
+                          notifications.show({
+                            title: 'Success',
+                            message: 'Invitation accepted successfully.',
+                            color: 'green',
+                          });
+                        } catch (err: any) {
+                          console.error('Failed to accept invitation:', err);
+                          notifications.show({
+                            title: 'Error',
+                            message: err.message || 'Failed to accept invitation',
+                            color: 'red',
+                          });
+                        }
+                      }}
+                    >
+                      Accept
+                    </Button>
+                    <Button
+                      variant="light"
+                      color="red"
+                      radius="md"
+                      flex={1}
+                      onClick={async () => {
+                        try {
+                          await refreshSession();
+                          await respondToAffiliationMutation.mutateAsync({
+                            affiliationId: affiliation.id,
+                            accept: false,
+                          });
+                          notifications.show({
+                            title: 'Success',
+                            message: 'Invitation rejected.',
+                            color: 'gray',
+                          });
+                        } catch (err: any) {
+                          console.error('Failed to reject invitation:', err);
+                          notifications.show({
+                            title: 'Error',
+                            message: err.message || 'Failed to reject invitation',
+                            color: 'red',
+                          });
+                        }
+                      }}
+                    >
+                      Reject
+                    </Button>
+                  </Group>
+                )}
               </Card>
             </Grid.Col>
           ))}
@@ -285,7 +346,7 @@ export default function MyUniversities() {
   const isLoading =
     isLoadingUniversities ||
     isLoadingPendingAffiliations ||
-    joinUniversityMutation.isPending ||
+    studentJoinMutation.isPending ||
     respondToAffiliationMutation.isPending;
 
   return (

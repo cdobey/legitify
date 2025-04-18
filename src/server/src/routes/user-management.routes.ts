@@ -1,19 +1,19 @@
 import {
-  disableTwoFactor,
-  enableTwoFactor,
-  verifyTwoFactor,
-} from '@/controllers/two-factor.controller';
-import {
   deleteProfilePictureHandler,
   upload,
   uploadProfilePictureHandler,
-} from '@/controllers/user-profile.controller';
+} from '@/controllers/profile.controller';
+import {
+  disableTwoFactor,
+  enableTwoFactor,
+  verifyTwoFactor,
+} from '@/controllers/two-factor-auth.controller';
 import {
   changePassword,
   getProfile,
   searchUsers,
   updateProfile,
-} from '@/controllers/user.controller';
+} from '@/controllers/user-management.controller';
 import { authMiddleware } from '@/middleware/auth';
 import { Router } from 'express';
 

@@ -6,7 +6,9 @@ import {
   deleteUniversityLogo,
   registerStudent,
   requestJoinUniversity,
+  requestStudentAffiliation,
   respondToAffiliation,
+  respondToJoinRequest,
   uploadUniversityLogo,
 } from './university.api';
 import {
@@ -15,6 +17,8 @@ import {
   AffiliationResponseParams,
   CreateUniversityParams,
   CreateUniversityResponse,
+  JoinRequestResponse,
+  JoinRequestResponseParams,
   JoinUniversityParams,
   RegisterStudentParams,
   RegisterStudentResponse,
@@ -38,6 +42,17 @@ export const useJoinUniversityMutation = () => {
 
   return useMutation<{ message: string }, AxiosError, JoinUniversityParams>({
     mutationFn: params => requestJoinUniversity(params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: universityKeys.pendingAffiliations() });
+    },
+  });
+};
+
+export const useStudentJoinUniversityMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<{ message: string }, AxiosError, JoinUniversityParams>({
+    mutationFn: params => requestStudentAffiliation(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: universityKeys.pendingAffiliations() });
     },
@@ -106,6 +121,22 @@ export const useDeleteUniversityLogoMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: universityKeys.my() });
       queryClient.invalidateQueries({ queryKey: universityKeys.all_universities() });
+    },
+  });
+};
+
+export const useRespondToJoinRequestMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    { message: string; request: JoinRequestResponse },
+    AxiosError,
+    JoinRequestResponseParams
+  >({
+    mutationFn: params => respondToJoinRequest(params),
+    onSuccess: () => {
+      // Invalidating pending join requests to refresh the list
+      queryClient.invalidateQueries({ queryKey: universityKeys.pendingJoinRequests() });
     },
   });
 };
