@@ -545,35 +545,41 @@ export default function SettingsPage() {
     switch (user?.role) {
       case 'individual':
         return (
-          <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-            <StatCard
-              title="Your Degrees"
-              value={(userDegrees?.length || 0).toString()}
-              icon={<IconBadge size={24} />}
-            />
-            <StatCard
-              title="Pending Access Requests"
-              value={pendingAccessRequestsCount.toString()}
-              icon={<IconUser size={24} />}
-            />
-          </SimpleGrid>
+          <Stack gap="md">
+            <Title order={4}>Account Overview</Title>
+            <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+              <StatCard
+                title="Your Degrees"
+                value={(userDegrees?.length || 0).toString()}
+                icon={<IconBadge size={24} />}
+              />
+              <StatCard
+                title="Pending Access Requests"
+                value={pendingAccessRequestsCount.toString()}
+                icon={<IconUser size={24} />}
+              />
+            </SimpleGrid>
+          </Stack>
         );
       case 'university':
         const degreeCount = ledgerRecords?.length || 0;
         return (
-          <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-            <StatCard
-              title="Issued Degrees"
-              value={degreeCount.toString()}
-              icon={<IconBadge size={24} />}
-            />
-            <StatCard
-              title="Last Activity"
-              value={degreeCount > 0 ? formatDate(ledgerRecords?.[0]?.issuedAt) : 'N/A'}
-              icon={<IconUser size={24} />}
-              isDate
-            />
-          </SimpleGrid>
+          <Stack gap="md">
+            <Title order={4}>University Overview</Title>
+            <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+              <StatCard
+                title="Issued Degrees"
+                value={degreeCount.toString()}
+                icon={<IconBadge size={24} />}
+              />
+              <StatCard
+                title="Last Activity"
+                value={degreeCount > 0 ? formatDate(ledgerRecords?.[0]?.issuedAt) : 'N/A'}
+                icon={<IconUser size={24} />}
+                isDate
+              />
+            </SimpleGrid>
+          </Stack>
         );
       case 'employer':
         const accessibleDegreesCount = accessibleDegrees?.length || 0;
@@ -582,18 +588,21 @@ export default function SettingsPage() {
         ).size;
 
         return (
-          <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
-            <StatCard
-              title="Unique Individuals"
-              value={uniqueIndividuals.toString()}
-              icon={<IconUser size={24} />}
-            />
-            <StatCard
-              title="Accessible Degrees"
-              value={accessibleDegreesCount.toString()}
-              icon={<IconBadge size={24} />}
-            />
-          </SimpleGrid>
+          <Stack gap="md">
+            <Title order={4}>Employer Overview</Title>
+            <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+              <StatCard
+                title="Unique Individuals"
+                value={uniqueIndividuals.toString()}
+                icon={<IconUser size={24} />}
+              />
+              <StatCard
+                title="Accessible Degrees"
+                value={accessibleDegreesCount.toString()}
+                icon={<IconBadge size={24} />}
+              />
+            </SimpleGrid>
+          </Stack>
         );
       default:
         return null;
@@ -624,36 +633,32 @@ export default function SettingsPage() {
         </Alert>
       )}
 
-      <Paper shadow="sm" p="xl" withBorder radius="md" mb="lg">
-        <Group align="center" mb="md">
-          {user.profilePictureUrl ? (
-            <Avatar
-              size={90}
-              radius="50%"
-              src={user.profilePictureUrl}
-              alt={`${user.username}'s avatar`}
-            />
-          ) : (
-            <Avatar size={90} color="primaryBlue" radius="50%">
-              {user.username.charAt(0).toUpperCase()}
-            </Avatar>
-          )}
-          <Stack gap="xs" style={{ flexGrow: 1 }}>
-            <Title order={3}>{user.username}</Title>
-            <Text c="dimmed">{user.email}</Text>
-            <Group mt="xs" gap="xs">
-              <Badge color="primaryBlue" variant="light">
-                {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-              </Badge>
-              <Badge color="teal" variant="light">
-                {user.orgName}
-              </Badge>
-            </Group>
-          </Stack>
-        </Group>
-
-        {getRoleStats()}
-      </Paper>
+      <Group align="center" mb="xl">
+        {user.profilePictureUrl ? (
+          <Avatar
+            size={90}
+            radius="50%"
+            src={user.profilePictureUrl}
+            alt={`${user.username}'s avatar`}
+          />
+        ) : (
+          <Avatar size={90} color="primaryBlue" radius="50%">
+            {user.username.charAt(0).toUpperCase()}
+          </Avatar>
+        )}
+        <Stack gap="xs" style={{ flexGrow: 1 }}>
+          <Title order={3}>{user.username}</Title>
+          <Text c="dimmed">{user.email}</Text>
+          <Group mt="xs" gap="xs">
+            <Badge color="primaryBlue" variant="light">
+              {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+            </Badge>
+            <Badge color="teal" variant="light">
+              {user.orgName}
+            </Badge>
+          </Group>
+        </Stack>
+      </Group>
 
       <Tabs defaultValue="profile">
         <Tabs.List mb="md">
@@ -676,6 +681,10 @@ export default function SettingsPage() {
         <Tabs.Panel value="profile">
           <Paper shadow="sm" p="xl" withBorder radius="md">
             <Stack gap="xl">
+              {getRoleStats()}
+
+              <Divider />
+
               <Stack gap="md">
                 <Title order={4}>Profile Picture</Title>
                 <Group align="flex-start" wrap="nowrap">
