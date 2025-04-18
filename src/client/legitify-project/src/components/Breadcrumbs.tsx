@@ -202,6 +202,9 @@ export default function Breadcrumbs() {
 
     for (let i = 0; i < pathSegments.length; i++) {
       const segment = pathSegments[i];
+
+      if (i === 0 && segment === 'dashboard') continue;
+
       currentPath += `/${segment}`;
 
       // Skip invalid paths
@@ -281,7 +284,7 @@ export default function Breadcrumbs() {
         const isLast = index === breadcrumbs.length - 1;
 
         return (
-          <Group key={crumb.path} gap={8}>
+          <Group key={`${crumb.path}-${crumb.title}-${index}`} gap={8}>
             {index > 0 && (
               <IconChevronRight
                 size={14}

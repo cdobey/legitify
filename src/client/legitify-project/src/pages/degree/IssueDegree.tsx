@@ -134,7 +134,7 @@ export default function IssueDegree() {
         programDuration: formData.programDuration || '',
         gpa: Number(formData.gpa) || 0,
         additionalNotes: formData.additionalNotes || '',
-        universityId: formData.universityId || '', // Include university ID
+        universityId: formData.universityId || '',
       });
 
       clearInterval(progressInterval);
