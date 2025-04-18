@@ -97,6 +97,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
     if (path.includes('/dashboard')) return <IconHome size={28} stroke={1.5} />;
     if (path.includes('/settings')) return <IconSettings size={28} stroke={1.5} />;
     if (path.includes('/universities')) return <IconSchool size={28} stroke={1.5} />;
+    if (path.includes('/university')) return <IconSchool size={28} stroke={1.5} />;
     if (path.includes('/users/search')) return <IconUserPlus size={28} stroke={1.5} />;
     return <IconHome size={28} stroke={1.5} />;
   };
@@ -116,7 +117,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
     if (path.includes('/degree/view/')) return 'Degree Certificate';
     if (path === '/profile') return 'Profile';
     if (path === '/settings') return 'Settings';
-    if (path.includes('/universities')) return 'Universities';
+    if (path.includes('/university')) return 'Manage University';
     if (path.includes('/users/search')) return 'Search Users';
 
     // Convert path to title case
@@ -143,7 +144,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
     if (path.includes('/degree/view/')) return 'View verified certificate details';
     if (path === '/profile') return 'View and manage your profile information';
     if (path === '/settings') return 'Manage your account settings';
-    if (path.includes('/universities')) return 'Manage your university affiliations';
+    if (path.includes('/university')) return 'Manage your university affiliations';
     if (path.includes('/users/search')) return 'Search for users to request credential access';
 
     return '';

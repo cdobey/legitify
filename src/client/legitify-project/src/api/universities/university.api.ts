@@ -125,3 +125,9 @@ export const respondToJoinRequest = (params: JoinRequestResponseParams) =>
     path: '/university/respond-join-request',
     params,
   });
+
+export const getMyPendingJoinRequests = () =>
+  apiCall<JoinRequestsResponse>({
+    method: 'get',
+    path: '/university/my-pending-join-requests',
+  });

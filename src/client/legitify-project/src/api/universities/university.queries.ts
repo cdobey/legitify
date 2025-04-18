@@ -2,6 +2,7 @@ import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import {
   getAllUniversities,
+  getMyPendingJoinRequests,
   getMyUniversities,
   getPendingAffiliations,
   getPendingJoinRequests,
@@ -22,6 +23,7 @@ export const universityKeys = {
   studentAffiliations: () => [...universityKeys.all, 'student-affiliations'] as const,
   pendingAffiliations: () => [...universityKeys.all, 'pending-affiliations'] as const,
   pendingJoinRequests: () => [...universityKeys.all, 'pending-join-requests'] as const,
+  myPendingJoinRequests: () => [...universityKeys.all, 'my-pending-join-requests'] as const,
 };
 
 export const useMyUniversitiesQuery = (
@@ -71,6 +73,16 @@ export const usePendingJoinRequestsQuery = (
   useQuery<JoinRequestsResponse, AxiosError>({
     queryKey: universityKeys.pendingJoinRequests(),
     queryFn: () => getPendingJoinRequests(),
+    staleTime: 3 * 60 * 1000, // 3 minutes
+    ...options,
+  });
+
+export const useMyPendingJoinRequestsQuery = (
+  options?: Partial<UseQueryOptions<JoinRequestsResponse, AxiosError>>,
+) =>
+  useQuery<JoinRequestsResponse, AxiosError>({
+    queryKey: universityKeys.myPendingJoinRequests(),
+    queryFn: () => getMyPendingJoinRequests(),
     staleTime: 3 * 60 * 1000, // 3 minutes
     ...options,
   });

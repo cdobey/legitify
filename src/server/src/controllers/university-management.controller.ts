@@ -381,6 +381,44 @@ export const getPendingJoinRequests: RequestHandler = async (
 };
 
 /**
+ * Get pending join requests initiated BY the current university user
+ */
+export const getMyPendingJoinRequests: RequestHandler = async (
+  req: RequestWithUser,
+  res: Response,
+): Promise<void> => {
+  try {
+    if (req.user?.role !== 'university') {
+      res.status(403).json({ error: 'Only university users can view their pending join requests' });
+      return;
+    }
+
+    const pendingRequests = await prisma.universityJoinRequest.findMany({
+      where: {
+        requesterId: req.user.id,
+        status: 'pending',
+      },
+      include: {
+        university: {
+          select: {
+            id: true,
+            displayName: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    res.json(pendingRequests);
+  } catch (error: any) {
+    console.error('getMyPendingJoinRequests error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/**
  * Respond to a university join request
  */
 export const respondToJoinRequest: RequestHandler = async (

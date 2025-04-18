@@ -10,6 +10,7 @@ import {
 import {
   createUniversity,
   getAllUniversities,
+  getMyPendingJoinRequests,
   getMyUniversities,
   getPendingJoinRequests,
   requestJoinUniversity,
@@ -350,6 +351,31 @@ router.post('/request-student-affiliation', authMiddleware, requestStudentAffili
  *         description: Internal server error
  */
 router.get('/pending-join-requests', authMiddleware, getPendingJoinRequests);
+
+/**
+ * @openapi
+ * /university/my-pending-join-requests:
+ *   get:
+ *     summary: Get pending join requests initiated BY the current university user
+ *     tags:
+ *       - University
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of pending join requests made by the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/UniversityJoinRequest' // Assuming you have this schema defined
+ *       403:
+ *         description: Forbidden - only university users can access this endpoint
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/my-pending-join-requests', authMiddleware, getMyPendingJoinRequests);
 
 /**
  * @openapi

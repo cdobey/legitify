@@ -15,7 +15,7 @@ import ViewDegree from './pages/degree/ViewDegree';
 import HomePage from './pages/HomePage';
 import ProfilePage from './pages/Profile';
 import Settings from './pages/Settings';
-import ManageUniversities from './pages/university/ManageUniversities';
+import ManageUniversities from './pages/university/ManageUniversity';
 import MyUniversities from './pages/user/MyUniversities';
 import SearchUsers from './pages/users/SearchUsers';
 
@@ -40,7 +40,10 @@ export default function App() {
         <Route
           path="/degree/issue"
           element={
-            <ProtectedRoute requiredRole="university" deniedMessage="Only universities can issue degrees.">
+            <ProtectedRoute
+              requiredRole="university"
+              deniedMessage="Only universities can issue degrees."
+            >
               <IssueDegree />
             </ProtectedRoute>
           }
@@ -118,7 +121,7 @@ export default function App() {
           }
         />
         <Route
-          path="/universities/manage"
+          path="/university/manage"
           element={
             <ProtectedRoute requiredRole="university">
               <ManageUniversities />

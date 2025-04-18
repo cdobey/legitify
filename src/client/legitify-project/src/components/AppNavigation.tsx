@@ -56,7 +56,7 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
     },
     {
       label: 'Manage University',
-      to: '/universities/manage',
+      to: '/university/manage',
       icon: <IconSchool size={collapsed ? 22 : 18} />,
     },
   ];

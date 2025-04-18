@@ -57,7 +57,7 @@ const routeConfig: Record<
     redirectPath: '/dashboard', // Redirect to dashboard if clicked
   },
   universities: {
-    title: 'Universities',
+    title: 'University',
     icon: <IconSchool size={16} stroke={1.5} />,
     validPaths: ['manage'],
     isClickable: false, // Mark universities as non-clickable
