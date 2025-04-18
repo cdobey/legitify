@@ -12,8 +12,6 @@ import {
   Group,
   LoadingOverlay,
   Paper,
-  Popover,
-  Select,
   SimpleGrid,
   Skeleton,
   Stack,
@@ -32,17 +30,14 @@ import {
   IconCheck,
   IconClock,
   IconEye,
-  IconFilter,
   IconInfoCircle,
   IconThumbDown,
   IconThumbUp,
   IconX,
 } from '@tabler/icons-react';
-import { useState } from 'react';
 
 export default function ManageDegrees() {
   const theme = useMantineTheme();
-  const [statusFilter, setStatusFilter] = useState<string | null>('all');
   const { data: degrees, isLoading, error, refetch } = useMyDegreesQuery();
   const acceptMutation = useAcceptDegreeMutation();
   const denyMutation = useDenyDegreeMutation();
@@ -109,10 +104,6 @@ export default function ManageDegrees() {
       });
     }
   };
-
-  const filteredDegrees = degrees?.filter(
-    (degree: DegreeDocument) => statusFilter === 'all' || degree.status === statusFilter,
-  );
 
   const pendingDegrees =
     degrees?.filter((degree: DegreeDocument) => degree.status === 'issued') || [];
@@ -257,9 +248,8 @@ export default function ManageDegrees() {
         No degrees found
       </Title>
       <Text size="sm" c="dimmed" maw={400} mx="auto" mb="xl">
-        {statusFilter !== 'all'
-          ? `You don't have any degrees with status "${statusFilter}"`
-          : "You don't have any degrees yet. When a university issues a degree to you, it will appear here."}
+        You don't have any degrees yet. When a university issues a degree to you, it will appear
+        here.
       </Text>
     </Paper>
   );
@@ -345,31 +335,6 @@ export default function ManageDegrees() {
 
   return (
     <Container size="lg" py="xl">
-      <Group justify="space-between" mb="xl">
-        <Popover width={300} position="bottom-end" shadow="md">
-          <Popover.Target>
-            <Button variant="subtle" leftSection={<IconFilter size={16} />}>
-              Filter by Status
-            </Button>
-          </Popover.Target>
-          <Popover.Dropdown>
-            <Stack>
-              <Select
-                label="Filter credentials by status"
-                value={statusFilter}
-                onChange={setStatusFilter}
-                data={[
-                  { value: 'all', label: 'All Credentials' },
-                  { value: 'issued', label: 'Pending Verification' },
-                  { value: 'accepted', label: 'Accepted' },
-                  { value: 'denied', label: 'Rejected' },
-                ]}
-              />
-            </Stack>
-          </Popover.Dropdown>
-        </Popover>
-      </Group>
-
       <Paper p="md" withBorder radius="md" mb="xl">
         <Group>
           <ThemeIcon size={42} radius="md" color="primaryBlue" variant="light">
@@ -431,7 +396,7 @@ export default function ManageDegrees() {
                 </Tabs.List>
 
                 <Tabs.Panel value="all">
-                  <Stack>{filteredDegrees?.map(renderDegreeCard)}</Stack>
+                  <Stack>{degrees?.map(renderDegreeCard)}</Stack>
                 </Tabs.Panel>
 
                 <Tabs.Panel value="pending">
