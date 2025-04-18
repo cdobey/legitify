@@ -85,7 +85,6 @@ export default function MyUniversities() {
       ]);
       return !alreadyAffiliatedIds.has(uni.id);
     });
-    console.log('Filtered Universities:', filteredUniversities);
 
     return (
       <Stack>

@@ -21,12 +21,6 @@ import { useMyUniversitiesQuery } from '../../api/universities/university.querie
 // Reduced to 3MB for safer uploads with base64 encoding (which increases size by ~33%)
 const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB in bytes
 
-interface University {
-  id: string;
-  name: string;
-  displayName: string;
-}
-
 interface DegreeFormData {
   email: string;
   file: File | null;

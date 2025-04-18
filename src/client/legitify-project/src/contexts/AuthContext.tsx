@@ -25,7 +25,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
-  console.log('AuthProvider user:', user);
   const [isLoading, setIsLoading] = useState(true);
   const [twoFactorState, setTwoFactorState] = useState<TwoFactorState>({ required: false });
 

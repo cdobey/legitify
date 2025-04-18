@@ -59,142 +59,18 @@ export default function AccessRequests() {
       ? deniedRequests
       : requests || [];
 
-  // Add direct access for debugging
-  const handleDirectGrant = (requestId: string, granted: boolean) => {
-    console.log(`Direct grant called with: requestId=${requestId}, granted=${granted}`);
-    handleGrantAccess(requestId, granted);
-  };
-
-  // Fix the modal implementation with better styling and positioning
-  const openGrantConfirmModal = (request: AccessRequest): void => {
-    console.log('Opening grant confirmation modal for request:', request);
-
-    modals.open({
-      title: (
-        <Group>
-          <ThemeIcon color="green" size="md" variant="light">
-            <IconCheck size={16} />
-          </ThemeIcon>
-          <Text fw={600}>Grant Access Request</Text>
-        </Group>
-      ),
-      overlayProps: {
-        color: colorScheme === 'dark' ? theme.colors.dark[9] : theme.colors.gray[2],
-        opacity: 0.55,
-        blur: 3,
-      },
-      size: 'md',
-      radius: 'md',
-      shadow: 'xl',
-      padding: 'xl',
-      withCloseButton: true,
-      children: (
-        <>
-          <Text size="sm" mb="lg">
-            Are you sure you want to grant access to your credential for{' '}
-            <Text span fw={600} c="primaryBlue">
-              {request.employerName}
-            </Text>
-            ? They will be able to view your degree details and verification status.
-          </Text>
-          <Text size="xs" c="dimmed" mb="xl">
-            Document ID: {request.docId}
-          </Text>
-          <Group justify="flex-end" mt="xl">
-            <Button variant="default" onClick={() => modals.closeAll()}>
-              Cancel
-            </Button>
-            <Button
-              color="green"
-              leftSection={<IconThumbUp size={16} />}
-              onClick={() => {
-                console.log('Modal confirmed - granting access to:', request.requestId);
-                handleDirectGrant(request.requestId, true);
-                modals.closeAll();
-              }}
-            >
-              Grant Access
-            </Button>
-          </Group>
-        </>
-      ),
-    });
-  };
-
-  const openDenyConfirmModal = (request: AccessRequest): void => {
-    console.log('Opening deny confirmation modal for request:', request);
-
-    modals.open({
-      title: (
-        <Group>
-          <ThemeIcon color="red" size="md" variant="light">
-            <IconX size={16} />
-          </ThemeIcon>
-          <Text fw={600}>Deny Access Request</Text>
-        </Group>
-      ),
-      centered: true,
-      overlayProps: {
-        color: colorScheme === 'dark' ? theme.colors.dark[9] : theme.colors.gray[2],
-        opacity: 0.55,
-        blur: 3,
-      },
-      size: 'md',
-      radius: 'md',
-      shadow: 'xl',
-      padding: 'xl',
-      withCloseButton: true,
-      children: (
-        <>
-          <Text size="sm" mb="lg">
-            Are you sure you want to deny the access request from{' '}
-            <Text span fw={600} c="red">
-              {request.employerName}
-            </Text>
-            ? They will not be able to access your credential.
-          </Text>
-          <Text size="xs" c="dimmed" mb="xl">
-            Document ID: {request.docId}
-          </Text>
-          <Group justify="flex-end" mt="xl">
-            <Button variant="default" onClick={() => modals.closeAll()}>
-              Cancel
-            </Button>
-            <Button
-              color="red"
-              leftSection={<IconThumbDown size={16} />}
-              onClick={() => {
-                console.log('Modal confirmed - denying access to:', request.requestId);
-                handleDirectGrant(request.requestId, false);
-                modals.closeAll();
-              }}
-            >
-              Deny Access
-            </Button>
-          </Group>
-        </>
-      ),
-    });
-  };
-
   const handleGrantAccess = async (requestId: string, granted: boolean): Promise<void> => {
-    console.log(`Starting handleGrantAccess: requestId=${requestId}, granted=${granted}`);
+    if (!requestId) {
+      notifications.show({
+        title: 'Error',
+        message: 'Invalid request ID',
+        color: 'red',
+      });
+      return;
+    }
 
     try {
-      console.log('About to call grantMutation.mutateAsync with:', { requestId, granted });
-
-      // Check if requestId is valid
-      if (!requestId) {
-        console.error('Invalid requestId:', requestId);
-        throw new Error('Invalid request ID');
-      }
-
-      // Use direct object instead of parameter destructuring for clearer debugging
-      const requestParams = { requestId, granted };
-      console.log('Request params:', requestParams);
-
-      const result = await grantMutation.mutateAsync(requestParams);
-      console.log('Grant mutation completed successfully:', result);
+      await grantMutation.mutateAsync({ requestId, granted });
 
       notifications.show({
         title: granted ? 'Access Granted' : 'Access Denied',
@@ -205,19 +81,66 @@ export default function AccessRequests() {
         icon: granted ? <IconCheck size={16} /> : <IconX size={16} />,
       });
 
-      // Force refetch after a short delay to ensure backend has processed the change
-      setTimeout(() => {
-        console.log('Refetching access requests...');
-        refetch();
-      }, 500);
+      // Refetch to update the UI
+      setTimeout(() => refetch(), 500);
     } catch (error) {
-      console.error('Error details:', error);
       notifications.show({
         title: 'Error',
         message: (error as Error).message || 'Failed to process request',
         color: 'red',
       });
     }
+  };
+
+  const openConfirmModal = (request: AccessRequest, isGranting: boolean): void => {
+    const color = isGranting ? 'green' : 'red';
+    const icon = isGranting ? <IconCheck size={16} /> : <IconX size={16} />;
+    const title = isGranting ? 'Grant Access Request' : 'Deny Access Request';
+    const message = isGranting
+      ? `Are you sure you want to grant access to your credential for ${request.employerName}? They will be able to view your degree details and verification status.`
+      : `Are you sure you want to deny the access request from ${request.employerName}? They will not be able to access your credential.`;
+    const actionText = isGranting ? 'Grant Access' : 'Deny Access';
+    const textColor = isGranting ? 'primaryBlue' : 'red';
+
+    modals.open({
+      title: (
+        <Group>
+          <ThemeIcon color={color} size="md" variant="light">
+            {icon}
+          </ThemeIcon>
+          <Text fw={600}>{title}</Text>
+        </Group>
+      ),
+      children: (
+        <>
+          <Text size="sm" mb="lg">
+            {message.split(request.employerName)[0]}
+            <Text span fw={600} c={textColor}>
+              {request.employerName}
+            </Text>
+            {message.split(request.employerName)[1]}
+          </Text>
+          <Text size="xs" c="dimmed" mb="xl">
+            Document ID: {request.docId}
+          </Text>
+          <Group justify="flex-end" mt="xl">
+            <Button variant="default" onClick={() => modals.closeAll()}>
+              Cancel
+            </Button>
+            <Button
+              color={color}
+              leftSection={isGranting ? <IconThumbUp size={16} /> : <IconThumbDown size={16} />}
+              onClick={() => {
+                handleGrantAccess(request.requestId, isGranting);
+                modals.closeAll();
+              }}
+            >
+              {actionText}
+            </Button>
+          </Group>
+        </>
+      ),
+    });
   };
 
   const getStatusBadge = (status: string): JSX.Element => {
@@ -246,6 +169,19 @@ export default function AccessRequests() {
     }
   };
 
+  const getStatusColor = (status: string): string => {
+    switch (status) {
+      case 'granted':
+        return theme.colors.green[6];
+      case 'denied':
+        return theme.colors.red[6];
+      case 'pending':
+        return theme.colors.yellow[6];
+      default:
+        return theme.colors.gray[6];
+    }
+  };
+
   const renderRequestCard = (request: AccessRequest): JSX.Element => (
     <Card
       key={request.requestId}
@@ -254,13 +190,7 @@ export default function AccessRequests() {
       radius="md"
       withBorder
       style={{
-        borderLeft: `4px solid ${
-          request.status === 'granted'
-            ? theme.colors.green[6]
-            : request.status === 'denied'
-            ? theme.colors.red[6]
-            : theme.colors.yellow[6]
-        }`,
+        borderLeft: `4px solid ${getStatusColor(request.status)}`,
       }}
     >
       <Group justify="space-between" mb="xs">
@@ -316,10 +246,7 @@ export default function AccessRequests() {
               size="sm"
               color="green"
               leftSection={<IconThumbUp size={16} />}
-              onClick={() => {
-                console.log('Grant Access button clicked for request:', request);
-                openGrantConfirmModal(request);
-              }}
+              onClick={() => openConfirmModal(request, true)}
               loading={grantMutation.isPending}
             >
               Grant Access
@@ -329,7 +256,7 @@ export default function AccessRequests() {
               color="red"
               variant="light"
               leftSection={<IconThumbDown size={16} />}
-              onClick={() => openDenyConfirmModal(request)}
+              onClick={() => openConfirmModal(request, false)}
               loading={grantMutation.isPending}
             >
               Deny Access
@@ -463,6 +390,7 @@ export default function AccessRequests() {
       </Alert>
     );
   };
+
   return (
     <Container size="lg" py="xl">
       <Paper p="md" withBorder radius="md" mb="xl">

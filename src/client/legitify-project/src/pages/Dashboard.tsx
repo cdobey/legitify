@@ -31,7 +31,6 @@ import {
   IconUserPlus,
   IconX,
 } from '@tabler/icons-react';
-import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AccessRequest } from '../api/degrees/degree.models';
 import { DashboardSkeleton } from '../components/SkeletonLoaders';
@@ -44,28 +43,6 @@ export default function Dashboard() {
 
   // Main dashboard data - this is now more self-contained
   const { data, isLoading, error, refetch } = useDashboardData();
-
-  // Force immediate data loading when dashboard is mounted
-  useEffect(() => {
-    if (user) {
-      console.log(`Dashboard mounted for ${user.role} user: ${user.username}`);
-      refetch();
-    }
-  }, [user, refetch]);
-
-  // Debug log dashboard data
-  useEffect(() => {
-    if (data) {
-      console.log('Dashboard data loaded:', {
-        stats: data.stats,
-        myDegrees: data.myDegrees?.length,
-        accessRequests: data.accessRequests?.length,
-        accessibleDegrees: data.accessibleDegrees?.length,
-        recentVerifications: data.recentVerifications?.length,
-        recentIssued: data.recentIssued?.length,
-      });
-    }
-  }, [data]);
 
   // Use data directly from the dashboard query
   const myDegrees = data?.myDegrees || [];
@@ -230,11 +207,6 @@ export default function Dashboard() {
   };
 
   const renderUniversityDashboard = () => {
-    console.log('Rendering university dashboard with:', {
-      recentIssuedCount: data?.recentIssued?.length || 0,
-      stats: data?.stats,
-    });
-
     const stats = [
       {
         title: 'Total Issued',
@@ -332,11 +304,6 @@ export default function Dashboard() {
   };
 
   const renderIndividualDashboard = () => {
-    console.log('Rendering individual dashboard with:', {
-      myDegreesCount: myDegrees.length,
-      requestsCount: pendingRequests.length,
-    });
-
     // Calculate percentages for the progress bars
     const total = data?.stats?.total || 0;
     const acceptedPercent =
@@ -469,11 +436,6 @@ export default function Dashboard() {
   };
 
   const renderEmployerDashboard = () => {
-    console.log('Rendering employer dashboard with:', {
-      accessibleDegreesCount: accessibleDegrees.length,
-      verificationsCount: data?.recentVerifications?.length || 0,
-    });
-
     // Calculate stats from accessible degrees
     const statsFromAccessibleDegrees = {
       totalAccessible: accessibleDegrees.length,

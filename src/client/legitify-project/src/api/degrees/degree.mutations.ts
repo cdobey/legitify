@@ -41,11 +41,9 @@ export const useGrantAccessMutation = () => {
 
   return useMutation<{ message: string }, AxiosError, { requestId: string; granted: boolean }>({
     mutationFn: params => {
-      console.log('useGrantAccess mutation called with params:', params);
       return grantAccess(params);
     },
     onSuccess: () => {
-      console.log('Grant access mutation successful, invalidating queries...');
       // Invalidate relevant queries to trigger refetches
       queryClient.invalidateQueries({ queryKey: degreeKeys.requests() });
       queryClient.invalidateQueries({ queryKey: degreeKeys.accessible() });

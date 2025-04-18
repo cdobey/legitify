@@ -1,4 +1,5 @@
 import { register } from '@/api/auth/auth.api';
+import { University } from '@/api/universities/university.models';
 import { UserRole } from '@/api/users/user.models';
 import {
   Alert,
@@ -24,7 +25,6 @@ import {
   IconAlertCircle,
   IconArrowLeft,
   IconArrowRight,
-  IconBriefcase,
   IconLock,
   IconLockCheck,
   IconMail,
@@ -35,27 +35,6 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-
-interface University {
-  id: string;
-  name: string;
-  displayName: string;
-  description?: string;
-  owner: {
-    username: string;
-  };
-}
-
-// Define registration data type
-interface RegistrationData {
-  username: string;
-  email: string;
-  password: string;
-  role: string;
-  country: string;
-  termsAccepted: boolean;
-  orgName?: string;
-}
 
 // Define form values interface
 interface FormValues {
@@ -83,10 +62,10 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { api, login } = useAuth(); // Make sure login is extracted from useAuth
+  const { login } = useAuth();
 
   // Create a comprehensive form with all fields for both steps
-  const form = useForm({
+  const form = useForm<FormValues>({
     initialValues: {
       username: '',
       email: '',
@@ -94,7 +73,7 @@ const Register = () => {
       confirmPassword: '',
       firstName: '',
       lastName: '',
-      role: 'individual' as UserRole,
+      role: 'individual',
       country: '',
       organizationName: '',
       universityName: '',
@@ -113,7 +92,7 @@ const Register = () => {
     },
   });
 
-  // Fetch universities for individual registration or when joining a university
+  // Fetch universities for individual registration
   useEffect(() => {
     if (active === 1 && form.values.role === 'individual') {
       const fetchUniversities = async () => {
@@ -133,44 +112,12 @@ const Register = () => {
     }
   }, [form.values.role, active]);
 
-  const handleRegistration = (data: RegistrationData) => {
-    // This function would handle the API call to register the user
-    console.log('Registration data:', data);
-    // Example: api.post('/auth/register', data)
-    //   .then(response => navigate('/auth/login'))
-    //   .catch(error => console.error('Registration failed:', error));
-  };
-
   const nextStep = () => {
-    if (active === 0) {
-      form.validate();
-      if (!form.isValid()) return;
-    } else if (active === 1) {
-      form.validate();
-      if (!form.isValid()) return;
-    }
+    form.validate();
+    if (!form.isValid()) return;
 
     if (active < 1) {
       setActive(current => current + 1);
-    } else {
-      // Format registration data
-      let registrationData: RegistrationData = {
-        username: form.values.username,
-        email: form.values.email,
-        password: form.values.password,
-        role: form.values.role,
-        country: form.values.country,
-        termsAccepted: form.values.termsAccepted,
-      };
-
-      // Add role-specific data
-      if (form.values.role === 'university' || form.values.role === 'employer') {
-        registrationData.orgName = form.values.organizationName;
-      }
-
-      // Send registration data
-      console.log('Submitting registration:', registrationData);
-      handleRegistration(registrationData);
     }
   };
 
@@ -219,15 +166,14 @@ const Register = () => {
   };
 
   const isStep1Valid = () => {
-    const { username, email, password, confirmPassword, role } = form.values;
-    const basicFieldsValid =
+    const { username, email, password, confirmPassword } = form.values;
+    return (
       username.trim() !== '' &&
       email.trim() !== '' &&
       password.trim() !== '' &&
       confirmPassword.trim() !== '' &&
-      password === confirmPassword;
-
-    return basicFieldsValid;
+      password === confirmPassword
+    );
   };
 
   const isStep2Valid = () => {
@@ -251,7 +197,6 @@ const Register = () => {
     return basicValid;
   };
 
-  // In the renderFormStep function, fix the references to countries and PasswordStrength
   const renderFormStep = (step: number) => {
     switch (step) {
       case 0:
@@ -306,19 +251,6 @@ const Register = () => {
         return (
           <>
             <SimpleGrid cols={1} mt="xl">
-              <Select
-                required
-                label="Role"
-                placeholder="Select your role"
-                data={[
-                  { value: 'individual', label: 'Individual' },
-                  { value: 'university', label: 'University' },
-                  { value: 'employer', label: 'Employer' },
-                ]}
-                leftSection={<IconBriefcase size={16} className="accent-icon" />}
-                {...form.getInputProps('role')}
-              />
-
               <Select
                 required
                 label="Country"
