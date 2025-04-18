@@ -2,6 +2,7 @@ import { LoginParams } from '@/api/auth/auth.models';
 import { useLoginMutation } from '@/api/auth/auth.mutations';
 import { useUserProfileQuery } from '@/api/auth/auth.queries';
 import { TwoFactorState, User } from '@/api/users/user.models';
+import { queryClient } from '@/config/queryClient';
 import axios, { AxiosInstance } from 'axios';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -213,6 +214,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     sessionStorage.removeItem('user');
     setUser(null);
     clearTwoFactorState();
+    queryClient.clear();
+
     navigate('/');
   };
 
