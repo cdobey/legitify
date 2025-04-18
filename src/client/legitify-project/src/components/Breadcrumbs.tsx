@@ -53,8 +53,13 @@ const routeConfig: Record<
     title: 'Degrees',
     icon: <IconCertificate size={16} stroke={1.5} />,
     validPaths: ['issue', 'manage', 'requests', 'verify', 'accessible', 'all-records', 'view'],
-    isClickable: false, // The /degree route doesn't exist as a page
-    redirectPath: '/dashboard', // Redirect to dashboard if clicked
+    isClickable: true,
+    redirectPath: '/degrees',
+  },
+  degrees: {
+    title: 'Degrees',
+    icon: <IconCertificate size={16} stroke={1.5} />,
+    isClickable: true,
   },
   universities: {
     title: 'University',
@@ -170,19 +175,10 @@ export default function Breadcrumbs() {
 
     // Special handling for certificate view to maintain context
     if (pathSegments[0] === 'degree' && pathSegments[1] === 'view' && pathSegments.length === 3) {
-      // Add Degrees category
       breadcrumbs.push({
         title: 'Degrees',
-        path: '/dashboard',
+        path: '/degrees',
         icon: <IconCertificate size={16} stroke={1.5} />,
-        isClickable: false,
-      });
-
-      // Add Accessible Degrees with back link
-      breadcrumbs.push({
-        title: 'Accessible Degrees',
-        path: '/degree/accessible',
-        icon: <IconFiles size={16} stroke={1.5} />,
         isClickable: true,
       });
 

@@ -144,6 +144,7 @@ export interface LedgerRecord {
   docId: string;
   docHash: string;
   owner: string;
+  ownerEmail?: string;
   issuer: string;
   universityId: string;
   issuedAt: string;

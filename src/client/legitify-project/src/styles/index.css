@@ -737,6 +737,154 @@ button.accent-orange:hover {
   background-color: #2a2d36;
 }
 
+/* Enhanced Records Table Styling */
+.records-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.records-table th {
+  font-weight: 600;
+  padding: 12px 16px;
+  transition: background-color 0.2s ease;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #f4f8fa;
+}
+
+[data-theme='dark'] .records-table th {
+  background-color: #323642;
+  color: #e9ecef;
+  border-bottom: 1px solid #3f4356;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.records-table td {
+  padding: 12px 16px;
+  vertical-align: middle;
+}
+
+/* Sortable header styling */
+.sortable-header {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.sortable-header:hover {
+  background-color: #e9ecef;
+}
+
+[data-theme='dark'] .sortable-header:hover {
+  background-color: #3a3e4e;
+}
+
+/* Row hover effects */
+.record-row {
+  transition: all 0.2s ease;
+}
+
+.record-row:hover {
+  background-color: rgba(34, 145, 214, 0.05) !important;
+}
+
+[data-theme='dark'] .record-row:hover {
+  background-color: rgba(44, 166, 211, 0.1) !important;
+  box-shadow: 0 0 0 1px rgba(44, 166, 211, 0.2);
+}
+
+/* Status badge styling */
+.status-badge {
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-transform: capitalize;
+  width: 80px;
+  text-align: center;
+}
+
+/* Status colors for different states */
+.status-teal {
+  background-color: rgba(21, 226, 181, 0.15) !important;
+  color: #15e2b5 !important;
+  border: 1px solid rgba(21, 226, 181, 0.3) !important;
+}
+
+.status-red {
+  background-color: rgba(255, 71, 87, 0.15) !important;
+  color: #ff4757 !important;
+  border: 1px solid rgba(255, 71, 87, 0.3) !important;
+}
+
+.status-blue {
+  background-color: rgba(44, 166, 211, 0.15) !important;
+  color: #2ca6d3 !important;
+  border: 1px solid rgba(44, 166, 211, 0.3) !important;
+}
+
+/* View action button styling */
+.view-action {
+  transition: all 0.2s ease;
+}
+
+.view-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(34, 145, 214, 0.2);
+}
+
+[data-theme='dark'] .view-action:hover {
+  box-shadow: 0 3px 8px rgba(44, 166, 211, 0.3);
+}
+
+/* Table container styling */
+.records-table-container {
+  border-radius: 8px;
+  border: 1px solid #eaecef;
+  background-color: white;
+}
+
+[data-theme='dark'] .records-table-container {
+  border-color: #3f4356;
+  background-color: #282b36;
+}
+
+/* Pagination styling */
+.records-pagination .mantine-Pagination-control {
+  transition: all 0.2s ease;
+}
+
+.records-pagination .mantine-Pagination-control[data-active] {
+  background-color: var(--primary-blue);
+  color: white;
+  font-weight: 600;
+}
+
+[data-theme='dark'] .records-pagination .mantine-Pagination-control[data-active] {
+  background-color: #2ca6d3;
+  color: white;
+  font-weight: 600;
+}
+
+.records-pagination .mantine-Pagination-control:not([data-active]):hover {
+  background-color: rgba(34, 145, 214, 0.1);
+}
+
+[data-theme='dark'] .records-pagination .mantine-Pagination-control:not([data-active]):hover {
+  background-color: rgba(44, 166, 211, 0.2);
+}
+
+/* Card Section styling */
+.mantine-Card-section {
+  padding: 16px;
+}
+
+[data-theme='dark'] .mantine-Card-section {
+  background-color: #282b36;
+  border-color: #3f4356;
+}
+
 /* Card Section styling */
 .mantine-Card-section {
   padding: 16px;

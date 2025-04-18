@@ -8,6 +8,7 @@ import {
   IconFiles,
   IconHome,
   IconInbox,
+  IconList,
   IconSchool,
   IconSettings,
   IconUser,
@@ -15,6 +16,7 @@ import {
 } from '@tabler/icons-react';
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import AppHeader from './AppHeader';
 import AppNavigation from './AppNavigation';
@@ -29,6 +31,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const [navCollapsed, setNavCollapsed] = useState(true);
   const theme = useMantineTheme();
   const { isDarkMode } = useTheme();
+  const { user } = useAuth();
   const location = useLocation();
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -93,6 +96,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
     if (path.includes('/degree/verify')) return <IconCheck size={28} stroke={1.5} />;
     if (path.includes('/degree/accessible')) return <IconFileCheck size={28} stroke={1.5} />;
     if (path.includes('/degree/view/')) return <IconCertificate2 size={28} stroke={1.5} />;
+    if (path.includes('/degree/all')) return <IconList size={28} stroke={1.5} />;
+    if (path === '/degrees') return <IconList size={28} stroke={1.5} />;
     if (path.includes('/profile')) return <IconUser size={28} stroke={1.5} />;
     if (path.includes('/dashboard')) return <IconHome size={28} stroke={1.5} />;
     if (path.includes('/settings')) return <IconSettings size={28} stroke={1.5} />;
@@ -114,6 +119,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
     if (path === '/degree/requests') return 'Access Requests';
     if (path === '/degree/verify') return 'Verify Degree';
     if (path === '/degree/accessible') return 'Accessible Degrees';
+    if (path === '/degree/all-records') return 'Blockchain Records';
+    if (path === '/degrees') {
+      return user?.role === 'employer' ? 'Accessible Degrees' : 'Blockchain Records';
+    }
     if (path.includes('/degree/view/')) return 'Degree Certificate';
     if (path === '/profile') return 'Profile';
     if (path === '/settings') return 'Settings';
@@ -141,6 +150,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
     if (path === '/degree/requests') return 'Manage access requests for your credentials';
     if (path === '/degree/verify') return 'Verify the authenticity of credentials';
     if (path === '/degree/accessible') return 'View credentials you have access to';
+    if (path === '/degree/all-records') return 'View all records stored on the blockchain';
+    if (path === '/degrees') {
+      return user?.role === 'employer'
+        ? 'View credentials you have access to'
+        : 'View all records stored on the blockchain';
+    }
     if (path.includes('/degree/view/')) return 'View verified certificate details';
     if (path === '/profile') return 'View and manage your profile information';
     if (path === '/settings') return 'Manage your account settings';

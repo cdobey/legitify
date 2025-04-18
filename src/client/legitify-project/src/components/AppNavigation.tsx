@@ -55,6 +55,11 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
       icon: <IconCertificate size={collapsed ? 22 : 18} />,
     },
     {
+      label: 'All Degrees',
+      to: '/degrees',
+      icon: <IconFiles size={collapsed ? 22 : 18} />,
+    },
+    {
       label: 'Manage University',
       to: '/university/manage',
       icon: <IconSchool size={collapsed ? 22 : 18} />,
@@ -88,7 +93,7 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
     },
     {
       label: 'Accessible Degrees',
-      to: '/degree/accessible',
+      to: '/degrees',
       icon: <IconFileCheck size={collapsed ? 22 : 18} />,
     },
   ];
