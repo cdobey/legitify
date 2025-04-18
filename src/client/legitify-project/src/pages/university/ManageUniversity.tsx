@@ -72,7 +72,7 @@ interface RegisterStudentForm {
   password: string;
 }
 
-export default function ManageUniversities() {
+export default function ManageUniversity() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 

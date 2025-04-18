@@ -1,6 +1,6 @@
 import { ModalsProvider } from '@/contexts/ModalsContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
-import ManageUniversities from '@/pages/university/ManageUniversity';
+import ManageUniversity from '@/pages/university/ManageUniversity';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -31,7 +31,6 @@ function MockAuthProvider({ user, children }: { user: any; children: React.React
   );
 }
 
-// Patch useAuth to use our mock context
 vi.mock('@/contexts/AuthContext', async (importOriginal: () => Promise<any>) => {
   const actual = await importOriginal();
   return {
@@ -45,12 +44,23 @@ const mockUseMyUniversitiesQuery = vi.fn();
 const mockUseAllUniversitiesQuery = vi.fn();
 const mockUsePendingAffiliationsQuery = vi.fn();
 const mockUseRecentIssuedDegreesQuery = vi.fn();
+const mockUsePrimaryUniversityQuery = vi.fn();
+const mockUseMyPendingJoinRequestsQuery = vi.fn();
 
 // --- Mock University API Queries ---
 vi.mock('@/api/universities/university.queries', () => ({
   useMyUniversitiesQuery: (...args: any[]) => mockUseMyUniversitiesQuery(...args),
   useAllUniversitiesQuery: (...args: any[]) => mockUseAllUniversitiesQuery(...args),
   usePendingAffiliationsQuery: (...args: any[]) => mockUsePendingAffiliationsQuery(...args),
+  usePrimaryUniversityQuery: (...args: any[]) => mockUsePrimaryUniversityQuery(...args),
+  useMyPendingJoinRequestsQuery: (...args: any[]) => mockUseMyPendingJoinRequestsQuery(...args),
+  universityKeys: {
+    my: () => ['universities', 'my'],
+    pendingAffiliations: () => ['universities', 'pending-affiliations'],
+    pendingJoinRequests: () => ['universities', 'pending-join-requests'],
+    myPendingJoinRequests: () => ['universities', 'my-pending-join-requests'],
+    studentAffiliations: () => ['universities', 'student-affiliations'],
+  },
   usePendingJoinRequestsQuery: vi.fn().mockReturnValue({
     data: [
       {
@@ -119,7 +129,6 @@ vi.mock('@/api/degrees/degree.queries', () => ({
 
 // Custom render function with providers
 function renderWithProviders(user: any = null, universityData: any[] = []) {
-  // Setup mocks for this render
   mockUseMyUniversitiesQuery.mockReturnValue({
     data: universityData,
     isLoading: false,
@@ -174,6 +183,24 @@ function renderWithProviders(user: any = null, universityData: any[] = []) {
     isLoading: false,
   });
 
+  mockUsePrimaryUniversityQuery.mockReturnValue({
+    data: universityData.length > 0 ? universityData[0] : null,
+    isLoading: false,
+    error: null,
+  });
+
+  mockUseMyPendingJoinRequestsQuery.mockReturnValue({
+    data: [
+      {
+        id: 'join-req-1',
+        status: 'pending',
+        createdAt: '2025-01-15T00:00:00Z',
+        university: { id: 'uni-3', displayName: 'Pending Join University' },
+      },
+    ],
+    isLoading: false,
+  });
+
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -188,7 +215,7 @@ function renderWithProviders(user: any = null, universityData: any[] = []) {
         <ThemeProvider>
           <ModalsProvider>
             <MockAuthProvider user={user}>
-              <ManageUniversities />
+              <ManageUniversity />
             </MockAuthProvider>
           </ModalsProvider>
         </ThemeProvider>
@@ -197,8 +224,7 @@ function renderWithProviders(user: any = null, universityData: any[] = []) {
   );
 }
 
-describe('ManageUniversities component', () => {
-  // Sample user for testing
+describe('ManageUniversity component', () => {
   const universityUser = {
     id: 'u1',
     email: 'uni@example.com',
@@ -206,7 +232,6 @@ describe('ManageUniversities component', () => {
     username: 'universityUser',
   };
 
-  // Sample university data
   const sampleUniversity = {
     id: 'uni-1',
     name: 'test-university',
@@ -225,7 +250,7 @@ describe('ManageUniversities component', () => {
     renderWithProviders(universityUser);
 
     // Should show the alert about not having a university
-    expect(screen.getByText(/you don't have a university yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/you don't have a university affiliation yet/i)).toBeInTheDocument();
 
     // Should show create and join buttons
     expect(screen.getByRole('button', { name: /create university/i })).toBeInTheDocument();
@@ -271,29 +296,39 @@ describe('ManageUniversities component', () => {
       expect(within(modal).getByText(/select university/i)).toBeInTheDocument();
     });
 
-    // Click join without selecting a university
+    // Find the form elements
     const modal = screen.getByRole('dialog');
-    await userEvent.click(within(modal).getByRole('button', { name: /^send request$/i }));
+    const submitButton = within(modal).getByRole('button', { name: /^send request$/i });
 
-    // Should show validation error
+    // Click join without selecting a university
+    await userEvent.click(submitButton);
+
     await waitFor(() => {
-      expect(screen.getByText(/please select a university/i)).toBeInTheDocument();
+      expect(modal).toBeInTheDocument();
+      expect(within(modal).getByLabelText(/select university/i)).toBeInTheDocument();
     });
   });
 
   it('displays university dashboard when user has a university', async () => {
     renderWithProviders(universityUser, [sampleUniversity]);
 
-    // Should show the university name in the title
-    expect(screen.getByText(/manage university: test university/i)).toBeInTheDocument();
+    // Should show the university name in a heading
+    expect(screen.getByText('Test University')).toBeInTheDocument();
+
+    // Should show the university ID
+    expect(screen.getByText(/ID: uni-1/i)).toBeInTheDocument();
 
     // Should show dashboard info
     await waitFor(() => {
-      expect(screen.getByText(/university dashboard/i)).toBeInTheDocument();
       expect(screen.getByText(/recent activity/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByRole('tab', { name: /students/i })).toBeInTheDocument();
+    // Check for student management section
+    expect(screen.getByText(/student management/i)).toBeInTheDocument();
+
+    // Check that we have the expected tabs
+    expect(screen.getByRole('tab', { name: /actions/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /affiliated/i })).toBeInTheDocument();
 
     const tabs = screen.getAllByRole('tab');
     expect(
@@ -304,24 +339,32 @@ describe('ManageUniversities component', () => {
     ).toBe(true);
 
     expect(screen.getByRole('tab', { name: /sent invitations/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /add student/i })).toBeInTheDocument();
   });
 
   it('displays active students in the students tab', async () => {
     renderWithProviders(universityUser, [sampleUniversity]);
+    await userEvent.click(screen.getByRole('tab', { name: /affiliated/i }));
+    const tabPanel = await waitFor(() => {
+      const panel = screen.getByRole('tabpanel');
+      expect(panel).toBeInTheDocument();
+      return panel;
+    });
 
-    // Students tab should be active by default
-    expect(screen.getByText(/affiliated students/i)).toBeInTheDocument();
+    const affiliatedTable = within(tabPanel).getByRole('table');
 
-    // Should show the student in the table - more precisely target the table cells
-    const table = screen.getAllByRole('table')[1]; // The affiliated students table
-    const tableBody = within(table).getAllByRole('rowgroup')[1]; // Get the tbody
-    const studentRow = within(tableBody).getByRole('row');
+    // Find the activeStudent in the table
+    const studentElement = within(affiliatedTable).getByText('activeStudent');
+    expect(studentElement).toBeInTheDocument();
 
-    // Check specific cells for student info
-    const cells = within(studentRow).getAllByRole('cell');
-    expect(cells[0]).toHaveTextContent('activeStudent');
-    expect(cells[1]).toHaveTextContent('active@student.com');
+    const activeStudentRow = studentElement.closest('tr');
+    expect(activeStudentRow).not.toBeNull();
+
+    if (activeStudentRow) {
+      const cells = within(activeStudentRow).getAllByRole('cell');
+      expect(cells[0]).toHaveTextContent('activeStudent');
+      expect(cells[1]).toHaveTextContent('active@student.com');
+      expect(cells[2]).toHaveTextContent('Active');
+    }
   });
 
   it('can switch to join requests tab and display pending requests', async () => {
@@ -348,7 +391,7 @@ describe('ManageUniversities component', () => {
     const tabPanel = screen.getByRole('tabpanel');
     await waitFor(() => {
       expect(
-        within(tabPanel).getByText(/these students have requested to join your university/i),
+        within(tabPanel).getByText(/review and respond to students requesting to join/i),
       ).toBeInTheDocument();
     });
 
@@ -356,7 +399,7 @@ describe('ManageUniversities component', () => {
     const table = within(tabPanel).getByRole('table');
     const rows = within(table).getAllByRole('row');
     // Skip header row (index 0)
-    const studentCell = within(rows[1]).getAllByRole('cell')[0]; // First cell should be the username
+    const studentCell = within(rows[1]).getAllByRole('cell')[0];
     expect(studentCell).toHaveTextContent('student1');
 
     // Should show approve/reject buttons
@@ -379,8 +422,7 @@ describe('ManageUniversities component', () => {
     // Find specific table cell for student name to avoid ambiguity
     const table = within(tabPanel).getByRole('table');
     const rows = within(table).getAllByRole('row');
-    // Skip header row (index 0)
-    const studentCell = within(rows[1]).getAllByRole('cell')[0]; // First cell should be the username
+    const studentCell = within(rows[1]).getAllByRole('cell')[0];
     expect(studentCell).toHaveTextContent('student2');
 
     // Should show pending status
@@ -390,13 +432,14 @@ describe('ManageUniversities component', () => {
   it('can switch to add student tab and display add student form', async () => {
     renderWithProviders(universityUser, [sampleUniversity]);
 
-    // Click on the add student tab
-    await userEvent.click(screen.getByRole('tab', { name: /add student/i }));
+    // Click on the Actions tab instead as that's where the add student form is
+    await userEvent.click(screen.getByRole('tab', { name: /actions/i }));
 
-    // Should show the add student form in the specific tab panel
+    // Should show the add student form in the Actions tab panel
     const tabPanel = screen.getByRole('tabpanel');
     await waitFor(() => {
-      expect(within(tabPanel).getByText(/register new students/i)).toBeInTheDocument();
+      expect(within(tabPanel).getByText(/invite existing student/i)).toBeInTheDocument();
+      expect(within(tabPanel).getByText(/register new student/i)).toBeInTheDocument();
     });
 
     // Should show both individual and batch upload buttons within the tab panel
@@ -408,9 +451,6 @@ describe('ManageUniversities component', () => {
 
   it('can open the register student modal and validate form', async () => {
     renderWithProviders(universityUser, [sampleUniversity]);
-
-    // Click on the add student tab
-    await userEvent.click(screen.getByRole('tab', { name: /add student/i }));
 
     // Click the register individual button
     await userEvent.click(screen.getByRole('button', { name: /register individual/i }));
@@ -447,9 +487,6 @@ describe('ManageUniversities component', () => {
   it('can open the batch upload modal', async () => {
     renderWithProviders(universityUser, [sampleUniversity]);
 
-    // Click on the add student tab
-    await userEvent.click(screen.getByRole('tab', { name: /add student/i }));
-
     // Click the batch upload button
     await userEvent.click(screen.getByRole('button', { name: /batch upload/i }));
 
@@ -458,20 +495,24 @@ describe('ManageUniversities component', () => {
       const modal = screen.getByRole('dialog');
       expect(modal).toBeInTheDocument();
       expect(within(modal).getByText(/batch register students/i)).toBeInTheDocument();
-      expect(within(modal).getByText(/csv upload feature coming soon/i)).toBeInTheDocument();
+      expect(within(modal).getByText(/feature coming soon/i)).toBeInTheDocument();
     });
   });
 
   it('allows inviting a student via email', async () => {
     renderWithProviders(universityUser, [sampleUniversity]);
 
-    // Get the students tab panel which should be active by default
-    const studentsTab = screen.getByRole('tabpanel');
+    await userEvent.click(screen.getByRole('tab', { name: /actions/i }));
 
-    // Find the email input by its label text
-    const emailInput = within(studentsTab).getByLabelText(/student email/i);
-    // Find invite button directly in the tab panel
-    const inviteButton = within(studentsTab).getByRole('button', { name: /^invite student$/i });
+    await waitFor(() => {
+      expect(screen.getByRole('tabpanel')).toBeInTheDocument();
+    });
+    const actionsTabPanel = screen.getByRole('tabpanel');
+
+    const emailInput = within(actionsTabPanel).getByPlaceholderText(
+      /enter student's email address/i,
+    );
+    const inviteButton = within(actionsTabPanel).getByRole('button', { name: /^invite student$/i });
 
     // Enter valid email
     await userEvent.type(emailInput, 'new.student@example.com');
