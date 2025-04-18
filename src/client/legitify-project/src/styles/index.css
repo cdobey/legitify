@@ -1146,3 +1146,49 @@ button.accent-orange:hover {
 [data-theme='dark'] .mantine-DateInput-day[data-outside] {
   color: #4a4f66;
 }
+
+/* Document upload card styling with subtle glow effect */
+.document-upload-card {
+  transition: box-shadow 0.3s ease, border-color 0.3s ease !important;
+}
+
+.document-upload-card:hover {
+  transform: none !important;
+  box-shadow: 0 0 15px rgba(44, 166, 211, 0.15) !important;
+  border-color: rgba(44, 166, 211, 0.3) !important;
+}
+
+[data-theme='dark'] .document-upload-card:hover {
+  box-shadow: 0 0 15px rgba(44, 166, 211, 0.2) !important;
+  border-color: rgba(44, 166, 211, 0.4) !important;
+}
+
+/* Step cards in IssueDegree page - orange glow effect like welcome card */
+.issue-degree-card {
+  transition: box-shadow 0.3s ease, border-color 0.3s ease !important;
+}
+
+.issue-degree-card:hover {
+  transform: none !important;
+  box-shadow: 0 0 15px rgba(251, 133, 0, 0.15) !important;
+  border-color: rgba(251, 133, 0, 0.3) !important;
+}
+
+[data-theme='dark'] .issue-degree-card:hover {
+  box-shadow: 0 0 15px rgba(255, 153, 19, 0.2) !important;
+  border-color: rgba(255, 153, 19, 0.4) !important;
+}
+
+/* Remove focus outline and selected border from Stepper steps */
+.mantine-Stepper-step {
+  outline: none !important;
+}
+
+.mantine-Stepper-step:focus-visible {
+  outline: none !important;
+}
+
+.mantine-Stepper-step[data-progress] {
+  outline: none !important;
+  border: none !important;
+}
