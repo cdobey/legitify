@@ -5,8 +5,6 @@ import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ mode }) => {
-  console.log(`Building in ${mode} mode`);
-
   // Load environment variables - Render.com will provide these
   const env = loadEnv(mode, process.cwd(), '');
 
@@ -14,14 +12,12 @@ export default defineConfig(({ mode }) => {
   if (mode !== 'production') {
     const clientEnvPath = path.resolve(process.cwd(), 'client.env');
     if (fs.existsSync(clientEnvPath)) {
-      console.log('Loading environment from client.env file');
       dotenv.config({ path: clientEnvPath });
     }
   }
 
   // Determine API URL based on mode (use only environment variable in production)
   const apiUrl = mode === 'production' ? env.VITE_API_URL : 'http://localhost:3001';
-  console.log(`API URL: ${apiUrl}`);
 
   // Check if required env vars are present during build
   if (mode === 'production') {
