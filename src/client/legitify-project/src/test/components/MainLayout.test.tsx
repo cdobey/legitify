@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import MainLayout from '../../components/MainLayout'; // Adjust the path as needed
 import { MantineProvider, MantineThemeOverride } from '@mantine/core';
@@ -54,14 +54,18 @@ vi.mock('../../contexts/ThemeContext', () => ({
   useTheme: () => mockThemeState,
 }));
 
+interface AppNavigationProps {
+    collapsed: boolean;
+    onToggleCollapse: () => void;
+  }
+
 // Mock the components used by MainLayout
 vi.mock('./AppHeader', () => ({
   default: () => <div data-testid="app-header">App Header Mock</div>,
 }));
 
 vi.mock('./AppNavigation', () => ({
-  default: ({ collapsed, onToggleCollapse }) => (
-    <div data-testid="app-navigation">
+    default: ({ collapsed, onToggleCollapse }: AppNavigationProps) => (    <div data-testid="app-navigation">
       <button 
         data-testid="toggle-nav" 
         onClick={onToggleCollapse}
