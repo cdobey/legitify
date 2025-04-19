@@ -9,12 +9,14 @@ import {
   Pagination,
   Paper,
   ScrollArea,
+  Stack,
   Table,
   Text,
   TextInput,
   Tooltip,
   useMantineTheme,
 } from '@mantine/core';
+import { modals } from '@mantine/modals';
 import {
   IconArrowsSort,
   IconBuilding,
@@ -24,6 +26,7 @@ import {
   IconCircleX,
   IconClockHour4,
   IconEye,
+  IconEyeClosed,
   IconFilter,
   IconInfoCircle,
   IconSearch,
@@ -94,10 +97,13 @@ export default function AllRecords() {
         case 'universityName':
           return accessibleRecord.issuer;
         case 'issuedAt':
+          return accessibleRecord.requestedAt;
         case 'dateGranted':
-          return accessibleRecord.dateGranted;
+          return accessibleRecord.status === 'granted'
+            ? accessibleRecord.dateGranted
+            : accessibleRecord.requestedAt;
         case 'accepted':
-          return accessibleRecord.status === 'accepted';
+          return accessibleRecord.status === 'granted';
         case 'denied':
           return accessibleRecord.status === 'denied';
         case 'degreeTitle':
@@ -151,11 +157,21 @@ export default function AllRecords() {
         // Apply status filter with unified field access
         const matchesStatus =
           statusFilter === 'all' ||
-          (statusFilter === 'accepted' && getRecordProperty(record, 'accepted')) ||
-          (statusFilter === 'denied' && getRecordProperty(record, 'denied')) ||
+          (statusFilter === 'accepted' &&
+            (getRecordProperty(record, 'accepted') ||
+              (isEmployer && getRecordProperty(record, 'status') === 'granted'))) ||
+          (statusFilter === 'denied' &&
+            (getRecordProperty(record, 'denied') ||
+              (isEmployer && getRecordProperty(record, 'status') === 'denied'))) ||
           (statusFilter === 'pending' &&
-            !getRecordProperty(record, 'accepted') &&
-            !getRecordProperty(record, 'denied'));
+            !(
+              getRecordProperty(record, 'accepted') ||
+              (isEmployer && getRecordProperty(record, 'status') === 'granted')
+            ) &&
+            !(
+              getRecordProperty(record, 'denied') ||
+              (isEmployer && getRecordProperty(record, 'status') === 'denied')
+            ));
 
         return matchesSearch && matchesStatus;
       })
@@ -302,13 +318,14 @@ export default function AllRecords() {
 
     // Determine status colors and icons
     const statusColor =
-      isAccepted || status === 'accepted'
+      isAccepted || status === 'accepted' || status === 'granted'
         ? 'teal'
         : isDenied || status === 'denied'
         ? 'red'
-        : 'blue';
+        : 'amber';
+
     const statusIcon =
-      isAccepted || status === 'accepted' ? (
+      isAccepted || status === 'accepted' || status === 'granted' ? (
         <IconCircleCheck size={14} />
       ) : isDenied || status === 'denied' ? (
         <IconCircleX size={14} />
@@ -316,7 +333,6 @@ export default function AllRecords() {
         <IconClockHour4 size={14} />
       );
 
-    // Format the date for better display
     const dateField = isEmployer ? 'dateGranted' : 'issuedAt';
     const dateValue = getRecordProperty(record, dateField);
     const issueDate = new Date(dateValue);
@@ -325,16 +341,55 @@ export default function AllRecords() {
       month: 'short',
       day: 'numeric',
     });
-
-    // Get docId for links
     const docId = getRecordProperty(record, 'docId');
 
     return (
       <Table.Tr
         key={docId}
-        style={{ cursor: 'pointer' }}
-        className="record-row"
-        onClick={() => (window.location.href = `/degree/view/${docId}`)}
+        style={{
+          cursor: 'pointer',
+          opacity: status === 'pending' ? 0.7 : 1,
+          background: status === 'pending' ? 'rgba(255, 171, 64, 0.05)' : undefined,
+        }}
+        className={`record-row ${status === 'pending' ? 'pending-record' : ''}`}
+        onClick={e => {
+          // For pending records, show alert instead of navigation
+          if (status === 'pending' && isEmployer) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            modals.open({
+              title: (
+                <Text fw={700} size="lg" c="blue">
+                  Access Request Pending
+                </Text>
+              ),
+              children: (
+                <Stack>
+                  <Text>
+                    Your request to view this degree certificate is still pending approval from
+                    <Text span fw={700} ml={5}>
+                      {getRecordProperty(record, 'owner')}
+                    </Text>
+                    .
+                  </Text>
+                  <Text size="sm" c="dimmed">
+                    Document ID: {docId}
+                  </Text>
+                  <Text size="sm" c="dimmed">
+                    Requested on: {formattedDate}
+                  </Text>
+                  <Text mt="md">
+                    You'll receive access once the individual approves your request.
+                  </Text>
+                </Stack>
+              ),
+              centered: true,
+            });
+          } else {
+            window.location.href = `/degree/view/${docId}`;
+          }
+        }}
       >
         <Table.Td>
           <Group gap="md" wrap="nowrap">
@@ -383,22 +438,110 @@ export default function AllRecords() {
 
         <Table.Td>
           <Badge color={statusColor} className={`status-badge status-${statusColor}`}>
-            {status === 'accepted' ? 'Accepted' : status === 'denied' ? 'Denied' : 'Pending'}
+            {status === 'accepted' || status === 'granted'
+              ? isEmployer
+                ? 'Granted'
+                : 'Accepted'
+              : status === 'denied'
+              ? 'Denied'
+              : 'Pending'}
           </Badge>
         </Table.Td>
 
         <Table.Td>
-          <ActionIcon
-            variant="light"
-            radius="md"
-            color="blue"
-            component={Link}
-            to={`/degree/view/${docId}`}
-            className="view-action"
-            onClick={e => e.stopPropagation()}
-          >
-            <IconEye size={16} />
-          </ActionIcon>
+          {status === 'pending' && isEmployer ? (
+            <ActionIcon
+              variant="light"
+              radius="md"
+              color="gray"
+              className="view-action"
+              onClick={e => {
+                e.stopPropagation();
+                // Show alert for pending records
+                modals.open({
+                  title: (
+                    <Text fw={700} size="lg" c="blue">
+                      Access Request Pending
+                    </Text>
+                  ),
+                  children: (
+                    <Stack>
+                      <Text>
+                        Your request to view this degree certificate is still pending approval from
+                        <Text span fw={700} ml={5}>
+                          {getRecordProperty(record, 'owner')}
+                        </Text>
+                        .
+                      </Text>
+                      <Text size="sm" c="dimmed">
+                        Document ID: {docId}
+                      </Text>
+                      <Text size="sm" c="dimmed">
+                        Requested on: {formattedDate}
+                      </Text>
+                      <Text mt="md">
+                        You'll receive access once the individual approves your request.
+                      </Text>
+                    </Stack>
+                  ),
+                  centered: true,
+                });
+              }}
+            >
+              <IconEyeClosed size={16} />
+            </ActionIcon>
+          ) : status === 'denied' && isEmployer ? (
+            <ActionIcon
+              variant="light"
+              radius="md"
+              color="red"
+              className="view-action"
+              onClick={e => {
+                e.stopPropagation();
+                // Show alert for denied records
+                modals.open({
+                  title: (
+                    <Text fw={700} size="lg" c="red">
+                      Access Request Denied
+                    </Text>
+                  ),
+                  children: (
+                    <Stack>
+                      <Text>
+                        Your request to view this degree certificate has been denied by
+                        <Text span fw={700} ml={5}>
+                          {getRecordProperty(record, 'owner')}
+                        </Text>
+                        .
+                      </Text>
+                      <Text size="sm" c="dimmed">
+                        Document ID: {docId}
+                      </Text>
+                      <Text mt="md">
+                        You may need to contact the individual directly if you require access to
+                        this degree.
+                      </Text>
+                    </Stack>
+                  ),
+                  centered: true,
+                });
+              }}
+            >
+              <IconEyeClosed size={16} />
+            </ActionIcon>
+          ) : (
+            <ActionIcon
+              variant="light"
+              radius="md"
+              color="blue"
+              component={Link}
+              to={`/degree/view/${docId}`}
+              className="view-action"
+              onClick={e => e.stopPropagation()}
+            >
+              <IconEye size={16} />
+            </ActionIcon>
+          )}
         </Table.Td>
       </Table.Tr>
     );
@@ -449,7 +592,7 @@ export default function AllRecords() {
                 <Menu.Item
                   leftSection={<IconClockHour4 size={14} />}
                   onClick={() => setStatusFilter('pending')}
-                  color={statusFilter === 'pending' ? 'blue' : undefined}
+                  color={statusFilter === 'pending' ? 'amber' : undefined}
                 >
                   Pending Only
                 </Menu.Item>

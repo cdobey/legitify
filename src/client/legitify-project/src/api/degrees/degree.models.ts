@@ -106,8 +106,9 @@ export interface AccessibleDegree {
     name: string;
     email: string;
   };
-  status: string;
-  dateGranted: string;
+  status: 'pending' | 'granted' | 'denied';
+  requestedAt: string;
+  dateGranted: string | null;
 }
 
 export type AccessibleDegreesResponse = AccessibleDegree[];

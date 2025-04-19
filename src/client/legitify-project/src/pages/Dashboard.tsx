@@ -517,7 +517,7 @@ export default function Dashboard() {
 
             {accessibleDegrees && accessibleDegrees.length > 0 ? (
               <Stack>
-                {accessibleDegrees.slice(0, 3).map((degree: any, index: number) => (
+                {accessibleDegrees.slice(0, 2).map((degree: any, index: number) => (
                   <Card key={index} withBorder p="sm">
                     <Text fw={500}>Owner: {degree.owner?.name || 'Unknown'}</Text>
                     <Group justify="space-between">
@@ -538,7 +538,7 @@ export default function Dashboard() {
                 ))}
                 {accessibleDegrees.length > 3 && (
                   <Text ta="center" size="sm" c="dimmed">
-                    + {accessibleDegrees.length - 3} more accessible degrees
+                    + {accessibleDegrees.length - 2} more accessible degrees
                   </Text>
                 )}
               </Stack>

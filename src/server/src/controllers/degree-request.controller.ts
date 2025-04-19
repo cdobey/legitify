@@ -423,7 +423,6 @@ export const getAccessibleDegrees: RequestHandler = async (
     const accessRequests = await prisma.request.findMany({
       where: {
         requesterId: req.user.id,
-        status: 'granted',
       },
       include: {
         document: {
@@ -460,8 +459,9 @@ export const getAccessibleDegrees: RequestHandler = async (
         name: request.document.issuedToUser.username,
         email: request.document.issuedToUser.email,
       },
-      status: request.document.status,
-      dateGranted: request.updatedAt,
+      status: request.status,
+      requestedAt: request.createdAt,
+      dateGranted: request.status === 'granted' ? request.updatedAt : null,
     }));
 
     res.json(accessibleDocs);

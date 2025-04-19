@@ -167,9 +167,11 @@ export const getUserDegrees: RequestHandler = async (
         status: 'accepted',
       },
       include: {
-        issuerUser: {
+        university: {
           select: {
-            orgName: true,
+            id: true,
+            displayName: true,
+            name: true,
           },
         },
       },
@@ -180,9 +182,10 @@ export const getUserDegrees: RequestHandler = async (
 
     const formattedDocs = documents.map((doc: any) => ({
       docId: doc.id,
-      issuer: doc.issuerUser.orgName,
+      issuer: doc.university?.displayName || 'Unknown University',
       status: doc.status,
       issueDate: doc.createdAt,
+      fieldOfStudy: doc.fieldOfStudy,
     }));
 
     res.json(formattedDocs);

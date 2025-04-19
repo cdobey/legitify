@@ -28,7 +28,7 @@ import {
   Title,
   useMantineTheme,
 } from '@mantine/core';
-import { useLocalStorage, useMediaQuery } from '@mantine/hooks';
+import { useMediaQuery } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import {
   IconAward,
@@ -46,9 +46,11 @@ import {
   IconInfoCircle,
   IconSchool,
   IconSearch,
+  IconShieldLock,
   IconSortAscending,
   IconSortDescending,
   IconUserSearch,
+  IconX,
 } from '@tabler/icons-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useMemo, useState } from 'react';
@@ -100,12 +102,6 @@ export default function SearchUsers() {
   const [filterByField, setFilterByField] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Store requested access in local storage to persist between page reloads
-  const [requestedAccesses, setRequestedAccesses] = useLocalStorage<RequestedAccess[]>({
-    key: 'requested-degree-accesses',
-    defaultValue: [],
-  });
-
   const searchMutation = useSearchUserMutation();
   const requestAccessMutation = useRequestAccessMutation();
 
@@ -121,6 +117,38 @@ export default function SearchUsers() {
     enabled: !!searchMutation.data?.id,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
+  const isAccessRequested = (docId: string) => {
+    const accessDegree = accessibleDegrees.find(d => d.docId === docId);
+    return accessDegree && accessDegree.status === 'pending';
+  };
+
+  const isAccessible = (docId: string) => {
+    const accessDegree = accessibleDegrees.find(d => d.docId === docId);
+    return accessDegree && accessDegree.status === 'granted';
+  };
+
+  const isAccessDenied = (docId: string) => {
+    const accessDegree = accessibleDegrees.find(d => d.docId === docId);
+    return accessDegree && accessDegree.status === 'denied';
+  };
+
+  // Format the date for a specific degree
+  const getRequestDate = (docId: string) => {
+    const accessDegree = accessibleDegrees.find(d => d.docId === docId);
+    return accessDegree && accessDegree.requestedAt ? formatDate(accessDegree.requestedAt) : '';
+  };
+
+  // Format a date string safely handling null values
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'N/A';
+
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
 
   const fieldsOfStudy = useMemo(() => {
     if (!degrees) return [];
@@ -154,13 +182,9 @@ export default function SearchUsers() {
 
     // Apply tab filter
     if (activeTab === 'requested') {
-      filtered = filtered.filter(
-        doc =>
-          requestedAccesses.some(req => req.docId === doc.docId) &&
-          !accessibleDocIds.has(doc.docId),
-      );
+      filtered = filtered.filter(doc => isAccessRequested(doc.docId));
     } else if (activeTab === 'accessible') {
-      filtered = filtered.filter(doc => accessibleDocIds.has(doc.docId));
+      filtered = filtered.filter(doc => isAccessible(doc.docId));
     }
 
     // Sort documents
@@ -206,8 +230,9 @@ export default function SearchUsers() {
     activeTab,
     sortBy,
     sortDirection,
-    requestedAccesses,
-    accessibleDocIds,
+    isAccessRequested,
+    isAccessible,
+    accessibleDegrees,
   ]);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -221,9 +246,6 @@ export default function SearchUsers() {
   const handleRequestAccess = async (docId: string) => {
     try {
       await requestAccessMutation.mutateAsync(docId);
-
-      // Update local storage with newly requested access
-      setRequestedAccesses(prev => [...prev, { docId, timestamp: Date.now() }]);
 
       notifications.show({
         title: 'Access Requested',
@@ -268,14 +290,6 @@ export default function SearchUsers() {
     }
   };
 
-  const isAccessRequested = (docId: string) => {
-    return requestedAccesses.some(req => req.docId === docId);
-  };
-
-  const isAccessible = (docId: string) => {
-    return accessibleDocIds.has(docId);
-  };
-
   // Clear filters
   const clearFilters = () => {
     setFilterByField(null);
@@ -288,54 +302,71 @@ export default function SearchUsers() {
   // Get counts for different categories
   const requestedCount = useMemo(() => {
     if (!degrees) return 0;
-    return degrees.filter(doc => isAccessRequested(doc.docId) && !isAccessible(doc.docId)).length;
-  }, [degrees, requestedAccesses, accessibleDocIds]);
+    return degrees.filter(doc => isAccessRequested(doc.docId)).length;
+  }, [degrees, accessibleDegrees]);
 
   const accessibleCount = useMemo(() => {
     if (!degrees) return 0;
     return degrees.filter(doc => isAccessible(doc.docId)).length;
-  }, [degrees, accessibleDocIds]);
+  }, [degrees, accessibleDegrees]);
 
-  // Format the date string
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  // Helper to get the status of a credential
+  // Determine status of each degree by checking backend data
   const getCredentialStatus = (docId: string) => {
-    if (isAccessible(docId)) {
-      return {
-        badge: <Badge color="green">Accessible</Badge>,
-        icon: <IconEye size={16} />,
-        label: 'Access Granted',
-        color: 'green' as const,
-        buttonText: 'View Credential',
-      };
-    } else if (isAccessRequested(docId)) {
-      return {
-        badge: <Badge color="blue">Requested</Badge>,
-        icon: <IconClock size={16} />,
-        label: 'Access Requested',
-        color: 'blue' as const,
-        buttonText: 'Request Pending',
-      };
-    } else {
-      return {
-        badge: (
-          <Badge color="gray" variant="outline">
-            Not Requested
-          </Badge>
-        ),
-        icon: <IconAward size={16} />,
-        label: 'Request Access',
-        color: 'indigo' as const,
-        buttonText: 'Request Access',
-      };
+    // Find the degree in our accessible degrees list
+    const accessDegree = accessibleDegrees.find(d => d.docId === docId);
+
+    if (accessDegree) {
+      if (accessDegree.status === 'granted') {
+        return {
+          badge: (
+            <Badge color="teal" variant="light" radius="sm">
+              Access Granted
+            </Badge>
+          ),
+          icon: <IconEye size={16} />,
+          label: 'Access Granted',
+          color: 'teal' as const,
+          buttonText: 'View Credential',
+        };
+      } else if (accessDegree.status === 'pending') {
+        return {
+          badge: (
+            <Badge color="orange" variant="light" radius="sm">
+              Access Requested
+            </Badge>
+          ),
+          icon: <IconClock size={16} />,
+          label: 'Access Requested',
+          color: 'orange' as const,
+          buttonText: 'Request Pending',
+        };
+      } else if (accessDegree.status === 'denied') {
+        return {
+          badge: (
+            <Badge color="red" variant="light" radius="sm">
+              Access Denied
+            </Badge>
+          ),
+          icon: <IconX size={16} />,
+          label: 'Access Denied',
+          color: 'red' as const,
+          buttonText: 'Request Access',
+        };
+      }
     }
+
+    // Default case - not requested
+    return {
+      badge: (
+        <Badge color="blue" variant="light" radius="sm">
+          Not Requested
+        </Badge>
+      ),
+      icon: <IconAward size={16} />,
+      label: 'Request Access',
+      color: 'blue' as const,
+      buttonText: 'Request Access',
+    };
   };
 
   const findAccessInfo = (docId: string) => {
@@ -729,6 +760,15 @@ export default function SearchUsers() {
                                     >
                                       View Credential
                                     </Button>
+                                  ) : isAccessDenied(doc.docId) ? (
+                                    <div className="access-denied-indicator">
+                                      <ThemeIcon size="sm" variant="light">
+                                        <IconShieldLock size={16} />
+                                      </ThemeIcon>
+                                      <span className="access-denied-text">
+                                        Access Denied by User
+                                      </span>
+                                    </div>
                                   ) : (
                                     <Button
                                       onClick={() => handleRequestAccess(doc.docId)}
@@ -753,13 +793,7 @@ export default function SearchUsers() {
                                       mt={4}
                                       ta={isMobile ? 'left' : 'right'}
                                     >
-                                      Requested on{' '}
-                                      {formatDate(
-                                        new Date(
-                                          requestedAccesses.find(req => req.docId === doc.docId)
-                                            ?.timestamp || Date.now(),
-                                        ).toISOString(),
-                                      )}
+                                      Requested on {getRequestDate(doc.docId)}
                                     </Text>
                                   )}
                                 </Flex>

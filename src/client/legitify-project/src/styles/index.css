@@ -559,12 +559,32 @@ button.accent-orange:hover {
 }
 
 /* Badge styling improvements */
-[data-theme='dark'] .mantine-Badge-root {
-  background-color: #282b36;
+.mantine-Badge-root {
+  font-weight: 500;
 }
 
-[data-theme='dark'] .mantine-Badge-root[data-variant='filled'] {
-  color: white;
+[data-theme='dark'] .mantine-Badge-root[data-variant='light'][color='teal'] {
+  background-color: rgba(21, 226, 181, 0.15);
+  color: var(--accent-teal);
+  border: 1px solid rgba(21, 226, 181, 0.3);
+}
+
+[data-theme='dark'] .mantine-Badge-root[data-variant='light'][color='orange'] {
+  background-color: rgba(255, 153, 19, 0.15);
+  color: var(--accent-orange);
+  border: 1px solid rgba(255, 153, 19, 0.3);
+}
+
+[data-theme='dark'] .mantine-Badge-root[data-variant='light'][color='red'] {
+  background-color: rgba(255, 71, 87, 0.15);
+  color: #ff4757;
+  border: 1px solid rgba(255, 71, 87, 0.3);
+}
+
+[data-theme='dark'] .mantine-Badge-root[data-variant='light'][color='blue'] {
+  background-color: rgba(44, 166, 211, 0.15);
+  color: var(--primary-blue);
+  border: 1px solid rgba(44, 166, 211, 0.3);
 }
 
 /* Green success badges */
@@ -822,6 +842,18 @@ button.accent-orange:hover {
   background-color: rgba(44, 166, 211, 0.15) !important;
   color: #2ca6d3 !important;
   border: 1px solid rgba(44, 166, 211, 0.3) !important;
+}
+
+.status-amber {
+  background-color: rgba(255, 171, 64, 0.15) !important;
+  color: #ff9913 !important;
+  border: 1px solid rgba(255, 171, 64, 0.3) !important;
+}
+
+[data-theme='dark'] .status-amber {
+  background-color: rgba(255, 171, 64, 0.15) !important;
+  color: #ff9913 !important;
+  border: 1px solid rgba(255, 171, 64, 0.3) !important;
 }
 
 /* View action button styling */
@@ -1339,4 +1371,39 @@ button.accent-orange:hover {
 .mantine-Stepper-step[data-progress] {
   outline: none !important;
   border: none !important;
+}
+
+/* Access Denied Indicator */
+.access-denied-indicator {
+  background-color: rgba(255, 71, 87, 0.1);
+  border: 1px solid rgba(255, 71, 87, 0.3);
+  border-radius: var(--mantine-radius-md);
+  padding: var(--mantine-spacing-xs);
+  color: #ff4757;
+  display: flex;
+  align-items: center;
+  gap: var(--mantine-spacing-xs);
+  font-weight: 500;
+}
+
+[data-theme='dark'] .access-denied-indicator {
+  background-color: rgba(255, 71, 87, 0.15);
+  border-color: rgba(255, 71, 87, 0.4);
+  color: #ff6b7a;
+}
+
+.access-denied-indicator .mantine-ThemeIcon-root {
+  background-color: rgba(255, 71, 87, 0.2);
+  color: #ff4757;
+}
+
+[data-theme='dark'] .access-denied-indicator .mantine-ThemeIcon-root {
+  background-color: rgba(255, 71, 87, 0.25);
+  color: #ff6b7a;
+}
+
+/* Styling for the access denied text */
+.access-denied-text {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
 }

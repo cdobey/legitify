@@ -225,13 +225,19 @@ const combineQueryData = (
           r.isSuccess &&
           r.data &&
           Array.isArray(r.data) &&
-          (r.data.length === 0 || // Empty array is valid
+          (r.data.length === 0 ||
             (r.data.length > 0 &&
               r.data[0] &&
               'docId' in r.data[0] &&
               'owner' in r.data[0] &&
-              'requestId' in r.data[0])), // Accessible degrees have requestId and owner properties
+              'requestId' in r.data[0])),
       ) as QueryResultWithKey<AccessibleDegreesResponse> | undefined;
+
+      if (accessibleDegreesResult?.data) {
+        dashboardData.accessibleDegrees = accessibleDegreesResult.data;
+        dashboardData.stats.total = accessibleDegreesResult.data.length;
+        dashboardData.stats.accepted = accessibleDegreesResult.data.length;
+      }
     }
 
     if (userRole === 'university') {
