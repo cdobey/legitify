@@ -91,11 +91,34 @@ export const getAllLedgerRecords: RequestHandler = async (
     const records = JSON.parse(result.toString());
     gateway.disconnect();
 
-    // Enrich the records with university display names, but use only the current university
+    // Get all user IDs from the records to fetch their emails in a single query
+    const userIds = records.map((record: any) => record.owner);
+
+    // Fetch all users with these IDs in a single query
+    const users = await prisma.user.findMany({
+      where: {
+        id: {
+          in: userIds,
+        },
+      },
+      select: {
+        id: true,
+        email: true,
+      },
+    });
+
+    // Create a map for quick lookup
+    const userEmailMap = new Map();
+    users.forEach(user => {
+      userEmailMap.set(user.id, user.email);
+    });
+
+    // Enrich the records with university display names and owner emails
     const enrichedRecords = records.map((record: any) => {
       return {
         ...record,
         universityName: university?.displayName || 'Unknown University',
+        ownerEmail: userEmailMap.get(record.owner) || 'Unknown Email',
       };
     });
 
@@ -144,9 +167,11 @@ export const getUserDegrees: RequestHandler = async (
         status: 'accepted',
       },
       include: {
-        issuerUser: {
+        university: {
           select: {
-            orgName: true,
+            id: true,
+            displayName: true,
+            name: true,
           },
         },
       },
@@ -157,9 +182,10 @@ export const getUserDegrees: RequestHandler = async (
 
     const formattedDocs = documents.map((doc: any) => ({
       docId: doc.id,
-      issuer: doc.issuerUser.orgName,
+      issuer: doc.university?.displayName || 'Unknown University',
       status: doc.status,
       issueDate: doc.createdAt,
+      fieldOfStudy: doc.fieldOfStudy,
     }));
 
     res.json(formattedDocs);

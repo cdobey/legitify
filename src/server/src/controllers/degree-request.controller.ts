@@ -135,58 +135,80 @@ export const grantAccess: RequestHandler = async (
 
 /**
  * Employer views a degree document if access is granted and verifies its hash.
+ * Universities can also view degrees they have issued.
  */
 export const viewDegree: RequestHandler = async (
   req: RequestWithUser,
   res: Response,
 ): Promise<void> => {
   try {
-    if (req.user?.role !== 'employer') {
-      res.status(403).json({ error: 'Only employer can view documents' });
+    // Allow both employers and universities to access degrees
+    if (req.user?.role !== 'employer' && req.user?.role !== 'university') {
+      res.status(403).json({ error: 'Only employers or universities can view documents' });
       return;
     }
 
     const docId = req.params.docId;
-    console.log(`Employer ${req.user.id} attempting to view document ${docId}`);
+    console.log(
+      `User ${req.user.id} with role ${req.user.role} attempting to view document ${docId}`,
+    );
 
     if (!docId) {
       res.status(400).json({ error: 'Missing docId parameter' });
       return;
     }
 
-    // Check if access is granted with enhanced logging
-    console.log(`Checking if access is granted for document ${docId} to user ${req.user.id}`);
-    const grantedRequest = await prisma.request.findFirst({
-      where: {
-        documentId: docId,
-        requesterId: req.user.id,
-        status: 'granted',
-      },
-    });
-
-    if (!grantedRequest) {
-      console.log(`No granted access found for document ${docId} and user ${req.user.id}`);
-
-      // Check if there are any requests (for better error messages)
-      const anyRequest = await prisma.request.findFirst({
+    // First check if this is a university viewing a degree they issued
+    if (req.user.role === 'university') {
+      const isIssuer = await prisma.document.findFirst({
         where: {
-          documentId: docId,
-          requesterId: req.user.id,
+          id: docId,
+          issuer: req.user.id,
         },
       });
 
-      if (anyRequest) {
-        console.log(`Found request with status: ${anyRequest.status}`);
-        res.status(403).json({
-          error: `Access request exists but status is '${anyRequest.status}'. Please wait for the owner to grant access.`,
-        });
-      } else {
-        res.status(403).json({ error: 'No access request found. Please request access first.' });
+      if (!isIssuer) {
+        res.status(403).json({ error: 'Universities can only view degrees they have issued' });
+        return;
       }
-      return;
-    }
 
-    console.log(`Access granted for document ${docId} to user ${req.user.id}`);
+      console.log(`University ${req.user.id} is the issuer of document ${docId}, granting access`);
+    }
+    // For employers, check if access is granted
+    else if (req.user.role === 'employer') {
+      console.log(`Checking if access is granted for document ${docId} to employer ${req.user.id}`);
+      const grantedRequest = await prisma.request.findFirst({
+        where: {
+          documentId: docId,
+          requesterId: req.user.id,
+          status: 'granted',
+        },
+      });
+
+      if (!grantedRequest) {
+        console.log(`No granted access found for document ${docId} and user ${req.user.id}`);
+
+        // Check if there are any requests (for better error messages)
+        const anyRequest = await prisma.request.findFirst({
+          where: {
+            documentId: docId,
+            requesterId: req.user.id,
+          },
+        });
+
+        if (anyRequest) {
+          console.log(`Found request with status: ${anyRequest.status}`);
+          res.status(403).json({
+            error: `Access request exists but status is '${anyRequest.status}'. Please wait for the owner to grant access.`,
+          });
+        } else {
+          res.status(403).json({ error: 'No access request found. Please request access first.' });
+        }
+        return;
+      }
+
+      console.log(`Access granted for document ${docId} to employer ${req.user.id}`);
+    }
 
     // Fetch document with more detailed includes
     const doc = await prisma.document.findUnique({
@@ -242,6 +264,23 @@ export const viewDegree: RequestHandler = async (
       });
     };
 
+    // For employers, include the access granted date
+    const accessGrantedOn =
+      req.user.role === 'employer'
+        ? await prisma.request
+            .findFirst({
+              where: {
+                documentId: docId,
+                requesterId: req.user.id,
+                status: 'granted',
+              },
+              select: {
+                updatedAt: true,
+              },
+            })
+            .then(request => formatDate(request?.updatedAt ?? null))
+        : null;
+
     // Return enriched document data
     res.json({
       // Basic document info
@@ -289,7 +328,7 @@ export const viewDegree: RequestHandler = async (
       fileData: doc.fileData ? Buffer.from(doc.fileData).toString('base64') : null,
 
       // Access information
-      accessGrantedOn: formatDate(grantedRequest.updatedAt),
+      accessGrantedOn: accessGrantedOn,
     });
   } catch (error: any) {
     console.error('viewDegree error:', error);
@@ -384,7 +423,6 @@ export const getAccessibleDegrees: RequestHandler = async (
     const accessRequests = await prisma.request.findMany({
       where: {
         requesterId: req.user.id,
-        status: 'granted',
       },
       include: {
         document: {
@@ -421,8 +459,9 @@ export const getAccessibleDegrees: RequestHandler = async (
         name: request.document.issuedToUser.username,
         email: request.document.issuedToUser.email,
       },
-      status: request.document.status,
-      dateGranted: request.updatedAt,
+      status: request.status,
+      requestedAt: request.createdAt,
+      dateGranted: request.status === 'granted' ? request.updatedAt : null,
     }));
 
     res.json(accessibleDocs);

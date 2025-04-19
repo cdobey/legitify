@@ -171,7 +171,15 @@ export const getStudentUniversities: RequestHandler = async (
         status: AffiliationStatus.active,
       },
       include: {
-        university: true,
+        university: {
+          include: {
+            owner: {
+              select: {
+                username: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -201,11 +209,12 @@ export const getPendingAffiliations: RequestHandler = async (
         },
         include: {
           university: {
-            select: {
-              id: true,
-              name: true,
-              displayName: true,
-              description: true,
+            include: {
+              owner: {
+                select: {
+                  username: true,
+                },
+              },
             },
           },
         },
@@ -250,7 +259,15 @@ export const getPendingAffiliations: RequestHandler = async (
               email: true,
             },
           },
-          university: true,
+          university: {
+            include: {
+              owner: {
+                select: {
+                  username: true,
+                },
+              },
+            },
+          },
         },
       });
 

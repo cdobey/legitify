@@ -1,15 +1,21 @@
-import { Navigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 import { Alert, Container } from '@mantine/core';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: "university" | "individual" | "employer";
+  requiredRole?: 'university' | 'individual' | 'employer';
   deniedMessage?: string;
+  allowedRoles?: ('university' | 'individual' | 'employer')[];
 }
 
-const ProtectedRoute = ({ children, requiredRole, deniedMessage }: ProtectedRouteProps) => {
+const ProtectedRoute = ({
+  children,
+  requiredRole,
+  deniedMessage,
+  allowedRoles,
+}: ProtectedRouteProps) => {
   const { user, isLoading } = useAuth();
 
   // Show nothing while checking authentication
@@ -22,8 +28,13 @@ const ProtectedRoute = ({ children, requiredRole, deniedMessage }: ProtectedRout
     return <Navigate to="/login" replace />;
   }
 
-  // If role is required and user doesn't have it, show denied message (if provided), else redirect
-  if (requiredRole && user.role !== requiredRole) {
+  const hasRequiredAccess =
+    (!requiredRole && !allowedRoles) ||
+    (requiredRole && user.role === requiredRole) ||
+    (allowedRoles && allowedRoles.includes(user.role));
+
+  // If user doesn't have required access, show denied message or redirect
+  if (!hasRequiredAccess) {
     return (
       <Container size="sm" py="xl">
         <Alert color="red" title="Access Denied">

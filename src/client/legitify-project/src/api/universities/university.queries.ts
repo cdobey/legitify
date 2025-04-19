@@ -2,6 +2,7 @@ import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import {
   getAllUniversities,
+  getMyPendingJoinRequests,
   getMyUniversities,
   getPendingAffiliations,
   getPendingJoinRequests,
@@ -11,6 +12,7 @@ import {
   AffiliationsResponse,
   JoinRequestsResponse,
   UniversitiesResponse,
+  University,
 } from './university.models';
 
 export const universityKeys = {
@@ -22,6 +24,7 @@ export const universityKeys = {
   studentAffiliations: () => [...universityKeys.all, 'student-affiliations'] as const,
   pendingAffiliations: () => [...universityKeys.all, 'pending-affiliations'] as const,
   pendingJoinRequests: () => [...universityKeys.all, 'pending-join-requests'] as const,
+  myPendingJoinRequests: () => [...universityKeys.all, 'my-pending-join-requests'] as const,
 };
 
 export const useMyUniversitiesQuery = (
@@ -72,5 +75,39 @@ export const usePendingJoinRequestsQuery = (
     queryKey: universityKeys.pendingJoinRequests(),
     queryFn: () => getPendingJoinRequests(),
     staleTime: 3 * 60 * 1000, // 3 minutes
+    ...options,
+  });
+
+export const useMyPendingJoinRequestsQuery = (
+  options?: Partial<UseQueryOptions<JoinRequestsResponse, AxiosError>>,
+) =>
+  useQuery<JoinRequestsResponse, AxiosError>({
+    queryKey: universityKeys.myPendingJoinRequests(),
+    queryFn: () => getMyPendingJoinRequests(),
+    staleTime: 3 * 60 * 1000, // 3 minutes
+    ...options,
+  });
+
+export const usePrimaryUniversityQuery = (
+  userId?: string,
+  role?: 'university' | 'individual',
+  options?: Partial<UseQueryOptions<UniversitiesResponse, AxiosError, University | null>>,
+) =>
+  useQuery<UniversitiesResponse, AxiosError, University | null>({
+    queryKey: universityKeys.my(),
+    queryFn: getMyUniversities,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
+    enabled: Boolean(userId),
+    select: (universities): University | null => {
+      if (!universities || universities.length === 0) return null;
+
+      if (role === 'university') {
+        const owned = universities.find(u => u.ownerId === userId);
+        return owned ?? universities[0];
+      }
+
+      return universities[0];
+    },
     ...options,
   });

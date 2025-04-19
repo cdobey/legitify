@@ -31,23 +31,20 @@ interface DashboardData {
   recentIssued?: DegreeDocumentsResponse;
 }
 
-// Type for the query result
 interface QueryResultWithKey<T> {
   data?: T;
   isSuccess: boolean;
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
-  queryKey?: readonly unknown[]; // Make queryKey optional
+  queryKey?: readonly unknown[];
 }
-
-// Type for the combined result
 interface CombinedQueryResult {
   isLoading: boolean;
   isError: boolean;
   error: Error | null | undefined;
   data: DashboardData;
-  refetch: () => Promise<void>; // Add refetch function
+  refetch: () => Promise<void>;
 }
 
 export const useDashboardData = () => {
@@ -175,15 +172,6 @@ const combineQueryData = (
     },
   };
 
-  console.log(`Processing dashboard data for role: ${userRole}`);
-  console.log(
-    `Got ${results.length} query results with data:`,
-    results.map(r => ({
-      hasData: !!r.data,
-      dataLength: r.data && Array.isArray(r.data) ? r.data.length : 0,
-    })),
-  );
-
   // Check for any successful results
   if (results.some(result => result.isSuccess)) {
     if (userRole === 'individual') {
@@ -201,8 +189,6 @@ const combineQueryData = (
               !('owner' in r.data[0]))), // To differentiate from accessible degrees
       ) as QueryResultWithKey<DegreeDocumentsResponse> | undefined;
 
-      console.log(`Individual: Found my degrees data: ${!!myDegreesResult?.data}`);
-
       // Find access requests by checking for specific properties
       const accessRequestsResult = results.find(
         r =>
@@ -216,8 +202,6 @@ const combineQueryData = (
               'employerName' in r.data[0])),
       ) as QueryResultWithKey<AccessRequestsResponse> | undefined;
 
-      console.log(`Individual: Found access requests data: ${!!accessRequestsResult?.data}`);
-
       if (myDegreesResult?.data) {
         const myDegrees = myDegreesResult.data;
         dashboardData.myDegrees = myDegrees;
@@ -227,13 +211,10 @@ const combineQueryData = (
         dashboardData.stats.accepted = myDegrees.filter(d => d.status === 'accepted').length;
         dashboardData.stats.pending = myDegrees.filter(d => d.status === 'issued').length;
         dashboardData.stats.rejected = myDegrees.filter(d => d.status === 'denied').length;
-
-        console.log(`Individual: Calculated stats from ${myDegrees.length} degrees`);
       }
 
       if (accessRequestsResult?.data) {
         dashboardData.accessRequests = accessRequestsResult.data;
-        console.log(`Individual: Found ${accessRequestsResult.data.length} access requests`);
       }
     }
 
@@ -244,41 +225,18 @@ const combineQueryData = (
           r.isSuccess &&
           r.data &&
           Array.isArray(r.data) &&
-          (r.data.length === 0 || // Empty array is valid
+          (r.data.length === 0 ||
             (r.data.length > 0 &&
               r.data[0] &&
               'docId' in r.data[0] &&
               'owner' in r.data[0] &&
-              'requestId' in r.data[0])), // Accessible degrees have requestId and owner properties
+              'requestId' in r.data[0])),
       ) as QueryResultWithKey<AccessibleDegreesResponse> | undefined;
-
-      console.log(`Employer: Found accessible degrees data: ${!!accessibleDegreesResult?.data}`);
-
-      // Find verification results - since we don't have this API yet, this should return undefined or empty array
-      // Be more precise in matching - remove the "|| true" which was causing it to match ANY array data
-      const verificationsResult = results.find(
-        r =>
-          r.isSuccess &&
-          r.data &&
-          Array.isArray(r.data) &&
-          r.queryKey?.some(k => String(k).includes('verifications')) &&
-          // Make sure it's not the same as accessible degrees
-          r !== accessibleDegreesResult,
-      ) as QueryResultWithKey<any[]> | undefined;
-
-      console.log(`Employer: Found verifications data: ${!!verificationsResult?.data}`);
 
       if (accessibleDegreesResult?.data) {
         dashboardData.accessibleDegrees = accessibleDegreesResult.data;
-        console.log(`Employer: Found ${accessibleDegreesResult.data.length} accessible degrees`);
-      }
-
-      if (verificationsResult?.data) {
-        dashboardData.recentVerifications = verificationsResult.data;
-        console.log(`Employer: Found ${verificationsResult.data.length} verifications`);
-      } else {
-        // Set to empty array if we don't have verification data yet
-        dashboardData.recentVerifications = [];
+        dashboardData.stats.total = accessibleDegreesResult.data.length;
+        dashboardData.stats.accepted = accessibleDegreesResult.data.length;
       }
     }
 
@@ -293,8 +251,6 @@ const combineQueryData = (
             (r.data.length > 0 && r.data[0] && 'docId' in r.data[0] && 'status' in r.data[0])),
       ) as QueryResultWithKey<DegreeDocumentsResponse> | undefined;
 
-      console.log(`University: Found recent issued degrees data: ${!!recentIssuedResult?.data}`);
-
       if (recentIssuedResult?.data) {
         const recentIssued = recentIssuedResult.data;
         dashboardData.recentIssued = recentIssued;
@@ -304,8 +260,6 @@ const combineQueryData = (
         dashboardData.stats.accepted = recentIssued.filter(d => d.status === 'accepted').length;
         dashboardData.stats.pending = recentIssued.filter(d => d.status === 'issued').length;
         dashboardData.stats.rejected = recentIssued.filter(d => d.status === 'denied').length;
-
-        console.log(`University: Calculated stats from ${recentIssued.length} degrees`);
       }
     }
   }

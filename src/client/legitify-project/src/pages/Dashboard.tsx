@@ -31,7 +31,6 @@ import {
   IconUserPlus,
   IconX,
 } from '@tabler/icons-react';
-import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { AccessRequest } from '../api/degrees/degree.models';
 import { DashboardSkeleton } from '../components/SkeletonLoaders';
@@ -44,28 +43,6 @@ export default function Dashboard() {
 
   // Main dashboard data - this is now more self-contained
   const { data, isLoading, error, refetch } = useDashboardData();
-
-  // Force immediate data loading when dashboard is mounted
-  useEffect(() => {
-    if (user) {
-      console.log(`Dashboard mounted for ${user.role} user: ${user.username}`);
-      refetch();
-    }
-  }, [user, refetch]);
-
-  // Debug log dashboard data
-  useEffect(() => {
-    if (data) {
-      console.log('Dashboard data loaded:', {
-        stats: data.stats,
-        myDegrees: data.myDegrees?.length,
-        accessRequests: data.accessRequests?.length,
-        accessibleDegrees: data.accessibleDegrees?.length,
-        recentVerifications: data.recentVerifications?.length,
-        recentIssued: data.recentIssued?.length,
-      });
-    }
-  }, [data]);
 
   // Use data directly from the dashboard query
   const myDegrees = data?.myDegrees || [];
@@ -184,7 +161,7 @@ export default function Dashboard() {
               title: 'Accessible Degrees',
               icon: <IconFileCheck size={22} />,
               color: theme.colors.accentOrange?.[5] || theme.colors.orange[5],
-              link: '/degree/accessible',
+              link: '/degrees',
               description: 'View credentials you have access to',
             },
           ];
@@ -230,11 +207,6 @@ export default function Dashboard() {
   };
 
   const renderUniversityDashboard = () => {
-    console.log('Rendering university dashboard with:', {
-      recentIssuedCount: data?.recentIssued?.length || 0,
-      stats: data?.stats,
-    });
-
     const stats = [
       {
         title: 'Total Issued',
@@ -332,11 +304,6 @@ export default function Dashboard() {
   };
 
   const renderIndividualDashboard = () => {
-    console.log('Rendering individual dashboard with:', {
-      myDegreesCount: myDegrees.length,
-      requestsCount: pendingRequests.length,
-    });
-
     // Calculate percentages for the progress bars
     const total = data?.stats?.total || 0;
     const acceptedPercent =
@@ -469,11 +436,6 @@ export default function Dashboard() {
   };
 
   const renderEmployerDashboard = () => {
-    console.log('Rendering employer dashboard with:', {
-      accessibleDegreesCount: accessibleDegrees.length,
-      verificationsCount: data?.recentVerifications?.length || 0,
-    });
-
     // Calculate stats from accessible degrees
     const statsFromAccessibleDegrees = {
       totalAccessible: accessibleDegrees.length,
@@ -548,14 +510,14 @@ export default function Dashboard() {
           <Paper withBorder radius="md" p="md">
             <Group justify="space-between" mb="md">
               <Title order={4}>Accessible Degrees</Title>
-              <Button variant="light" size="sm" component={Link} to="/degree/accessible">
+              <Button variant="light" size="sm" component={Link} to="/degrees">
                 View All
               </Button>
             </Group>
 
             {accessibleDegrees && accessibleDegrees.length > 0 ? (
               <Stack>
-                {accessibleDegrees.slice(0, 3).map((degree: any, index: number) => (
+                {accessibleDegrees.slice(0, 2).map((degree: any, index: number) => (
                   <Card key={index} withBorder p="sm">
                     <Text fw={500}>Owner: {degree.owner?.name || 'Unknown'}</Text>
                     <Group justify="space-between">
@@ -576,7 +538,7 @@ export default function Dashboard() {
                 ))}
                 {accessibleDegrees.length > 3 && (
                   <Text ta="center" size="sm" c="dimmed">
-                    + {accessibleDegrees.length - 3} more accessible degrees
+                    + {accessibleDegrees.length - 2} more accessible degrees
                   </Text>
                 )}
               </Stack>

@@ -5,7 +5,6 @@ import { useAuth } from './contexts/AuthContext';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Dashboard from './pages/Dashboard';
-import AccessibleDegrees from './pages/degree/AccessibleDegrees';
 import AccessRequests from './pages/degree/AccessRequests';
 import AllRecords from './pages/degree/AllRecords';
 import IssueDegree from './pages/degree/IssueDegree';
@@ -15,7 +14,7 @@ import ViewDegree from './pages/degree/ViewDegree';
 import HomePage from './pages/HomePage';
 import ProfilePage from './pages/Profile';
 import Settings from './pages/Settings';
-import ManageUniversities from './pages/university/ManageUniversities';
+import ManageUniversities from './pages/university/ManageUniversity';
 import MyUniversities from './pages/user/MyUniversities';
 import SearchUsers from './pages/users/SearchUsers';
 
@@ -40,7 +39,10 @@ export default function App() {
         <Route
           path="/degree/issue"
           element={
-            <ProtectedRoute requiredRole="university" deniedMessage="Only universities can issue degrees.">
+            <ProtectedRoute
+              requiredRole="university"
+              deniedMessage="Only universities can issue degrees."
+            >
               <IssueDegree />
             </ProtectedRoute>
           }
@@ -80,7 +82,7 @@ export default function App() {
         <Route
           path="/degree/view/:docId"
           element={
-            <ProtectedRoute requiredRole="employer">
+            <ProtectedRoute allowedRoles={['employer', 'university']}>
               <ViewDegree />
             </ProtectedRoute>
           }
@@ -90,14 +92,6 @@ export default function App() {
           element={
             <ProtectedRoute requiredRole="employer">
               <VerifyDegree />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/degree/accessible"
-          element={
-            <ProtectedRoute requiredRole="employer">
-              <AccessibleDegrees />
             </ProtectedRoute>
           }
         />
@@ -118,7 +112,7 @@ export default function App() {
           }
         />
         <Route
-          path="/universities/manage"
+          path="/university/manage"
           element={
             <ProtectedRoute requiredRole="university">
               <ManageUniversities />
@@ -126,6 +120,14 @@ export default function App() {
           }
         />
         <Route path="/settings" element={<Settings />} />
+        <Route
+          path="/degrees"
+          element={
+            <ProtectedRoute allowedRoles={['university', 'employer']}>
+              <AllRecords />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </MainLayout>
   );
