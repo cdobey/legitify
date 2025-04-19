@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import React from 'react';
+import { MantineProvider } from '@mantine/core';
 import AppHeader from '../../components/AppHeader'; // Adjust the path as needed
 
 // Define interface types
@@ -43,7 +44,7 @@ const mockAuthState = {
 };
 
 // Mock auth context
-vi.mock('../contexts/AuthContext', () => ({
+vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => mockAuthState,
 }));
 
@@ -66,25 +67,11 @@ function setup(user: User | null = null, isDarkMode = false) {
   mockThemeState.isDarkMode = isDarkMode;
 
   render(
-    <MemoryRouter>
-      <AppHeader />
-    </MemoryRouter>
-  );
-
-  return {
-    user: userEvent.setup(),
-  };
-}
-
-function setup(user: User | null = null, isDarkMode = false) {
-  // Update the mock states before rendering
-  mockAuthState.user = user;
-  mockThemeState.isDarkMode = isDarkMode;
-
-  render(
-    <MemoryRouter>
-      <AppHeader />
-    </MemoryRouter>
+    <MantineProvider>
+      <MemoryRouter>
+        <AppHeader />
+      </MemoryRouter>
+    </MantineProvider>
   );
 
   return {
