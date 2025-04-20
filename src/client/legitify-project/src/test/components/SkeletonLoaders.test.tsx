@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import {
   CardSkeleton,
   WelcomeCardSkeleton,
@@ -12,25 +12,101 @@ import {
   IndividualDashboardSkeleton,
   EmployerDashboardSkeleton,
   DashboardSkeleton
-} from './DashboardSkeleton'; // Adjust the import path as needed
+} from '../../components/SkeletonLoaders'; // Adjust the import path as needed
 
 // Mock Mantine components to simplify testing
 vi.mock('@mantine/core', () => ({
-  Box: ({ children, mb }) => <div data-testid="box" data-mb={mb}>{children}</div>,
-  Card: ({ children, withBorder, p, radius, style }) => 
+  Box: ({ children, mb }: { children: React.ReactNode; mb?: string | number }) => 
+    <div data-testid="box" data-mb={mb}>{children}</div>,
+  Card: ({ 
+    children, 
+    withBorder, 
+    p, 
+    radius, 
+    style 
+  }: { 
+    children: React.ReactNode; 
+    withBorder?: boolean; 
+    p?: string; 
+    radius?: string; 
+    style?: React.CSSProperties 
+  }) => 
     <div data-testid="card" data-withborder={withBorder} data-p={p} data-radius={radius} style={style}>{children}</div>,
-  Container: ({ children, size, py }) => 
+  Container: ({ 
+    children, 
+    size, 
+    py 
+  }: { 
+    children: React.ReactNode; 
+    size?: string; 
+    py?: string 
+  }) => 
     <div data-testid="container" data-size={size} data-py={py}>{children}</div>,
-  Grid: ({ children, mb }) => <div data-testid="grid" data-mb={mb}>{children}</div>,
-  'Grid.Col': ({ children, span, key }) => 
+  Grid: ({ children, mb }: { children: React.ReactNode; mb?: string }) => 
+    <div data-testid="grid" data-mb={mb}>{children}</div>,
+  'Grid.Col': ({ 
+    children, 
+    span, 
+    key 
+  }: { 
+    children: React.ReactNode; 
+    span?: any; 
+    key?: string | number 
+  }) => 
     <div data-testid="grid-col" data-span={JSON.stringify(span)} data-key={key}>{children}</div>,
-  Group: ({ children, justify, mb, wrap }) => 
+  Group: ({ 
+    children, 
+    justify, 
+    mb, 
+    wrap 
+  }: { 
+    children: React.ReactNode; 
+    justify?: string; 
+    mb?: string | number; 
+    wrap?: string 
+  }) => 
     <div data-testid="group" data-justify={justify} data-mb={mb} data-wrap={wrap}>{children}</div>,
-  Paper: ({ children, withBorder, radius, p, mb }) => 
+  Paper: ({ 
+    children, 
+    withBorder, 
+    radius, 
+    p, 
+    mb 
+  }: { 
+    children: React.ReactNode; 
+    withBorder?: boolean; 
+    radius?: string; 
+    p?: string; 
+    mb?: string 
+  }) => 
     <div data-testid="paper" data-withborder={withBorder} data-radius={radius} data-p={p} data-mb={mb}>{children}</div>,
-  SimpleGrid: ({ children, cols, spacing, mb }) => 
+  SimpleGrid: ({ 
+    children, 
+    cols, 
+    spacing, 
+    mb 
+  }: { 
+    children: React.ReactNode; 
+    cols?: any; 
+    spacing?: string; 
+    mb?: string 
+  }) => 
     <div data-testid="simple-grid" data-cols={JSON.stringify(cols)} data-spacing={spacing} data-mb={mb}>{children}</div>,
-  Skeleton: ({ height, width, mb, mt, circle, radius }) => 
+  Skeleton: ({ 
+    height, 
+    width, 
+    mb, 
+    mt, 
+    circle, 
+    radius 
+  }: { 
+    height?: number | string; 
+    width?: number | string; 
+    mb?: string; 
+    mt?: string; 
+    circle?: boolean; 
+    radius?: string 
+  }) => 
     <div 
       data-testid="skeleton" 
       data-height={height} 
@@ -40,7 +116,8 @@ vi.mock('@mantine/core', () => ({
       data-circle={circle ? 'true' : undefined}
       data-radius={radius}
     ></div>,
-  Stack: ({ children, gap }) => <div data-testid="stack" data-gap={gap}>{children}</div>
+  Stack: ({ children, gap }: { children: React.ReactNode; gap?: string }) => 
+    <div data-testid="stack" data-gap={gap}>{children}</div>
 }));
 
 describe('Dashboard Skeleton Components', () => {
@@ -241,18 +318,30 @@ describe('Dashboard Skeleton Components', () => {
       
       // Should include common components and individual specific components
       const boxes = screen.getAllByTestId('box');
-      const simpleGrid = screen.getByTestId('simple-grid');
+      // Use getAllByTestId instead of getByTestId since there are multiple SimpleGrids
+      const simpleGrids = screen.getAllByTestId('simple-grid');
       
       expect(boxes.length).toBeGreaterThan(0);
-      expect(simpleGrid).toBeInTheDocument();
+      expect(simpleGrids.length).toBeGreaterThan(0);
+      
+      // Check for ProgressBarsSkeleton which is specific to individual users
+      const progressBarsContainer = screen.getByTestId('paper');
+      const progressBars = within(progressBarsContainer).getAllByTestId('box');
+      expect(progressBars.length).toBe(3); // Default is 3 bars
     });
     
     it('should render for employer role', () => {
       render(<DashboardSkeleton userRole="employer" />);
       
       // Should include quick actions with 3 columns for employer
-      const quickActionsGrid = screen.getByTestId('simple-grid');
-      expect(JSON.parse(quickActionsGrid.getAttribute('data-cols') || '{}')).toHaveProperty('sm');
+      const simpleGrids = screen.getAllByTestId('simple-grid');
+      
+      // The first SimpleGrid should be the QuickActionsSkeleton with 3 columns for employer
+      const quickActionsGrid = simpleGrids[0];
+      const colsData = JSON.parse(quickActionsGrid.getAttribute('data-cols') || '{}');
+      
+      // Verify it has sm: 3 for employer (instead of the default 2)
+      expect(colsData).toHaveProperty('sm', 3);
     });
   });
 });
