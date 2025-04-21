@@ -43,7 +43,7 @@ const generateConnectionProfile = org => {
   };
 
   // Define all organizations we need to include
-  const allOrgs = ['orguniversity', 'orgemployer', 'orgindividual'];
+  const allOrgs = ['orgissuer', 'orgverifier', 'orgholder'];
 
   // Add all organizations to the template
   allOrgs.forEach(orgName => {
@@ -60,13 +60,13 @@ const generateConnectionProfile = org => {
   // Add all peers and CA configurations
   allOrgs.forEach(orgName => {
     let peerPort, caPort;
-    if (orgName === 'orguniversity') {
+    if (orgName === 'orgissuer') {
       peerPort = 7051;
       caPort = 7054;
-    } else if (orgName === 'orgemployer') {
+    } else if (orgName === 'orgverifier') {
       peerPort = 8051;
       caPort = 8054;
-    } else if (orgName === 'orgindividual') {
+    } else if (orgName === 'orgholder') {
       peerPort = 9051;
       caPort = 9054;
     }
@@ -224,7 +224,7 @@ app.get('/health', (req, res) => {
 app.get('/connection-profile/:org', (req, res) => {
   try {
     const org = req.params.org.toLowerCase();
-    if (!['orguniversity', 'orgemployer', 'orgindividual'].includes(org)) {
+    if (!['orgissuer', 'orgverifier', 'orgholder'].includes(org)) {
       return res.status(400).json({ error: 'Invalid organization' });
     }
 
@@ -311,14 +311,14 @@ app.get('/status', (req, res) => {
     const networkStatus = {
       network: 'legitify-network',
       running: fs.existsSync(path.join(NETWORK_ROOT, '.running')),
-      orgs: ['orguniversity', 'orgemployer', 'orgindividual'].map(org => {
+      orgs: ['orgissuer', 'orgverifier', 'orgholder'].map(org => {
         return {
           name: org,
           peer: {
-            port: org === 'orguniversity' ? 7051 : org === 'orgemployer' ? 8051 : 9051,
+            port: org === 'orgissuer' ? 7051 : org === 'orgverifier' ? 8051 : 9051,
           },
           ca: {
-            port: org === 'orguniversity' ? 7054 : org === 'orgemployer' ? 8054 : 9054,
+            port: org === 'orgissuer' ? 7054 : org === 'orgverifier' ? 8054 : 9054,
           },
         };
       }),

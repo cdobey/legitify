@@ -21,11 +21,11 @@ services:
     # Comment/Uncomment the port mapping if you want to hide/expose the CouchDB service,
     # for example map it to utilize Fauxton User Interface in dev environments.
     ports:
-      - "5984:5984"
+      - '5984:5984'
     networks:
       - test
 
-  peer0.orguniversity.com:
+  peer0.orgissuer.com:
     environment:
       - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
       - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb0:5984
@@ -50,11 +50,11 @@ services:
     # Comment/Uncomment the port mapping if you want to hide/expose the CouchDB service,
     # for example map it to utilize Fauxton User Interface in dev environments.
     ports:
-      - "7984:5984"
+      - '7984:5984'
     networks:
       - test
 
-  peer0.orgemployer.com:
+  peer0.orgverifier.com:
     environment:
       - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
       - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb1:5984
@@ -75,11 +75,11 @@ services:
       - COUCHDB_USER=admin
       - COUCHDB_PASSWORD=adminpw
     ports:
-      - "8984:5984"
+      - '8984:5984'
     networks:
       - test
 
-  peer0.orgindividual.com:
+  peer0.orgholder.com:
     environment:
       - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
       - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb2:5984

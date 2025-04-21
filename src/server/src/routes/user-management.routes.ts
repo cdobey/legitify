@@ -31,6 +31,35 @@ const router = Router();
  *     responses:
  *       200:
  *         description: User profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   format: uuid
+ *                 username:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *                   format: email
+ *                 role:
+ *                   type: string
+ *                   enum: [issuer, holder, verifier]
+ *                 orgName:
+ *                   type: string
+ *                 profilePictureUrl:
+ *                   type: string
+ *                   nullable: true
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *                 twoFactorEnabled:
+ *                   type: boolean
  *       401:
  *         description: Unauthorized
  *       404:
@@ -53,11 +82,27 @@ router.get('/me', authMiddleware, getProfile);
  *         required: true
  *         schema:
  *           type: string
+ *           format: email
  *     responses:
  *       200:
  *         description: User found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 uid:
+ *                   type: string
+ *                   format: uuid
+ *                 email:
+ *                   type: string
+ *                   format: email
+ *                 username:
+ *                   type: string
  *       404:
  *         description: User not found
+ *       400:
+ *         description: Email parameter is required
  */
 router.get('/search', authMiddleware, searchUsers);
 
@@ -87,8 +132,35 @@ router.get('/search', authMiddleware, searchUsers);
  *     responses:
  *       200:
  *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   format: uuid
+ *                 username:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *                   format: email
+ *                 role:
+ *                   type: string
+ *                   enum: [issuer, holder, verifier]
+ *                 orgName:
+ *                   type: string
+ *                 profilePictureUrl:
+ *                   type: string
+ *                   nullable: true
+ *                 createdAt:
+ *                   type: string
+ *                   format: date-time
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
  *       400:
- *         description: Bad request (e.g., validation error)
+ *         description: Bad request (e.g., validation error, username/email already taken)
  *       401:
  *         description: Authentication required
  *       500:
@@ -126,6 +198,14 @@ router.put('/profile', authMiddleware, updateProfile);
  *     responses:
  *       200:
  *         description: Password changed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Password changed successfully
  *       400:
  *         description: Bad request (e.g., incorrect current password, weak new password)
  *       401:
@@ -156,12 +236,43 @@ router.put('/password', authMiddleware, changePassword);
  *               file:
  *                 type: string
  *                 format: binary
- *                 description: Profile picture image file (max 2MB, formats: jpeg, jpg, png, gif, webp)
+ *                 description: "Profile picture image file (max 2MB, formats: jpeg, jpg, png, gif, webp)"
  *     responses:
  *       200:
  *         description: Profile picture uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Profile picture uploaded successfully
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     username:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                     orgName:
+ *                       type: string
+ *                     profilePictureUrl:
+ *                       type: string
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                     twoFactorEnabled:
+ *                       type: boolean
  *       400:
- *         description: Bad request
+ *         description: Bad request (no file uploaded or invalid file format)
  *       401:
  *         description: Authentication required
  *       500:
@@ -175,6 +286,38 @@ router.put('/password', authMiddleware, changePassword);
  *     responses:
  *       200:
  *         description: Profile picture deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Profile picture deleted successfully
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     username:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                     orgName:
+ *                       type: string
+ *                     profilePictureUrl:
+ *                       type: string
+ *                       nullable: true
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                     twoFactorEnabled:
+ *                       type: boolean
  *       401:
  *         description: Authentication required
  *       404:
@@ -237,15 +380,20 @@ router.post('/2fa/enable', authMiddleware, enableTwoFactor);
  *             required:
  *               - token
  *             properties:
- *               secret:
- *                 type: string
- *                 description: TOTP secret key
  *               token:
  *                 type: string
  *                 description: TOTP verification code
  *     responses:
  *       200:
  *         description: Two-factor authentication enabled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Two-factor authentication has been enabled successfully
  *       400:
  *         description: Bad request (e.g., invalid token)
  *       401:
@@ -280,6 +428,14 @@ router.post('/2fa/verify', authMiddleware, verifyTwoFactor);
  *     responses:
  *       200:
  *         description: Two-factor authentication disabled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Two-factor authentication has been disabled successfully
  *       400:
  *         description: Bad request (e.g., invalid token, 2FA not enabled)
  *       401:

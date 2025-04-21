@@ -1,4 +1,4 @@
-export interface University {
+export interface Issuer {
   id: string;
   name: string;
   displayName: string;
@@ -18,16 +18,18 @@ export interface University {
       email: string;
     };
   }>;
+  memberRole?: string;
 }
 
 export interface Affiliation {
   id: string;
   userId: string;
-  universityId: string;
+  issuerId: string;
   status: 'pending' | 'active' | 'rejected';
-  initiatedBy?: 'student' | 'university';
+  initiatedBy?: 'holder' | 'issuer';
   createdAt: string;
-  university: University;
+  updatedAt?: string;
+  issuer: Issuer;
   user: {
     id: string;
     username: string;
@@ -35,35 +37,35 @@ export interface Affiliation {
   };
 }
 
-export interface CreateUniversityParams {
+export interface CreateIssuerParams {
   name: string;
   displayName: string;
   description?: string;
   logoUrl?: string;
 }
 
-export interface CreateUniversityResponse {
+export interface CreateIssuerResponse {
   message: string;
-  university: University;
+  issuer: Issuer;
 }
 
-export interface JoinUniversityParams {
-  universityId: string;
+export interface JoinIssuerParams {
+  issuerId: string;
 }
 
-export interface AddStudentParams {
-  universityId: string;
-  studentEmail: string;
+export interface AddHolderParams {
+  issuerId: string;
+  holderEmail: string;
 }
 
-export interface RegisterStudentParams {
+export interface RegisterHolderParams {
   email: string;
   username: string;
   password: string;
-  universityId: string;
+  issuerId: string;
 }
 
-export interface RegisterStudentResponse {
+export interface RegisterHolderResponse {
   message: string;
   user: {
     id: string;
@@ -86,8 +88,8 @@ export interface AffiliationResponse {
 export interface JoinRequestResponse {
   id: string;
   requesterId: string;
-  universityId: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  issuerId: string;
+  status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
   updatedAt: string;
   requester: {
@@ -95,7 +97,7 @@ export interface JoinRequestResponse {
     username: string;
     email: string;
   };
-  university: University;
+  issuer: Issuer;
 }
 
 export interface JoinRequestResponseParams {
@@ -105,5 +107,5 @@ export interface JoinRequestResponseParams {
 
 export type JoinRequestsResponse = JoinRequestResponse[];
 
-export type UniversitiesResponse = University[];
+export type UniversitiesResponse = Issuer[];
 export type AffiliationsResponse = Affiliation[];

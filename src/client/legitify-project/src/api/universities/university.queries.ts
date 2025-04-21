@@ -2,58 +2,58 @@ import { useQuery, UseQueryOptions } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import {
   getAllUniversities,
+  getHolderIssuers,
   getMyPendingJoinRequests,
   getMyUniversities,
   getPendingAffiliations,
   getPendingJoinRequests,
-  getStudentUniversities,
-} from './university.api';
+} from './issuer.api';
 import {
   AffiliationsResponse,
+  Issuer,
   JoinRequestsResponse,
   UniversitiesResponse,
-  University,
-} from './university.models';
+} from './issuer.models';
 
-export const universityKeys = {
-  all: ['universities'] as const,
-  lists: () => [...universityKeys.all, 'list'] as const,
-  my: () => [...universityKeys.all, 'my'] as const,
-  all_universities: () => [...universityKeys.all, 'all'] as const,
-  pending: (universityId: string) => [...universityKeys.all, 'pending', universityId] as const,
-  studentAffiliations: () => [...universityKeys.all, 'student-affiliations'] as const,
-  pendingAffiliations: () => [...universityKeys.all, 'pending-affiliations'] as const,
-  pendingJoinRequests: () => [...universityKeys.all, 'pending-join-requests'] as const,
-  myPendingJoinRequests: () => [...universityKeys.all, 'my-pending-join-requests'] as const,
+export const issuerKeys = {
+  all: ['issuers'] as const,
+  lists: () => [...issuerKeys.all, 'list'] as const,
+  my: () => [...issuerKeys.all, 'my'] as const,
+  all_issuers: () => [...issuerKeys.all, 'all'] as const,
+  pending: (issuerId: string) => [...issuerKeys.all, 'pending', issuerId] as const,
+  holderAffiliations: () => [...issuerKeys.all, 'holder-affiliations'] as const,
+  pendingAffiliations: () => [...issuerKeys.all, 'pending-affiliations'] as const,
+  pendingJoinRequests: () => [...issuerKeys.all, 'pending-join-requests'] as const,
+  myPendingJoinRequests: () => [...issuerKeys.all, 'my-pending-join-requests'] as const,
 };
 
-export const useMyUniversitiesQuery = (
+export const useMyIssuersQuery = (
   options?: Partial<UseQueryOptions<UniversitiesResponse, AxiosError>>,
 ) =>
   useQuery<UniversitiesResponse, AxiosError>({
-    queryKey: universityKeys.my(),
+    queryKey: issuerKeys.my(),
     queryFn: () => getMyUniversities(),
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: true,
     ...options,
   });
 
-export const useAllUniversitiesQuery = (
+export const useAllIssuersQuery = (
   options?: Partial<UseQueryOptions<UniversitiesResponse, AxiosError>>,
 ) =>
   useQuery<UniversitiesResponse, AxiosError>({
-    queryKey: universityKeys.all_universities(),
+    queryKey: issuerKeys.all_issuers(),
     queryFn: () => getAllUniversities(),
     staleTime: 5 * 60 * 1000, // 5 minutes
     ...options,
   });
 
-export const useStudentUniversitiesQuery = (
+export const useHolderIssuersQuery = (
   options?: Partial<UseQueryOptions<UniversitiesResponse, AxiosError>>,
 ) =>
   useQuery<UniversitiesResponse, AxiosError>({
-    queryKey: universityKeys.studentAffiliations(),
-    queryFn: () => getStudentUniversities(),
+    queryKey: issuerKeys.holderAffiliations(),
+    queryFn: () => getHolderIssuers(),
     staleTime: 5 * 60 * 1000, // 5 minutes
     ...options,
   });
@@ -62,7 +62,7 @@ export const usePendingAffiliationsQuery = (
   options?: Partial<UseQueryOptions<AffiliationsResponse, AxiosError>>,
 ) =>
   useQuery<AffiliationsResponse, AxiosError>({
-    queryKey: universityKeys.pendingAffiliations(),
+    queryKey: issuerKeys.pendingAffiliations(),
     queryFn: () => getPendingAffiliations(),
     staleTime: 3 * 60 * 1000, // 3 minutes
     ...options,
@@ -72,7 +72,7 @@ export const usePendingJoinRequestsQuery = (
   options?: Partial<UseQueryOptions<JoinRequestsResponse, AxiosError>>,
 ) =>
   useQuery<JoinRequestsResponse, AxiosError>({
-    queryKey: universityKeys.pendingJoinRequests(),
+    queryKey: issuerKeys.pendingJoinRequests(),
     queryFn: () => getPendingJoinRequests(),
     staleTime: 3 * 60 * 1000, // 3 minutes
     ...options,
@@ -82,32 +82,32 @@ export const useMyPendingJoinRequestsQuery = (
   options?: Partial<UseQueryOptions<JoinRequestsResponse, AxiosError>>,
 ) =>
   useQuery<JoinRequestsResponse, AxiosError>({
-    queryKey: universityKeys.myPendingJoinRequests(),
+    queryKey: issuerKeys.myPendingJoinRequests(),
     queryFn: () => getMyPendingJoinRequests(),
     staleTime: 3 * 60 * 1000, // 3 minutes
     ...options,
   });
 
-export const usePrimaryUniversityQuery = (
+export const usePrimaryIssuerQuery = (
   userId?: string,
-  role?: 'university' | 'individual',
-  options?: Partial<UseQueryOptions<UniversitiesResponse, AxiosError, University | null>>,
+  role?: 'issuer' | 'holder',
+  options?: Partial<UseQueryOptions<UniversitiesResponse, AxiosError, Issuer | null>>,
 ) =>
-  useQuery<UniversitiesResponse, AxiosError, University | null>({
-    queryKey: universityKeys.my(),
+  useQuery<UniversitiesResponse, AxiosError, Issuer | null>({
+    queryKey: issuerKeys.my(),
     queryFn: getMyUniversities,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
     enabled: Boolean(userId),
-    select: (universities): University | null => {
-      if (!universities || universities.length === 0) return null;
+    select: (issuers): Issuer | null => {
+      if (!issuers || issuers.length === 0) return null;
 
-      if (role === 'university') {
-        const owned = universities.find(u => u.ownerId === userId);
-        return owned ?? universities[0];
+      if (role === 'issuer') {
+        const owned = issuers.find(u => u.ownerId === userId);
+        return owned ?? issuers[0];
       }
 
-      return universities[0];
+      return issuers[0];
     },
     ...options,
   });

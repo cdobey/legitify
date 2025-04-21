@@ -48,42 +48,46 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
   ];
 
   // Role-specific links
-  const universityLinks = [
+  const issuerLinks = [
     {
-      label: 'Issue Degree',
-      to: '/degree/issue',
+      label: 'Issue Credential',
+      to: '/credential/issue',
       icon: <IconCertificate size={collapsed ? 22 : 18} />,
     },
     {
-      label: 'All Degrees',
-      to: '/degrees',
+      label: 'All Credentials',
+      to: '/credentials',
       icon: <IconFiles size={collapsed ? 22 : 18} />,
     },
     {
-      label: 'Manage University',
-      to: '/university/manage',
+      label: 'Manage Issuer',
+      to: '/issuer/manage',
       icon: <IconSchool size={collapsed ? 22 : 18} />,
     },
   ];
 
-  const individualLinks = [
-    { label: 'My Degrees', to: '/degree/manage', icon: <IconFiles size={collapsed ? 22 : 18} /> },
+  const holderLinks = [
     {
-      label: 'My Universities',
-      to: '/universities',
+      label: 'My Credentials',
+      to: '/credential/manage',
+      icon: <IconFiles size={collapsed ? 22 : 18} />,
+    },
+    {
+      label: 'My Issuers',
+      to: '/issuers',
       icon: <IconSchool size={collapsed ? 22 : 18} />,
     },
     {
       label: 'Access Requests',
-      to: '/degree/requests',
+      to: '/credential/requests',
       icon: <IconInbox size={collapsed ? 22 : 18} />,
     },
   ];
 
-  const employerLinks = [
+  const verifierLinks = [
     {
-      label: 'Verify Degree',
-      to: '/degree/verify',
+      label: 'Verify Credential',
+      to: '/credential/verify',
       icon: <IconSearch size={collapsed ? 22 : 18} />,
     },
     {
@@ -92,8 +96,8 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
       icon: <IconUserPlus size={collapsed ? 22 : 18} />,
     },
     {
-      label: 'Accessible Degrees',
-      to: '/degrees',
+      label: 'Accessible Credentials',
+      to: '/credentials',
       icon: <IconFileCheck size={collapsed ? 22 : 18} />,
     },
   ];
@@ -105,12 +109,12 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
 
   // Determine which links to show based on user role
   const roleLinks = user
-    ? user.role === 'university'
-      ? universityLinks
-      : user.role === 'individual'
-      ? individualLinks
-      : user.role === 'employer'
-      ? employerLinks
+    ? user.role === 'issuer'
+      ? issuerLinks
+      : user.role === 'holder'
+      ? holderLinks
+      : user.role === 'verifier'
+      ? verifierLinks
       : []
     : [];
 

@@ -26,6 +26,7 @@ import {
   IconShield,
 } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
+import { StatusIndicator } from '../components/StatusIndicator';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -81,7 +82,7 @@ export default function HomePage() {
                 fw={800}
                 style={{ lineHeight: 1.2, letterSpacing: '-1px' }}
               >
-                Secure Degree Verification{' '}
+                Secure Credential Verification{' '}
                 <Text
                   span
                   inherit
@@ -129,10 +130,10 @@ export default function HomePage() {
                   </>
                 ) : (
                   <>
-                    {user.role === 'university' && (
+                    {user.role === 'issuer' && (
                       <Button
                         component={Link}
-                        to="/degree/issue"
+                        to="/credential/issue"
                         size="lg"
                         variant="white"
                         color="primaryBlue"
@@ -141,14 +142,14 @@ export default function HomePage() {
                         rightSection={<IconArrowRight size={18} />}
                         style={{ boxShadow: '0 4px 14px rgba(0, 0, 0, 0.1)' }}
                       >
-                        Issue New Degree
+                        Issue New Credential
                       </Button>
                     )}
-                    {user.role === 'individual' && (
+                    {user.role === 'holder' && (
                       <>
                         <Button
                           component={Link}
-                          to="/degree/manage"
+                          to="/credential/manage"
                           size="lg"
                           variant="white"
                           color="primaryBlue"
@@ -157,11 +158,11 @@ export default function HomePage() {
                           rightSection={<IconArrowRight size={18} />}
                           style={{ boxShadow: '0 4px 14px rgba(0, 0, 0, 0.1)' }}
                         >
-                          Manage Degrees
+                          Manage Credentials
                         </Button>
                         <Button
                           component={Link}
-                          to="/degree/requests"
+                          to="/credential/requests"
                           size="lg"
                           variant="outline"
                           color="white"
@@ -173,10 +174,10 @@ export default function HomePage() {
                         </Button>
                       </>
                     )}
-                    {user.role === 'employer' && (
+                    {user.role === 'verifier' && (
                       <Button
                         component={Link}
-                        to="/degree/verify"
+                        to="/credential/verify"
                         size="lg"
                         variant="white"
                         color="primaryBlue"
@@ -185,7 +186,7 @@ export default function HomePage() {
                         rightSection={<IconArrowRight size={18} />}
                         style={{ boxShadow: '0 4px 14px rgba(0, 0, 0, 0.1)' }}
                       >
-                        Verify Degrees
+                        Verify Credentials
                       </Button>
                     )}
                   </>
@@ -196,7 +197,7 @@ export default function HomePage() {
           <Grid.Col span={{ base: 12, md: 5 }} style={{ display: 'flex', alignItems: 'center' }}>
             <Image
               src="/online-certificate.png"
-              alt="Digital Degree Certification"
+              alt="Digital Credential Certification"
               radius="lg"
               style={{
                 maxWidth: '100%',
@@ -236,10 +237,10 @@ export default function HomePage() {
               <IconCertificate size={36} />
             </ThemeIcon>
             <Title order={3} mb="sm" fw={600} c="primaryBlue">
-              Issue Degrees
+              Issue Credentials
             </Title>
             <Text c="dimmed" size="md" lh={1.6}>
-              Universities can securely issue digital degrees that are tamper-proof and easily
+              Issuers can securely issue digital credentials that are tamper-proof and easily
               verifiable on the blockchain, eliminating the risk of fraud.
             </Text>
           </Card>
@@ -263,8 +264,8 @@ export default function HomePage() {
               Request Access
             </Title>
             <Text c="dimmed" size="md" lh={1.6}>
-              Graduates can securely access and share their digital degrees with potential employers
-              through our platform, maintaining full control over their credentials.
+              Graduates can securely access and share their digital credentials with potential
+              verifiers through our platform, maintaining full control over their credentials.
             </Text>
           </Card>
         </Grid.Col>
@@ -287,7 +288,7 @@ export default function HomePage() {
               Verify Documents
             </Title>
             <Text c="dimmed" size="md" lh={1.6}>
-              Employers can instantly verify degrees with our secure platform, ensuring that
+              Verifiers can instantly verify credentials with our secure platform, ensuring that
               candidates' credentials are legitimate and trustworthy.
             </Text>
           </Card>
@@ -362,7 +363,7 @@ export default function HomePage() {
                   Instant Verification
                 </Text>
                 <Text size="md" c="dimmed" lh={1.6}>
-                  Employers can verify credentials in seconds, not days or weeks, streamlining the
+                  Verifiers can verify credentials in seconds, not days or weeks, streamlining the
                   hiring process and reducing administrative overhead.
                 </Text>
               </List.Item>
@@ -381,7 +382,7 @@ export default function HomePage() {
                 </Text>
                 <Text size="md" c="dimmed" lh={1.6}>
                   Our platform connects legitimate educational institutions, graduates, and
-                  employers in a secure, transparent ecosystem.
+                  verifiers in a secure, transparent ecosystem.
                 </Text>
               </List.Item>
             </List>
@@ -391,11 +392,11 @@ export default function HomePage() {
               to={
                 user
                   ? `/${
-                      user.role === 'university'
-                        ? 'degree/issue'
-                        : user.role === 'individual'
-                        ? 'degree/manage'
-                        : 'degree/verify'
+                      user.role === 'issuer'
+                        ? 'credential/issue'
+                        : user.role === 'holder'
+                        ? 'credential/manage'
+                        : 'credential/verify'
                     }`
                   : '/register'
               }
@@ -519,7 +520,7 @@ export default function HomePage() {
             Frequently Asked Questions
           </Title>
           <Text ta="center" size="lg" c="dimmed" maw={700} mx="auto" mb={50}>
-            Find answers to common questions about our blockchain-powered degree verification
+            Find answers to common questions about our blockchain-powered credential verification
             platform
           </Text>
         </div>
@@ -531,25 +532,25 @@ export default function HomePage() {
             id: 'what-is-legitify',
             title: 'What is LegiTify?',
             content:
-              'LegiTify is a blockchain-based degree verification system that allows universities to issue digital degrees, graduates to manage and share them, and employers to instantly verify their authenticity. Our platform eliminates credential fraud and streamlines the verification process using secure, tamper-proof blockchain technology.',
+              'LegiTify is a blockchain-based credential verification system that allows issuers to issue digital credentials, graduates to manage and share them, and verifiers to instantly verify their authenticity. Our platform eliminates credential fraud and streamlines the verification process using secure, tamper-proof blockchain technology.',
           },
           {
             id: 'how-secure',
             title: 'How secure are the digital credentials?',
             content:
-              'Our system uses blockchain technology to create tamper-proof records of credentials. Once a degree is issued, it cannot be altered, providing the highest level of security and trust for all parties involved. We employ multiple layers of encryption and secure access controls to ensure your credentials remain protected at all times.',
+              'Our system uses blockchain technology to create tamper-proof records of credentials. Once a credential is issued, it cannot be altered, providing the highest level of security and trust for all parties involved. We employ multiple layers of encryption and secure access controls to ensure your credentials remain protected at all times.',
           },
           {
             id: 'who-can-use',
             title: 'Who can use LegiTify?',
             content:
-              "LegiTify serves three main user types: universities that issue degrees, individuals who receive and manage their credentials, and employers who need to verify the authenticity of applicants' degrees. Each user type has a dedicated interface designed to address their specific needs, creating a seamless experience across the credential ecosystem.",
+              "LegiTify serves three main user types: issuers that issue credentials, holders who receive and manage their credentials, and verifiers who need to verify the authenticity of applicants' credentials. Each user type has a dedicated interface designed to address their specific needs, creating a seamless experience across the credential ecosystem.",
           },
           {
             id: 'how-verify',
-            title: 'How does degree verification work?',
+            title: 'How does credential verification work?',
             content:
-              "Employers can request access to a candidate's degree. Once granted, they can view the degree details and verify its authenticity through our blockchain verification system, which confirms the credential was legitimately issued by the university. The entire process takes seconds rather than days or weeks required by traditional verification methods.",
+              "Verifiers can request access to a candidate's credential. Once granted, they can view the credential details and verify its authenticity through our blockchain verification system, which confirms the credential was legitimately issued by the issuer. The entire process takes seconds rather than days or weeks required by traditional verification methods.",
           },
         ].map(item => (
           <Accordion
@@ -689,6 +690,9 @@ export default function HomePage() {
       <Divider my={0} variant="dashed" style={{ opacity: 0.3 }} />
       {renderFAQ()}
       {!user && renderCTA()}
+
+      {/* System Status Indicator */}
+      <StatusIndicator position="bottom-right" />
     </Box>
   );
 }

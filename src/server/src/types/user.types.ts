@@ -17,8 +17,13 @@ export interface UserProfileResponse {
   id: string;
   username: string;
   email: string;
+  firstName?: string;
+  lastName?: string;
+  country?: string;
   role: Role;
   orgName: OrgName;
+  profilePictureUrl?: string;
+  twoFactorEnabled: boolean;
   createdAt: string;
   updatedAt: string;
 }

@@ -1,11 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { describe, expect, it } from 'vitest';
 import App from '../App';
 import { AuthProvider } from '../contexts/AuthContext';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from '../contexts/ThemeContext';
 import { ModalsProvider } from '../contexts/ModalsContext';
+import { ThemeProvider } from '../contexts/ThemeContext';
 
 function renderWithProviders(ui: React.ReactElement, { route = '/' } = {}) {
   const queryClient = new QueryClient();
@@ -19,16 +19,16 @@ function renderWithProviders(ui: React.ReactElement, { route = '/' } = {}) {
           </MemoryRouter>
         </ModalsProvider>
       </ThemeProvider>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   );
 }
 
 describe('App routing', () => {
   it('renders HomePage for unauthenticated users', () => {
     renderWithProviders(<App />, { route: '/' });
-    // HomePage: Heading text is 'Secure Degree Verification' (h1), not 'welcome'
+    // HomePage: Heading text is 'Secure Credential Verification' (h1), not 'welcome'
     expect(
-      screen.getByRole('heading', { name: /secure degree verification/i })
+      screen.getByRole('heading', { name: /secure credential verification/i }),
     ).toBeInTheDocument();
     // Note: 'Get Started' button may not be present in test context if user is not unauthenticated or if minimal DOM is rendered.
   });

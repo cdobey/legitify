@@ -9,9 +9,9 @@ TEST_NETWORK_HOME=${TEST_NETWORK_HOME:-${PWD}}
 
 export CORE_PEER_TLS_ENABLED=true
 export ORDERER_CA=${TEST_NETWORK_HOME}/organizations/ordererOrganizations/legitifyapp.com/tlsca/tlsca.legitifyapp.com-cert.pem
-export PEER0_ORGUNIVERSITY_CA=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orguniversity.com/tlsca/tlsca.orguniversity.com-cert.pem
-export PEER0_ORGEMPLOYER_CA=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orgemployer.com/tlsca/tlsca.orgemployer.com-cert.pem
-export PEER0_ORGINDIVIDUAL_CA=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orgindividual.com/tlsca/tlsca.orgindividual.com-cert.pem
+export PEER0_ORGISSUER_CA=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orgissuer.com/tlsca/tlsca.orgissuer.com-cert.pem
+export PEER0_ORGVERIFIER_CA=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orgverifier.com/tlsca/tlsca.orgverifier.com-cert.pem
+export PEER0_OrgHolder_CA=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orgholder.com/tlsca/tlsca.orgholder.com-cert.pem
 
 # Set environment variables for the peer org
 setGlobals() {
@@ -23,19 +23,19 @@ setGlobals() {
   fi
   infoln "Using organization ${USING_ORG}"
   if [ $USING_ORG -eq 1 ]; then
-    export CORE_PEER_LOCALMSPID=OrgUniversityMSP
-    export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_ORGUNIVERSITY_CA
-    export CORE_PEER_MSPCONFIGPATH=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orguniversity.com/users/Admin@orguniversity.com/msp
+    export CORE_PEER_LOCALMSPID=OrgIssuerMSP
+    export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_ORGISSUER_CA
+    export CORE_PEER_MSPCONFIGPATH=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orgissuer.com/users/Admin@orgissuer.com/msp
     export CORE_PEER_ADDRESS=localhost:7051
   elif [ $USING_ORG -eq 2 ]; then
-    export CORE_PEER_LOCALMSPID=OrgEmployerMSP
-    export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_ORGEMPLOYER_CA
-    export CORE_PEER_MSPCONFIGPATH=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orgemployer.com/users/Admin@orgemployer.com/msp
+    export CORE_PEER_LOCALMSPID=OrgVerifierMSP
+    export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_ORGVERIFIER_CA
+    export CORE_PEER_MSPCONFIGPATH=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orgverifier.com/users/Admin@orgverifier.com/msp
     export CORE_PEER_ADDRESS=localhost:8051
   elif [ $USING_ORG -eq 3 ]; then
-    export CORE_PEER_LOCALMSPID=OrgIndividualMSP
-    export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_ORGINDIVIDUAL_CA
-    export CORE_PEER_MSPCONFIGPATH=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orgindividual.com/users/Admin@orgindividual.com/msp
+    export CORE_PEER_LOCALMSPID=OrgHolderMSP
+    export CORE_PEER_TLS_ROOTCERT_FILE=$PEER0_OrgHolder_CA
+    export CORE_PEER_MSPCONFIGPATH=${TEST_NETWORK_HOME}/organizations/peerOrganizations/orgholder.com/users/Admin@orgholder.com/msp
     export CORE_PEER_ADDRESS=localhost:9051
   else
     errorln "ORG Unknown"
@@ -75,9 +75,9 @@ parsePeerConnectionParameters() {
 
     # Add TLS root certificate
     case $1 in
-      1) CA=PEER0_ORGUNIVERSITY_CA ;;
-      2) CA=PEER0_ORGEMPLOYER_CA ;;
-      3) CA=PEER0_ORGINDIVIDUAL_CA ;;
+      1) CA=PEER0_ORGISSUER_CA ;;
+      2) CA=PEER0_ORGVERIFIER_CA ;;
+      3) CA=PEER0_OrgHolder_CA ;;
       *) errorln "Invalid organization identifier: $1. Must be 1, 2, or 3." ;;
     esac
 

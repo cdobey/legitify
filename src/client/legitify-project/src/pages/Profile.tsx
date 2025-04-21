@@ -1,4 +1,4 @@
-import { useMyUniversitiesQuery } from '@/api/universities/university.queries';
+import { useMyIssuersQuery } from '@/api/issuers/issuer.queries';
 import {
   Avatar,
   Badge,
@@ -28,11 +28,11 @@ import {
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  useAccessibleDegreesQuery,
+  useAccessibleCredentialsQuery,
   useAccessRequestsQuery,
   useLedgerRecordsQuery,
-  useMyDegreesQuery,
-} from '../api/degrees/degree.queries';
+  useMyCredentialsQuery,
+} from '../api/credentials/credential.queries';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -42,20 +42,20 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<string | null>('overview');
 
   // Queries based on user role
-  const { data: userDegrees } = useMyDegreesQuery({ enabled: user?.role === 'individual' });
-  const { data: accessRequests } = useAccessRequestsQuery({ enabled: user?.role === 'individual' });
+  const { data: userCredentials } = useMyCredentialsQuery({ enabled: user?.role === 'holder' });
+  const { data: accessRequests } = useAccessRequestsQuery({ enabled: user?.role === 'holder' });
   const { data: ledgerRecords } = useLedgerRecordsQuery({
-    enabled: user?.role === 'university',
+    enabled: user?.role === 'issuer',
   });
-  const { data: universities } = useMyUniversitiesQuery({
-    enabled: user?.role === 'university',
+  const { data: issuers } = useMyIssuersQuery({
+    enabled: user?.role === 'issuer',
   });
-  const { data: accessibleDegrees } = useAccessibleDegreesQuery({
-    enabled: user?.role === 'employer',
+  const { data: accessibleCredentials } = useAccessibleCredentialsQuery({
+    enabled: user?.role === 'verifier',
   });
 
   // Format date for display
-  const formatDate = (dateString?: string) => {
+  const formatDate = (dateString?: string | null) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -149,12 +149,12 @@ export default function ProfilePage() {
   // Get role-specific stats for the Overview tab
   const RoleStats = () => {
     switch (user.role) {
-      case 'individual':
+      case 'holder':
         return (
           <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md">
             <StatCard
-              title="Your Degrees"
-              value={(userDegrees?.length || 0).toString()}
+              title="Your Credentials"
+              value={(userCredentials?.length || 0).toString()}
               icon={<IconCertificate size={24} />}
               color="blue"
             />
@@ -175,25 +175,25 @@ export default function ProfilePage() {
           </SimpleGrid>
         );
 
-      case 'university':
-        const degreeCount = ledgerRecords?.length || 0;
+      case 'issuer':
+        const credentialCount = ledgerRecords?.length || 0;
         return (
           <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md">
             <StatCard
-              title="Degrees Issued"
-              value={degreeCount.toString()}
+              title="Credentials Issued"
+              value={credentialCount.toString()}
               icon={<IconCertificate size={24} />}
               color="blue"
             />
             <StatCard
-              title="University ID"
-              value={universities?.[0]?.id ? universities[0].id.substring(0, 8) + '...' : 'N/A'}
+              title="Issuer ID"
+              value={issuers?.[0]?.id ? issuers[0].id.substring(0, 8) + '...' : 'N/A'}
               icon={<IconBadge size={24} />}
               color="blue"
             />
             <StatCard
               title="Last Activity"
-              value={degreeCount > 0 ? formatDate(ledgerRecords?.[0]?.issuedAt) : 'N/A'}
+              value={credentialCount > 0 ? formatDate(ledgerRecords?.[0]?.issuedAt) : 'N/A'}
               icon={<IconCalendar size={24} />}
               color="teal"
               isDate
@@ -201,23 +201,23 @@ export default function ProfilePage() {
           </SimpleGrid>
         );
 
-      case 'employer':
-        const accessibleDegreesCount = accessibleDegrees?.length || 0;
-        const uniqueIndividuals = new Set(
-          accessibleDegrees?.map(degree => degree.owner?.email) || [],
+      case 'verifier':
+        const accessibleCredentialsCount = accessibleCredentials?.length || 0;
+        const uniqueHolders = new Set(
+          accessibleCredentials?.map(credential => credential.holder?.email) || [],
         ).size;
 
         return (
           <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md">
             <StatCard
-              title="Individuals"
-              value={uniqueIndividuals.toString()}
+              title="Holders"
+              value={uniqueHolders.toString()}
               icon={<IconUser size={24} />}
               color="indigo"
             />
             <StatCard
-              title="Accessible Degrees"
-              value={accessibleDegreesCount.toString()}
+              title="Accessible Credentials"
+              value={accessibleCredentialsCount.toString()}
               icon={<IconCertificate size={24} />}
               color="blue"
             />
@@ -247,19 +247,19 @@ export default function ProfilePage() {
           <Tabs.Tab value="profile" leftSection={<IconUserCircle size={16} />}>
             Profile Details
           </Tabs.Tab>
-          {user.role === 'individual' && (
-            <Tabs.Tab value="degrees" leftSection={<IconCertificate size={16} />}>
-              My Degrees
+          {user.role === 'holder' && (
+            <Tabs.Tab value="credentials" leftSection={<IconCertificate size={16} />}>
+              My Credentials
             </Tabs.Tab>
           )}
-          {user.role === 'university' && (
+          {user.role === 'issuer' && (
             <Tabs.Tab value="issued" leftSection={<IconCertificate size={16} />}>
-              Issued Degrees
+              Issued Credentials
             </Tabs.Tab>
           )}
-          {user.role === 'employer' && (
+          {user.role === 'verifier' && (
             <Tabs.Tab value="accessible" leftSection={<IconCertificate size={16} />}>
-              Accessible Degrees
+              Accessible Credentials
             </Tabs.Tab>
           )}
         </Tabs.List>
@@ -333,32 +333,25 @@ export default function ProfilePage() {
               </Stack>
             </SimpleGrid>
 
-            {user.role === 'university' && universities?.[0] && (
+            {user.role === 'issuer' && issuers?.[0] && (
               <>
                 <Title order={5} mt="xl" mb="md">
-                  University Information
+                  Issuer Information
                 </Title>
                 <Card withBorder p="md">
                   <Group align="flex-start">
-                    {universities[0].logoUrl && (
+                    {issuers[0].logoUrl && (
                       <Avatar
-                        src={universities[0].logoUrl}
-                        alt={universities[0].displayName}
+                        src={issuers[0].logoUrl}
+                        alt={issuers[0].displayName}
                         size={100}
                         radius="md"
                       />
                     )}
                     <Stack gap="xs" style={{ flex: 1 }}>
-                      <ProfileDetailItem
-                        label="University Name"
-                        value={universities[0].displayName}
-                      />
-                      <ProfileDetailItem label="Short Name" value={universities[0].name} />
-                      <ProfileDetailItem
-                        label="University ID"
-                        value={universities[0].id}
-                        color="blue"
-                      />
+                      <ProfileDetailItem label="Issuer Name" value={issuers[0].displayName} />
+                      <ProfileDetailItem label="Short Name" value={issuers[0].name} />
+                      <ProfileDetailItem label="Issuer ID" value={issuers[0].id} color="blue" />
                     </Stack>
                   </Group>
                 </Card>
@@ -373,22 +366,22 @@ export default function ProfilePage() {
           </Paper>
         </Tabs.Panel>
 
-        {user.role === 'individual' && (
-          <Tabs.Panel value="degrees">
+        {user.role === 'holder' && (
+          <Tabs.Panel value="credentials">
             <Paper shadow="sm" p="xl" withBorder radius="md">
               <Title order={4} mb="lg">
-                My Degrees
+                My Credentials
               </Title>
-              {userDegrees && userDegrees.length > 0 ? (
+              {userCredentials && userCredentials.length > 0 ? (
                 <Stack>
-                  {userDegrees.map(degree => (
-                    <Card key={degree.docId} withBorder className="accent-card">
+                  {userCredentials.map(credential => (
+                    <Card key={credential.docId} withBorder className="accent-card">
                       <Group align="flex-start" justify="space-between">
                         <div>
-                          <Title order={5}>{degree.degreeTitle}</Title>
-                          <Text size="sm">Issued by: {degree.issuer}</Text>
-                          <Text size="sm">Date: {formatDate(degree.issueDate)}</Text>
-                          <Text size="sm">Degree ID: {degree.docId.slice(0, 10)}...</Text>
+                          <Title order={5}>{credential.title}</Title>
+                          <Text size="sm">Issued by: {credential.issuer}</Text>
+                          <Text size="sm">Date: {formatDate(credential.issueDate)}</Text>
+                          <Text size="sm">Credential ID: {credential.docId.slice(0, 10)}...</Text>
                         </div>
                         <Badge color="green" size="lg">
                           Verified
@@ -398,17 +391,17 @@ export default function ProfilePage() {
                   ))}
                 </Stack>
               ) : (
-                <Text>You don't have any degrees yet.</Text>
+                <Text>You don't have any credentials yet.</Text>
               )}
             </Paper>
           </Tabs.Panel>
         )}
 
-        {user.role === 'university' && (
+        {user.role === 'issuer' && (
           <Tabs.Panel value="issued">
             <Paper shadow="sm" p="xl" withBorder radius="md">
               <Title order={4} mb="lg">
-                Issued Degrees
+                Issued Credentials
               </Title>
               {ledgerRecords && ledgerRecords.length > 0 ? (
                 <Stack>
@@ -416,10 +409,10 @@ export default function ProfilePage() {
                     <Card key={record.docId} withBorder className="accent-card">
                       <Group align="flex-start" justify="space-between">
                         <div>
-                          <Title order={5}>{record.degreeTitle}</Title>
-                          <Text size="sm">Recipient: {record.owner}</Text>
+                          <Title order={5}>{record.title}</Title>
+                          <Text size="sm">Recipient: {record.holderEmail}</Text>
                           <Text size="sm">Date: {formatDate(record.issuedAt)}</Text>
-                          <Text size="sm">Degree ID: {record.docId.slice(0, 10)}...</Text>
+                          <Text size="sm">Credential ID: {record.docId.slice(0, 10)}...</Text>
                         </div>
                         <Badge color="blue" size="lg">
                           Issued
@@ -429,28 +422,30 @@ export default function ProfilePage() {
                   ))}
                 </Stack>
               ) : (
-                <Text>You haven't issued any degrees yet.</Text>
+                <Text>You haven't issued any credentials yet.</Text>
               )}
             </Paper>
           </Tabs.Panel>
         )}
 
-        {user.role === 'employer' && (
+        {user.role === 'verifier' && (
           <Tabs.Panel value="accessible">
             <Paper shadow="sm" p="xl" withBorder radius="md">
               <Title order={4} mb="lg">
-                Accessible Degrees
+                Accessible Credentials
               </Title>
-              {accessibleDegrees && accessibleDegrees.length > 0 ? (
+              {accessibleCredentials && accessibleCredentials.length > 0 ? (
                 <Stack>
-                  {accessibleDegrees.map(degree => (
-                    <Card key={degree.docId} withBorder className="accent-card">
+                  {accessibleCredentials.map(credential => (
+                    <Card key={credential.credentialId} withBorder className="accent-card">
                       <Group align="flex-start" justify="space-between">
                         <div>
-                          <Title order={5}>Degree Document</Title>
-                          <Text size="sm">Holder: {degree.owner.name || degree.owner.email}</Text>
-                          <Text size="sm">Issuer: {degree.issuer}</Text>
-                          <Text size="sm">Date Granted: {formatDate(degree.dateGranted)}</Text>
+                          <Title order={5}>Credential Document</Title>
+                          <Text size="sm">
+                            Holder: {credential.holder.name || credential.holder.email}
+                          </Text>
+                          <Text size="sm">Issuer: {credential.issuer}</Text>
+                          <Text size="sm">Date Granted: {formatDate(credential.dateGranted)}</Text>
                         </div>
                         <Badge color="indigo" size="lg">
                           Accessible
@@ -460,7 +455,7 @@ export default function ProfilePage() {
                   ))}
                 </Stack>
               ) : (
-                <Text>You don't have access to any degrees yet.</Text>
+                <Text>You don't have access to any credentials yet.</Text>
               )}
             </Paper>
           </Tabs.Panel>

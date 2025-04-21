@@ -3,16 +3,16 @@ import { UseQueryOptions, useQueries, useQueryClient } from '@tanstack/react-que
 import { useEffect } from 'react';
 import {
   getAccessRequests,
-  getAccessibleDegrees,
-  getMyDegrees,
-  getRecentIssuedDegrees,
-} from '../api/degrees/degree.api';
+  getAccessibleCredentials,
+  getMyCredentials,
+  getRecentIssuedCredentials,
+} from '../api/credentials/credential.api';
 import {
   AccessRequestsResponse,
-  AccessibleDegreesResponse,
-  DegreeDocumentsResponse,
-} from '../api/degrees/degree.models';
-import { degreeKeys } from '../api/degrees/degree.queries';
+  AccessibleCredentialsResponse,
+  CredentialDocumentsResponse,
+} from '../api/credentials/credential.models';
+import { credentialKeys } from '../api/credentials/credential.queries';
 import { useAuth } from '../contexts/AuthContext';
 
 interface DashboardStats {
@@ -24,11 +24,11 @@ interface DashboardStats {
 
 interface DashboardData {
   stats: DashboardStats;
-  myDegrees?: DegreeDocumentsResponse;
+  myCredentials?: CredentialDocumentsResponse;
   accessRequests?: AccessRequestsResponse;
-  accessibleDegrees?: AccessibleDegreesResponse;
+  accessibleCredentials?: AccessibleCredentialsResponse;
   recentVerifications?: any[];
-  recentIssued?: DegreeDocumentsResponse;
+  recentIssued?: CredentialDocumentsResponse;
 }
 
 interface QueryResultWithKey<T> {
@@ -57,33 +57,33 @@ export const useDashboardData = () => {
 
     const prefetchData = async () => {
       // Prefetch core data based on user role
-      if (user.role === 'individual') {
-        // Prefetch my degrees immediately without waiting
+      if (user.role === 'holder') {
+        // Prefetch my credentials immediately without waiting
         queryClient.prefetchQuery({
-          queryKey: degreeKeys.lists(),
-          queryFn: () => getMyDegrees(),
+          queryKey: credentialKeys.lists(),
+          queryFn: () => getMyCredentials(),
         });
 
         // Prefetch access requests
         queryClient.prefetchQuery({
-          queryKey: degreeKeys.requests(),
+          queryKey: credentialKeys.requests(),
           queryFn: () => getAccessRequests(),
         });
       }
 
-      if (user.role === 'employer') {
-        // Prefetch accessible degrees
+      if (user.role === 'verifier') {
+        // Prefetch accessible credentials
         queryClient.prefetchQuery({
-          queryKey: degreeKeys.accessible(),
-          queryFn: () => getAccessibleDegrees(),
+          queryKey: credentialKeys.accessible(),
+          queryFn: () => getAccessibleCredentials(),
         });
       }
 
-      if (user.role === 'university') {
-        // Prefetch recently issued degrees
+      if (user.role === 'issuer') {
+        // Prefetch recently issued credentials
         queryClient.prefetchQuery({
-          queryKey: [...degreeKeys.all, 'recent-issued'],
-          queryFn: () => getRecentIssuedDegrees(),
+          queryKey: [...credentialKeys.all, 'recent-issued'],
+          queryFn: () => getRecentIssuedCredentials(),
         });
       }
     };
@@ -95,7 +95,7 @@ export const useDashboardData = () => {
   const queryResults = useQueries({
     queries: generateQueriesForRole(user),
     combine: (results): CombinedQueryResult => {
-      // Transform the results into a unified dashboard data object
+      // Transforms the results into a unified dashboard data object
       return {
         isLoading: results.some(result => result.isLoading),
         isError: results.some(result => result.isError),
@@ -125,32 +125,32 @@ const generateQueriesForRole = (user: User | null): UseQueryOptions[] => {
 
   const queries: UseQueryOptions[] = [];
 
-  if (user.role === 'individual') {
+  if (user.role === 'holder') {
     queries.push({
-      queryKey: degreeKeys.lists(),
-      queryFn: () => getMyDegrees() as Promise<DegreeDocumentsResponse>,
+      queryKey: credentialKeys.lists(),
+      queryFn: () => getMyCredentials() as Promise<CredentialDocumentsResponse>,
       ...commonOptions,
     });
 
     queries.push({
-      queryKey: degreeKeys.requests(),
+      queryKey: credentialKeys.requests(),
       queryFn: () => getAccessRequests() as Promise<AccessRequestsResponse>,
       ...commonOptions,
     });
   }
 
-  if (user.role === 'employer') {
+  if (user.role === 'verifier') {
     queries.push({
-      queryKey: degreeKeys.accessible(),
-      queryFn: () => getAccessibleDegrees() as Promise<AccessibleDegreesResponse>,
+      queryKey: credentialKeys.accessible(),
+      queryFn: () => getAccessibleCredentials() as Promise<AccessibleCredentialsResponse>,
       ...commonOptions,
     });
   }
 
-  if (user.role === 'university') {
+  if (user.role === 'issuer') {
     queries.push({
-      queryKey: [...degreeKeys.all, 'recent-issued'],
-      queryFn: () => getRecentIssuedDegrees() as Promise<DegreeDocumentsResponse>,
+      queryKey: [...credentialKeys.all, 'recent-issued'],
+      queryFn: () => getRecentIssuedCredentials() as Promise<CredentialDocumentsResponse>,
       ...commonOptions,
     });
   }
@@ -174,20 +174,19 @@ const combineQueryData = (
 
   // Check for any successful results
   if (results.some(result => result.isSuccess)) {
-    if (userRole === 'individual') {
-      // Find my degrees data by checking for array data with expected properties
-      const myDegreesResult = results.find(
+    if (userRole === 'holder') {
+      const myCredentialsResult = results.find(
         r =>
           r.isSuccess &&
           r.data &&
           Array.isArray(r.data) &&
-          (r.data.length === 0 || // Empty array is valid
+          (r.data.length === 0 ||
             (r.data.length > 0 &&
               r.data[0] &&
               'docId' in r.data[0] &&
               'status' in r.data[0] &&
-              !('owner' in r.data[0]))), // To differentiate from accessible degrees
-      ) as QueryResultWithKey<DegreeDocumentsResponse> | undefined;
+              !('owner' in r.data[0]))),
+      ) as QueryResultWithKey<CredentialDocumentsResponse> | undefined;
 
       // Find access requests by checking for specific properties
       const accessRequestsResult = results.find(
@@ -195,22 +194,22 @@ const combineQueryData = (
           r.isSuccess &&
           r.data &&
           Array.isArray(r.data) &&
-          (r.data.length === 0 || // Empty array is valid
+          (r.data.length === 0 ||
             (r.data.length > 0 &&
               r.data[0] &&
               'requestId' in r.data[0] &&
-              'employerName' in r.data[0])),
+              'verifierName' in r.data[0])),
       ) as QueryResultWithKey<AccessRequestsResponse> | undefined;
 
-      if (myDegreesResult?.data) {
-        const myDegrees = myDegreesResult.data;
-        dashboardData.myDegrees = myDegrees;
+      if (myCredentialsResult?.data) {
+        const myCredentials = myCredentialsResult.data;
+        dashboardData.myCredentials = myCredentials;
 
         // Calculate statistics
-        dashboardData.stats.total = myDegrees.length;
-        dashboardData.stats.accepted = myDegrees.filter(d => d.status === 'accepted').length;
-        dashboardData.stats.pending = myDegrees.filter(d => d.status === 'issued').length;
-        dashboardData.stats.rejected = myDegrees.filter(d => d.status === 'denied').length;
+        dashboardData.stats.total = myCredentials.length;
+        dashboardData.stats.accepted = myCredentials.filter(d => d.status === 'accepted').length;
+        dashboardData.stats.pending = myCredentials.filter(d => d.status === 'issued').length;
+        dashboardData.stats.rejected = myCredentials.filter(d => d.status === 'denied').length;
       }
 
       if (accessRequestsResult?.data) {
@@ -218,9 +217,9 @@ const combineQueryData = (
       }
     }
 
-    if (userRole === 'employer') {
-      // Find accessible degrees by checking for specific properties
-      const accessibleDegreesResult = results.find(
+    if (userRole === 'verifier') {
+      // Find accessible credentials by checking for specific properties
+      const accessibleCredentialsResult = results.find(
         r =>
           r.isSuccess &&
           r.data &&
@@ -231,25 +230,24 @@ const combineQueryData = (
               'docId' in r.data[0] &&
               'owner' in r.data[0] &&
               'requestId' in r.data[0])),
-      ) as QueryResultWithKey<AccessibleDegreesResponse> | undefined;
+      ) as QueryResultWithKey<AccessibleCredentialsResponse> | undefined;
 
-      if (accessibleDegreesResult?.data) {
-        dashboardData.accessibleDegrees = accessibleDegreesResult.data;
-        dashboardData.stats.total = accessibleDegreesResult.data.length;
-        dashboardData.stats.accepted = accessibleDegreesResult.data.length;
+      if (accessibleCredentialsResult?.data) {
+        dashboardData.accessibleCredentials = accessibleCredentialsResult.data;
+        dashboardData.stats.total = accessibleCredentialsResult.data.length;
+        dashboardData.stats.accepted = accessibleCredentialsResult.data.length;
       }
     }
 
-    if (userRole === 'university') {
-      // Find recent issued degrees by checking for specific properties
+    if (userRole === 'issuer') {
       const recentIssuedResult = results.find(
         r =>
           r.isSuccess &&
           r.data &&
           Array.isArray(r.data) &&
-          (r.data.length === 0 || // Empty array is valid
+          (r.data.length === 0 ||
             (r.data.length > 0 && r.data[0] && 'docId' in r.data[0] && 'status' in r.data[0])),
-      ) as QueryResultWithKey<DegreeDocumentsResponse> | undefined;
+      ) as QueryResultWithKey<CredentialDocumentsResponse> | undefined;
 
       if (recentIssuedResult?.data) {
         const recentIssued = recentIssuedResult.data;

@@ -1,6 +1,7 @@
 import { register } from '@/api/auth/auth.api';
-import { University } from '@/api/universities/university.models';
+import { Issuer } from '@/api/issuers/issuer.models';
 import { UserRole } from '@/api/users/user.models';
+import { StatusIndicator } from '@/components/StatusIndicator';
 import {
   Alert,
   Anchor,
@@ -47,24 +48,23 @@ interface FormValues {
   role: UserRole;
   country: string;
   organizationName: string;
-  universityName: string;
-  universityDisplayName: string;
-  universityDescription: string;
+  issuerName: string;
+  issuerDisplayName: string;
+  issuerDescription: string;
   termsAccepted: boolean;
   provideOrgInfoLater: boolean;
-  joinUniversityId: string;
+  joinIssuerId: string;
 }
 
 const Register = () => {
   const [active, setActive] = useState(0);
-  const [universities, setUniversities] = useState<University[]>([]);
-  const [isLoadingUniversities, setIsLoadingUniversities] = useState(false);
+  const [issuers, setIssuers] = useState<Issuer[]>([]);
+  const [isLoadingIssuers, setIsLoadingIssuers] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  // Create a comprehensive form with all fields for both steps
   const form = useForm<FormValues>({
     initialValues: {
       username: '',
@@ -73,15 +73,15 @@ const Register = () => {
       confirmPassword: '',
       firstName: '',
       lastName: '',
-      role: 'individual',
+      role: 'holder',
       country: '',
       organizationName: '',
-      universityName: '',
-      universityDisplayName: '',
-      universityDescription: '',
+      issuerName: '',
+      issuerDisplayName: '',
+      issuerDescription: '',
       termsAccepted: false,
       provideOrgInfoLater: false,
-      joinUniversityId: '',
+      joinIssuerId: '',
     },
     validate: {
       email: value => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
@@ -92,23 +92,22 @@ const Register = () => {
     },
   });
 
-  // Fetch universities for individual registration
   useEffect(() => {
-    if (active === 1 && form.values.role === 'individual') {
-      const fetchUniversities = async () => {
+    if (active === 1 && form.values.role === 'holder') {
+      const fetchIssuers = async () => {
         try {
-          setIsLoadingUniversities(true);
+          setIsLoadingIssuers(true);
           const baseUrl = import.meta.env.VITE_API_URL || '/api';
-          const response = await axios.get(`${baseUrl}/university/all`);
-          setUniversities(response.data);
+          const response = await axios.get(`${baseUrl}/issuer/all`);
+          setIssuers(response.data);
         } catch (error) {
-          console.error('Error fetching universities:', error);
-          setError('Failed to load universities. Please try again.');
+          console.error('Error fetching issuers:', error);
+          setError('Failed to load issuers. Please try again.');
         } finally {
-          setIsLoadingUniversities(false);
+          setIsLoadingIssuers(false);
         }
       };
-      fetchUniversities();
+      fetchIssuers();
     }
   }, [form.values.role, active]);
 
@@ -138,17 +137,17 @@ const Register = () => {
       };
 
       // Add role-specific data
-      if (form.values.role === 'university' && !form.values.provideOrgInfoLater) {
-        registrationData.universityName = form.values.universityName;
-        registrationData.universityDisplayName = form.values.universityDisplayName;
-        registrationData.universityDescription = form.values.universityDescription;
-      } else if (form.values.role === 'employer') {
+      if (form.values.role === 'issuer' && !form.values.provideOrgInfoLater) {
+        registrationData.issuerName = form.values.issuerName;
+        registrationData.issuerDisplayName = form.values.issuerDisplayName;
+        registrationData.issuerDescription = form.values.issuerDescription;
+      } else if (form.values.role === 'verifier') {
         registrationData.orgName = form.values.organizationName;
       }
 
-      // Add university join request for individuals
-      if (form.values.role === 'individual' && form.values.joinUniversityId) {
-        registrationData.joinUniversityId = form.values.joinUniversityId;
+      // Add issuer join request for holders
+      if (form.values.role === 'holder' && form.values.joinIssuerId) {
+        registrationData.joinIssuerId = form.values.joinIssuerId;
       }
 
       // Register the user
@@ -161,7 +160,7 @@ const Register = () => {
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.message || 'Failed to register');
-      setIsLoading(false); // Only set loading to false on error
+      setIsLoading(false);
     }
   };
 
@@ -177,21 +176,15 @@ const Register = () => {
   };
 
   const isStep2Valid = () => {
-    const {
-      role,
-      country,
-      termsAccepted,
-      universityName,
-      universityDisplayName,
-      provideOrgInfoLater,
-    } = form.values;
+    const { role, country, termsAccepted, issuerName, issuerDisplayName, provideOrgInfoLater } =
+      form.values;
 
     // Basic validation that applies to all roles
     const basicValid = !!role && country !== '' && termsAccepted;
 
-    // Additional validation for university role when not choosing to provide info later
-    if (role === 'university' && !provideOrgInfoLater) {
-      return basicValid && !!universityName && !!universityDisplayName;
+    // Additional validation for issuer role when not choosing to provide info later
+    if (role === 'issuer' && !provideOrgInfoLater) {
+      return basicValid && !!issuerName && !!issuerDisplayName;
     }
 
     return basicValid;
@@ -235,12 +228,12 @@ const Register = () => {
               mt="md"
               value={form.values.role}
               onChange={value =>
-                form.setFieldValue('role', value as 'individual' | 'university' | 'employer')
+                form.setFieldValue('role', value as 'holder' | 'issuer' | 'verifier')
               }
               data={[
-                { value: 'individual', label: 'Individual' },
-                { value: 'employer', label: 'Employer' },
-                { value: 'university', label: 'University' },
+                { value: 'holder', label: 'Holder' },
+                { value: 'verifier', label: 'Verifier' },
+                { value: 'issuer', label: 'Issuer' },
               ]}
               fullWidth
               className="orange-segment"
@@ -258,14 +251,13 @@ const Register = () => {
                 data={[
                   { value: 'us', label: 'United States' },
                   { value: 'uk', label: 'United Kingdom' },
-                  { value: 'ca', label: 'Canada' },
-                  // Add more countries as needed
+                  { value: 'ie', label: 'Ireland' },
                 ]}
                 searchable
                 {...form.getInputProps('country')}
               />
 
-              {form.values.role === 'employer' && (
+              {form.values.role === 'verifier' && (
                 <TextInput
                   label="Organization Name (Optional)"
                   placeholder="Organization Name"
@@ -273,10 +265,10 @@ const Register = () => {
                 />
               )}
 
-              {form.values.role === 'university' && (
+              {form.values.role === 'issuer' && (
                 <>
                   <Switch
-                    label="I'll provide university information later"
+                    label="I'll provide issuer information later"
                     checked={form.values.provideOrgInfoLater}
                     onChange={event =>
                       form.setFieldValue('provideOrgInfoLater', event.currentTarget.checked)
@@ -287,46 +279,44 @@ const Register = () => {
                   {!form.values.provideOrgInfoLater && (
                     <>
                       <TextInput
-                        label="University Name"
-                        placeholder="Official university name"
+                        label="Issuer Name"
+                        placeholder="Official issuer name"
                         required
                         mt="md"
-                        {...form.getInputProps('universityName')}
+                        {...form.getInputProps('issuerName')}
                       />
                       <TextInput
                         label="Display Name"
                         placeholder="Name to display to users"
                         required
                         mt="md"
-                        {...form.getInputProps('universityDisplayName')}
+                        {...form.getInputProps('issuerDisplayName')}
                       />
                       <TextInput
                         label="Description"
-                        placeholder="Brief description of the university"
+                        placeholder="Brief description of the issuer"
                         mt="md"
-                        {...form.getInputProps('universityDescription')}
+                        {...form.getInputProps('issuerDescription')}
                       />
                     </>
                   )}
                 </>
               )}
 
-              {form.values.role === 'individual' && (
+              {form.values.role === 'holder' && (
                 <Select
-                  label="Join a University (Optional)"
-                  description="Request to join an existing university"
-                  placeholder={
-                    isLoadingUniversities ? 'Loading universities...' : 'Select a university'
-                  }
-                  data={universities.map(uni => ({
+                  label="Join a Issuer (Optional)"
+                  description="Request to join an existing issuer"
+                  placeholder={isLoadingIssuers ? 'Loading issuers...' : 'Select a issuer'}
+                  data={issuers.map(uni => ({
                     value: uni.id,
-                    label: uni.displayName || uni.name,
+                    label: uni.shorthand || uni.name,
                   }))}
                   searchable
                   clearable
                   mt="md"
-                  disabled={isLoadingUniversities}
-                  {...form.getInputProps('joinUniversityId')}
+                  disabled={isLoadingIssuers}
+                  {...form.getInputProps('joinIssuerId')}
                 />
               )}
 
@@ -422,6 +412,8 @@ const Register = () => {
           </Anchor>
         </Text>
       </Card>
+
+      <StatusIndicator position="bottom-right" />
     </Container>
   );
 };

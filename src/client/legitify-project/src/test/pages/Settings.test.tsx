@@ -88,14 +88,14 @@ vi.mock('@/api/users/user.mutations', () => ({
   }),
 }));
 
-// --- Mock University API Queries and Mutations ---
-vi.mock('@/api/universities/university.queries', () => ({
-  useMyUniversitiesQuery: ({ enabled }: { enabled: boolean }) => ({
+// --- Mock Issuer API Queries and Mutations ---
+vi.mock('@/api/issuers/issuer.queries', () => ({
+  useMyIssuersQuery: ({ enabled }: { enabled: boolean }) => ({
     data: enabled
       ? [
           {
             id: 'uni-1',
-            displayName: 'Test University',
+            displayName: 'Test Issuer',
             logoUrl: 'https://example.com/logo.png',
           },
         ]
@@ -103,21 +103,21 @@ vi.mock('@/api/universities/university.queries', () => ({
   }),
 }));
 
-vi.mock('@/api/universities/university.mutations', () => ({
-  useUploadUniversityLogoMutation: () => ({
+vi.mock('@/api/issuers/issuer.mutations', () => ({
+  useUploadIssuerLogoMutation: () => ({
     mutateAsync: vi.fn().mockResolvedValue({}),
     isPending: false,
   }),
-  useDeleteUniversityLogoMutation: () => ({
+  useDeleteIssuerLogoMutation: () => ({
     mutateAsync: vi.fn().mockResolvedValue({}),
     isPending: false,
   }),
 }));
 
-// --- Mock Degree API Queries ---
-vi.mock('@/api/degrees/degree.queries', () => ({
-  useMyDegreesQuery: ({ enabled }: { enabled: boolean }) => ({
-    data: enabled ? [{ id: 'degree-1', title: 'Bachelor of Science' }] : [],
+// --- Mock Credential API Queries ---
+vi.mock('@/api/credentials/credential.queries', () => ({
+  useMyCredentialsQuery: ({ enabled }: { enabled: boolean }) => ({
+    data: enabled ? [{ id: 'credential-1', title: 'Bachelor of Science' }] : [],
   }),
   useAccessRequestsQuery: ({ enabled }: { enabled: boolean }) => ({
     data: enabled ? [{ id: 'request-1', status: 'pending' }] : [],
@@ -132,13 +132,13 @@ vi.mock('@/api/degrees/degree.queries', () => ({
         ]
       : [],
   }),
-  useAccessibleDegreesQuery: ({ enabled }: { enabled: boolean }) => ({
+  useAccessibleCredentialsQuery: ({ enabled }: { enabled: boolean }) => ({
     data: enabled
       ? [
           {
-            id: 'degree-1',
+            id: 'credential-1',
             owner: {
-              email: 'student@example.com',
+              email: 'holder@example.com',
             },
           },
         ]
@@ -171,35 +171,35 @@ function renderSettingsWithProviders(user: any) {
 }
 
 // Sample users for testing different roles
-const universityUser = {
+const issuerUser = {
   id: 'u1',
   email: 'uni@example.com',
-  role: 'university',
-  username: 'universityUser',
-  orgName: 'orguniversity',
+  role: 'issuer',
+  username: 'issuerUser',
+  orgName: 'orgissuer',
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-02T00:00:00Z',
   twoFactorEnabled: false,
 };
 
-const individualUser = {
+const holderUser = {
   id: 'i1',
   email: 'ind@example.com',
-  role: 'individual',
-  username: 'individualUser',
-  orgName: 'orgindividual',
+  role: 'holder',
+  username: 'holderUser',
+  orgName: 'orgholder',
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-02T00:00:00Z',
   twoFactorEnabled: false,
   profilePictureUrl: 'https://example.com/profile.png',
 };
 
-const employerUser = {
+const verifierUser = {
   id: 'e1',
   email: 'emp@example.com',
-  role: 'employer',
-  username: 'employerUser',
-  orgName: 'orgemployer',
+  role: 'verifier',
+  username: 'verifierUser',
+  orgName: 'orgverifier',
   createdAt: '2024-01-01T00:00:00Z',
   updatedAt: '2024-01-02T00:00:00Z',
   twoFactorEnabled: true,
@@ -212,19 +212,19 @@ describe('Settings Page', () => {
     expect(screen.getByText(/you need to be logged in/i)).toBeInTheDocument();
   });
 
-  it('displays user profile information correctly for individual users', async () => {
-    renderSettingsWithProviders(individualUser);
+  it('displays user profile information correctly for holder users', async () => {
+    renderSettingsWithProviders(holderUser);
 
-    expect(screen.getByText(individualUser.username)).toBeInTheDocument();
-    expect(screen.getByText(individualUser.email)).toBeInTheDocument();
+    expect(screen.getByText(holderUser.username)).toBeInTheDocument();
+    expect(screen.getByText(holderUser.email)).toBeInTheDocument();
 
-    const roleBadges = screen.getAllByText('Individual');
+    const roleBadges = screen.getAllByText('Holder');
     const roleBadgeElement = roleBadges.find(
       element => element.closest('.mantine-Badge-root') !== null,
     );
     expect(roleBadgeElement).toBeInTheDocument();
 
-    const orgBadges = screen.getAllByText(individualUser.orgName);
+    const orgBadges = screen.getAllByText(holderUser.orgName);
     const orgBadgeElement = orgBadges.find(
       element => element.closest('.mantine-Badge-root') !== null,
     );
@@ -235,49 +235,49 @@ describe('Settings Page', () => {
     expect(screen.getByRole('tab', { name: /security/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /preferences/i })).toBeInTheDocument();
 
-    // Verify individual-specific stats are displayed
-    expect(screen.getByText('Your Degrees')).toBeInTheDocument();
+    // Verify holder-specific stats are displayed
+    expect(screen.getByText('Your Credentials')).toBeInTheDocument();
     expect(screen.getByText('Pending Access Requests')).toBeInTheDocument();
 
-    // Find the value "1" that represents degree count
-    const degreesCard = screen
-      .getAllByText('Your Degrees')[0]
+    // Find the value "1" that represents credential count
+    const credentialsCard = screen
+      .getAllByText('Your Credentials')[0]
       .closest('.mantine-Card-root') as HTMLElement;
-    expect(degreesCard).toBeInTheDocument();
+    expect(credentialsCard).toBeInTheDocument();
 
-    const degreeCountText = within(degreesCard).getByText('1');
-    expect(degreeCountText).toBeInTheDocument();
+    const credentialCountText = within(credentialsCard).getByText('1');
+    expect(credentialCountText).toBeInTheDocument();
   });
 
-  it('displays university-specific tab and logo section for university users', async () => {
-    renderSettingsWithProviders(universityUser);
+  it('displays issuer-specific tab and logo section for issuer users', async () => {
+    renderSettingsWithProviders(issuerUser);
 
-    // Should have university tab
-    expect(screen.getByRole('tab', { name: /university/i })).toBeInTheDocument();
+    // Should have issuer tab
+    expect(screen.getByRole('tab', { name: /issuer/i })).toBeInTheDocument();
 
-    // Click on university tab
-    await userEvent.click(screen.getByRole('tab', { name: /university/i }));
+    // Click on issuer tab
+    await userEvent.click(screen.getByRole('tab', { name: /issuer/i }));
 
-    // Should show university-specific content
+    // Should show issuer-specific content
     await waitFor(() => {
-      expect(screen.getByText('University Logo')).toBeInTheDocument();
+      expect(screen.getByText('Issuer Logo')).toBeInTheDocument();
     });
 
-    // Verify university-specific stats are displayed
-    expect(screen.getByText('Issued Degrees')).toBeInTheDocument();
+    // Verify issuer-specific stats are displayed
+    expect(screen.getByText('Issued Credentials')).toBeInTheDocument();
     expect(screen.getByText('Last Activity')).toBeInTheDocument();
   });
 
-  it('displays employer-specific stats for employer users', () => {
-    renderSettingsWithProviders(employerUser);
+  it('displays verifier-specific stats for verifier users', () => {
+    renderSettingsWithProviders(verifierUser);
 
-    // Verify employer-specific stats are displayed
-    expect(screen.getByText('Unique Individuals')).toBeInTheDocument();
-    expect(screen.getByText('Accessible Degrees')).toBeInTheDocument();
+    // Verify verifier-specific stats are displayed
+    expect(screen.getByText('Unique Holders')).toBeInTheDocument();
+    expect(screen.getByText('Accessible Credentials')).toBeInTheDocument();
   });
 
   it('shows enabled 2FA interface for users with 2FA enabled', async () => {
-    renderSettingsWithProviders(employerUser);
+    renderSettingsWithProviders(verifierUser);
 
     // Click on security tab
     await userEvent.click(screen.getByRole('tab', { name: /security/i }));
@@ -291,7 +291,7 @@ describe('Settings Page', () => {
   });
 
   it('shows setup 2FA interface for users without 2FA enabled', async () => {
-    renderSettingsWithProviders(individualUser);
+    renderSettingsWithProviders(holderUser);
 
     // Click on security tab
     await userEvent.click(screen.getByRole('tab', { name: /security/i }));
@@ -307,7 +307,7 @@ describe('Settings Page', () => {
   });
 
   it('shows theme selection options in preferences tab', async () => {
-    renderSettingsWithProviders(individualUser);
+    renderSettingsWithProviders(holderUser);
 
     // Click on preferences tab
     await userEvent.click(screen.getByRole('tab', { name: /preferences/i }));
@@ -322,7 +322,7 @@ describe('Settings Page', () => {
   });
 
   it('shows appropriate form fields in profile section', async () => {
-    renderSettingsWithProviders(individualUser);
+    renderSettingsWithProviders(holderUser);
 
     // Profile section should be default active tab
     expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
@@ -345,7 +345,7 @@ describe('Settings Page', () => {
   });
 
   it('shows password change form in security tab', async () => {
-    renderSettingsWithProviders(individualUser);
+    renderSettingsWithProviders(holderUser);
 
     // Click on security tab
     await userEvent.click(screen.getByRole('tab', { name: /security/i }));

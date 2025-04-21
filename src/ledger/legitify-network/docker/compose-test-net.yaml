@@ -8,9 +8,9 @@ volumes:
   orderer2.legitifyapp.com:
   orderer3.legitifyapp.com:
   orderer4.legitifyapp.com:
-  peer0.orguniversity.com:
-  peer0.orgemployer.com:
-  peer0.orgindividual.com:
+  peer0.orgissuer.com:
+  peer0.orgverifier.com:
+  peer0.orgholder.com:
 
 networks:
   test:
@@ -185,8 +185,8 @@ services:
     networks:
       - test
 
-  peer0.orguniversity.com:
-    container_name: peer0.orguniversity.com
+  peer0.orgissuer.com:
+    container_name: peer0.orgissuer.com
     image: hyperledger/fabric-peer:2.5.10
     labels:
       service: hyperledger-fabric
@@ -204,23 +204,23 @@ services:
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
       # Peer specific variables
-      - CORE_PEER_ID=peer0.orguniversity.com
-      - CORE_PEER_ADDRESS=peer0.orguniversity.com:7051
+      - CORE_PEER_ID=peer0.orgissuer.com
+      - CORE_PEER_ADDRESS=peer0.orgissuer.com:7051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
-      - CORE_PEER_CHAINCODEADDRESS=peer0.orguniversity.com:7052
+      - CORE_PEER_CHAINCODEADDRESS=peer0.orgissuer.com:7052
       - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.orguniversity.com:7051
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orguniversity.com:7051
-      - CORE_PEER_LOCALMSPID=OrgUniversityMSP
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.orgissuer.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orgissuer.com:7051
+      - CORE_PEER_LOCALMSPID=OrgIssuerMSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
-      - CORE_OPERATIONS_LISTENADDRESS=peer0.orguniversity.com:9444
+      - CORE_OPERATIONS_LISTENADDRESS=peer0.orgissuer.com:9444
       - CORE_METRICS_PROVIDER=prometheus
       - CORE_CHAINCODE_EXECUTETIMEOUT=300s
       # Keepalive settings
       - CORE_PEER_KEEPALIVE_MININTERVAL=60s
     volumes:
-      - ../organizations/peerOrganizations/orguniversity.com/peers/peer0.orguniversity.com:/etc/hyperledger/fabric
-      - peer0.orguniversity.com:/var/hyperledger/production
+      - ../organizations/peerOrganizations/orgissuer.com/peers/peer0.orgissuer.com:/etc/hyperledger/fabric
+      - peer0.orgissuer.com:/var/hyperledger/production
       - ../config:/etc/hyperledger/peercfg
       - ${DOCKER_SOCK:-/var/run/docker.sock}:/host/var/run/docker.sock
     working_dir: /root
@@ -231,8 +231,8 @@ services:
     networks:
       - test
 
-  peer0.orgemployer.com:
-    container_name: peer0.orgemployer.com
+  peer0.orgverifier.com:
+    container_name: peer0.orgverifier.com
     image: hyperledger/fabric-peer:2.5.10
     labels:
       service: hyperledger-fabric
@@ -250,23 +250,23 @@ services:
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
       # Peer specific variables
-      - CORE_PEER_ID=peer0.orgemployer.com
-      - CORE_PEER_ADDRESS=peer0.orgemployer.com:8051
+      - CORE_PEER_ID=peer0.orgverifier.com
+      - CORE_PEER_ADDRESS=peer0.orgverifier.com:8051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:8051
-      - CORE_PEER_CHAINCODEADDRESS=peer0.orgemployer.com:8052
+      - CORE_PEER_CHAINCODEADDRESS=peer0.orgverifier.com:8052
       - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:8052
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orgemployer.com:8051
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.orgemployer.com:8051
-      - CORE_PEER_LOCALMSPID=OrgEmployerMSP
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orgverifier.com:8051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.orgverifier.com:8051
+      - CORE_PEER_LOCALMSPID=OrgVerifierMSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
-      - CORE_OPERATIONS_LISTENADDRESS=peer0.orgemployer.com:9445
+      - CORE_OPERATIONS_LISTENADDRESS=peer0.orgverifier.com:9445
       - CORE_METRICS_PROVIDER=prometheus
       - CORE_CHAINCODE_EXECUTETIMEOUT=300s
       # Keepalive settings
       - CORE_PEER_KEEPALIVE_MININTERVAL=60s
     volumes:
-      - ../organizations/peerOrganizations/orgemployer.com/peers/peer0.orgemployer.com:/etc/hyperledger/fabric
-      - peer0.orgemployer.com:/var/hyperledger/production
+      - ../organizations/peerOrganizations/orgverifier.com/peers/peer0.orgverifier.com:/etc/hyperledger/fabric
+      - peer0.orgverifier.com:/var/hyperledger/production
       - ../config:/etc/hyperledger/peercfg
       - ${DOCKER_SOCK:-/var/run/docker.sock}:/host/var/run/docker.sock
     working_dir: /root
@@ -277,8 +277,8 @@ services:
     networks:
       - test
 
-  peer0.orgindividual.com:
-    container_name: peer0.orgindividual.com
+  peer0.orgholder.com:
+    container_name: peer0.orgholder.com
     image: hyperledger/fabric-peer:2.5.10
     labels:
       service: hyperledger-fabric
@@ -299,16 +299,16 @@ services:
       - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
       # Peer specific variables
-      - CORE_PEER_ID=peer0.orgindividual.com
-      - CORE_PEER_ADDRESS=peer0.orgindividual.com:9051
+      - CORE_PEER_ID=peer0.orgholder.com
+      - CORE_PEER_ADDRESS=peer0.orgholder.com:9051
       - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
-      - CORE_PEER_CHAINCODEADDRESS=peer0.orgindividual.com:9052
+      - CORE_PEER_CHAINCODEADDRESS=peer0.orgholder.com:9052
       - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
-      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orgindividual.com:9051
-      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.orgindividual.com:9051
-      - CORE_PEER_LOCALMSPID=OrgIndividualMSP
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orgholder.com:9051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.orgholder.com:9051
+      - CORE_PEER_LOCALMSPID=OrgHolderMSP
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
-      - CORE_OPERATIONS_LISTENADDRESS=peer0.orgindividual.com:9446
+      - CORE_OPERATIONS_LISTENADDRESS=peer0.orgholder.com:9446
       - CORE_METRICS_PROVIDER=prometheus
       - CORE_CHAINCODE_EXECUTETIMEOUT=500s
       # Keepalive settings
@@ -318,8 +318,8 @@ services:
       - 9051:9051
       - 9052:9052
     volumes:
-      - ../organizations/peerOrganizations/orgindividual.com/peers/peer0.orgindividual.com:/etc/hyperledger/fabric
-      - peer0.orgindividual.com:/var/hyperledger/production
+      - ../organizations/peerOrganizations/orgholder.com/peers/peer0.orgholder.com:/etc/hyperledger/fabric
+      - peer0.orgholder.com:/var/hyperledger/production
       - ../config:/etc/hyperledger/peercfg
       - ${DOCKER_SOCK:-/var/run/docker.sock}:/host/var/run/docker.sock
     working_dir: /root

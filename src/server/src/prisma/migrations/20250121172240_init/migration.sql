@@ -8,10 +8,10 @@
 
 */
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('university', 'individual', 'employer');
+CREATE TYPE "Role" AS ENUM ('issuer', 'holder', 'verifier');
 
 -- CreateEnum
-CREATE TYPE "OrgName" AS ENUM ('orguniversity', 'orgindividual', 'orgemployer');
+CREATE TYPE "OrgName" AS ENUM ('orgissuer', 'orgholder', 'orgverifier');
 
 -- CreateEnum
 CREATE TYPE "DocumentStatus" AS ENUM ('issued', 'accepted', 'denied');

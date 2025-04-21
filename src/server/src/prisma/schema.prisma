@@ -9,159 +9,169 @@ generator client {
 }
 
 model User {
-  id               String      @id @default(uuid())
-  username         String      @unique
-  email            String      @unique
-  role             Role
-  orgName          OrgName
-  profilePictureUrl String?    
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
+  id                 String      @id @default(uuid())
+  username           String      @unique
+  email              String      @unique
+  firstName          String?
+  lastName           String?
+  country            String?
+  role               Role
+  orgName            OrgName
+  profilePictureUrl  String?    
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
   
-  twoFactorEnabled Boolean @default(false)
-  twoFactorSecret String? // Stored temporarily during setup or permanently when enabled
+  twoFactorEnabled   Boolean     @default(false)
+  twoFactorSecret    String?
 
   // Relations
-  issuedDocuments         Document[] @relation("Issuer")
-  receivedDocuments       Document[] @relation("IssuedTo")
-  requests                Request[]  @relation("Requester")
-  ownedUniversities       University[] @relation("UniversityOwner")
-  sentJoinRequests        UniversityJoinRequest[] @relation("UniversityJoinRequester")
+  issuedCredentials  Credential[] @relation("Issuer")
+  heldCredentials    Credential[] @relation("Holder")
+  requests           Request[]    @relation("Requester")
+  ownedIssuers       Issuer[]     @relation("IssuerOwner")
+  sentJoinRequests   IssuerJoinRequest[] @relation("IssuerJoinRequester")
   
-  // University administration relationships
-  universityMemberships   UniversityMember[] @relation("UniversityMember")
+  // Issuer memberships
+  issuerMemberships  IssuerMember[] @relation("IssuerMember")
   
-  // University student relationships
-  studentAffiliations     StudentAffiliation[] @relation("StudentAffiliation")
+  // Issuer affiliations for holders
+  issuerAffiliations IssuerAffiliation[] @relation("HolderAffiliation")
 }
 
-// New model for University sub-organizations
-model University {
-  id          String      @id @default(uuid())
-  name        String
-  displayName String      
-  description String?
-  logoUrl     String?
-  ownerId     String
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+model Issuer {
+  id           String      @id @default(uuid())
+  name         String
+  shorthand    String      // (e.g., DCU)
+  description  String?
+  logoUrl      String?
+  ownerId      String
+  issuerType   String      // Type of issuer (academic, professional, etc.)
+  country      String?
+  address      String?
+  website      String?     // Official website URL
+  foundedYear  Int?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
   // Relations
-  owner         User                  @relation("UniversityOwner", fields: [ownerId], references: [id])
-  joinRequests  UniversityJoinRequest[] @relation("UniversityJoinTarget")
-  documents     Document[]            @relation("UniversityDocuments")
+  owner        User              @relation("IssuerOwner", fields: [ownerId], references: [id])
+  joinRequests IssuerJoinRequest[] @relation("IssuerJoinTarget")
+  credentials  Credential[]      @relation("CredentialIssuer")
   
-  // University administrators relationship
-  members       UniversityMember[]    @relation("UniversityMembers")
+  // Issuer members relationship
+  members      IssuerMember[]    @relation("IssuerMembers")
   
-  // Student affiliations relationship
-  students      StudentAffiliation[]  @relation("UniversityStudents")
+  // Holder affiliations relationship
+  affiliations IssuerAffiliation[] @relation("IssuerAffiliations")
 
   @@unique([name, ownerId])
 }
 
-// Model for University Members (university users who can administer the university)
-model UniversityMember {
-  id           String    @id @default(uuid())
-  userId       String
-  universityId String
-  role         String    @default("admin") // admin or other roles in the future
-  status       MembershipStatus @default(pending)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+// Issuer Members model
+model IssuerMember {
+  id             String          @id @default(uuid())
+  userId         String
+  issuerId       String
+  role           String          @default("admin")
+  status         MembershipStatus @default(pending)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   // Relations
-  user        User       @relation("UniversityMember", fields: [userId], references: [id])
-  university  University @relation("UniversityMembers", fields: [universityId], references: [id])
+  user           User            @relation("IssuerMember", fields: [userId], references: [id])
+  issuer         Issuer          @relation("IssuerMembers", fields: [issuerId], references: [id])
 
-  @@unique([userId, universityId])
+  @@unique([userId, issuerId])
 }
 
-// Model for Student-University affiliations
-model StudentAffiliation {
-  id           String    @id @default(uuid())
-  userId       String
-  universityId String
-  status       AffiliationStatus @default(pending)
-  initiatedBy  String?   @default("student") // Who initiated: "student" or "university"
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+// Holder-Issuer affiliations
+model IssuerAffiliation {
+  id             String            @id @default(uuid())
+  userId         String
+  issuerId       String
+  status         AffiliationStatus @default(pending)
+  initiatedBy    String?           @default("holder") // "holder" or "issuer"
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 
   // Relations
-  student     User       @relation("StudentAffiliation", fields: [userId], references: [id])
-  university  University @relation("UniversityStudents", fields: [universityId], references: [id])
+  holder         User              @relation("HolderAffiliation", fields: [userId], references: [id])
+  issuer         Issuer            @relation("IssuerAffiliations", fields: [issuerId], references: [id])
 
-  @@unique([userId, universityId])
+  @@unique([userId, issuerId])
 }
 
-model Document {
-  id               String         @id @default(uuid())
-  issuedTo         String
-  issuer           String
-  fileData         Bytes?         // Store as binary
-  status           DocumentStatus @default(issued)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+// Credential model
+model Credential {
+  id               String           @id @default(uuid())
+  docId            String           @unique
+  docHash          String
+  type             String           // Type of credential (credential, certificate, badge, etc.)
+  holderId         String
+  issuerId         String
+  issuerOrgId      String
+  fileData         Bytes?           // Store credential data as binary
+  status           CredentialStatus @default(issued)
+  title            String
+  description      String?
+  ledgerTimestamp  String?          // Timestamp from the blockchain
+  achievementDate  DateTime?
+  expirationDate   DateTime?        // Optional
+  programLength    String?          // Length of the program (e.g., "4 years")
+  domain           String?          // Field or area of the credential
   
-  // University that issued the degree
-  universityId     String?
-  university       University?    @relation("UniversityDocuments", fields: [universityId], references: [id])
+  // JSON field for storing custom attributes
+  attributes       Json?            // Stores the dynamic attributes as JSON
   
-  // Academic detail fields
-  degreeTitle      String?        // e.g., "Bachelor of Science"
-  fieldOfStudy     String?        // e.g., "Computer Science" 
-  graduationDate   DateTime?      // When the degree was earned
-  honors           String?        // e.g., "Cum Laude", "First Class"
-  studentId        String?        // Student's university ID
-  programDuration  String?        // e.g., "4 years"
-  gpa              Float?         // Grade Point Average
-  additionalNotes  String?        // Any additional information
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   // Relations
-  issuerUser    User      @relation("Issuer", fields: [issuer], references: [id])
-  issuedToUser  User      @relation("IssuedTo", fields: [issuedTo], references: [id])
-  requests      Request[] @relation("Document")
+  issuer          User             @relation("Issuer", fields: [issuerId], references: [id])
+  holder          User             @relation("Holder", fields: [holderId], references: [id])
+  issuerOrg       Issuer           @relation("CredentialIssuer", fields: [issuerOrgId], references: [id])
+  requests        Request[]        @relation("Credential")
 }
 
 model Request {
-  id          String    @id @default(uuid())
-  requesterId String
-  documentId  String
-  status      RequestStatus @default(pending)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id             String        @id @default(uuid())
+  requesterId    String
+  credentialId   String
+  status         RequestStatus @default(pending)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   // Relations
-  requester User     @relation("Requester", fields: [requesterId], references: [id])
-  document  Document @relation("Document", fields: [documentId], references: [id])
+  requester      User          @relation("Requester", fields: [requesterId], references: [id])
+  credential     Credential    @relation("Credential", fields: [credentialId], references: [id])
 }
 
 model WalletIdentity {
-  label       String   @id
-  orgName     OrgName
-  type        String   // e.g., "X.509"
-  certificate String   @db.Text
-  privateKey  String   @db.Text
-  mspId       String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  label         String        @id
+  orgName       OrgName
+  type          String        // e.g., "X.509"
+  certificate   String        @db.Text
+  privateKey    String        @db.Text
+  mspId         String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   @@unique([label, orgName])
 }
 
 enum Role {
-  university
-  individual
-  employer
+  issuer
+  holder
+  verifier
 }
 
 enum OrgName {
-  orguniversity
-  orgindividual
-  orgemployer
+  orgissuer
+  orgholder
+  orgverifier
 }
 
-enum DocumentStatus {
+enum CredentialStatus {
   issued
   accepted
   denied
@@ -173,30 +183,27 @@ enum RequestStatus {
   denied
 }
 
-// New enum for student affiliation status
 enum AffiliationStatus {
   pending
   active
   rejected
 }
 
-// New enum for university membership status
 enum MembershipStatus {
   pending
   active
   rejected
 }
 
-// Model for university join requests
-model UniversityJoinRequest {
-  id          String    @id @default(uuid())
-  requesterId String
-  universityId String
-  status      String    @default("pending") // pending, approved, rejected
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+model IssuerJoinRequest {
+  id             String    @id @default(uuid())
+  requesterId    String
+  issuerId       String
+  status         String    @default("pending") // pending, approved, rejected
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   // Relations
-  requester   User      @relation("UniversityJoinRequester", fields: [requesterId], references: [id])
-  university  University @relation("UniversityJoinTarget", fields: [universityId], references: [id])
+  requester      User      @relation("IssuerJoinRequester", fields: [requesterId], references: [id])
+  issuer         Issuer    @relation("IssuerJoinTarget", fields: [issuerId], references: [id])
 }

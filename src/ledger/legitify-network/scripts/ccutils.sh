@@ -304,26 +304,26 @@ function chaincodeInvoke() {
   
   # Set peer variables based on organization
   if [ "$ORG" -eq 1 ]; then
-    PEER="peer0.orguniversity.com"
+    PEER="peer0.orgissuer.com"
     PORT=7051
-    PEER_TLS_ROOTCERT=${PWD}/organizations/peerOrganizations/orguniversity.com/peers/peer0.orguniversity.com/tls/ca.crt
-    PEER2="peer0.orgindividual.com"
+    PEER_TLS_ROOTCERT=${PWD}/organizations/peerOrganizations/orgissuer.com/peers/peer0.orgissuer.com/tls/ca.crt
+    PEER2="peer0.orgholder.com"
     PORT2=9051
-    PEER2_TLS_ROOTCERT=${PWD}/organizations/peerOrganizations/orgindividual.com/peers/peer0.orgindividual.com/tls/ca.crt
+    PEER2_TLS_ROOTCERT=${PWD}/organizations/peerOrganizations/orgholder.com/peers/peer0.orgholder.com/tls/ca.crt
   elif [ "$ORG" -eq 2 ]; then
-    PEER="peer0.orgemployer.com"
+    PEER="peer0.orgverifier.com"
     PORT=8051
-    PEER_TLS_ROOTCERT=${PWD}/organizations/peerOrganizations/orgemployer.com/peers/peer0.orgemployer.com/tls/ca.crt
-    PEER2="peer0.orgindividual.com"
+    PEER_TLS_ROOTCERT=${PWD}/organizations/peerOrganizations/orgverifier.com/peers/peer0.orgverifier.com/tls/ca.crt
+    PEER2="peer0.orgholder.com"
     PORT2=9051
-    PEER2_TLS_ROOTCERT=${PWD}/organizations/peerOrganizations/orgindividual.com/peers/peer0.orgindividual.com/tls/ca.crt
+    PEER2_TLS_ROOTCERT=${PWD}/organizations/peerOrganizations/orgholder.com/peers/peer0.orgholder.com/tls/ca.crt
   elif [ "$ORG" -eq 3 ]; then
-    PEER="peer0.orgindividual.com"
+    PEER="peer0.orgholder.com"
     PORT=9051
-    PEER_TLS_ROOTCERT=${PWD}/organizations/peerOrganizations/orgindividual.com/peers/peer0.orgindividual.com/tls/ca.crt
-    PEER2="peer0.orguniversity.com"
+    PEER_TLS_ROOTCERT=${PWD}/organizations/peerOrganizations/orgholder.com/peers/peer0.orgholder.com/tls/ca.crt
+    PEER2="peer0.orgissuer.com"
     PORT2=7051
-    PEER2_TLS_ROOTCERT=${PWD}/organizations/peerOrganizations/orguniversity.com/peers/peer0.orguniversity.com/tls/ca.crt
+    PEER2_TLS_ROOTCERT=${PWD}/organizations/peerOrganizations/orgissuer.com/peers/peer0.orgissuer.com/tls/ca.crt
   else
     errorln "ORG Unknown"
   fi

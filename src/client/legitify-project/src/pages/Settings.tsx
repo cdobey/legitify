@@ -1,8 +1,8 @@
 import {
-  useDeleteUniversityLogoMutation,
-  useUploadUniversityLogoMutation,
-} from '@/api/universities/university.mutations';
-import { useMyUniversitiesQuery } from '@/api/universities/university.queries';
+  useDeleteIssuerLogoMutation,
+  useUploadIssuerLogoMutation,
+} from '@/api/issuers/issuer.mutations';
+import { useMyIssuersQuery } from '@/api/issuers/issuer.queries';
 import {
   Alert,
   Avatar,
@@ -45,11 +45,11 @@ import {
 } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
 import {
-  useAccessibleDegreesQuery,
+  useAccessibleCredentialsQuery,
   useAccessRequestsQuery,
   useLedgerRecordsQuery,
-  useMyDegreesQuery,
-} from '../api/degrees/degree.queries';
+  useMyCredentialsQuery,
+} from '../api/credentials/credential.queries';
 import {
   useChangePasswordMutation,
   useDeleteProfilePictureMutation,
@@ -95,21 +95,21 @@ export default function SettingsPage() {
   const [twoFactorVerificationCode, setTwoFactorVerificationCode] = useState('');
   const [twoFactorDisableCode, setTwoFactorDisableCode] = useState('');
 
-  const { data: userDegrees } = useMyDegreesQuery({ enabled: user?.role === 'individual' });
-  const { data: accessRequests } = useAccessRequestsQuery({ enabled: user?.role === 'individual' });
+  const { data: userCredentials } = useMyCredentialsQuery({ enabled: user?.role === 'holder' });
+  const { data: accessRequests } = useAccessRequestsQuery({ enabled: user?.role === 'holder' });
   const { data: ledgerRecords } = useLedgerRecordsQuery({
-    enabled: user?.role === 'university',
+    enabled: user?.role === 'issuer',
   });
-  const { data: universities } = useMyUniversitiesQuery({
-    enabled: user?.role === 'university',
+  const { data: issuers } = useMyIssuersQuery({
+    enabled: user?.role === 'issuer',
   });
-  const { data: accessibleDegrees } = useAccessibleDegreesQuery({
-    enabled: user?.role === 'employer',
+  const { data: accessibleCredentials } = useAccessibleCredentialsQuery({
+    enabled: user?.role === 'verifier',
   });
 
   // Mutations
-  const uploadLogoMutation = useUploadUniversityLogoMutation();
-  const deleteLogoMutation = useDeleteUniversityLogoMutation();
+  const uploadLogoMutation = useUploadIssuerLogoMutation();
+  const deleteLogoMutation = useDeleteIssuerLogoMutation();
   const uploadProfilePictureMutation = useUploadProfilePictureMutation();
   const deleteProfilePictureMutation = useDeleteProfilePictureMutation();
   const updateProfileMutation = useUpdateProfileMutation();
@@ -118,8 +118,8 @@ export default function SettingsPage() {
   const verifyTwoFactorMutation = useVerifyTwoFactorMutation();
   const disableTwoFactorMutation = useDisableTwoFactorMutation();
 
-  // Get the university for university users
-  const university = universities?.[0];
+  // Get the issuer for issuer users
+  const issuer = issuers?.[0];
 
   const pendingAccessRequestsCount =
     accessRequests?.filter(request => request.status === 'pending').length ?? 0;
@@ -241,8 +241,8 @@ export default function SettingsPage() {
         return;
       }
 
-      if (!university) {
-        setError('No university found');
+      if (!issuer) {
+        setError('No issuer found');
         return;
       }
 
@@ -253,16 +253,16 @@ export default function SettingsPage() {
       }
 
       await uploadLogoMutation.mutateAsync({
-        universityId: university.id,
+        issuerId: issuer.id,
         logoFile,
       });
 
-      setSuccess('University logo uploaded successfully');
+      setSuccess('Issuer logo uploaded successfully');
       setLogoFile(null);
       closeLogoModal();
     } catch (err: any) {
       console.error('Failed to upload logo:', err);
-      setError(err.message || 'Failed to upload university logo');
+      setError(err.message || 'Failed to upload issuer logo');
     }
   };
 
@@ -272,30 +272,30 @@ export default function SettingsPage() {
       setError(null);
       setSuccess(null);
 
-      if (!university) {
-        setError('No university found');
+      if (!issuer) {
+        setError('No issuer found');
         return;
       }
 
-      if (!university.logoUrl) {
+      if (!issuer.logoUrl) {
         setError('No logo found to delete');
         return;
       }
 
-      await deleteLogoMutation.mutateAsync(university.id);
+      await deleteLogoMutation.mutateAsync(issuer.id);
       notifications.show({
         title: 'Success',
-        message: 'University logo deleted successfully',
+        message: 'Issuer logo deleted successfully',
         color: 'green',
         icon: <IconCheck size={16} />,
       });
-      setSuccess('University logo deleted successfully');
+      setSuccess('Issuer logo deleted successfully');
     } catch (err: any) {
       console.error('Failed to delete logo:', err);
-      setError(err.message || 'Failed to delete university logo');
+      setError(err.message || 'Failed to delete issuer logo');
       notifications.show({
         title: 'Error',
-        message: err.message || 'Failed to delete university logo',
+        message: err.message || 'Failed to delete issuer logo',
         color: 'red',
         icon: <IconAlertCircle size={16} />,
       });
@@ -442,15 +442,15 @@ export default function SettingsPage() {
     });
   };
 
-  // Logo management section for university users
+  // Logo management section for issuer users
   const renderLogoSection = () => {
-    if (!university) return null;
+    if (!issuer) return null;
 
     return (
       <Stack gap="md">
-        <Title order={4}>University Logo</Title>
+        <Title order={4}>Issuer Logo</Title>
         <Group align="flex-start" wrap="nowrap">
-          {university.logoUrl ? (
+          {issuer.logoUrl ? (
             <Card withBorder p="xs" style={{ width: '150px', height: '150px' }}>
               <Box
                 style={{
@@ -464,8 +464,8 @@ export default function SettingsPage() {
                 mb="xs"
               >
                 <Image
-                  src={university.logoUrl}
-                  alt={`${university.displayName} logo`}
+                  src={issuer.logoUrl}
+                  alt={`${issuer.displayName} logo`}
                   fit="contain"
                   height={100}
                   style={{
@@ -493,7 +493,7 @@ export default function SettingsPage() {
                   leftSection={<IconTrash size={14} />}
                   onClick={handleLogoDelete}
                   loading={deleteLogoMutation.isPending}
-                  disabled={!university.logoUrl || deleteLogoMutation.isPending}
+                  disabled={!issuer.logoUrl || deleteLogoMutation.isPending}
                   style={{ padding: '0 8px', height: '24px' }}
                 >
                   {deleteLogoMutation.isPending ? 'Removing...' : 'Remove'}
@@ -528,7 +528,7 @@ export default function SettingsPage() {
 
           <Stack style={{ flex: 1 }} gap="xs">
             <Text size="sm">
-              Upload your university logo to enhance your branding on certificates and profiles.
+              Upload your issuer logo to enhance your branding on certificates and profiles.
             </Text>
             <Text size="xs" c="dimmed">
               The logo should be square and less than 2MB in size. Supported formats: JPEG, PNG,
@@ -543,14 +543,14 @@ export default function SettingsPage() {
   // Role-specific statistics
   const getRoleStats = () => {
     switch (user?.role) {
-      case 'individual':
+      case 'holder':
         return (
           <Stack gap="md">
             <Title order={4}>Account Overview</Title>
             <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
               <StatCard
-                title="Your Degrees"
-                value={(userDegrees?.length || 0).toString()}
+                title="Your Credentials"
+                value={(userCredentials?.length || 0).toString()}
                 icon={<IconBadge size={24} />}
               />
               <StatCard
@@ -561,44 +561,44 @@ export default function SettingsPage() {
             </SimpleGrid>
           </Stack>
         );
-      case 'university':
-        const degreeCount = ledgerRecords?.length || 0;
+      case 'issuer':
+        const credentialCount = ledgerRecords?.length || 0;
         return (
           <Stack gap="md">
-            <Title order={4}>University Overview</Title>
+            <Title order={4}>Issuer Overview</Title>
             <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
               <StatCard
-                title="Issued Degrees"
-                value={degreeCount.toString()}
+                title="Issued Credentials"
+                value={credentialCount.toString()}
                 icon={<IconBadge size={24} />}
               />
               <StatCard
                 title="Last Activity"
-                value={degreeCount > 0 ? formatDate(ledgerRecords?.[0]?.issuedAt) : 'N/A'}
+                value={credentialCount > 0 ? formatDate(ledgerRecords?.[0]?.issuedAt) : 'N/A'}
                 icon={<IconUser size={24} />}
                 isDate
               />
             </SimpleGrid>
           </Stack>
         );
-      case 'employer':
-        const accessibleDegreesCount = accessibleDegrees?.length || 0;
-        const uniqueIndividuals = new Set(
-          accessibleDegrees?.map(degree => degree.owner?.email) || [],
+      case 'verifier':
+        const accessibleCredentialsCount = accessibleCredentials?.length || 0;
+        const uniqueHolders = new Set(
+          accessibleCredentials?.map(credential => credential.holder?.email) || [],
         ).size;
 
         return (
           <Stack gap="md">
-            <Title order={4}>Employer Overview</Title>
+            <Title order={4}>Verifier Overview</Title>
             <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
               <StatCard
-                title="Unique Individuals"
-                value={uniqueIndividuals.toString()}
+                title="Unique Holders"
+                value={uniqueHolders.toString()}
                 icon={<IconUser size={24} />}
               />
               <StatCard
-                title="Accessible Degrees"
-                value={accessibleDegreesCount.toString()}
+                title="Accessible Credentials"
+                value={accessibleCredentialsCount.toString()}
                 icon={<IconBadge size={24} />}
               />
             </SimpleGrid>
@@ -671,9 +671,9 @@ export default function SettingsPage() {
           <Tabs.Tab value="preferences" leftSection={<IconSun size="0.8rem" />}>
             Preferences
           </Tabs.Tab>
-          {user.role === 'university' && (
-            <Tabs.Tab value="university" leftSection={<IconBadge size="0.8rem" />}>
-              University
+          {user.role === 'issuer' && (
+            <Tabs.Tab value="issuer" leftSection={<IconBadge size="0.8rem" />}>
+              Issuer
             </Tabs.Tab>
           )}
         </Tabs.List>
@@ -973,8 +973,8 @@ export default function SettingsPage() {
           </Paper>
         </Tabs.Panel>
 
-        {user.role === 'university' && (
-          <Tabs.Panel value="university">
+        {user.role === 'issuer' && (
+          <Tabs.Panel value="issuer">
             <Paper shadow="sm" p="xl" withBorder radius="md">
               <Stack gap="xl">{renderLogoSection()}</Stack>
             </Paper>
@@ -1147,7 +1147,7 @@ export default function SettingsPage() {
       <Modal
         opened={logoModalOpened}
         onClose={closeLogoModal}
-        title={logoFile ? 'Preview New Logo' : 'University Logo'}
+        title={logoFile ? 'Preview New Logo' : 'Issuer Logo'}
         styles={{
           header: {
             background: 'transparent',
@@ -1180,7 +1180,7 @@ export default function SettingsPage() {
         <Stack gap="md">
           <Text size="sm" c={isDarkMode ? 'dimmed' : 'dark'}>
             {logoFile
-              ? 'Preview your new university logo.'
+              ? 'Preview your new issuer logo.'
               : 'Upload a new logo or manage your existing one.'}
           </Text>
 
@@ -1208,7 +1208,7 @@ export default function SettingsPage() {
                   style={{ maxWidth: '100%', maxHeight: '100%' }}
                 />
               </Box>
-            ) : university?.logoUrl ? (
+            ) : issuer?.logoUrl ? (
               <Box
                 style={{
                   width: '150px',
@@ -1225,8 +1225,8 @@ export default function SettingsPage() {
                 }}
               >
                 <Image
-                  src={university.logoUrl}
-                  alt="Current university logo"
+                  src={issuer.logoUrl}
+                  alt="Current issuer logo"
                   fit="contain"
                   style={{ maxWidth: '100%', maxHeight: '100%' }}
                 />
@@ -1265,7 +1265,7 @@ export default function SettingsPage() {
                   size="sm"
                   leftSection={<IconCloudUpload size={16} />}
                 >
-                  {university?.logoUrl && !logoFile ? 'Choose New Logo' : 'Select Image'}
+                  {issuer?.logoUrl && !logoFile ? 'Choose New Logo' : 'Select Image'}
                 </Button>
               )}
             </FileButton>
@@ -1282,7 +1282,7 @@ export default function SettingsPage() {
               </Button>
             )}
 
-            {university?.logoUrl && !logoFile && (
+            {issuer?.logoUrl && !logoFile && (
               <Button
                 variant="light"
                 color="red"

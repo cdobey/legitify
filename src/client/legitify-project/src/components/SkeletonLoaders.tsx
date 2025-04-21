@@ -13,7 +13,7 @@ import { ReactNode } from 'react';
 
 // Props for role-specific dashboard skeletons
 interface DashboardSkeletonProps {
-  userRole?: 'university' | 'individual' | 'employer';
+  userRole?: 'issuer' | 'holder' | 'verifier';
 }
 
 // Generic card skeleton for consistent spacing
@@ -183,7 +183,7 @@ export function DualColumnSkeleton() {
 }
 
 // Role-specific dashboard skeletons
-export function UniversityDashboardSkeleton() {
+export function IssuerDashboardSkeleton() {
   return (
     <>
       <StatsGridSkeleton columns={4} />
@@ -192,7 +192,7 @@ export function UniversityDashboardSkeleton() {
   );
 }
 
-export function IndividualDashboardSkeleton() {
+export function HolderDashboardSkeleton() {
   return (
     <>
       <ProgressBarsSkeleton bars={3} />
@@ -201,7 +201,7 @@ export function IndividualDashboardSkeleton() {
   );
 }
 
-export function EmployerDashboardSkeleton() {
+export function VerifierDashboardSkeleton() {
   return (
     <>
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md" mb="xl">
@@ -269,11 +269,11 @@ export function DashboardSkeleton({ userRole }: DashboardSkeletonProps) {
   return (
     <Container size="xl" py="xl">
       <WelcomeCardSkeleton />
-      <QuickActionsSkeleton columns={userRole === 'employer' ? 3 : 2} />
+      <QuickActionsSkeleton columns={userRole === 'verifier' ? 3 : 2} />
 
-      {userRole === 'university' && <UniversityDashboardSkeleton />}
-      {userRole === 'individual' && <IndividualDashboardSkeleton />}
-      {userRole === 'employer' && <EmployerDashboardSkeleton />}
+      {userRole === 'issuer' && <IssuerDashboardSkeleton />}
+      {userRole === 'holder' && <HolderDashboardSkeleton />}
+      {userRole === 'verifier' && <VerifierDashboardSkeleton />}
     </Container>
   );
 }

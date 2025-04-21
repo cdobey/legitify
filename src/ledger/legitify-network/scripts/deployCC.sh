@@ -76,11 +76,11 @@ checkPrereqs
 PACKAGE_ID=$(peer lifecycle chaincode calculatepackageid ${CC_NAME}.tar.gz)
 
 ## Install chaincode on peer0.org1, peer0.org2, and peer0.org3
-infoln "Installing chaincode on peer0.orguniversity..."
+infoln "Installing chaincode on peer0.orgissuer..."
 installChaincode 1
-infoln "Installing chaincode on peer0.orgemployer..."
+infoln "Installing chaincode on peer0.orgverifier..."
 installChaincode 2
-infoln "Installing chaincode on peer0.orgindividual..."
+infoln "Installing chaincode on peer0.orgholder..."
 installChaincode 3
 
 resolveSequence
@@ -95,9 +95,9 @@ approveForMyOrg 1
 
 ## check whether the chaincode definition is ready to be committed
 ## expect org1 to have approved and org2, org3 not to
-checkCommitReadiness 1 "\"OrgUniversityMSP\": true" "\"OrgEmployerMSP\": false" "\"OrgIndividualMSP\": false"
-checkCommitReadiness 2 "\"OrgUniversityMSP\": true" "\"OrgEmployerMSP\": false" "\"OrgIndividualMSP\": false"
-checkCommitReadiness 3 "\"OrgUniversityMSP\": true" "\"OrgEmployerMSP\": false" "\"OrgIndividualMSP\": false"
+checkCommitReadiness 1 "\"OrgIssuerMSP\": true" "\"OrgVerifierMSP\": false" "\"OrgHolderMSP\": false"
+checkCommitReadiness 2 "\"OrgIssuerMSP\": true" "\"OrgVerifierMSP\": false" "\"OrgHolderMSP\": false"
+checkCommitReadiness 3 "\"OrgIssuerMSP\": true" "\"OrgVerifierMSP\": false" "\"OrgHolderMSP\": false"
 
 ## now approve also for org2 and org3
 approveForMyOrg 2
@@ -105,9 +105,9 @@ approveForMyOrg 3
 
 ## check whether the chaincode definition is ready to be committed
 ## expect them all to have approved
-checkCommitReadiness 1 "\"OrgUniversityMSP\": true" "\"OrgEmployerMSP\": true" "\"OrgIndividualMSP\": true"
-checkCommitReadiness 2 "\"OrgUniversityMSP\": true" "\"OrgEmployerMSP\": true" "\"OrgIndividualMSP\": true"
-checkCommitReadiness 3 "\"OrgUniversityMSP\": true" "\"OrgEmployerMSP\": true" "\"OrgIndividualMSP\": true"
+checkCommitReadiness 1 "\"OrgIssuerMSP\": true" "\"OrgVerifierMSP\": true" "\"OrgHolderMSP\": true"
+checkCommitReadiness 2 "\"OrgIssuerMSP\": true" "\"OrgVerifierMSP\": true" "\"OrgHolderMSP\": true"
+checkCommitReadiness 3 "\"OrgIssuerMSP\": true" "\"OrgVerifierMSP\": true" "\"OrgHolderMSP\": true"
 
 ## now that we know for sure all orgs have approved, commit the definition
 commitChaincodeDefinition 1 2 3

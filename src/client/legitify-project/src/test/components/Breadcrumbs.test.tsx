@@ -1,10 +1,9 @@
+import { MantineProvider, MantineThemeOverride } from '@mantine/core';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import React from 'react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Breadcrumbs from '../../components/Breadcrumbs';
-import { MantineProvider, MantineThemeOverride } from '@mantine/core';
 
 // Define interface types
 interface User {
@@ -48,7 +47,18 @@ vi.mock('@/contexts/ThemeContext', () => ({
 // Create a custom theme that includes primaryBlue
 const mockMantineTheme: MantineThemeOverride = {
   colors: {
-    primaryBlue: ['#e7f5ff', '#d0ebff', '#a5d8ff', '#74c0fc', '#4dabf7', '#339af0', '#228be6', '#1c7ed6', '#1971c2', '#1864ab'],
+    primaryBlue: [
+      '#e7f5ff',
+      '#d0ebff',
+      '#a5d8ff',
+      '#74c0fc',
+      '#4dabf7',
+      '#339af0',
+      '#228be6',
+      '#1c7ed6',
+      '#1971c2',
+      '#1864ab',
+    ],
   },
 };
 
@@ -80,7 +90,7 @@ function setup(user: User | null = null, pathname = '/', search = '') {
       <MemoryRouter initialEntries={[pathname + search]}>
         <Breadcrumbs />
       </MemoryRouter>
-    </MantineProvider>
+    </MantineProvider>,
   );
 
   return {
@@ -105,73 +115,91 @@ describe('Breadcrumbs Component', () => {
   });
 
   it('renders nothing on dashboard for logged in users', () => {
-    setup({
-      username: 'testuser',
-      email: 'test@example.com',
-      role: 'individual',
-    }, '/dashboard');
-    
+    setup(
+      {
+        username: 'testuser',
+        email: 'test@example.com',
+        role: 'holder',
+      },
+      '/dashboard',
+    );
+
     // Breadcrumbs should not render on dashboard
     expect(document.querySelector('.breadcrumbs-container')).not.toBeInTheDocument();
   });
 
   it('renders breadcrumbs for profile page', () => {
-    setup({
-      username: 'testuser',
-      email: 'test@example.com',
-      role: 'individual',
-    }, '/profile');
-    
+    setup(
+      {
+        username: 'testuser',
+        email: 'test@example.com',
+        role: 'holder',
+      },
+      '/profile',
+    );
+
     // Should show Home > Profile
     expect(screen.getByText('Home')).toBeInTheDocument();
     expect(screen.getByText('Profile')).toBeInTheDocument();
   });
 
   it('renders breadcrumbs for settings page', () => {
-    setup({
-      username: 'testuser',
-      email: 'test@example.com',
-      role: 'individual',
-    }, '/settings');
-    
+    setup(
+      {
+        username: 'testuser',
+        email: 'test@example.com',
+        role: 'holder',
+      },
+      '/settings',
+    );
+
     // Should show Home > Settings
     expect(screen.getByText('Home')).toBeInTheDocument();
     expect(screen.getByText('Settings')).toBeInTheDocument();
   });
 
-  it('renders breadcrumbs for degree paths', () => {
-    setup({
-      username: 'testuser',
-      email: 'test@example.com',
-      role: 'individual',
-    }, '/degree/manage');
-    
-    // Should show Home > Degrees > Manage
+  it('renders breadcrumbs for credential paths', () => {
+    setup(
+      {
+        username: 'testuser',
+        email: 'test@example.com',
+        role: 'holder',
+      },
+      '/credential/manage',
+    );
+
+    // Should show Home > Credentials > Manage
     expect(screen.getByText('Home')).toBeInTheDocument();
-    expect(screen.getByText('Degrees')).toBeInTheDocument();
+    expect(screen.getByText('Credentials')).toBeInTheDocument();
     expect(screen.getByText('Manage')).toBeInTheDocument();
   });
 
-  it('renders correct breadcrumbs for university paths', () => {
-    setup({
-      username: 'testuser',
-      email: 'test@example.com',
-      role: 'university',
-    }, '/universities/manage');
-    
-    // Should show Home > University > Manage
+  it('renders correct breadcrumbs for issuer paths', () => {
+    setup(
+      {
+        username: 'testuser',
+        email: 'test@example.com',
+        role: 'issuer',
+      },
+      '/issuers/manage',
+    );
+
+    // Should show Home > Issuer > Manage
     expect(screen.getByText('Home')).toBeInTheDocument();
-    expect(screen.getByText('University')).toBeInTheDocument();
+    expect(screen.getByText('Issuer')).toBeInTheDocument();
     expect(screen.getByText('Manage')).toBeInTheDocument();
   });
 
-  it('renders correct breadcrumbs for employer paths', () => {
-    setup({
-      username: 'testuser',
-      email: 'test@example.com',
-      role: 'employer',
-    }, '/users/search');
-    
+  it('renders correct breadcrumbs for verifier paths', () => {
+    setup(
+      {
+        username: 'testuser',
+        email: 'test@example.com',
+        role: 'verifier',
+      },
+      '/users/search',
+    );
+
     // Should show Home > Users > Search
     expect(screen.getByText('Home')).toBeInTheDocument();
     expect(screen.getByText('Users')).toBeInTheDocument();
@@ -179,58 +207,70 @@ describe('Breadcrumbs Component', () => {
   });
 
   it('handles special case for certificate view', () => {
-    setup({
-      username: 'testuser',
-      email: 'test@example.com',
-      role: 'individual',
-    }, '/degree/view/abc123456789');
-    
-    // Should show Home > Degrees > View Certificate
+    setup(
+      {
+        username: 'testuser',
+        email: 'test@example.com',
+        role: 'holder',
+      },
+      '/credential/view/abc123456789',
+    );
+
+    // Should show Home > Credentials > View Certificate
     expect(screen.getByText('Home')).toBeInTheDocument();
-    expect(screen.getByText('Degrees')).toBeInTheDocument();
+    expect(screen.getByText('Credentials')).toBeInTheDocument();
     expect(screen.getByText('View Certificate')).toBeInTheDocument();
   });
 
   it('makes last breadcrumb non-clickable', () => {
-    setup({
-      username: 'testuser',
-      email: 'test@example.com',
-      role: 'individual',
-    }, '/profile');
-    
+    setup(
+      {
+        username: 'testuser',
+        email: 'test@example.com',
+        role: 'holder',
+      },
+      '/profile',
+    );
+
     // Home should be a link
     const homeLink = screen.getByText('Home').closest('a');
     expect(homeLink).toBeInTheDocument();
     expect(homeLink).toHaveAttribute('href', '/dashboard');
-    
+
     // Profile should be text (not a link)
     const profileText = screen.getByText('Profile');
     expect(profileText.tagName).not.toBe('A');
   });
 
   it('makes non-clickable routes as text instead of links', () => {
-    setup({
-      username: 'testuser',
-      email: 'test@example.com',
-      role: 'individual',
-    }, '/universities');
-    
+    setup(
+      {
+        username: 'testuser',
+        email: 'test@example.com',
+        role: 'holder',
+      },
+      '/issuers',
+    );
+
     // Home should be a link
     const homeLink = screen.getByText('Home').closest('a');
     expect(homeLink).toBeInTheDocument();
-    
-    // University should be text (not a link) because it's marked as not clickable
-    const uniText = screen.getByText('University');
+
+    // Issuer should be text (not a link) because it's marked as not clickable
+    const uniText = screen.getByText('Issuer');
     expect(uniText.tagName).not.toBe('A');
   });
 
   it('uses dashboard as home for logged in users', () => {
-    setup({
-      username: 'testuser',
-      email: 'test@example.com',
-      role: 'individual',
-    }, '/profile');
-    
+    setup(
+      {
+        username: 'testuser',
+        email: 'test@example.com',
+        role: 'holder',
+      },
+      '/profile',
+    );
+
     // Home link should point to dashboard
     const homeLink = screen.getByText('Home').closest('a');
     expect(homeLink).toHaveAttribute('href', '/dashboard');
@@ -238,19 +278,22 @@ describe('Breadcrumbs Component', () => {
 
   it('uses root as home for non-logged in users', () => {
     setup(null, '/profile');
-    
+
     // Home link should point to root
     const homeLink = screen.getByText('Home').closest('a');
     expect(homeLink).toHaveAttribute('href', '/');
   });
 
   it('shows icons with breadcrumb items', () => {
-    setup({
-      username: 'testuser',
-      email: 'test@example.com',
-      role: 'individual',
-    }, '/degree/manage');
-    
+    setup(
+      {
+        username: 'testuser',
+        email: 'test@example.com',
+        role: 'holder',
+      },
+      '/credential/manage',
+    );
+
     // Should have icons alongside the text
     const icons = document.querySelectorAll('svg');
     // 3 for the breadcrumb items + chevron icons between them
@@ -259,12 +302,15 @@ describe('Breadcrumbs Component', () => {
 
   it('changes style based on dark mode', () => {
     mockThemeState.isDarkMode = true;
-    setup({
-      username: 'testuser',
-      email: 'test@example.com',
-      role: 'individual',
-    }, '/profile');
-    
+    setup(
+      {
+        username: 'testuser',
+        email: 'test@example.com',
+        role: 'holder',
+      },
+      '/profile',
+    );
+
     // This is a visual test, so we just ensure it renders
     expect(screen.getByText('Home')).toBeInTheDocument();
     expect(screen.getByText('Profile')).toBeInTheDocument();

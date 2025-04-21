@@ -1,7 +1,7 @@
-import FabricCAServices from "fabric-ca-client";
-import fs from "fs";
-import path from "path";
-import { DatabaseWallet } from "../src/utils/db-wallet";
+import FabricCAServices from 'fabric-ca-client';
+import fs from 'fs';
+import path from 'path';
+import { DatabaseWallet } from '../src/utils/db-wallet';
 
 interface Organization {
   name: string;
@@ -13,18 +13,15 @@ async function enrollAdmin(orgName: string, mspId: string): Promise<void> {
     const rootDir = __dirname;
 
     // Use the connection profiles fetched from the resource server
-    const ccpPath = path.resolve(
-      rootDir,
-      `../src/connectionProfiles/connection-${orgName}.json`
-    );
+    const ccpPath = path.resolve(rootDir, `../src/connectionProfiles/connection-${orgName}.json`);
 
     if (!fs.existsSync(ccpPath)) {
       throw new Error(
-        `Connection profile not found at ${ccpPath}. Make sure to run fetch-fabric-resources.js first.`
+        `Connection profile not found at ${ccpPath}. Make sure to run fetch-fabric-resources.js first.`,
       );
     }
 
-    const ccp = JSON.parse(fs.readFileSync(ccpPath, "utf8"));
+    const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));
     const caInfo = ccp.certificateAuthorities[`ca.${orgName}.com`];
 
     if (!caInfo) {
@@ -34,7 +31,7 @@ async function enrollAdmin(orgName: string, mspId: string): Promise<void> {
     const ca = new FabricCAServices(
       caInfo.url,
       { trustedRoots: caInfo.tlsCACerts.pem, verify: false },
-      caInfo.caName
+      caInfo.caName,
     );
 
     // Use database wallet
@@ -50,8 +47,8 @@ async function enrollAdmin(orgName: string, mspId: string): Promise<void> {
     console.log(`Enrolling admin user for ${orgName}...`);
 
     const enrollment = await ca.enroll({
-      enrollmentID: "admin",
-      enrollmentSecret: "adminpw",
+      enrollmentID: 'admin',
+      enrollmentSecret: 'adminpw',
     });
 
     const x509Identity = {
@@ -60,12 +57,12 @@ async function enrollAdmin(orgName: string, mspId: string): Promise<void> {
         privateKey: enrollment.key.toBytes(),
       },
       mspId: mspId,
-      type: "X.509",
+      type: 'X.509',
     };
 
     await wallet.put(`${orgName}admin`, x509Identity);
     console.log(
-      `Successfully enrolled admin user for ${orgName} and imported it into the database wallet`
+      `Successfully enrolled admin user for ${orgName} and imported it into the database wallet`,
     );
   } catch (error) {
     console.error(`Failed to enroll admin user for ${orgName}:`, error);
@@ -77,9 +74,9 @@ async function enrollAdmin(orgName: string, mspId: string): Promise<void> {
 async function main(): Promise<void> {
   try {
     const organizations: Organization[] = [
-      { name: "orguniversity", mspId: "OrgUniversityMSP" },
-      { name: "orgemployer", mspId: "OrgEmployerMSP" },
-      { name: "orgindividual", mspId: "OrgIndividualMSP" },
+      { name: 'orgissuer', mspId: 'OrgIssuerMSP' },
+      { name: 'orgverifier', mspId: 'OrgVerifierMSP' },
+      { name: 'orgholder', mspId: 'OrgHolderMSP' },
     ];
 
     for (const org of organizations) {

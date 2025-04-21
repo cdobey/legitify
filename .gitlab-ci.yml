@@ -75,13 +75,13 @@ test_flow:
       fi
 
     # Prepare chaincode
-    - cd chaincode/degreeChaincode
+    - cd chaincode/credentialChaincode
     - GO111MODULE=on go mod vendor
 
     # Start the network and test
     - cd $CI_PROJECT_DIR/src/ledger/legitify-network
     - bash scripts/startNetwork.sh
-    - bash scripts/testDegreeChaincode.sh
+    - bash scripts/testCredentialChaincode.sh
 
   after_script:
     - |
@@ -335,7 +335,7 @@ initialize_database:
       export FABRIC_CONNECTION=${FABRIC_CONNECTION:-network.legitifyapp.com}
       export RESOURCE_SERVER_PORT=${RESOURCE_SERVER_PORT:-8080}
       export FABRIC_CHANNEL=${FABRIC_CHANNEL:-legitifychannel}
-      export FABRIC_CHAINCODE=${FABRIC_CHAINCODE:-degreeCC}
+      export FABRIC_CHAINCODE=${FABRIC_CHAINCODE:-credentialCC}
       export LEGITIFY_API_URL=${LEGITIFY_API_URL:-"https://api.legitifyapp.com"}
 
       # Show disk space before database operations

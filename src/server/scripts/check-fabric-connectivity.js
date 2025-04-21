@@ -37,13 +37,13 @@ const RESOURCE_SERVER_URL = `http://${FABRIC_CONNECTION}:${RESOURCE_SERVER_PORT}
 
 // Define the components to check
 const components = [
-  { name: 'OrgUniversity Peer', port: 7051, protocol: 'tcp' },
-  { name: 'OrgEmployer Peer', port: 8051, protocol: 'tcp' },
-  { name: 'OrgIndividual Peer', port: 9051, protocol: 'tcp' },
+  { name: 'OrgIssuer Peer', port: 7051, protocol: 'tcp' },
+  { name: 'OrgVerifier Peer', port: 8051, protocol: 'tcp' },
+  { name: 'OrgHolder Peer', port: 9051, protocol: 'tcp' },
   { name: 'Orderer', port: 7050, protocol: 'tcp' },
-  { name: 'OrgUniversity CA', port: 7054, protocol: 'tcp' },
-  { name: 'OrgEmployer CA', port: 8054, protocol: 'tcp' },
-  { name: 'OrgIndividual CA', port: 9054, protocol: 'tcp' },
+  { name: 'OrgIssuer CA', port: 7054, protocol: 'tcp' },
+  { name: 'OrgVerifier CA', port: 8054, protocol: 'tcp' },
+  { name: 'OrgHolder CA', port: 9054, protocol: 'tcp' },
   { name: 'Resource Server', port: 8080, protocol: 'http' },
 ];
 

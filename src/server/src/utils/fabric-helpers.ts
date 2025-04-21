@@ -12,38 +12,37 @@ interface OrgConfig {
 }
 
 const orgConfigs: { [key: string]: OrgConfig } = {
-  orguniversity: {
-    name: 'orguniversity',
-    mspId: 'OrgUniversityMSP',
-    caName: 'ca.orguniversity.com',
+  orgissuer: {
+    name: 'orgissuer',
+    mspId: 'OrgIssuerMSP',
+    caName: 'ca.orgissuer.com',
   },
-  orgemployer: {
-    name: 'orgemployer',
-    mspId: 'OrgEmployerMSP',
-    caName: 'ca.orgemployer.com',
+  orgverifier: {
+    name: 'orgverifier',
+    mspId: 'OrgVerifierMSP',
+    caName: 'ca.orgverifier.com',
   },
-  orgindividual: {
-    name: 'orgindividual',
-    mspId: 'OrgIndividualMSP',
-    caName: 'ca.orgindividual.com',
+  orgholder: {
+    name: 'orgholder',
+    mspId: 'OrgHolderMSP',
+    caName: 'ca.orgholder.com',
   },
 };
 
-// Enroll user with CA, optionally adding university attributes
 export const enrollUser = async (
   userId: string,
   orgName: OrgName,
-  universityId?: string,
+  issuerId?: string,
 ): Promise<void> => {
   try {
     console.log(`Enrolling user ${userId} with org ${orgName}...`);
 
-    // For university users, we'll add university ID as an attribute
+    // For issuer users, we'll add issuer ID as an attribute
     const attributes = [];
-    if (orgName === OrgName.orguniversity && universityId) {
+    if (orgName === OrgName.orgissuer && issuerId) {
       attributes.push({
-        name: 'universityId',
-        value: universityId,
+        name: 'issuerId',
+        value: issuerId,
         ecert: true,
       });
     }
@@ -53,18 +52,14 @@ export const enrollUser = async (
       throw new Error(`Invalid organization: ${orgName}`);
     }
 
-    // Load the network configuration
     const ccpPath = path.resolve(__dirname, `../connectionProfiles/connection-${org.name}.json`);
     const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));
 
-    // Create a new CA client for interacting with the CA
     const caURL = ccp.certificateAuthorities[org.caName].url;
     const ca = new FabricCAServices(caURL);
 
-    // Create a wallet using the database
     const wallet = await DatabaseWallet.createInstance(org.name);
 
-    // Check if user already exists in wallet
     const userIdentity = await wallet.get(userId);
     if (userIdentity) {
       console.log(`Identity for ${userId} already exists in ${org.name} wallet`);
@@ -81,8 +76,6 @@ export const enrollUser = async (
     const provider = wallet.getProviderRegistry().getProvider(adminIdentity.type);
     const adminUser = await provider.getUserContext(adminIdentity, `${org.name}admin`);
 
-    // Register the user using the admin identity
-    // First let's check if we need to handle attributes
     const registrationRequest: {
       enrollmentID: string;
       enrollmentSecret: string;
@@ -112,11 +105,11 @@ export const enrollUser = async (
       enrollmentSecret: secret,
     };
 
-    // If we have university attributes, request them to be included in the certificate
+    // If we have issuer attributes, request them to be included in the certificate
     if (attributes.length > 0) {
       enrollmentRequest.attr_reqs = [
         {
-          name: 'universityId',
+          name: 'issuerId',
           optional: false,
         },
       ];
@@ -147,17 +140,12 @@ export const enrollUser = async (
   }
 };
 
-// Add a utility function to update university-specific identity when a university is created
-export const updateUniversityIdentity = async (
-  userId: string,
-  universityId: string,
-): Promise<void> => {
+export const updateIssuerIdentity = async (userId: string, issuerId: string): Promise<void> => {
   try {
-    // Re-enroll the user with the university ID attribute
-    await enrollUser(userId, OrgName.orguniversity, universityId);
-    console.log(`Updated identity for user ${userId} with universityId ${universityId}`);
+    await enrollUser(userId, OrgName.orgissuer, issuerId);
+    console.log(`Updated identity for user ${userId} with issuerId ${issuerId}`);
   } catch (error) {
-    console.error(`Failed to update university identity: ${error}`);
+    console.error(`Failed to update issuer identity: ${error}`);
     throw error;
   }
 };
@@ -248,9 +236,9 @@ export async function testFabricConnection(
 
     // First try to ping the organizations's peer
     let peerPort;
-    if (orgName === 'orguniversity') peerPort = 7051;
-    else if (orgName === 'orgemployer') peerPort = 8051;
-    else if (orgName === 'orgindividual') peerPort = 9051;
+    if (orgName === 'orgissuer') peerPort = 7051;
+    else if (orgName === 'orgverifier') peerPort = 8051;
+    else if (orgName === 'orgholder') peerPort = 9051;
     else return { connected: false, error: 'Unknown organization' };
 
     // Use node's built-in DNS to check hostname resolution

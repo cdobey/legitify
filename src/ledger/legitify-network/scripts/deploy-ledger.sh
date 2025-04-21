@@ -79,7 +79,7 @@ ssh -i ${SSH_KEY_FILE} ${EC2_USER}@${EC2_HOST} << 'EOF'
   fi
 
   # Deploy chaincode
-  cd ${HOME}/legitify/network/chaincode/degreeChaincode
+  cd ${HOME}/legitify/network/chaincode/credentialChaincode
   GO111MODULE=on go mod vendor
 
   # Start the network

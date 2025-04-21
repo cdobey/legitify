@@ -1,4 +1,3 @@
-
 # School of Computing &mdash; Year 4 Project Proposal Form
 
 > Edit (then commit and push) this document to complete your proposal form.
@@ -9,13 +8,13 @@
 ## SECTION A
 
 |                         |                                                         |
-|-------------------------|---------------------------------------------------------|
+| ----------------------- | ------------------------------------------------------- |
 | **Project Title:**      | Legitify: Empowering Trust Through Verified Credentials |
-| **Student 1 Name:**     | Christopher Dobey                                       |
-| **Student 1 ID:**       | 20756959                                                |
-| **Student 2 Name:**     | Pádraig Mann                                            |
-| **Student 2 ID:**       | 21477812                                                |
-| **Project Supervisor:** | *[TBC]* <---------------------                          |
+| **Holder 1 Name:**      | Christopher Dobey                                       |
+| **Holder 1 ID:**        | 20756959                                                |
+| **Holder 2 Name:**      | Pádraig Mann                                            |
+| **Holder 2 ID:**        | 21477812                                                |
+| **Project Supervisor:** | _[TBC]_ <---------------------                          |
 
 > Ensure that the Supervisor formally agrees to supervise your project; this is only recognised once the
 > Supervisor assigns herself/himself via the project Dashboard.
@@ -28,7 +27,7 @@
 > It is also permissible to carry forward content from this proposal to your later documents (e.g. functional
 > specification) as appropriate.
 >
-> Your proposal must include *at least* the following sections.
+> Your proposal must include _at least_ the following sections.
 
 ### Introduction
 
@@ -36,11 +35,11 @@ In today's digital era, verifying the authenticity of professional credentials, 
 
 ### Outline
 
-The proposed project involves developing a web-based platform that allows individuals to store and manage their credentials and identification documents, and organizations to issue and verify these credentials securely. The platform will use blockchain technology to record verification data, ensuring immutability and transparency.
+The proposed project involves developing a web-based platform that allows holders to store and manage their credentials and identification documents, and organizations to issue and verify these credentials securely. The platform will use blockchain technology to record verification data, ensuring immutability and transparency.
 
 Key components of the project include:
 
-- **Frontend Development**: Using **Vite** with **TypeScript** to build a responsive and user-friendly interface for individuals, organizations, and verifiers.
+- **Frontend Development**: Using **Vite** with **TypeScript** to build a responsive and user-friendly interface for holders, organizations, and verifiers.
 - **Backend Development**: Utilizing **Fastify** with **TypeScript** to create a scalable and high-performance server, integrating with **PostgreSQL** for data storage.
 - **Blockchain Integration**: Implementing smart contracts using **Solidity** and interacting with the Ethereum blockchain via **Ethers.js**.
 - **Security Implementation**: Ensuring robust authentication, authorization, and data protection mechanisms.
@@ -54,24 +53,24 @@ The idea for this project stems from the increasing need for secure and efficien
 **Functions Provided:**
 
 - **Credential Issuance**: Organizations can issue digital credentials, certificates, licenses, or identification documents through the platform.
-- **Credential Management**: Individuals can store, manage, and control access to their credentials and identification documents.
+- **Credential Management**: Holders can store, manage, and control access to their credentials and identification documents.
 - **Selective Sharing**: Users can share specific information or entire documents with verifiers, controlling what gets shared and for how long.
 - **Verification Services**: Verifiers can access and verify credentials with user-controlled permissions.
 - **Blockchain Verification**: The platform records hashes of credentials on the blockchain, enabling tamper-proof verification of authenticity.
 
 **Users:**
 
-- **Individuals**: Students, professionals, and anyone who needs to store and manage credentials or identification documents.
-- **Organizations**: Universities, certification bodies, employers, government agencies, and licensing authorities that issue credentials.
-- **Verifiers**: Employers, educational institutions, regulatory bodies, and other entities that need to verify credentials.
+- **Holders**: Holders, professionals, and anyone who needs to store and manage credentials or identification documents.
+- **Organizations**: Issuers, certification bodies, verifiers, government agencies, and licensing authorities that issue credentials.
+- **Verifiers**: Verifiers, educational institutions, regulatory bodies, and other entities that need to verify credentials.
 
 ### Justification
 
 The platform addresses critical issues in credential verification by providing a secure, efficient, and transparent system. It will be useful in:
 
 - **Preventing Fraud**: Utilizing blockchain's immutability to ensure credentials cannot be tampered with or falsified.
-- **Streamlining Verification**: Reducing the time and effort required for verifying credentials, benefiting both individuals and verifiers.
-- **Enhancing Privacy and Control**: Allowing individuals to control their personal information, deciding what to share and with whom.
+- **Streamlining Verification**: Reducing the time and effort required for verifying credentials, benefiting both holders and verifiers.
+- **Enhancing Privacy and Control**: Allowing holders to control their personal information, deciding what to share and with whom.
 - **Cross-Industry Application**: Applicable in sectors such as education, healthcare, employment, government services, and supply chain management.
 - **Facilitating Trust**: Building trust between parties by providing verifiable proof of credentials, essential in professional and regulatory environments.
 
@@ -138,13 +137,15 @@ No non-standard hardware components are required for this project. Standard deve
 
 ### Breakdown of Work
 
-#### **Student 1: Christopher Dobey**
+#### **Holder 1: Christopher Dobey**
 
 - **Project Planning and Management**:
-  - Collaborate with Student 2 on research, planning, scheduling, and overall project management.
+
+  - Collaborate with Holder 2 on research, planning, scheduling, and overall project management.
   - Define project scope and objectives, ensuring alignment with goals.
 
 - **Backend Development**:
+
   - **Server Setup**: Configure and set up the Fastify server using TypeScript.
   - **API Development**: Develop API endpoints for credential issuance and management functionalities.
   - **Blockchain Integration**:
@@ -155,6 +156,7 @@ No non-standard hardware components are required for this project. Standard deve
     - Focus on contracts that handle credential creation and storage on the blockchain.
 
 - **Frontend Development**:
+
   - **Interface for Organizations**:
     - Design and develop the frontend interface for organizations to issue credentials.
     - Ensure the interface is user-friendly and meets organizational needs.
@@ -162,23 +164,27 @@ No non-standard hardware components are required for this project. Standard deve
     - Integrate frontend components with backend APIs for organizational functionalities.
 
 - **Security Implementation**:
+
   - **Authentication and Authorization**:
     - Implement secure login systems for organizations.
     - Set up role-based access control for different organizational roles.
 
 - **Testing and Quality Assurance**:
+
   - **Backend Unit Testing**:
     - Write unit tests for backend components using **Mocha** and **Chai**.
   - **Smart Contract Testing**:
     - Develop tests for smart contracts to ensure they function as intended.
 
 - **Deployment**:
+
   - **CI/CD Pipelines**:
     - Set up continuous integration and deployment pipelines for backend services using **Docker** and cloud services.
   - **Backend Deployment**:
     - Deploy backend services and smart contracts to the cloud environment.
 
 - **Documentation**:
+
   - **Technical Documentation**:
     - Document backend APIs, smart contract interfaces, and system architecture related to credential issuance.
   - **Project Reports**:
@@ -190,13 +196,15 @@ No non-standard hardware components are required for this project. Standard deve
   - **Feedback Incorporation**:
     - Gather feedback related to organizational features and make necessary adjustments.
 
-#### **Student 2: Pádraig Mann**
+#### **Holder 2: Pádraig Mann**
 
 - **Project Planning and Management**:
-  - Work alongside Student 1 in project planning, research, and scheduling.
+
+  - Work alongside Holder 1 in project planning, research, and scheduling.
   - Manage task allocation and monitor project milestones.
 
 - **Backend Development**:
+
   - **Database Integration**:
     - Implement database schemas and interactions using **TypeORM** and **PostgreSQL**.
     - Focus on storing credentials, user data, and access permissions.
@@ -204,70 +212,81 @@ No non-standard hardware components are required for this project. Standard deve
     - Develop API endpoints for credential sharing, verification, and user management.
   - **Blockchain Integration**:
     - Utilize **Ethers.js** to interact with the Ethereum blockchain for credential verification.
-    - Handle blockchain interactions related to individuals and verifiers.
+    - Handle blockchain interactions related to holders and verifiers.
   - **Smart Contract Development**:
     - Develop and deploy smart contracts in Solidity for credential verification and access control.
     - Use **Hardhat** for compiling and testing contracts.
 
 - **Frontend Development**:
-  - **Interface for Individuals and Verifiers**:
-    - Design and build the user interface for individuals to manage and share credentials.
+
+  - **Interface for Holders and Verifiers**:
+    - Design and build the user interface for holders to manage and share credentials.
     - Develop the interface for verifiers to access and verify credentials.
   - **Frontend-Backend Integration**:
-    - Connect frontend components with backend APIs for individual and verifier functionalities.
+    - Connect frontend components with backend APIs for holder and verifier functionalities.
 
 - **Security Implementation**:
+
   - **Data Protection**:
     - Implement encryption for data at rest and in transit.
     - Ensure compliance with data privacy regulations and best practices.
 
 - **Testing and Quality Assurance**:
+
   - **Frontend Unit Testing**:
     - Write unit tests for frontend components using **Jest**.
   - **Integration Testing**:
     - Perform integration tests to ensure seamless interaction between frontend and backend systems.
 
 - **Deployment**:
+
   - **Scalability**:
     - Optimize the application for scalability, focusing on frontend performance and database efficiency.
   - **Frontend Deployment**:
     - Deploy frontend applications using **Docker** and cloud services.
 
 - **Documentation**:
+
   - **User Manuals**:
-    - Create comprehensive guides for individuals and verifiers to use the platform effectively.
+    - Create comprehensive guides for holders and verifiers to use the platform effectively.
   - **Technical Documentation**:
     - Document frontend architecture, database schemas, and APIs related to user functionalities.
 
 - **Presentation**:
   - **Demonstration**:
-    - Prepare and deliver presentations showcasing the individual's and verifier's perspectives.
+    - Prepare and deliver presentations showcasing the holder's and verifier's perspectives.
   - **Feedback Incorporation**:
     - Collect feedback on user experience and make necessary refinements.
 
 #### **Collaborative Responsibilities**
 
 - **Project Planning and Management**:
+
   - Maintain open communication, hold regular meetings, and update project timelines collaboratively.
   - Jointly make decisions on technology choices, design patterns, and system architecture.
 
 - **Smart Contract Development**:
+
   - Work together on designing the overall smart contract architecture.
   - Peer-review each other's code to ensure security and efficiency.
 
 - **Security Implementation**:
+
   - Collaborate on implementing comprehensive security measures across the platform.
   - Conduct joint security audits and penetration testing.
 
 - **Testing and Quality Assurance**:
+
   - Perform code reviews and pair programming sessions.
   - Test the entire system end-to-end to ensure all components work seamlessly.
 
 - **Deployment**:
+
   - Set up shared deployment environments.
   - Monitor system performance and address any deployment issues together.
 
 - **Documentation**:
+
   - Review and edit each other's documentation for clarity and completeness.
   - Ensure all documentation is consistent and up-to-date.
 
@@ -285,4 +304,4 @@ No non-standard hardware components are required for this project. Standard deve
   <img src="./res/sample-diagram.png" width="300px">
 </p>
 
-*Figure: Sample architecture diagram illustrating the system components and interactions.*
+_Figure: Sample architecture diagram illustrating the system components and interactions._

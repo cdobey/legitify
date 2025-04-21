@@ -1,92 +1,92 @@
 import axios from 'axios';
 import { apiCall } from '../apiCall';
 import {
-  AddStudentParams,
+  AddHolderParams,
   AffiliationResponse,
   AffiliationResponseParams,
   AffiliationsResponse,
-  CreateUniversityParams,
-  CreateUniversityResponse,
+  CreateIssuerParams,
+  CreateIssuerResponse,
+  Issuer,
+  JoinIssuerParams,
   JoinRequestResponse,
   JoinRequestResponseParams,
   JoinRequestsResponse,
-  JoinUniversityParams,
-  RegisterStudentParams,
-  RegisterStudentResponse,
+  RegisterHolderParams,
+  RegisterHolderResponse,
   UniversitiesResponse,
-  University,
-} from './university.models';
+} from './issuer.models';
 
 export const getMyUniversities = () =>
-  apiCall<UniversitiesResponse>({ method: 'get', path: '/university/my' });
+  apiCall<UniversitiesResponse>({ method: 'get', path: '/issuer/my' });
 
-export const createUniversity = (params: CreateUniversityParams) =>
-  apiCall<CreateUniversityResponse>({
+export const createIssuer = (params: CreateIssuerParams) =>
+  apiCall<CreateIssuerResponse>({
     method: 'post',
-    path: '/university/create',
+    path: '/issuer/create',
     params,
   });
 
-export const requestJoinUniversity = (params: JoinUniversityParams) =>
+export const requestJoinIssuer = (params: JoinIssuerParams) =>
   apiCall<{ message: string }>({
     method: 'post',
-    path: '/university/request-join',
+    path: '/issuer/request-join',
     params,
   });
 
-export const requestStudentAffiliation = (params: JoinUniversityParams) =>
+export const requestHolderAffiliation = (params: JoinIssuerParams) =>
   apiCall<{ message: string }>({
     method: 'post',
-    path: '/university/request-student-affiliation',
+    path: '/issuer/request-holder-affiliation',
     params,
   });
 
 export const getAllUniversities = () =>
   apiCall<UniversitiesResponse>({
     method: 'get',
-    path: '/university/all',
+    path: '/issuer/all',
   });
 
-export const addStudentToUniversity = (params: AddStudentParams) =>
+export const addHolderToIssuer = (params: AddHolderParams) =>
   apiCall<{ message: string }>({
     method: 'post',
-    path: '/university/add-student',
+    path: '/issuer/add-holder',
     params,
   });
 
-export const registerStudent = (params: RegisterStudentParams) =>
-  apiCall<RegisterStudentResponse>({
+export const registerHolder = (params: RegisterHolderParams) =>
+  apiCall<RegisterHolderResponse>({
     method: 'post',
-    path: '/university/register-student',
+    path: '/issuer/register-holder',
     params,
   });
 
 export const respondToAffiliation = (params: AffiliationResponseParams) =>
   apiCall<AffiliationResponse>({
     method: 'post',
-    path: '/university/respond-affiliation',
+    path: '/issuer/respond-affiliation',
     params,
   });
 
-export const getStudentUniversities = () =>
+export const getHolderIssuers = () =>
   apiCall<UniversitiesResponse>({
     method: 'get',
-    path: '/university/my-affiliations',
+    path: '/issuer/my-affiliations',
   });
 
 export const getPendingAffiliations = () =>
   apiCall<AffiliationsResponse>({
     method: 'get',
-    path: '/university/pending-affiliations',
+    path: '/issuer/pending-affiliations',
   });
 
-export const getUniversityStudents = (universityId: string) =>
-  apiCall<{ affiliations: AffiliationsResponse }>({
+export const getIssuerHolders = (issuerId: string) =>
+  apiCall<{ holders: AffiliationsResponse }>({
     method: 'get',
-    path: `/university/${universityId}/students`,
+    path: `/issuer/${issuerId}/holders`,
   });
 
-export const uploadUniversityLogo = async (universityId: string, logoFile: File) => {
+export const uploadIssuerLogo = async (issuerId: string, logoFile: File) => {
   // Simple direct implementation for file uploads
   const formData = new FormData();
   formData.append('file', logoFile);
@@ -95,7 +95,7 @@ export const uploadUniversityLogo = async (universityId: string, logoFile: File)
   const baseURL = import.meta.env.VITE_API_URL || '/api';
 
   try {
-    const response = await axios.post(`${baseURL}/university/${universityId}/logo`, formData, {
+    const response = await axios.post(`${baseURL}/issuer/${issuerId}/logo`, formData, {
       headers: {
         Authorization: token ? `Bearer ${token}` : '',
       },
@@ -107,27 +107,27 @@ export const uploadUniversityLogo = async (universityId: string, logoFile: File)
   }
 };
 
-export const deleteUniversityLogo = (universityId: string) =>
-  apiCall<{ message: string; university: University }>({
+export const deleteIssuerLogo = (issuerId: string) =>
+  apiCall<{ message: string; issuer: Issuer }>({
     method: 'delete',
-    path: `/university/${universityId}/logo`,
+    path: `/issuer/${issuerId}/logo`,
   });
 
 export const getPendingJoinRequests = () =>
   apiCall<JoinRequestsResponse>({
     method: 'get',
-    path: '/university/pending-join-requests',
+    path: '/issuer/pending-join-requests',
   });
 
 export const respondToJoinRequest = (params: JoinRequestResponseParams) =>
   apiCall<{ message: string; request: JoinRequestResponse }>({
     method: 'post',
-    path: '/university/respond-join-request',
+    path: '/issuer/respond-join-request',
     params,
   });
 
 export const getMyPendingJoinRequests = () =>
   apiCall<JoinRequestsResponse>({
     method: 'get',
-    path: '/university/my-pending-join-requests',
+    path: '/issuer/my-pending-join-requests',
   });

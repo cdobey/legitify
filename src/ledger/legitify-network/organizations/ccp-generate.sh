@@ -68,13 +68,13 @@ function generate_ccp {
 # Generate CCPs for the three organizations
 # --------------------------------------------------------------------
 
-# OrgUniversity
-generate_ccp "OrgUniversity" 7051 7054 "orguniversity.com"
+# OrgIssuer
+generate_ccp "OrgIssuer" 7051 7054 "orgissuer.com"
 
-# OrgEmployer
-generate_ccp "OrgEmployer" 8051 8054 "orgemployer.com"
+# OrgVerifier
+generate_ccp "OrgVerifier" 8051 8054 "orgverifier.com"
 
-# OrgIndividual
-generate_ccp "OrgIndividual" 9051 9054 "orgindividual.com"
+# OrgHolder
+generate_ccp "OrgHolder" 9051 9054 "orgholder.com"
 
 echo "Connection profiles generated successfully."

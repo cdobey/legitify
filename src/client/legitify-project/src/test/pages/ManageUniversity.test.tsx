@@ -1,6 +1,6 @@
 import { ModalsProvider } from '@/contexts/ModalsContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
-import ManageUniversity from '@/pages/university/ManageUniversity';
+import ManageIssuer from '@/pages/issuer/ManageIssuer';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -40,26 +40,26 @@ vi.mock('@/contexts/AuthContext', async (importOriginal: () => Promise<any>) => 
 });
 
 // Create mock functions for react-query hooks
-const mockUseMyUniversitiesQuery = vi.fn();
-const mockUseAllUniversitiesQuery = vi.fn();
+const mockUseMyIssuersQuery = vi.fn();
+const mockUseAllIssuersQuery = vi.fn();
 const mockUsePendingAffiliationsQuery = vi.fn();
-const mockUseRecentIssuedDegreesQuery = vi.fn();
-const mockUsePrimaryUniversityQuery = vi.fn();
+const mockUseRecentIssuedCredentialsQuery = vi.fn();
+const mockUsePrimaryIssuerQuery = vi.fn();
 const mockUseMyPendingJoinRequestsQuery = vi.fn();
 
-// --- Mock University API Queries ---
-vi.mock('@/api/universities/university.queries', () => ({
-  useMyUniversitiesQuery: (...args: any[]) => mockUseMyUniversitiesQuery(...args),
-  useAllUniversitiesQuery: (...args: any[]) => mockUseAllUniversitiesQuery(...args),
+// --- Mock Issuer API Queries ---
+vi.mock('@/api/issuers/issuer.queries', () => ({
+  useMyIssuersQuery: (...args: any[]) => mockUseMyIssuersQuery(...args),
+  useAllIssuersQuery: (...args: any[]) => mockUseAllIssuersQuery(...args),
   usePendingAffiliationsQuery: (...args: any[]) => mockUsePendingAffiliationsQuery(...args),
-  usePrimaryUniversityQuery: (...args: any[]) => mockUsePrimaryUniversityQuery(...args),
+  usePrimaryIssuerQuery: (...args: any[]) => mockUsePrimaryIssuerQuery(...args),
   useMyPendingJoinRequestsQuery: (...args: any[]) => mockUseMyPendingJoinRequestsQuery(...args),
-  universityKeys: {
-    my: () => ['universities', 'my'],
-    pendingAffiliations: () => ['universities', 'pending-affiliations'],
-    pendingJoinRequests: () => ['universities', 'pending-join-requests'],
-    myPendingJoinRequests: () => ['universities', 'my-pending-join-requests'],
-    studentAffiliations: () => ['universities', 'student-affiliations'],
+  issuerKeys: {
+    my: () => ['issuers', 'my'],
+    pendingAffiliations: () => ['issuers', 'pending-affiliations'],
+    pendingJoinRequests: () => ['issuers', 'pending-join-requests'],
+    myPendingJoinRequests: () => ['issuers', 'my-pending-join-requests'],
+    holderAffiliations: () => ['issuers', 'holder-affiliations'],
   },
   usePendingJoinRequestsQuery: vi.fn().mockReturnValue({
     data: [
@@ -67,45 +67,45 @@ vi.mock('@/api/universities/university.queries', () => ({
         id: 'req-1',
         status: 'pending',
         createdAt: '2025-01-01T00:00:00Z',
-        requester: { username: 'universityAdmin1', email: 'admin1@example.com' },
+        requester: { username: 'issuerAdmin1', email: 'admin1@example.com' },
       },
       {
         id: 'req-2',
         status: 'pending',
         createdAt: '2025-01-02T00:00:00Z',
-        requester: { username: 'universityAdmin2', email: 'admin2@example.com' },
+        requester: { username: 'issuerAdmin2', email: 'admin2@example.com' },
       },
     ],
     isLoading: false,
   }),
 }));
 
-// --- Mock University API Mutations ---
-vi.mock('@/api/universities/university.mutations', () => ({
-  useCreateUniversityMutation: () => ({
+// --- Mock Issuer API Mutations ---
+vi.mock('@/api/issuers/issuer.mutations', () => ({
+  useCreateIssuerMutation: () => ({
     mutateAsync: vi.fn().mockResolvedValue({
-      university: {
+      issuer: {
         id: 'new-uni-1',
-        displayName: 'New Test University',
-        name: 'new-test-university',
+        displayName: 'New Test Issuer',
+        name: 'new-test-issuer',
         description: 'Test description',
         affiliations: [],
       },
     }),
     isPending: false,
   }),
-  useJoinUniversityMutation: () => ({
+  useJoinIssuerMutation: () => ({
     mutateAsync: vi.fn().mockResolvedValue({ success: true }),
     isPending: false,
   }),
-  useAddStudentMutation: () => ({
+  useAddHolderMutation: () => ({
     mutateAsync: vi.fn().mockResolvedValue({ success: true }),
     isPending: false,
   }),
-  useRegisterStudentMutation: () => ({
+  useRegisterHolderMutation: () => ({
     mutateAsync: vi.fn().mockResolvedValue({
       success: true,
-      username: 'newstudent',
+      username: 'newholder',
     }),
     isPending: false,
   }),
@@ -122,23 +122,23 @@ vi.mock('@/api/universities/university.mutations', () => ({
   }),
 }));
 
-// --- Mock Degree API Queries ---
-vi.mock('@/api/degrees/degree.queries', () => ({
-  useRecentIssuedDegreesQuery: (...args: any[]) => mockUseRecentIssuedDegreesQuery(...args),
+// --- Mock Credential API Queries ---
+vi.mock('@/api/credentials/credential.queries', () => ({
+  useRecentIssuedCredentialsQuery: (...args: any[]) => mockUseRecentIssuedCredentialsQuery(...args),
 }));
 
 // Custom render function with providers
-function renderWithProviders(user: any = null, universityData: any[] = []) {
-  mockUseMyUniversitiesQuery.mockReturnValue({
-    data: universityData,
+function renderWithProviders(user: any = null, issuerData: any[] = []) {
+  mockUseMyIssuersQuery.mockReturnValue({
+    data: issuerData,
     isLoading: false,
     error: null,
   });
 
-  mockUseAllUniversitiesQuery.mockReturnValue({
+  mockUseAllIssuersQuery.mockReturnValue({
     data: [
-      { id: 'uni-1', displayName: 'Test University' },
-      { id: 'uni-2', displayName: 'Another University' },
+      { id: 'uni-1', displayName: 'Test Issuer' },
+      { id: 'uni-2', displayName: 'Another Issuer' },
     ],
     isLoading: false,
   });
@@ -148,34 +148,34 @@ function renderWithProviders(user: any = null, universityData: any[] = []) {
       {
         id: 'aff-1',
         status: 'pending',
-        initiatedBy: 'student',
+        initiatedBy: 'holder',
         createdAt: '2025-01-01T00:00:00Z',
-        user: { username: 'student1', email: 'student1@example.com' },
+        user: { username: 'holder1', email: 'holder1@example.com' },
       },
       {
         id: 'aff-2',
         status: 'pending',
-        initiatedBy: 'university',
+        initiatedBy: 'issuer',
         createdAt: '2025-01-01T00:00:00Z',
-        user: { username: 'student2', email: 'student2@example.com' },
+        user: { username: 'holder2', email: 'holder2@example.com' },
       },
     ],
     isLoading: false,
   });
 
-  mockUseRecentIssuedDegreesQuery.mockReturnValue({
+  mockUseRecentIssuedCredentialsQuery.mockReturnValue({
     data: [
       {
-        docId: 'degree-1',
-        recipientName: 'Student A',
-        issuedTo: 'student.a@example.com',
+        docId: 'credential-1',
+        recipientName: 'Holder A',
+        issuedTo: 'holder.a@example.com',
         status: 'accepted',
         issueDate: '2025-03-15T10:00:00Z',
       },
       {
-        docId: 'degree-2',
-        recipientName: 'Student B',
-        issuedTo: 'student.b@example.com',
+        docId: 'credential-2',
+        recipientName: 'Holder B',
+        issuedTo: 'holder.b@example.com',
         status: 'pending',
         issueDate: '2025-03-10T10:00:00Z',
       },
@@ -183,8 +183,8 @@ function renderWithProviders(user: any = null, universityData: any[] = []) {
     isLoading: false,
   });
 
-  mockUsePrimaryUniversityQuery.mockReturnValue({
-    data: universityData.length > 0 ? universityData[0] : null,
+  mockUsePrimaryIssuerQuery.mockReturnValue({
+    data: issuerData.length > 0 ? issuerData[0] : null,
     isLoading: false,
     error: null,
   });
@@ -195,7 +195,7 @@ function renderWithProviders(user: any = null, universityData: any[] = []) {
         id: 'join-req-1',
         status: 'pending',
         createdAt: '2025-01-15T00:00:00Z',
-        university: { id: 'uni-3', displayName: 'Pending Join University' },
+        issuer: { id: 'uni-3', displayName: 'Pending Join Issuer' },
       },
     ],
     isLoading: false,
@@ -215,7 +215,7 @@ function renderWithProviders(user: any = null, universityData: any[] = []) {
         <ThemeProvider>
           <ModalsProvider>
             <MockAuthProvider user={user}>
-              <ManageUniversity />
+              <ManageIssuer />
             </MockAuthProvider>
           </ModalsProvider>
         </ThemeProvider>
@@ -224,57 +224,55 @@ function renderWithProviders(user: any = null, universityData: any[] = []) {
   );
 }
 
-describe('ManageUniversity component', () => {
-  const universityUser = {
+describe('ManageIssuer component', () => {
+  const issuerUser = {
     id: 'u1',
     email: 'uni@example.com',
-    role: 'university',
-    username: 'universityUser',
+    role: 'issuer',
+    username: 'issuerUser',
   };
 
-  const sampleUniversity = {
+  const sampleIssuer = {
     id: 'uni-1',
-    name: 'test-university',
-    displayName: 'Test University',
-    description: 'Test university description',
+    name: 'test-issuer',
+    displayName: 'Test Issuer',
+    description: 'Test issuer description',
     affiliations: [
       {
         id: 'aff-active-1',
         status: 'active',
-        user: { username: 'activeStudent', email: 'active@student.com' },
+        user: { username: 'activeHolder', email: 'active@holder.com' },
       },
     ],
   };
 
-  it('shows create/join options when user has no university', async () => {
-    renderWithProviders(universityUser);
+  it('shows create/join options when user has no issuer', async () => {
+    renderWithProviders(issuerUser);
 
-    // Should show the alert about not having a university
-    expect(screen.getByText(/you don't have a university affiliation yet/i)).toBeInTheDocument();
+    // Should show the alert about not having a issuer
+    expect(screen.getByText(/you don't have a issuer affiliation yet/i)).toBeInTheDocument();
 
     // Should show create and join buttons
-    expect(screen.getByRole('button', { name: /create university/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /join existing university/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /create issuer/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /join existing issuer/i })).toBeInTheDocument();
   });
 
-  it('opens and validates the create university modal', async () => {
-    renderWithProviders(universityUser);
+  it('opens and validates the create issuer modal', async () => {
+    renderWithProviders(issuerUser);
 
-    // Click the create university button
-    await userEvent.click(screen.getByRole('button', { name: /create university/i }));
+    // Click the create issuer button
+    await userEvent.click(screen.getByRole('button', { name: /create issuer/i }));
 
     // Wait for the modal to be visible
     await waitFor(() => {
       const modal = screen.getByRole('dialog');
       expect(modal).toBeInTheDocument();
-      expect(
-        within(modal).getByRole('heading', { name: /create university/i }),
-      ).toBeInTheDocument();
+      expect(within(modal).getByRole('heading', { name: /create issuer/i })).toBeInTheDocument();
     });
 
     // Click create without filling required fields
     const modal = screen.getByRole('dialog');
-    await userEvent.click(within(modal).getByRole('button', { name: /^create university$/i }));
+    await userEvent.click(within(modal).getByRole('button', { name: /^create issuer$/i }));
 
     // Should show validation errors
     await waitFor(() => {
@@ -283,39 +281,39 @@ describe('ManageUniversity component', () => {
     });
   });
 
-  it('opens and validates the join university modal', async () => {
-    renderWithProviders(universityUser);
+  it('opens and validates the join issuer modal', async () => {
+    renderWithProviders(issuerUser);
 
-    // Click the join university button
-    await userEvent.click(screen.getByRole('button', { name: /join existing university/i }));
+    // Click the join issuer button
+    await userEvent.click(screen.getByRole('button', { name: /join existing issuer/i }));
 
     // Wait for the modal to be visible
     await waitFor(() => {
       const modal = screen.getByRole('dialog');
       expect(modal).toBeInTheDocument();
-      expect(within(modal).getByText(/select university/i)).toBeInTheDocument();
+      expect(within(modal).getByText(/select issuer/i)).toBeInTheDocument();
     });
 
     // Find the form elements
     const modal = screen.getByRole('dialog');
     const submitButton = within(modal).getByRole('button', { name: /^send request$/i });
 
-    // Click join without selecting a university
+    // Click join without selecting a issuer
     await userEvent.click(submitButton);
 
     await waitFor(() => {
       expect(modal).toBeInTheDocument();
-      expect(within(modal).getByLabelText(/select university/i)).toBeInTheDocument();
+      expect(within(modal).getByLabelText(/select issuer/i)).toBeInTheDocument();
     });
   });
 
-  it('displays university dashboard when user has a university', async () => {
-    renderWithProviders(universityUser, [sampleUniversity]);
+  it('displays issuer dashboard when user has a issuer', async () => {
+    renderWithProviders(issuerUser, [sampleIssuer]);
 
-    // Should show the university name in a heading
-    expect(screen.getByText('Test University')).toBeInTheDocument();
+    // Should show the issuer name in a heading
+    expect(screen.getByText('Test Issuer')).toBeInTheDocument();
 
-    // Should show the university ID
+    // Should show the issuer ID
     expect(screen.getByText(/ID: uni-1/i)).toBeInTheDocument();
 
     // Should show dashboard info
@@ -323,8 +321,8 @@ describe('ManageUniversity component', () => {
       expect(screen.getByText(/recent activity/i)).toBeInTheDocument();
     });
 
-    // Check for student management section
-    expect(screen.getByText(/student management/i)).toBeInTheDocument();
+    // Check for holder management section
+    expect(screen.getByText(/holder management/i)).toBeInTheDocument();
 
     // Check that we have the expected tabs
     expect(screen.getByRole('tab', { name: /actions/i })).toBeInTheDocument();
@@ -341,8 +339,8 @@ describe('ManageUniversity component', () => {
     expect(screen.getByRole('tab', { name: /sent invitations/i })).toBeInTheDocument();
   });
 
-  it('displays active students in the students tab', async () => {
-    renderWithProviders(universityUser, [sampleUniversity]);
+  it('displays active holders in the holders tab', async () => {
+    renderWithProviders(issuerUser, [sampleIssuer]);
     await userEvent.click(screen.getByRole('tab', { name: /affiliated/i }));
     const tabPanel = await waitFor(() => {
       const panel = screen.getByRole('tabpanel');
@@ -352,23 +350,23 @@ describe('ManageUniversity component', () => {
 
     const affiliatedTable = within(tabPanel).getByRole('table');
 
-    // Find the activeStudent in the table
-    const studentElement = within(affiliatedTable).getByText('activeStudent');
-    expect(studentElement).toBeInTheDocument();
+    // Find the activeHolder in the table
+    const holderElement = within(affiliatedTable).getByText('activeHolder');
+    expect(holderElement).toBeInTheDocument();
 
-    const activeStudentRow = studentElement.closest('tr');
-    expect(activeStudentRow).not.toBeNull();
+    const activeHolderRow = holderElement.closest('tr');
+    expect(activeHolderRow).not.toBeNull();
 
-    if (activeStudentRow) {
-      const cells = within(activeStudentRow).getAllByRole('cell');
-      expect(cells[0]).toHaveTextContent('activeStudent');
-      expect(cells[1]).toHaveTextContent('active@student.com');
+    if (activeHolderRow) {
+      const cells = within(activeHolderRow).getAllByRole('cell');
+      expect(cells[0]).toHaveTextContent('activeHolder');
+      expect(cells[1]).toHaveTextContent('active@holder.com');
       expect(cells[2]).toHaveTextContent('Active');
     }
   });
 
   it('can switch to join requests tab and display pending requests', async () => {
-    renderWithProviders(universityUser, [sampleUniversity]);
+    renderWithProviders(issuerUser, [sampleIssuer]);
 
     // Wait for tabs to be loaded
     await waitFor(() => {
@@ -391,16 +389,16 @@ describe('ManageUniversity component', () => {
     const tabPanel = screen.getByRole('tabpanel');
     await waitFor(() => {
       expect(
-        within(tabPanel).getByText(/review and respond to students requesting to join/i),
+        within(tabPanel).getByText(/review and respond to holders requesting to join/i),
       ).toBeInTheDocument();
     });
 
-    // Find specific table cell for student name to avoid ambiguity
+    // Find specific table cell for holder name to avoid ambiguity
     const table = within(tabPanel).getByRole('table');
     const rows = within(table).getAllByRole('row');
     // Skip header row (index 0)
-    const studentCell = within(rows[1]).getAllByRole('cell')[0];
-    expect(studentCell).toHaveTextContent('student1');
+    const holderCell = within(rows[1]).getAllByRole('cell')[0];
+    expect(holderCell).toHaveTextContent('holder1');
 
     // Should show approve/reject buttons
     expect(within(tabPanel).getByRole('button', { name: /approve/i })).toBeInTheDocument();
@@ -408,7 +406,7 @@ describe('ManageUniversity component', () => {
   });
 
   it('can switch to sent invitations tab and display pending invitations', async () => {
-    renderWithProviders(universityUser, [sampleUniversity]);
+    renderWithProviders(issuerUser, [sampleIssuer]);
 
     // Click on the sent invitations tab
     await userEvent.click(screen.getByRole('tab', { name: /sent invitations/i }));
@@ -416,50 +414,48 @@ describe('ManageUniversity component', () => {
     // Should show the pending invitations content
     const tabPanel = screen.getByRole('tabpanel');
     await waitFor(() => {
-      expect(within(tabPanel).getByText(/you've invited these students/i)).toBeInTheDocument();
+      expect(within(tabPanel).getByText(/you've invited these holders/i)).toBeInTheDocument();
     });
 
-    // Find specific table cell for student name to avoid ambiguity
+    // Find specific table cell for holder name to avoid ambiguity
     const table = within(tabPanel).getByRole('table');
     const rows = within(table).getAllByRole('row');
-    const studentCell = within(rows[1]).getAllByRole('cell')[0];
-    expect(studentCell).toHaveTextContent('student2');
+    const holderCell = within(rows[1]).getAllByRole('cell')[0];
+    expect(holderCell).toHaveTextContent('holder2');
 
     // Should show pending status
     expect(within(tabPanel).getByText(/awaiting response/i)).toBeInTheDocument();
   });
 
-  it('can switch to add student tab and display add student form', async () => {
-    renderWithProviders(universityUser, [sampleUniversity]);
+  it('can switch to add holder tab and display add holder form', async () => {
+    renderWithProviders(issuerUser, [sampleIssuer]);
 
-    // Click on the Actions tab instead as that's where the add student form is
+    // Click on the Actions tab instead as that's where the add holder form is
     await userEvent.click(screen.getByRole('tab', { name: /actions/i }));
 
-    // Should show the add student form in the Actions tab panel
+    // Should show the add holder form in the Actions tab panel
     const tabPanel = screen.getByRole('tabpanel');
     await waitFor(() => {
-      expect(within(tabPanel).getByText(/invite existing student/i)).toBeInTheDocument();
-      expect(within(tabPanel).getByText(/register new student/i)).toBeInTheDocument();
+      expect(within(tabPanel).getByText(/invite existing holder/i)).toBeInTheDocument();
+      expect(within(tabPanel).getByText(/register new holder/i)).toBeInTheDocument();
     });
 
-    // Should show both individual and batch upload buttons within the tab panel
-    expect(
-      within(tabPanel).getByRole('button', { name: /register individual/i }),
-    ).toBeInTheDocument();
+    // Should show both holder and batch upload buttons within the tab panel
+    expect(within(tabPanel).getByRole('button', { name: /register holder/i })).toBeInTheDocument();
     expect(within(tabPanel).getByRole('button', { name: /batch upload/i })).toBeInTheDocument();
   });
 
-  it('can open the register student modal and validate form', async () => {
-    renderWithProviders(universityUser, [sampleUniversity]);
+  it('can open the register holder modal and validate form', async () => {
+    renderWithProviders(issuerUser, [sampleIssuer]);
 
-    // Click the register individual button
-    await userEvent.click(screen.getByRole('button', { name: /register individual/i }));
+    // Click the register holder button
+    await userEvent.click(screen.getByRole('button', { name: /register holder/i }));
 
     // Wait for the modal to be visible
     await waitFor(() => {
       const modal = screen.getByRole('dialog');
       expect(modal).toBeInTheDocument();
-      expect(within(modal).getByText(/register new student/i)).toBeInTheDocument();
+      expect(within(modal).getByText(/register new holder/i)).toBeInTheDocument();
     });
 
     // Find form inputs within the modal to avoid ambiguity
@@ -474,7 +470,7 @@ describe('ManageUniversity component', () => {
     await userEvent.type(passwordInput, 'short'); // too short
 
     // Try to submit
-    await userEvent.click(within(modal).getByRole('button', { name: /^register student$/i }));
+    await userEvent.click(within(modal).getByRole('button', { name: /^register holder$/i }));
 
     // Should show validation errors
     await waitFor(() => {
@@ -485,7 +481,7 @@ describe('ManageUniversity component', () => {
   });
 
   it('can open the batch upload modal', async () => {
-    renderWithProviders(universityUser, [sampleUniversity]);
+    renderWithProviders(issuerUser, [sampleIssuer]);
 
     // Click the batch upload button
     await userEvent.click(screen.getByRole('button', { name: /batch upload/i }));
@@ -494,13 +490,13 @@ describe('ManageUniversity component', () => {
     await waitFor(() => {
       const modal = screen.getByRole('dialog');
       expect(modal).toBeInTheDocument();
-      expect(within(modal).getByText(/batch register students/i)).toBeInTheDocument();
+      expect(within(modal).getByText(/batch register holders/i)).toBeInTheDocument();
       expect(within(modal).getByText(/feature coming soon/i)).toBeInTheDocument();
     });
   });
 
-  it('allows inviting a student via email', async () => {
-    renderWithProviders(universityUser, [sampleUniversity]);
+  it('allows inviting a holder via email', async () => {
+    renderWithProviders(issuerUser, [sampleIssuer]);
 
     await userEvent.click(screen.getByRole('tab', { name: /actions/i }));
 
@@ -510,19 +506,19 @@ describe('ManageUniversity component', () => {
     const actionsTabPanel = screen.getByRole('tabpanel');
 
     const emailInput = within(actionsTabPanel).getByPlaceholderText(
-      /enter student's email address/i,
+      /enter holder's email address/i,
     );
-    const inviteButton = within(actionsTabPanel).getByRole('button', { name: /^invite student$/i });
+    const inviteButton = within(actionsTabPanel).getByRole('button', { name: /^invite holder$/i });
 
     // Enter valid email
-    await userEvent.type(emailInput, 'new.student@example.com');
+    await userEvent.type(emailInput, 'new.holder@example.com');
 
     // Click invite
     await userEvent.click(inviteButton);
 
     // Should show success message
     await waitFor(() => {
-      expect(screen.getByText(/invitation sent to new.student@example.com/i)).toBeInTheDocument();
+      expect(screen.getByText(/invitation sent to new.holder@example.com/i)).toBeInTheDocument();
     });
   });
 });

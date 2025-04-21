@@ -1,9 +1,8 @@
+import { MantineProvider } from '@mantine/core';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import React from 'react';
-import { MantineProvider } from '@mantine/core';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import AppHeader from '../../components/AppHeader'; // Adjust the path as needed
 
 // Define interface types
@@ -71,7 +70,7 @@ function setup(user: User | null = null, isDarkMode = false) {
       <MemoryRouter>
         <AppHeader />
       </MemoryRouter>
-    </MantineProvider>
+    </MantineProvider>,
   );
 
   return {
@@ -94,10 +93,10 @@ describe('AppHeader Component', () => {
 
   it('toggles theme when theme button is clicked (not logged in)', async () => {
     const { user } = setup();
-    
+
     const themeToggleButton = screen.getByLabelText('Toggle theme');
     await user.click(themeToggleButton);
-    
+
     // Since we're using the actual theme provider, we can't directly check if
     // toggleTheme was called, but we can verify the button is present
     expect(themeToggleButton).toBeInTheDocument();
@@ -107,10 +106,10 @@ describe('AppHeader Component', () => {
     setup({
       username: 'testuser',
       email: 'test@example.com',
-      role: 'individual',
+      role: 'holder',
       orgName: 'Test Organization',
     });
-    
+
     // Should render the first letter of username as avatar content
     const avatar = screen.getByText('T');
     expect(avatar).toBeInTheDocument();
@@ -120,11 +119,11 @@ describe('AppHeader Component', () => {
     setup({
       username: 'testuser',
       email: 'test@example.com',
-      role: 'individual',
+      role: 'holder',
       orgName: 'Test Organization',
       profilePictureUrl: 'https://example.com/profile.jpg',
     });
-    
+
     // Profile picture should be rendered as img
     const avatar = document.querySelector('img[src="https://example.com/profile.jpg"]');
     expect(avatar).toBeInTheDocument();
@@ -134,14 +133,14 @@ describe('AppHeader Component', () => {
     const { user } = setup({
       username: 'testuser',
       email: 'test@example.com',
-      role: 'individual',
+      role: 'holder',
       orgName: 'Test Organization',
     });
-    
+
     // Click the avatar to open the menu
     const avatar = screen.getByText('T');
     await user.click(avatar);
-    
+
     // User menu should be open with user details
     await waitFor(() => {
       expect(screen.getByText('testuser')).toBeInTheDocument();
@@ -153,18 +152,18 @@ describe('AppHeader Component', () => {
     const { user } = setup({
       username: 'testuser',
       email: 'test@example.com',
-      role: 'employer',
+      role: 'verifier',
       orgName: 'Acme Corporation',
     });
-    
+
     // Click the avatar to open the menu
     const avatar = screen.getByText('T');
     await user.click(avatar);
-    
+
     // Check that org info is displayed
     await waitFor(() => {
       expect(screen.getByText('Acme Corporation')).toBeInTheDocument();
-      expect(screen.getByText('Role: Employer')).toBeInTheDocument();
+      expect(screen.getByText('Role: Verifier')).toBeInTheDocument();
     });
   });
 
@@ -172,17 +171,17 @@ describe('AppHeader Component', () => {
     const { user } = setup({
       username: 'testuser',
       email: 'test@example.com',
-      role: 'individual',
+      role: 'holder',
       orgName: 'Test Organization',
     });
-    
+
     // Click the avatar to open the menu
     const avatar = screen.getByText('T');
     await user.click(avatar);
-    
+
     // Find and check the settings option
     const settingsOption = await screen.findByText('Settings');
-    
+
     // Since we're using Link component, we can't fully test navigation
     // But we can check that the link has the correct href
     expect(settingsOption.closest('a')).toHaveAttribute('href', '/settings');
@@ -192,17 +191,17 @@ describe('AppHeader Component', () => {
     const { user } = setup({
       username: 'testuser',
       email: 'test@example.com',
-      role: 'individual',
+      role: 'holder',
       orgName: 'Test Organization',
     });
-    
+
     // Click the avatar to open the menu
     const avatar = screen.getByText('T');
     await user.click(avatar);
-    
+
     // Find and check the profile option
     const profileOption = await screen.findByText('My Profile');
-    
+
     // Since we're using Link component, we can't fully test navigation
     // But we can check that the link has the correct href
     expect(profileOption.closest('a')).toHaveAttribute('href', '/profile');

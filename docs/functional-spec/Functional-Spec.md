@@ -1,4 +1,4 @@
-# Student Declaration of Academic Integrity
+# Holder Declaration of Academic Integrity
 
 | Names & ID numbers | Christopher Dobey (20756959), Padraig Mann (21477812)      |
 | ------------------ | ---------------------------------------------------------- |
@@ -11,7 +11,7 @@
 | Submission Date    | 22/11/2024                                                 |
 | ---                | ---                                                        |
 
-I understand that the University regards breaches of academic integrity and plagiarism as grave and serious. I have read and understood the DCU Academic Integrity and Plagiarism Policy. I accept the penalties that may be imposed should I engage in practice or practices that breach this policy. I have identified and included the source of all facts, ideas, opinions and viewpoints of others in the assignment references. Direct quotations, paraphrasing, discussion of ideas from books, journal articles, internet sources, module text, or any other source whatsoever are acknowledged and the sources cited are identified in the assignment references. I declare that this material, which I now submit for assessment, is entirely my own work and has not been taken from the work of others save and to the extent that such work has been cited and acknowledged within the text of my work.
+I understand that the Issuer regards breaches of academic integrity and plagiarism as grave and serious. I have read and understood the DCU Academic Integrity and Plagiarism Policy. I accept the penalties that may be imposed should I engage in practice or practices that breach this policy. I have identified and included the source of all facts, ideas, opinions and viewpoints of others in the assignment references. Direct quotations, paraphrasing, discussion of ideas from books, journal articles, internet sources, module text, or any other source whatsoever are acknowledged and the sources cited are identified in the assignment references. I declare that this material, which I now submit for assessment, is entirely my own work and has not been taken from the work of others save and to the extent that such work has been cited and acknowledged within the text of my work.
 
 I have used the DCU library referencing guidelines (available at <https://www4.dcu.ie/library/classes_and_tutorials/citingreferencing.shtml> and/or the appropriate referencing system recommended in the assignment guidelines and/or programme documentation. By signing this form or by submitting material online I confirm that this assignment, or any part of it, has not been previously submitted by me or any other person for assessment on this or any other course of study.
 
@@ -23,7 +23,7 @@ Date: 22/11/24
 
 # **_Table of Contents_**
 
-[**Student Declaration of Academic Integrity 1**](#_todqxopewkx1)
+[**Holder Declaration of Academic Integrity 1**](#_todqxopewkx1)
 
 [**Table of Contents 2**](#_gjdgxs)
 
@@ -49,13 +49,13 @@ Date: 22/11/24
 
 [User Characteristics and Objectives 5](#_2s8eyo1)
 
-[Individuals 5](#_6dcuo6veraqr)
+[Holders 5](#_6dcuo6veraqr)
 
 [Organisations 6](#_qd3f9us99kes)
 
 [Operational Scenarios 6](#_3rdcrjn)
 
-University Credential Verification 6
+Issuer Credential Verification 6
 
 Employment History Verification 6
 
@@ -119,7 +119,7 @@ Regulatory Compliance 7
 
 In today's digital era, verifying the authenticity of professional credentials, academic qualifications, and personal identification documents is a critical yet challenging task. Traditional methods are often time-consuming, prone to fraud, and lack transparency. We believe that blockchain technology offers a solution by providing a secure, immutable and decentralised way to verify credentials. Our project proposes the development of a Blockchain-based Credential Verification Platform, ‘Legitify’, that utilises blockchain's capabilities to create a secure and streamlined verification process.
 
-Legitify will serve as a centralised hub where individuals can store and manage their credentials and organisations can issue and verify these credentials securely. The system will use blockchain technology to record verification data, ensuring immutability and transparency. The backend will be developed using Fastify with TypeScript, PostgreSQL will be used for storing credential files and metadata and the blockchain interactions will be handled using Ethers.js. We will be interfacing with the Ethereum blockchain or other compatible networks like Polygon.
+Legitify will serve as a centralised hub where holders can store and manage their credentials and organisations can issue and verify these credentials securely. The system will use blockchain technology to record verification data, ensuring immutability and transparency. The backend will be developed using Fastify with TypeScript, PostgreSQL will be used for storing credential files and metadata and the blockchain interactions will be handled using Ethers.js. We will be interfacing with the Ethereum blockchain or other compatible networks like Polygon.
 
 We believe that there is the opportunity to expand Legitify to allow it to be incorporated into other systems, for example allowing people to store credentials like personal identification in digital wallets. This expansion would involve liaising with Apple and Google who are the leading developers of digital wallets, which could be outside the scope of our project considering our limited timescale but could be explored if we were looking to develop Legitify further.
 
@@ -129,11 +129,11 @@ The Legitify Platform aims to meet the growing demand for secure and efficient c
 
 Target Audience:
 
-**Individuals** will have control over their personal credentials, enabling them to manage, store, and share verified credentials securely.
+**Holders** will have control over their personal credentials, enabling them to manage, store, and share verified credentials securely.
 
-**Organisations** (such as universities, certification bodies, and employers) can issue digital credentials, ensuring that these credentials are tamper-proof and can be easily verified by authorised entities.
+**Organisations** (such as issuers, certification bodies, and verifiers) can issue digital credentials, ensuring that these credentials are tamper-proof and can be easily verified by authorised entities.
 
-**Verifiers**, including employers, academic institutions, and regulatory bodies, can securely authenticate credentials, reducing the administrative burden and ensuring quick, accurate verification.
+**Verifiers**, including verifiers, academic institutions, and regulatory bodies, can securely authenticate credentials, reducing the administrative burden and ensuring quick, accurate verification.
 
 Strategic Goals:
 
@@ -149,17 +149,17 @@ The platform is aligned with the industry's move towards digital transformation,
 
 Stakeholders:
 
-**Individuals (students, professionals, job seekers):** Store and manage personal credentials.
+**Holders (holders, professionals, job seekers):** Store and manage personal credentials.
 
-**Organisations (educational institutions, employers, regulatory bodies):** Issue and verify credentials.
+**Organisations (educational institutions, verifiers, regulatory bodies):** Issue and verify credentials.
 
-**Verifiers (employers, academic institutions, government agencies):** Authenticate credentials securely and efficiently.
+**Verifiers (verifiers, academic institutions, government agencies):** Authenticate credentials securely and efficiently.
 
 ## Glossary
 
 **Blockchain**: A decentralised and distributed digital ledger that records transactions across many computers in a way that ensures the records are secure and tamper-proof.
 
-**Credential Issuance**: The process of generating and providing verified digital credentials to an individual or entity.
+**Credential Issuance**: The process of generating and providing verified digital credentials to an holder or entity.
 
 **Credential Verification**: The process of validating the authenticity of credentials against a trusted source, such as a blockchain.
 
@@ -197,11 +197,11 @@ Legitify is a proposed blockchain based verification platform that allows users 
 
 #### Credential Issuance
 
-Organisations can upload, manage or issue digital copies of credentials which can then be issued to individuals and stored securely on the system.
+Organisations can upload, manage or issue digital copies of credentials which can then be issued to holders and stored securely on the system.
 
 #### Verification Requests
 
-The platform will allow users such as employers, to request verifications through the system which will need to be approved by the owner before being securely shared.
+The platform will allow users such as verifiers, to request verifications through the system which will need to be approved by the owner before being securely shared.
 
 #### Blockchain Validation
 
@@ -209,13 +209,13 @@ Credentials can be verified against the blockchain to ensure that they are valid
 
 #### User Control
 
-Individuals can view their credentials, selectively share them with verifiers and manage access to them through the platform. Users should be able to selectively share partial pieces of information as well as revoke access at will.
+Holders can view their credentials, selectively share them with verifiers and manage access to them through the platform. Users should be able to selectively share partial pieces of information as well as revoke access at will.
 
 ## User Characteristics and Objectives
 
-#### Individuals
+#### Holders
 
-Individual users are likely to have no advanced technical skills but will be presumed to be proficient enough with digital tools to manage their credentials using the platform. They should be able to:
+Holder users are likely to have no advanced technical skills but will be presumed to be proficient enough with digital tools to manage their credentials using the platform. They should be able to:
 
 - Store and manage credentials on the system
 - Share credentials selectively with verifiers
@@ -233,13 +233,13 @@ Organisational users are likely to have more technical familiarity with managing
 
 The platform will support a number of different operational scenarios and should be flexible enough to facilitate additional scenarios to align with the requirements of the platform’s users. Some baseline scenarios are as follows:
 
-#### University Credential Verification
+#### Issuer Credential Verification
 
-The platform should allow universities to issue a degree to students on the platform, which will then be hashed and stored on the blockchain. Employers can then request access to details of this certification through the platform which can be accepted by the certifications owner without requiring the college to manually contact the university that issued the certification.
+The platform should allow issuers to issue a credential to holders on the platform, which will then be hashed and stored on the blockchain. Verifiers can then request access to details of this certification through the platform which can be accepted by the certifications owner without requiring the college to manually contact the issuer that issued the certification.
 
 #### Employment History Verification
 
-The platform should allow an organisation to upload details of a current or former employee’s employment with the organisation. Future employers should then be able to verify this history of employment without having to request it directly from the original issuer.
+The platform should allow an organisation to upload details of a current or former employee’s employment with the organisation. Future verifiers should then be able to verify this history of employment without having to request it directly from the original issuer.
 
 #### Identification Verification
 
@@ -255,7 +255,7 @@ The system must be designed to scale to handle a high volume of simultaneous req
 
 #### Regulatory Compliance
 
-Given that the system has the potential to handle sensitive information about individuals, it must be designed to handle data safely and securely, in compliance with privacy laws such as GDPR or other industry specific standards.
+Given that the system has the potential to handle sensitive information about holders, it must be designed to handle data safely and securely, in compliance with privacy laws such as GDPR or other industry specific standards.
 
 #### Technical Limitations
 
@@ -265,7 +265,7 @@ Reliance on blockchain networks for hash storage may introduce transaction delay
 
 ## Credential Issuance
 
-**_Description:_** Organisations must be able to issue immutable copies of credentials for individuals within the system.
+**_Description:_** Organisations must be able to issue immutable copies of credentials for holders within the system.
 
 **Criticality:** High
 
@@ -297,7 +297,7 @@ Reliance on blockchain networks for hash storage may introduce transaction delay
 
 ## User Management
 
-**Description:** System should allow role based access of platform mechanics for individuals, organisations, and verifiers.
+**Description:** System should allow role based access of platform mechanics for holders, organisations, and verifiers.
 
 **Criticality:** Medium
 
@@ -394,7 +394,7 @@ Reliance on blockchain networks for hash storage may introduce transaction delay
 
 Front-End Level
 
-This level of the System’s Architecture consists of a web application which is what users will be using to interact with our system. When the user first creates an account for the website, they will be prompted to select whether the account is for an Individual, an Organisation or a Verifier. The user’s selection will dictate which interface they will use on the website. The Front-End will be developed using Vite and TypeScript.
+This level of the System’s Architecture consists of a web application which is what users will be using to interact with our system. When the user first creates an account for the website, they will be prompted to select whether the account is for an Holder, an Organisation or a Verifier. The user’s selection will dictate which interface they will use on the website. The Front-End will be developed using Vite and TypeScript.
 
 Back-End Level
 
@@ -410,7 +410,7 @@ The Database Level is a PostgreSQL Database that stores the user’s information
 
 External Integrations
 
-The External Integrations would include some additional services for the website that would prove useful. Cloud storage which could hold credential information or other large pieces of data that would not be suitable for either the blockchain or database. Additionally, third-party verification services to authenticate users during registration would add extra security to the website to ensure only verified individuals or organisations could use the platform.
+The External Integrations would include some additional services for the website that would prove useful. Cloud storage which could hold credential information or other large pieces of data that would not be suitable for either the blockchain or database. Additionally, third-party verification services to authenticate users during registration would add extra security to the website to ensure only verified holders or organisations could use the platform.
 
 #
 
@@ -461,7 +461,7 @@ Once phase 3 is complete, we will have the necessary framework to start building
 
 ## Frontend Development (January 10–February 6, 2025)
 
-For phase 5, now that we have our backend architecture and smart contracts in place, we can begin to build out the frontend of our application. This will involve building out interfaces to be used by both individuals and organisations. We will integrate this frontend with our backend APIs so that we have a fully integrated front end solution with all basic functionalities.
+For phase 5, now that we have our backend architecture and smart contracts in place, we can begin to build out the frontend of our application. This will involve building out interfaces to be used by both holders and organisations. We will integrate this frontend with our backend APIs so that we have a fully integrated front end solution with all basic functionalities.
 
 ## Testing and Quality Assurance (February 7–20, 2025)
 

@@ -1,6 +1,6 @@
 import { apiCall } from '../apiCall';
-import { DegreeDocumentsResponse } from '../degrees/degree.models';
 import {
+  Credential,
   OrgName,
   ServerUserResponse,
   TwoFactorDisableRequest,
@@ -20,19 +20,31 @@ export const searchUsers = async (email: string): Promise<User> => {
     id: response.uid,
     email: response.email,
     username: response.username,
-    orgName: response.orgName as OrgName,
+    firstName: response.firstName,
+    lastName: response.lastName,
+    country: response.country,
+    orgName: response.orgName || OrgName.orgholder,
     profilePictureUrl: response.profilePictureUrl,
-    role: 'individual',
+    role: response.role || 'holder',
+    twoFactorEnabled: false,
+    createdAt: '',
+    updatedAt: '',
   };
 };
 
-export const getUserDegrees = (userId: string) =>
-  apiCall<DegreeDocumentsResponse>({
+export const getUserCredentials = (userId: string) =>
+  apiCall<{ credentials: Credential[] }>({
     method: 'get',
-    path: `/degree/user/${userId}`,
+    path: `/credentials/user/${userId}`,
   });
 
-export const updateProfile = async (data: { username?: string; email?: string }): Promise<User> => {
+export const updateProfile = async (data: {
+  username?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  country?: string;
+}): Promise<User> => {
   const response = await apiCall<User>({
     method: 'put',
     path: '/user/profile',

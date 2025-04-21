@@ -1,12 +1,10 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MantineProvider, MantineThemeOverride } from '@mantine/core';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import React from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import MainLayout from '../../components/MainLayout'; // Adjust the path as needed
-import { MantineProvider, MantineThemeOverride } from '@mantine/core';
 
-// Define interface types
 interface User {
   username: string;
   email: string;
@@ -15,7 +13,6 @@ interface User {
   profilePictureUrl?: string;
 }
 
-// Mock the necessary modules and hooks
 const mockToggle = vi.fn();
 const mockClose = vi.fn();
 
@@ -24,7 +21,6 @@ vi.mock('@mantine/hooks', () => ({
   useDisclosure: () => [false, { toggle: mockToggle, close: mockClose }],
 }));
 
-// Create our mock auth state
 const mockAuthState = {
   user: null as User | null,
   isLoading: false,
@@ -55,9 +51,9 @@ vi.mock('../../contexts/ThemeContext', () => ({
 }));
 
 interface AppNavigationProps {
-    collapsed: boolean;
-    onToggleCollapse: () => void;
-  }
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+}
 
 // Mock the components used by MainLayout
 vi.mock('./AppHeader', () => ({
@@ -65,11 +61,9 @@ vi.mock('./AppHeader', () => ({
 }));
 
 vi.mock('./AppNavigation', () => ({
-    default: ({ collapsed, onToggleCollapse }: AppNavigationProps) => (    <div data-testid="app-navigation">
-      <button 
-        data-testid="toggle-nav" 
-        onClick={onToggleCollapse}
-      >
+  default: ({ collapsed, onToggleCollapse }: AppNavigationProps) => (
+    <div data-testid="app-navigation">
+      <button data-testid="toggle-nav" onClick={onToggleCollapse}>
         Toggle Navigation
       </button>
       <span data-testid="nav-collapsed-state">{collapsed ? 'collapsed' : 'expanded'}</span>
@@ -84,7 +78,18 @@ vi.mock('./Breadcrumbs', () => ({
 // Create a custom theme that includes primaryBlue
 const mockMantineTheme: MantineThemeOverride = {
   colors: {
-    primaryBlue: ['#e7f5ff', '#d0ebff', '#a5d8ff', '#74c0fc', '#4dabf7', '#339af0', '#228be6', '#1c7ed6', '#1971c2', '#1864ab'],
+    primaryBlue: [
+      '#e7f5ff',
+      '#d0ebff',
+      '#a5d8ff',
+      '#74c0fc',
+      '#4dabf7',
+      '#339af0',
+      '#228be6',
+      '#1c7ed6',
+      '#1971c2',
+      '#1864ab',
+    ],
   },
 };
 
@@ -122,7 +127,7 @@ function setup(user: User | null = null, pathname = '/') {
           <div data-testid="layout-children">Layout Children Content</div>
         </MainLayout>
       </MemoryRouter>
-    </MantineProvider>
+    </MantineProvider>,
   );
 
   return {
@@ -137,13 +142,13 @@ describe('MainLayout Component', () => {
     mockAuthState.user = null;
     mockLocation.pathname = '/';
     mockThemeState.isDarkMode = false;
-    
+
     // Reset window.scrollY and event listeners
     Object.defineProperty(window, 'scrollY', {
       writable: true,
-      value: 0
+      value: 0,
     });
-    
+
     window.addEventListener = vi.fn();
     window.removeEventListener = vi.fn();
   });
@@ -152,9 +157,9 @@ describe('MainLayout Component', () => {
     // Restore original window properties
     Object.defineProperty(window, 'scrollY', {
       writable: true,
-      value: originalScrollY
+      value: originalScrollY,
     });
-    
+
     window.addEventListener = originalAddEventListener;
     window.removeEventListener = originalRemoveEventListener;
   });
@@ -173,19 +178,19 @@ describe('MainLayout Component', () => {
 
   it('toggles navigation when toggle button is clicked', async () => {
     const { user } = setup();
-    
+
     // Initially collapsed
     expect(screen.getByTestId('nav-collapsed-state')).toHaveTextContent('collapsed');
-    
+
     // Click toggle button
     await user.click(screen.getByTestId('toggle-nav'));
-    
+
     // Should be expanded now
     expect(screen.getByTestId('nav-collapsed-state')).toHaveTextContent('expanded');
-    
+
     // Click toggle button again
     await user.click(screen.getByTestId('toggle-nav'));
-    
+
     // Should be collapsed again
     expect(screen.getByTestId('nav-collapsed-state')).toHaveTextContent('collapsed');
   });
@@ -213,9 +218,9 @@ describe('MainLayout Component', () => {
             <div>Layout Children Content</div>
           </MainLayout>
         </MemoryRouter>
-      </MantineProvider>
+      </MantineProvider>,
     );
-    
+
     unmount();
     expect(window.removeEventListener).toHaveBeenCalledWith('scroll', expect.any(Function));
   });
@@ -235,14 +240,14 @@ describe('MainLayout Component', () => {
     expect(screen.getByText('Settings')).toBeInTheDocument();
   });
 
-  it('displays correct page title for degree management', () => {
-    setup(null, '/degree/manage');
-    expect(screen.getByText('Manage Degrees')).toBeInTheDocument();
+  it('displays correct page title for credential management', () => {
+    setup(null, '/credential/manage');
+    expect(screen.getByText('Manage Credentials')).toBeInTheDocument();
   });
 
-  it('displays correct page title for university management', () => {
-    setup(null, '/university/manage');
-    expect(screen.getByText('Manage University')).toBeInTheDocument();
+  it('displays correct page title for issuer management', () => {
+    setup(null, '/issuer/manage');
+    expect(screen.getByText('Manage Issuer')).toBeInTheDocument();
   });
 
   it('displays correct page description for dashboard', () => {
@@ -258,7 +263,7 @@ describe('MainLayout Component', () => {
   it('applies different styling in dark mode', () => {
     mockThemeState.isDarkMode = true;
     setup(null, '/dashboard');
-    
+
     // Just checking that the component renders in dark mode
     expect(screen.getByTestId('layout-children')).toBeInTheDocument();
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
@@ -270,35 +275,41 @@ describe('MainLayout Component', () => {
     expect(headerIcon).toBeInTheDocument();
   });
 
-  it('displays different title for degrees based on user role', () => {
-    setup({
-      username: 'employeruser',
-      email: 'employer@example.com',
-      role: 'employer',
-    }, '/degrees');
-    
-    expect(screen.getByText('Accessible Degrees')).toBeInTheDocument();
-    
-    // Change user to individual
-    setup({
-      username: 'individualuser',
-      email: 'individual@example.com',
-      role: 'individual',
-    }, '/degrees');
-    
+  it('displays different title for credentials based on user role', () => {
+    setup(
+      {
+        username: 'verifieruser',
+        email: 'verifier@example.com',
+        role: 'verifier',
+      },
+      '/credentials',
+    );
+
+    expect(screen.getByText('Accessible Credentials')).toBeInTheDocument();
+
+    // Change user to holder
+    setup(
+      {
+        username: 'holderuser',
+        email: 'holder@example.com',
+        role: 'holder',
+      },
+      '/credentials',
+    );
+
     expect(screen.getByText('Blockchain Records')).toBeInTheDocument();
   });
 
   it('collapses sidebar when clicking outside', () => {
     setup();
-    
+
     // First expand the sidebar
     fireEvent.click(screen.getByTestId('toggle-nav'));
     expect(screen.getByTestId('nav-collapsed-state')).toHaveTextContent('expanded');
-    
+
     // Simulate a click outside
     fireEvent.mouseDown(document.body);
-    
+
     // The sidebar should be collapsed again
     expect(screen.getByTestId('nav-collapsed-state')).toHaveTextContent('collapsed');
   });

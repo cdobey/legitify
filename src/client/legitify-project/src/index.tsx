@@ -9,6 +9,7 @@ import App from './App';
 import { queryClient } from './config/queryClient';
 import { AuthProvider } from './contexts/AuthContext';
 import { ModalsProvider } from './contexts/ModalsContext';
+import { StatusProvider } from './contexts/StatusContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import './styles/index.css';
 
@@ -32,9 +33,11 @@ root.render(
         <ModalsProvider>
           <Notifications />
           <BrowserRouter>
-            <AuthProvider>
-              <App />
-            </AuthProvider>
+            <StatusProvider>
+              <AuthProvider>
+                <App />
+              </AuthProvider>
+            </StatusProvider>
           </BrowserRouter>
         </ModalsProvider>
       </ThemeProvider>

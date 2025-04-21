@@ -1,3 +1,4 @@
+import { StatusIndicator } from '@/components/StatusIndicator';
 import {
   Alert,
   Button,
@@ -216,6 +217,8 @@ const Login = () => {
           </Group>
         </form>
       </Card>
+
+      <StatusIndicator position="bottom-right" />
     </Container>
   );
 };
