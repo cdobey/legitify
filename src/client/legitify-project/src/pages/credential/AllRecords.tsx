@@ -117,6 +117,14 @@ export default function AllRecords() {
       }
     } else {
       const ledgerRecord = record as LedgerRecord;
+      // Special case for ownerEmail to map to holderEmail
+      if (field === 'ownerEmail') {
+        return ledgerRecord.holderEmail;
+      }
+      // Special case for issuedAt to map to ledgerTimestamp
+      if (field === 'issuedAt') {
+        return ledgerRecord.ledgerTimestamp;
+      }
       return ledgerRecord[field as keyof LedgerRecord];
     }
   };
