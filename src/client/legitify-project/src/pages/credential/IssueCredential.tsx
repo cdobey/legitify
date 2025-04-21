@@ -431,7 +431,7 @@ export default function IssueCredential() {
                       label="Issuing Organization"
                       description="Choose which organization is issuing this credential"
                       placeholder={isLoadingIssuers ? 'Loading issuers...' : 'Select an issuer'}
-                      data={issuers.map(uni => ({ value: uni.id, label: uni.displayName }))}
+                      data={issuers.map(uni => ({ value: uni.id, label: uni.shorthand }))}
                       value={formData.issuerOrgId}
                       onChange={value => setFormData({ ...formData, issuerOrgId: value })}
                       required

@@ -227,8 +227,8 @@ const combineQueryData = (
           (r.data.length === 0 ||
             (r.data.length > 0 &&
               r.data[0] &&
-              'docId' in r.data[0] &&
-              'owner' in r.data[0] &&
+              'credentialId' in r.data[0] &&
+              'holder' in r.data[0] &&
               'requestId' in r.data[0])),
       ) as QueryResultWithKey<AccessibleCredentialsResponse> | undefined;
 

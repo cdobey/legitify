@@ -520,7 +520,7 @@ export default function Dashboard() {
               <Stack>
                 {accessibleCredentials.slice(0, 2).map((credential: any, index: number) => (
                   <Card key={index} withBorder p="sm">
-                    <Text fw={500}>Owner: {credential.owner?.name || 'Unknown'}</Text>
+                    <Text fw={500}>Owner: {credential.holder?.name || 'Unknown'}</Text>
                     <Group justify="space-between">
                       <Text size="xs" c="dimmed">
                         Issued by: {credential.issuer}
@@ -529,7 +529,7 @@ export default function Dashboard() {
                         variant="subtle"
                         size="sm"
                         component={Link}
-                        to={`/credential/view/${credential.docId}`}
+                        to={`/credential/view/${credential.credentialId}`}
                         rightSection={<IconArrowUpRight size={rem(16)} />}
                       >
                         View
