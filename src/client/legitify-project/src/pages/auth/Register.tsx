@@ -5,6 +5,7 @@ import { StatusIndicator } from '@/components/StatusIndicator';
 import {
   Alert,
   Anchor,
+  Box,
   Button,
   Card,
   Checkbox,
@@ -16,7 +17,6 @@ import {
   Select,
   SimpleGrid,
   Stepper,
-  Switch,
   Text,
   TextInput,
   Title,
@@ -54,6 +54,7 @@ interface FormValues {
   termsAccepted: boolean;
   provideOrgInfoLater: boolean;
   joinIssuerId: string;
+  issuerAction: 'create' | 'join' | 'skip'; // Updated to include 'skip'
 }
 
 const Register = () => {
@@ -82,6 +83,7 @@ const Register = () => {
       termsAccepted: false,
       provideOrgInfoLater: false,
       joinIssuerId: '',
+      issuerAction: 'create', // Default to create
     },
     validate: {
       email: value => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
@@ -93,7 +95,11 @@ const Register = () => {
   });
 
   useEffect(() => {
-    if (active === 1 && form.values.role === 'holder') {
+    if (
+      active === 1 &&
+      (form.values.role === 'holder' ||
+        (form.values.role === 'issuer' && form.values.issuerAction === 'join'))
+    ) {
       const fetchIssuers = async () => {
         try {
           setIsLoadingIssuers(true);
@@ -109,7 +115,7 @@ const Register = () => {
       };
       fetchIssuers();
     }
-  }, [form.values.role, active]);
+  }, [form.values.role, form.values.issuerAction, active]);
 
   const nextStep = () => {
     form.validate();
@@ -134,20 +140,29 @@ const Register = () => {
         password: form.values.password,
         username: form.values.username,
         role: form.values.role,
+        country: form.values.country,
       };
 
       // Add role-specific data
-      if (form.values.role === 'issuer' && !form.values.provideOrgInfoLater) {
-        registrationData.issuerName = form.values.issuerName;
-        registrationData.issuerDisplayName = form.values.issuerDisplayName;
-        registrationData.issuerDescription = form.values.issuerDescription;
+      if (form.values.role === 'issuer') {
+        if (form.values.issuerAction === 'create') {
+          // Create new issuer
+          registrationData.issuerName = form.values.issuerName;
+          registrationData.issuerDisplayName = form.values.issuerDisplayName;
+          registrationData.issuerDescription = form.values.issuerDescription;
+        } else if (form.values.issuerAction === 'join' && form.values.joinIssuerId) {
+          // Issuer joining existing issuer
+          registrationData.joinIssuerId = form.values.joinIssuerId;
+        }
+        // If issuerAction is 'skip', we don't add any issuer data
       } else if (form.values.role === 'verifier') {
+        // Verifier data
         registrationData.orgName = form.values.organizationName;
       }
 
-      // Add issuer join request for holders
+      // For holders joining an issuer - convert to expected array format
       if (form.values.role === 'holder' && form.values.joinIssuerId) {
-        registrationData.joinIssuerId = form.values.joinIssuerId;
+        registrationData.issuerIds = [form.values.joinIssuerId];
       }
 
       // Register the user
@@ -176,15 +191,28 @@ const Register = () => {
   };
 
   const isStep2Valid = () => {
-    const { role, country, termsAccepted, issuerName, issuerDisplayName, provideOrgInfoLater } =
-      form.values;
+    const {
+      role,
+      country,
+      termsAccepted,
+      issuerName,
+      issuerDisplayName,
+      issuerAction,
+      joinIssuerId,
+    } = form.values;
 
     // Basic validation that applies to all roles
     const basicValid = !!role && country !== '' && termsAccepted;
 
-    // Additional validation for issuer role when not choosing to provide info later
-    if (role === 'issuer' && !provideOrgInfoLater) {
-      return basicValid && !!issuerName && !!issuerDisplayName;
+    // Additional validation for issuer role
+    if (role === 'issuer') {
+      if (issuerAction === 'create') {
+        return basicValid && !!issuerName && !!issuerDisplayName;
+      } else if (issuerAction === 'join') {
+        return basicValid && !!joinIssuerId;
+      } else if (issuerAction === 'skip') {
+        return basicValid; // Only basic validation required if skipping
+      }
     }
 
     return basicValid;
@@ -267,27 +295,51 @@ const Register = () => {
 
               {form.values.role === 'issuer' && (
                 <>
-                  <Switch
-                    label="I'll provide issuer information later"
-                    checked={form.values.provideOrgInfoLater}
-                    onChange={event =>
-                      form.setFieldValue('provideOrgInfoLater', event.currentTarget.checked)
-                    }
-                    mt="md"
-                  />
+                  <Box mb="md">
+                    <Text fw={500} mb="xs">
+                      Issuer Organization
+                    </Text>
+                    <Group grow mb="xs">
+                      <Button
+                        variant={form.values.issuerAction === 'create' ? 'filled' : 'light'}
+                        onClick={() => form.setFieldValue('issuerAction', 'create')}
+                      >
+                        Create New Issuer
+                      </Button>
+                      <Button
+                        variant={form.values.issuerAction === 'join' ? 'filled' : 'light'}
+                        onClick={() => form.setFieldValue('issuerAction', 'join')}
+                      >
+                        Join Existing Issuer
+                      </Button>
+                    </Group>
+                    <Button
+                      variant="subtle"
+                      fullWidth
+                      onClick={() => {
+                        form.setFieldValue('issuerAction', 'skip');
+                        form.setFieldValue('issuerName', '');
+                        form.setFieldValue('issuerDisplayName', '');
+                        form.setFieldValue('issuerDescription', '');
+                        form.setFieldValue('joinIssuerId', '');
+                      }}
+                    >
+                      I'll create or join an issuer later from my dashboard
+                    </Button>
+                  </Box>
 
-                  {!form.values.provideOrgInfoLater && (
+                  {form.values.issuerAction === 'create' && (
                     <>
                       <TextInput
                         label="Issuer Name"
-                        placeholder="Official issuer name"
+                        placeholder="Full name (e.g., Dublin City University)"
                         required
                         mt="md"
                         {...form.getInputProps('issuerName')}
                       />
                       <TextInput
-                        label="Display Name"
-                        placeholder="Name to display to users"
+                        label="Short Name"
+                        placeholder="Abbreviation (e.g., DCU)"
                         required
                         mt="md"
                         {...form.getInputProps('issuerDisplayName')}
@@ -300,17 +352,35 @@ const Register = () => {
                       />
                     </>
                   )}
+
+                  {form.values.issuerAction === 'join' && (
+                    <Select
+                      label="Join an Issuer"
+                      description="Request to join an existing issuer"
+                      placeholder={isLoadingIssuers ? 'Loading issuers...' : 'Select an issuer'}
+                      data={issuers.map(issuer => ({
+                        value: issuer.id,
+                        label: `${issuer.name} (${issuer.shorthand})`,
+                      }))}
+                      searchable
+                      clearable
+                      required
+                      mt="md"
+                      disabled={isLoadingIssuers}
+                      {...form.getInputProps('joinIssuerId')}
+                    />
+                  )}
                 </>
               )}
 
               {form.values.role === 'holder' && (
                 <Select
-                  label="Join a Issuer (Optional)"
+                  label="Join an Issuer (Optional)"
                   description="Request to join an existing issuer"
-                  placeholder={isLoadingIssuers ? 'Loading issuers...' : 'Select a issuer'}
-                  data={issuers.map(uni => ({
-                    value: uni.id,
-                    label: uni.shorthand || uni.name,
+                  placeholder={isLoadingIssuers ? 'Loading issuers...' : 'Select an issuer'}
+                  data={issuers.map(issuer => ({
+                    value: issuer.id,
+                    label: `${issuer.name} (${issuer.shorthand})`,
                   }))}
                   searchable
                   clearable

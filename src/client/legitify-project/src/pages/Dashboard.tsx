@@ -406,15 +406,19 @@ export default function Dashboard() {
               <Stack>
                 {pendingRequests.slice(0, 3).map((request: AccessRequest, index: number) => (
                   <Card key={index} withBorder p="sm">
-                    <Text fw={500}>From: {request.verifierName}</Text>
+                    <Text fw={500}>From: {request.verifierName || 'Unknown Verifier'}</Text>
                     <Group justify="space-between">
                       <Text size="xs" c="dimmed">
-                        Document: {request.docId.substring(0, 8)}...
+                        Document:
+                        {request.docId ? request.docId.substring(0, 8) + '...' : 'ID unavailable'}
                       </Text>
                       <Badge color="yellow">Pending</Badge>
                     </Group>
                     <Text size="xs" mt="xs">
-                      Requested on: {new Date(request.requestDate).toLocaleDateString()}
+                      Requested on:
+                      {request.requestDate
+                        ? new Date(request.requestDate).toLocaleDateString()
+                        : 'Date unavailable'}
                     </Text>
                   </Card>
                 ))}

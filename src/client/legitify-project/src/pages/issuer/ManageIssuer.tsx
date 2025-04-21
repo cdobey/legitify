@@ -75,6 +75,7 @@ interface RegisterHolderForm {
 export default function ManageIssuer() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [joinModalError, setJoinModalError] = useState<string | null>(null);
 
   const [createModalOpened, { open: openCreateModal, close: closeCreateModal }] =
     useDisclosure(false);
@@ -126,16 +127,24 @@ export default function ManageIssuer() {
   });
 
   const createIssuerForm = useForm({
-    initialValues: { name: '', displayName: '', description: '' },
+    initialValues: {
+      name: '',
+      shorthand: '',
+      description: '',
+      country: '',
+      address: '',
+      website: '',
+      foundedYear: '',
+    },
     validate: {
       name: value => (value ? null : 'Identifier is required'),
-      displayName: value => (value ? null : 'Display name is required'),
+      shorthand: value => (value ? null : 'Short name is required'),
     },
   });
 
   const joinIssuerForm = useForm({
     initialValues: { issuerId: '' },
-    validate: { issuerId: value => (value ? null : 'Please select a issuer') },
+    validate: { issuerId: value => (value ? null : 'Please select an issuer') },
   });
 
   const registerHolderForm = useForm<RegisterHolderForm>({
@@ -149,13 +158,23 @@ export default function ManageIssuer() {
 
   const handleCreateIssuer = async (values: {
     name: string;
-    displayName: string;
+    shorthand: string;
     description: string;
+    country?: string;
+    address?: string;
+    website?: string;
+    foundedYear?: string;
   }) => {
     try {
       setError(null);
       await refreshSession();
-      await createIssuerMutation.mutateAsync(values);
+
+      const parsedValues = {
+        ...values,
+        foundedYear: values.foundedYear ? parseInt(values.foundedYear, 10) : undefined,
+      };
+
+      await createIssuerMutation.mutateAsync(parsedValues);
       setSuccess('Issuer created successfully');
       closeCreateModal();
     } catch (err: any) {
@@ -165,6 +184,7 @@ export default function ManageIssuer() {
 
   const handleJoinIssuer = async (values: { issuerId: string }) => {
     try {
+      setJoinModalError(null);
       setError(null);
       await refreshSession();
       await joinIssuerMutation.mutateAsync({ issuerId: values.issuerId });
@@ -172,7 +192,8 @@ export default function ManageIssuer() {
       setSuccess('Join request sent successfully. Waiting for approval.');
       closeJoinModal();
     } catch (err: any) {
-      setError(err.message || 'Failed to send join request');
+      setJoinModalError(err.message || 'Failed to send join request');
+      console.error('Join request error:', err);
     }
   };
 
@@ -199,7 +220,7 @@ export default function ManageIssuer() {
       await refreshSession();
       await registerHolderMutation.mutateAsync({ ...values, issuerId: issuer.id });
       setSuccess(
-        `Holder ${values.username} registered and automatically affiliated with ${issuer.displayName}`,
+        `Holder ${values.username} registered and automatically affiliated with ${issuer.shorthand}`,
       );
       registerHolderForm.reset();
       closeRegisterModal();
@@ -273,7 +294,7 @@ export default function ManageIssuer() {
       <Card withBorder shadow="sm" p="lg" mb="xl">
         <Group justify="space-between" mb="md">
           <Stack gap={0}>
-            <Title order={3}>{issuer.displayName}</Title>
+            <Title order={3}>{issuer.shorthand}</Title>
             <Text c="dimmed" size="sm">
               ID: {issuer.id}
             </Text>
@@ -436,7 +457,7 @@ export default function ManageIssuer() {
                 </Title>
                 <Text size="sm" c="dimmed" mb="md">
                   Create new accounts for holders, automatically affiliating them with{' '}
-                  {issuer.displayName}.
+                  {issuer.shorthand}.
                 </Text>
                 <Group>
                   <Button
@@ -498,7 +519,7 @@ export default function ManageIssuer() {
             ) : (
               <>
                 <Text mb="md" size="sm">
-                  Review and respond to holders requesting to join {issuer.displayName}.
+                  Review and respond to holders requesting to join {issuer.shorthand}.
                 </Text>
                 <Table highlightOnHover>
                   <Table.Thead>
@@ -569,7 +590,7 @@ export default function ManageIssuer() {
             ) : (
               <>
                 <Text mb="md" size="sm">
-                  You've invited these holders to join {issuer.displayName}. They haven't responded
+                  You've invited these holders to join {issuer.shorthand}. They haven't responded
                   yet.
                 </Text>
                 <Table highlightOnHover>
@@ -640,12 +661,12 @@ export default function ManageIssuer() {
                 icon={<IconInfoCircle size={16} />}
                 title="No Admin Join Requests"
               >
-                No administrators from other issuers have requested to join {issuer.displayName}.
+                No administrators from other issuers have requested to join {issuer.shorthand}.
               </Alert>
             ) : (
               <>
                 <Text mb="md" size="sm">
-                  Review and respond to administrators requesting to join {issuer.displayName}.
+                  Review and respond to administrators requesting to join {issuer.shorthand}.
                 </Text>
                 <Table highlightOnHover>
                   <Table.Thead>
@@ -740,7 +761,7 @@ export default function ManageIssuer() {
               <Table.Tbody>
                 {invitationsForCurrentUser.map(affiliation => (
                   <Table.Tr key={affiliation.id}>
-                    <Table.Td>{affiliation.issuer.displayName}</Table.Td>
+                    <Table.Td>{affiliation.issuer.shorthand}</Table.Td>
                     <Table.Td>{new Date(affiliation.createdAt).toLocaleDateString()}</Table.Td>
                     <Table.Td>
                       <Group gap="xs">
@@ -850,7 +871,7 @@ export default function ManageIssuer() {
                   <List.Item key={request.id}>
                     Requested to join{' '}
                     <Text span fw={500}>
-                      {request.issuer.displayName}
+                      {request.issuer.shorthand}
                     </Text>{' '}
                     on {new Date(request.createdAt).toLocaleDateString()} - Status:{' '}
                     <Badge color="blue" variant="light">
@@ -869,29 +890,57 @@ export default function ManageIssuer() {
           title="Create Issuer"
           styles={modalStyles}
           centered
-          size="md"
+          size="lg"
         >
           <form onSubmit={createIssuerForm.onSubmit(handleCreateIssuer)} noValidate>
             <Stack>
               <TextInput
-                label="Issuer Identifier"
-                description="Unique identifier (lowercase, no spaces, e.g., 'dublin-city-issuer')"
-                placeholder="e.g. dublin-city-issuer"
+                label="Name"
+                description="Full name of the issuer (e.g., 'Dublin City University')"
+                placeholder="e.g. Dublin City University"
                 required
                 {...createIssuerForm.getInputProps('name')}
               />
               <TextInput
-                label="Display Name"
-                description="The name that will be displayed to users"
-                placeholder="e.g. Dublin City Issuer"
+                label="Short Name"
+                description="The abbreviated name that will be displayed (e.g., DCU)"
+                placeholder="e.g. DCU"
                 required
-                {...createIssuerForm.getInputProps('displayName')}
+                {...createIssuerForm.getInputProps('shorthand')}
               />
               <TextInput
                 label="Description"
-                placeholder="Brief description of your issuer"
+                placeholder="Brief description of your Organization"
                 {...createIssuerForm.getInputProps('description')}
               />
+
+              <Group grow>
+                <TextInput
+                  label="Country"
+                  placeholder="Country of issuer"
+                  {...createIssuerForm.getInputProps('country')}
+                />
+                <TextInput
+                  label="Founded Year"
+                  placeholder="e.g., 1980"
+                  type="number"
+                  {...createIssuerForm.getInputProps('foundedYear')}
+                />
+              </Group>
+
+              <Group grow>
+                <TextInput
+                  label="Address"
+                  placeholder="Physical address"
+                  {...createIssuerForm.getInputProps('address')}
+                />
+                <TextInput
+                  label="Website"
+                  placeholder="e.g., https://example.com"
+                  {...createIssuerForm.getInputProps('website')}
+                />
+              </Group>
+
               <Divider />
               <Group justify="flex-end">
                 <Button variant="default" onClick={closeCreateModal}>
@@ -907,7 +956,10 @@ export default function ManageIssuer() {
 
         <Modal
           opened={joinModalOpened}
-          onClose={closeJoinModal}
+          onClose={() => {
+            setJoinModalError(null);
+            closeJoinModal();
+          }}
           title="Join Issuer"
           styles={modalStyles}
           centered
@@ -915,14 +967,24 @@ export default function ManageIssuer() {
         >
           <form onSubmit={joinIssuerForm.onSubmit(handleJoinIssuer)}>
             <Stack>
+              {joinModalError && (
+                <Alert
+                  color="red"
+                  title="Error"
+                  withCloseButton
+                  onClose={() => setJoinModalError(null)}
+                >
+                  {joinModalError}
+                </Alert>
+              )}
               <Select
                 label="Select Issuer"
                 description="Request to join an existing issuer"
-                placeholder={isLoadingAllIssuers ? 'Loading...' : 'Select a issuer'}
-                data={allIssuers.map(uni => ({ value: uni.id, label: uni.displayName }))}
+                placeholder={isLoadingAllIssuers ? 'Loading...' : 'Select an issuer'}
+                data={allIssuers.map(uni => ({ value: uni.id, label: uni.shorthand }))}
                 searchable
                 required
-                disabled={isLoadingAllIssuers}
+                disabled={isLoadingAllIssuers || joinIssuerMutation.isPending}
                 {...joinIssuerForm.getInputProps('issuerId')}
               />
               <Text size="sm" c="dimmed">
@@ -930,7 +992,11 @@ export default function ManageIssuer() {
               </Text>
               <Divider />
               <Group justify="flex-end">
-                <Button variant="default" onClick={closeJoinModal}>
+                <Button
+                  variant="default"
+                  onClick={closeJoinModal}
+                  disabled={joinIssuerMutation.isPending}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" loading={joinIssuerMutation.isPending}>
