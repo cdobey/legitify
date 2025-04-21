@@ -95,8 +95,10 @@ export const issueCredential: RequestHandler = async (
     const attributesJSON = JSON.stringify(attributes || {});
 
     // Submit to blockchain with the new fields
-    await contract.submitTransaction(
-      'IssueCredential',
+    const transaction = contract.createTransaction('IssueCredential');
+    const txId = transaction.getTransactionId();
+
+    await transaction.submit(
       docId,
       docHash,
       holder.id,
@@ -114,7 +116,6 @@ export const issueCredential: RequestHandler = async (
 
     gateway.disconnect();
 
-    // Store in database
     const credential = await prisma.credential.create({
       data: {
         id: docId,
@@ -133,8 +134,8 @@ export const issueCredential: RequestHandler = async (
         programLength,
         domain,
         attributes: attributes || {},
-        // Store the ledger timestamp (will be updated after transaction)
         ledgerTimestamp: new Date().toISOString(), // Temporary value, will be updated
+        txId: txId,
       },
     });
 

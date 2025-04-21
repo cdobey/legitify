@@ -328,6 +328,7 @@ export const viewCredential: RequestHandler = async (
         lastUpdated: credentialRecord.updatedAt
           ? formatDate(new Date(credentialRecord.updatedAt))
           : null,
+        txId: credential.txId || 'Not available',
       },
 
       // Credential file data

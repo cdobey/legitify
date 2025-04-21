@@ -88,9 +88,9 @@ export const verifyCredentialDocument: RequestHandler = async (
         if (isVerified) {
           gateway.disconnect();
 
-          // Format issuance date if it exists
-          const issuanceDateStr = credential.issuanceDate
-            ? new Date(credential.issuanceDate).toLocaleDateString('en-US', {
+          // Format ledger timestamp if it exists
+          const formattedTimestamp = credential.ledgerTimestamp
+            ? new Date(credential.ledgerTimestamp).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
@@ -113,7 +113,7 @@ export const verifyCredentialDocument: RequestHandler = async (
               description: credential.description || 'Not specified',
               type: credential.type || 'credential',
               attributes: credential.attributes || {},
-              issuanceDate: issuanceDateStr,
+              ledgerTimestamp: formattedTimestamp,
               issuedAt: credential.createdAt.toISOString(),
             },
           });

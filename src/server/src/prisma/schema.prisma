@@ -115,6 +115,7 @@ model Credential {
   title            String
   description      String?
   ledgerTimestamp  String?          // Timestamp from the blockchain
+  txId             String?          // Transaction ID from the blockchain
   achievementDate  DateTime?
   expirationDate   DateTime?        // Optional
   programLength    String?          // Length of the program (e.g., "4 years")

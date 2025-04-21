@@ -23,13 +23,13 @@ import {
 } from '@mantine/core';
 import {
   IconAlertTriangle,
+  IconBuilding,
   IconCalendar,
   IconCertificate,
   IconCheck,
   IconFileText,
   IconGrain,
   IconInfoCircle,
-  IconSchool,
   IconUserCircle,
 } from '@tabler/icons-react';
 import { useParams } from 'react-router-dom';
@@ -148,9 +148,9 @@ export default function ViewCredential() {
     }
   };
 
-  const documentTitle = credential.credentialTitle || 'Academic Certificate';
-  const fieldOfStudy = credential.fieldOfStudy || 'Field not specified';
-  const displayTitle = `${documentTitle}${fieldOfStudy ? ` in ${fieldOfStudy}` : ''}`;
+  const documentTitle = credential.title || 'Credential';
+  const fieldOrDomain = credential.domain || 'Field not specified';
+  const displayTitle = `${documentTitle}${fieldOrDomain ? ` in ${fieldOrDomain}` : ''}`;
 
   return (
     <Container size="lg" py="xl">
@@ -240,43 +240,38 @@ export default function ViewCredential() {
                     <IconCertificate size={rem(20)} />
                   </ThemeIcon>
                   <Text fw={700} size="lg">
-                    Certificate Information
+                    Credential Information
                   </Text>
                 </Group>
                 <Divider mb="md" />
                 <Stack gap="sm">
                   <Group gap="xs">
-                    <Text fw={600}>Credential Title:</Text>
-                    <Text>{credential.credentialTitle || 'Not specified'}</Text>
+                    <Text fw={600}>Title:</Text>
+                    <Text>{credential.title || 'Not specified'}</Text>
                   </Group>
                   <Group gap="xs">
-                    <Text fw={600}>Field of Study:</Text>
-                    <Text>{credential.fieldOfStudy || 'Not specified'}</Text>
+                    <Text fw={600}>Type:</Text>
+                    <Text>{credential.type || 'Not specified'}</Text>
                   </Group>
                   <Group gap="xs">
-                    <Text fw={600}>Graduation Date:</Text>
-                    <Text>{credential.graduationDate || 'Not specified'}</Text>
+                    <Text fw={600}>Domain:</Text>
+                    <Text>{credential.domain || 'Not specified'}</Text>
                   </Group>
                   <Group gap="xs">
-                    <Text fw={600}>Honors:</Text>
-                    <Text>{credential.honors || 'None'}</Text>
+                    <Text fw={600}>Achievement Date:</Text>
+                    <Text>{credential.achievementDate || 'Not specified'}</Text>
                   </Group>
                   <Group gap="xs">
-                    <Text fw={600}>Program Duration:</Text>
-                    <Text>{credential.programDuration || 'Not specified'}</Text>
+                    <Text fw={600}>Program Length:</Text>
+                    <Text>{credential.programLength || 'Not specified'}</Text>
                   </Group>
-                  {credential.gpa && (
-                    <Group gap="xs">
-                      <Text fw={600}>GPA:</Text>
-                      <Text>{credential.gpa}</Text>
-                    </Group>
-                  )}
-                  {credential.holderId && (
-                    <Group gap="xs">
-                      <Text fw={600}>Holder ID:</Text>
-                      <Text>{credential.holderId}</Text>
-                    </Group>
-                  )}
+                  {credential.attributes &&
+                    Object.entries(credential.attributes).map(([key, value]) => (
+                      <Group gap="xs" key={key}>
+                        <Text fw={600}>{key}:</Text>
+                        <Text>{value?.toString() || 'Not specified'}</Text>
+                      </Group>
+                    ))}
                 </Stack>
               </Card>
 
@@ -288,36 +283,46 @@ export default function ViewCredential() {
                     variant="filled"
                     color={isDarkMode ? '#6741d9' : 'indigo'}
                   >
-                    <IconSchool size={rem(20)} />
+                    <IconBuilding size={rem(20)} />
                   </ThemeIcon>
                   <Text fw={700} size="lg">
-                    Issuing Institution
+                    Issuing Organization
                   </Text>
                 </Group>
                 <Divider mb="md" />
+                {credential.issuerInfo?.logoUrl && (
+                  <Box mb="md" style={{ maxWidth: '200px', margin: '0 auto' }}>
+                    <img
+                      src={credential.issuerInfo.logoUrl}
+                      alt={`${credential.issuerInfo.name} logo`}
+                      style={{
+                        width: '100%',
+                        height: 'auto',
+                        objectFit: 'contain',
+                        borderRadius: theme.radius.sm,
+                      }}
+                    />
+                  </Box>
+                )}
                 <Stack gap="sm">
                   <Group gap="xs">
-                    <Text fw={600}>Name:</Text>
-                    <Text>{credential.issuer}</Text>
+                    <Text fw={600}>Organization Name:</Text>
+                    <Text>{credential.issuerInfo?.name || 'Not specified'}</Text>
                   </Group>
-                  {credential.issuerInfo && (
-                    <>
-                      <Group gap="xs">
-                        <Text fw={600}>Institution ID:</Text>
-                        <Text>{credential.issuerInfo.name}</Text>
-                      </Group>
-                      {credential.issuerInfo.description && (
-                        <Group gap="xs" align="flex-start">
-                          <Text fw={600}>Description:</Text>
-                          <Text>{credential.issuerInfo.description}</Text>
-                        </Group>
-                      )}
-                    </>
-                  )}
                   <Group gap="xs">
-                    <Text fw={600}>Issue Date:</Text>
-                    <Text>{credential.issueDate || 'Not available'}</Text>
+                    <Text fw={600}>Shorthand:</Text>
+                    <Text>{credential.issuer || 'Not specified'}</Text>
                   </Group>
+                  <Group gap="xs">
+                    <Text fw={600}>Organization ID:</Text>
+                    <Text>{credential.issuerOrgId || 'Not specified'}</Text>
+                  </Group>
+                  {credential.issuerInfo?.description && (
+                    <Group gap="xs" align="flex-start">
+                      <Text fw={600}>Description:</Text>
+                      <Text>{credential.issuerInfo.description}</Text>
+                    </Group>
+                  )}
                 </Stack>
               </Card>
 
@@ -332,27 +337,27 @@ export default function ViewCredential() {
                     <IconUserCircle size={rem(20)} />
                   </ThemeIcon>
                   <Text fw={700} size="lg">
-                    Certificate Owner
+                    Credential Holder
                   </Text>
                 </Group>
                 <Divider mb="md" />
-                {credential.owner ? (
+                {credential.holder ? (
                   <Stack gap="sm">
                     <Group gap="xs">
                       <Text fw={600}>Name:</Text>
-                      <Text>{credential.owner.name}</Text>
+                      <Text>{credential.holder.name}</Text>
                     </Group>
                     <Group gap="xs">
                       <Text fw={600}>Email:</Text>
                       <Text>
-                        <Anchor href={`mailto:${credential.owner.email}`} target="_blank">
-                          {credential.owner.email}
+                        <Anchor href={`mailto:${credential.holder.email}`} target="_blank">
+                          {credential.holder.email}
                         </Anchor>
                       </Text>
                     </Group>
                   </Stack>
                 ) : (
-                  <Text c="dimmed">Owner information not available</Text>
+                  <Text c="dimmed">Holder information not available</Text>
                 )}
               </Card>
 
@@ -380,10 +385,10 @@ export default function ViewCredential() {
                     <Text fw={600}>Access Granted On:</Text>
                     <Text>{credential.accessGrantedOn || 'Not available'}</Text>
                   </Group>
-                  {credential.additionalNotes && (
-                    <Group gap="xs" align="flex-start">
-                      <Text fw={600}>Additional Notes:</Text>
-                      <Text>{credential.additionalNotes}</Text>
+                  {credential.blockchainInfo?.recordCreated && (
+                    <Group gap="xs">
+                      <Text fw={600}>Record Created:</Text>
+                      <Text>{credential.blockchainInfo.recordCreated}</Text>
                     </Group>
                   )}
                 </Stack>

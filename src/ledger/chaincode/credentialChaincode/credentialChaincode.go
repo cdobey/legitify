@@ -267,10 +267,8 @@ func (dc *CredentialChaincode) GetAllCredentials(ctx contractapi.TransactionCont
     return credentials, nil
 }
 
-// GetIssuerCredentials retrieves all credentials for a specific issuer using composite keys
-func (dc *CredentialChaincode) GetIssuerCredentials(ctx contractapi.TransactionContextInterface, issuerID string) ([]*Credential, error) {
-    // Use composite key to efficiently query documents by issuer
-    iterator, err := ctx.GetStub().GetStateByPartialCompositeKey("issuer~doc", []string{issuerID})
+func (dc *CredentialChaincode) GetIssuerCredentials(ctx contractapi.TransactionContextInterface, issuerOrgID string) ([]*Credential, error) {
+    iterator, err := ctx.GetStub().GetStateByPartialCompositeKey("issuerOrg~doc", []string{issuerOrgID})
     if err != nil {
         return nil, fmt.Errorf("failed to get issuer credentials: %v", err)
     }
