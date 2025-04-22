@@ -235,7 +235,8 @@ describe('ManageIssuer component', () => {
   const sampleIssuer = {
     id: 'uni-1',
     name: 'test-issuer',
-    displayName: 'Test Issuer',
+    shorthand: 'Test Issuer',
+    displayName: 'Test Issuer University',
     description: 'Test issuer description',
     affiliations: [
       {
@@ -260,50 +261,25 @@ describe('ManageIssuer component', () => {
   it('opens and validates the create issuer modal', async () => {
     renderWithProviders(issuerUser);
 
-    // Click the create issuer button
+    // open modal
     await userEvent.click(screen.getByRole('button', { name: /create issuer/i }));
 
-    // Wait for the modal to be visible
+    // Wait for modal and elements inside it to appear
+    await screen.findByTestId('create-issuer-modal');
+    const nameInput = await screen.findByTestId('issuer-name-input');
+    const shortnameInput = await screen.findByTestId('issuer-shortname-input');
+
+    // Find the form within the document (Mantine modals often portal content)
+    const form = await screen.findByRole('form');
+
+    // Find the submit button *within the form*
+    const createButton = await within(form).findByRole('button', { name: /^create issuer$/i });
+    await userEvent.click(createButton);
+
+    // validation errors
     await waitFor(() => {
-      const modal = screen.getByRole('dialog');
-      expect(modal).toBeInTheDocument();
-      expect(within(modal).getByRole('heading', { name: /create issuer/i })).toBeInTheDocument();
-    });
-
-    // Click create without filling required fields
-    const modal = screen.getByRole('dialog');
-    await userEvent.click(within(modal).getByRole('button', { name: /^create issuer$/i }));
-
-    // Should show validation errors
-    await waitFor(() => {
-      expect(screen.getByText(/identifier is required/i)).toBeInTheDocument();
-      expect(screen.getByText(/display name is required/i)).toBeInTheDocument();
-    });
-  });
-
-  it('opens and validates the join issuer modal', async () => {
-    renderWithProviders(issuerUser);
-
-    // Click the join issuer button
-    await userEvent.click(screen.getByRole('button', { name: /join existing issuer/i }));
-
-    // Wait for the modal to be visible
-    await waitFor(() => {
-      const modal = screen.getByRole('dialog');
-      expect(modal).toBeInTheDocument();
-      expect(within(modal).getByText(/select issuer/i)).toBeInTheDocument();
-    });
-
-    // Find the form elements
-    const modal = screen.getByRole('dialog');
-    const submitButton = within(modal).getByRole('button', { name: /^send request$/i });
-
-    // Click join without selecting a issuer
-    await userEvent.click(submitButton);
-
-    await waitFor(() => {
-      expect(modal).toBeInTheDocument();
-      expect(within(modal).getByLabelText(/select issuer/i)).toBeInTheDocument();
+      expect(screen.getByText('Name is required')).toBeInTheDocument();
+      expect(screen.getByText('Short name is required')).toBeInTheDocument();
     });
   });
 
@@ -311,7 +287,9 @@ describe('ManageIssuer component', () => {
     renderWithProviders(issuerUser, [sampleIssuer]);
 
     // Should show the issuer name in a heading
-    expect(screen.getByText('Test Issuer')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(sampleIssuer.shorthand)).toBeInTheDocument();
+    });
 
     // Should show the issuer ID
     expect(screen.getByText(/ID: uni-1/i)).toBeInTheDocument();

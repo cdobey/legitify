@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import App from '../App';
 import { AuthProvider } from '../contexts/AuthContext';
 import { ModalsProvider } from '../contexts/ModalsContext';
+import { StatusProvider } from '../contexts/StatusContext';
 import { ThemeProvider } from '../contexts/ThemeContext';
 
 function renderWithProviders(ui: React.ReactElement, { route = '/' } = {}) {
@@ -15,7 +16,9 @@ function renderWithProviders(ui: React.ReactElement, { route = '/' } = {}) {
       <ThemeProvider>
         <ModalsProvider>
           <MemoryRouter initialEntries={[route]}>
-            <AuthProvider>{ui}</AuthProvider>
+            <StatusProvider>
+              <AuthProvider>{ui}</AuthProvider>
+            </StatusProvider>
           </MemoryRouter>
         </ModalsProvider>
       </ThemeProvider>
@@ -26,28 +29,26 @@ function renderWithProviders(ui: React.ReactElement, { route = '/' } = {}) {
 describe('App routing', () => {
   it('renders HomePage for unauthenticated users', () => {
     renderWithProviders(<App />, { route: '/' });
-    // HomePage: Heading text is 'Secure Credential Verification' (h1), not 'welcome'
+    // Check for the main heading "Secure Credential Verification"
     expect(
-      screen.getByRole('heading', { name: /secure credential verification/i }),
+      screen.getByRole('heading', { level: 1, name: /secure credential verification/i }),
     ).toBeInTheDocument();
-    // Note: 'Get Started' button may not be present in test context if user is not unauthenticated or if minimal DOM is rendered.
+    // Check for FAQ section which is unique to HomePage
+    expect(
+      screen.getByRole('heading', { name: /frequently asked questions/i }),
+    ).toBeInTheDocument();
   });
 
   it('renders Login page on /login', () => {
     renderWithProviders(<App />, { route: '/login' });
-    // Login page: Button is labeled 'Sign In'
-    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
-    // Optionally, check for heading 'Welcome Back'
+    // Check for Welcome Back heading and Sign In button
     expect(screen.getByRole('heading', { name: /welcome back/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
   });
 
   it('renders Register page on /register', () => {
     renderWithProviders(<App />, { route: '/register' });
-    // Register page: Button is labeled 'Register', but is only present on final step
-    // Heading is 'Join LegiTify'
+    // Check for Join LegiTify heading which is unique to the registration page
     expect(screen.getByRole('heading', { name: /join legitify/i })).toBeInTheDocument();
-    // Note: 'Register' button is only present and enabled on last step with valid form.
   });
-
-  // Add more routing and protected route tests as needed
 });

@@ -438,6 +438,7 @@ export default function IssueCredential() {
                       disabled={isLoadingIssuers}
                       leftSection={<IconBriefcase size={16} />}
                       size="md"
+                      aria-label="Issuing Organization Select"
                     />
                   </SimpleGrid>
 

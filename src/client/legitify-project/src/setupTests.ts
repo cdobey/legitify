@@ -31,12 +31,13 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // ResizeObserver
-class ResizeObserver {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
-window.ResizeObserver = ResizeObserver;
+beforeAll(() => {
+  global.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as any;
+});
 
 // scrollIntoView
 window.HTMLElement.prototype.scrollIntoView = vi.fn();

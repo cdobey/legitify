@@ -8,6 +8,9 @@ interface StatCardProps {
 }
 
 export default function StatCard({ title, value, icon, isDate }: StatCardProps) {
+  // Generate a test ID from the title
+  const testId = `stat-card-value-${title.toLowerCase().replace(/\s+/g, '-')}`;
+
   return (
     <Card withBorder p="md">
       <Group align="flex-start" gap="sm">
@@ -16,7 +19,12 @@ export default function StatCard({ title, value, icon, isDate }: StatCardProps) 
           <Text size="sm" c="dimmed">
             {title}
           </Text>
-          <Text size="lg" fw={500} style={{ wordBreak: isDate ? 'break-word' : 'normal' }}>
+          <Text
+            size="lg"
+            fw={500}
+            style={{ wordBreak: isDate ? 'break-word' : 'normal' }}
+            data-testid={testId}
+          >
             {value}
           </Text>
         </Stack>

@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import MainLayout from '../../components/MainLayout'; // Adjust the path as needed
+import MainLayout from '../../components/MainLayout';
 
 interface User {
   username: string;
@@ -56,23 +56,33 @@ interface AppNavigationProps {
 }
 
 // Mock the components used by MainLayout
-vi.mock('./AppHeader', () => ({
+vi.mock('../../components/AppHeader', () => ({
   default: () => <div data-testid="app-header">App Header Mock</div>,
 }));
 
-vi.mock('./AppNavigation', () => ({
+// Mock AppNavigation component to better match actual implementation
+vi.mock('../../components/AppNavigation', () => ({
   default: ({ collapsed, onToggleCollapse }: AppNavigationProps) => (
     <div data-testid="app-navigation">
-      <button data-testid="toggle-nav" onClick={onToggleCollapse}>
+      <button
+        className="mantine-focus-auto mantine-Burger-root"
+        aria-label="Toggle navigation"
+        data-testid="toggle-nav"
+        onClick={onToggleCollapse}
+      >
         Toggle Navigation
       </button>
-      <span data-testid="nav-collapsed-state">{collapsed ? 'collapsed' : 'expanded'}</span>
+      <div data-testid="nav-collapsed-state">{collapsed ? 'collapsed' : 'expanded'}</div>
     </div>
   ),
 }));
 
-vi.mock('./Breadcrumbs', () => ({
-  default: () => <div data-testid="breadcrumbs">Breadcrumbs Mock</div>,
+vi.mock('../../components/Breadcrumbs', () => ({
+  default: () => (
+    <div data-testid="breadcrumbs" style={{ backgroundColor: 'rgba(249, 250, 251, 0.7)' }}>
+      Breadcrumbs Mock
+    </div>
+  ),
 }));
 
 // Create a custom theme that includes primaryBlue
@@ -232,22 +242,24 @@ describe('MainLayout Component', () => {
 
   it('displays correct page title for profile', () => {
     setup(null, '/profile');
-    expect(screen.getByText('Profile')).toBeInTheDocument();
+    expect(screen.getByText('Profile', { selector: '.header-title' })).toBeInTheDocument();
   });
 
   it('displays correct page title for settings', () => {
     setup(null, '/settings');
-    expect(screen.getByText('Settings')).toBeInTheDocument();
+    expect(screen.getByText('Settings', { selector: '.header-title' })).toBeInTheDocument();
   });
 
   it('displays correct page title for credential management', () => {
     setup(null, '/credential/manage');
-    expect(screen.getByText('Manage Credentials')).toBeInTheDocument();
+    expect(
+      screen.getByText('Manage Credentials', { selector: '.header-title' }),
+    ).toBeInTheDocument();
   });
 
   it('displays correct page title for issuer management', () => {
     setup(null, '/issuer/manage');
-    expect(screen.getByText('Manage Issuer')).toBeInTheDocument();
+    expect(screen.getByText('Manage Issuer', { selector: '.header-title' })).toBeInTheDocument();
   });
 
   it('displays correct page description for dashboard', () => {

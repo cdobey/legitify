@@ -52,12 +52,44 @@ function MockAuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// --- Mock Status Context ---
+const StatusContext = React.createContext<any>(null);
+function MockStatusProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <StatusContext.Provider
+      value={{
+        backendStatus: {
+          status: { status: 'online', version: '1.0.0' },
+          isLoading: false,
+          isError: false,
+        },
+        ledgerStatus: {
+          status: { status: 'online', version: '1.0.0' },
+          isLoading: false,
+          isError: false,
+        },
+      }}
+    >
+      {children}
+    </StatusContext.Provider>
+  );
+}
+
 // Patch useAuth to use our mock context
 vi.mock('@/contexts/AuthContext', async () => {
   const actual = await import('@/contexts/AuthContext');
   return {
     ...actual,
     useAuth: () => React.useContext(AuthContext),
+  };
+});
+
+// Patch useStatus to use our mock context
+vi.mock('@/contexts/StatusContext', async () => {
+  const actual = await import('@/contexts/StatusContext');
+  return {
+    ...actual,
+    useStatus: () => React.useContext(StatusContext),
   };
 });
 
@@ -99,7 +131,9 @@ function renderWithProviders() {
         <ThemeProvider>
           <ModalsProvider>
             <MockAuthProvider>
-              <Register />
+              <MockStatusProvider>
+                <Register />
+              </MockStatusProvider>
             </MockAuthProvider>
           </ModalsProvider>
         </ThemeProvider>
@@ -254,10 +288,12 @@ describe('Register Component', () => {
 
     // Should show issuer-specific fields
     await waitFor(() => {
-      expect(screen.getByText(/i'll provide issuer information later/i)).toBeInTheDocument();
-      // When "provide later" is not checked, issuer name fields should appear
+      expect(screen.getByText(/issuer organization/i)).toBeInTheDocument();
+      // "Create New Issuer" button should be visible
+      expect(screen.getByText(/create new issuer/i)).toBeInTheDocument();
+      // When in "create" mode (default), issuer name fields should appear
       expect(screen.getByLabelText(/issuer name/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/display name/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/short name/i)).toBeInTheDocument();
     });
   });
 
@@ -282,13 +318,13 @@ describe('Register Component', () => {
     // Go to next step
     await user.click(screen.getByText(/next/i));
 
-    // Check "provide later" switch
-    await user.click(screen.getByLabelText(/i'll provide issuer information later/i));
+    // Click the "I'll create or join an issuer later" button
+    await user.click(screen.getByText(/i'll create or join an issuer later/i));
 
     // Issuer name fields should be hidden
     await waitFor(() => {
       expect(screen.queryByLabelText(/issuer name/i)).not.toBeInTheDocument();
-      expect(screen.queryByLabelText(/display name/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/short name/i)).not.toBeInTheDocument();
     });
   });
 
@@ -322,7 +358,10 @@ describe('Register Component', () => {
   it('submits registration form successfully', async () => {
     // Mock the register function to resolve successfully
     const { register } = await import('@/api/auth/auth.api');
-    vi.mocked(register).mockResolvedValueOnce({ uid: 'test-user-123' });
+    vi.mocked(register).mockResolvedValueOnce({
+      uid: 'test-user-123',
+      message: 'Registration successful',
+    });
 
     // Mock axios for the issuers fetch
     vi.mocked(axios.get).mockResolvedValue({

@@ -1,14 +1,47 @@
 import { ModalsProvider } from '@/contexts/ModalsContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import Settings from '@/pages/Settings';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientConfig, QueryClientProvider } from '@tanstack/react-query';
+import '@testing-library/jest-dom';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-// --- Mock Auth Context ---
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        gcTime: 0,
+        staleTime: 0,
+      },
+    },
+  } satisfies QueryClientConfig);
+
+let queryClient: QueryClient;
+
+function renderSettingsWithProviders(user: any) {
+  queryClient = createTestQueryClient();
+  return {
+    ...render(
+      <MemoryRouter>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider>
+            <ModalsProvider>
+              <MockAuthProvider user={user}>
+                <Settings />
+              </MockAuthProvider>
+            </ModalsProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </MemoryRouter>,
+    ),
+    queryClient,
+  };
+}
+
 const AuthContext = React.createContext<any>(null);
 function MockAuthProvider({ user, children }: { user: any; children: React.ReactNode }) {
   return (
@@ -31,7 +64,6 @@ function MockAuthProvider({ user, children }: { user: any; children: React.React
   );
 }
 
-// Patch useAuth to use our mock context
 vi.mock('@/contexts/AuthContext', async (importOriginal: () => Promise<any>) => {
   const actual = await importOriginal();
   return {
@@ -40,7 +72,6 @@ vi.mock('@/contexts/AuthContext', async (importOriginal: () => Promise<any>) => 
   };
 });
 
-// --- Mock Theme Context ---
 vi.mock('@/contexts/ThemeContext', async (importOriginal: () => Promise<any>) => {
   const actual = await importOriginal();
   return {
@@ -53,127 +84,48 @@ vi.mock('@/contexts/ThemeContext', async (importOriginal: () => Promise<any>) =>
   };
 });
 
-// --- Mock API Mutations ---
-vi.mock('@/api/users/user.mutations', () => ({
-  useUpdateProfileMutation: () => ({
-    mutateAsync: vi.fn().mockResolvedValue({}),
-    isPending: false,
-  }),
-  useChangePasswordMutation: () => ({
-    mutateAsync: vi.fn().mockResolvedValue({}),
-    isPending: false,
-  }),
-  useUploadProfilePictureMutation: () => ({
-    mutateAsync: vi.fn().mockResolvedValue({}),
-    isPending: false,
-  }),
-  useDeleteProfilePictureMutation: () => ({
-    mutateAsync: vi.fn().mockResolvedValue({}),
-    isPending: false,
-  }),
-  useEnableTwoFactorMutation: () => ({
-    mutateAsync: vi.fn().mockResolvedValue({
-      qrCode: 'data:image/png;base64,mockedQRCode',
-      secret: 'MOCKEDSECRET',
-    }),
-    isPending: false,
-  }),
-  useVerifyTwoFactorMutation: () => ({
-    mutateAsync: vi.fn().mockResolvedValue({}),
-    isPending: false,
-  }),
-  useDisableTwoFactorMutation: () => ({
-    mutateAsync: vi.fn().mockResolvedValue({}),
-    isPending: false,
-  }),
-}));
-
-// --- Mock Issuer API Queries and Mutations ---
-vi.mock('@/api/issuers/issuer.queries', () => ({
-  useMyIssuersQuery: ({ enabled }: { enabled: boolean }) => ({
-    data: enabled
-      ? [
-          {
-            id: 'uni-1',
-            displayName: 'Test Issuer',
-            logoUrl: 'https://example.com/logo.png',
-          },
-        ]
-      : [],
-  }),
-}));
-
-vi.mock('@/api/issuers/issuer.mutations', () => ({
-  useUploadIssuerLogoMutation: () => ({
-    mutateAsync: vi.fn().mockResolvedValue({}),
-    isPending: false,
-  }),
-  useDeleteIssuerLogoMutation: () => ({
-    mutateAsync: vi.fn().mockResolvedValue({}),
-    isPending: false,
-  }),
-}));
-
-// --- Mock Credential API Queries ---
+// Coudlnt get MSW api mocks working correctly so for this component I'm just gonna use query mocking for now (REVISIT)
 vi.mock('@/api/credentials/credential.queries', () => ({
-  useMyCredentialsQuery: ({ enabled }: { enabled: boolean }) => ({
-    data: enabled ? [{ id: 'credential-1', title: 'Bachelor of Science' }] : [],
+  useMyCredentialsQuery: () => ({
+    data: [{ id: 'cred-1', title: 'Mock Credential' }],
+    isLoading: false,
+    error: null,
+    isFetching: false,
   }),
-  useAccessRequestsQuery: ({ enabled }: { enabled: boolean }) => ({
-    data: enabled ? [{ id: 'request-1', status: 'pending' }] : [],
+  useAccessRequestsQuery: () => ({
+    data: [{ id: 'req-1', status: 'pending' }],
+    isLoading: false,
+    error: null,
+    isFetching: false,
   }),
-  useLedgerRecordsQuery: ({ enabled }: { enabled: boolean }) => ({
-    data: enabled
-      ? [
-          {
-            id: 'record-1',
-            issuedAt: '2025-04-10T10:00:00Z',
-          },
-        ]
-      : [],
+  useLedgerRecordsQuery: () => ({
+    data: [{ id: 'ledger-1', ledgerTimestamp: new Date().toISOString() }],
+    isLoading: false,
+    error: null,
+    isFetching: false,
   }),
-  useAccessibleCredentialsQuery: ({ enabled }: { enabled: boolean }) => ({
-    data: enabled
-      ? [
-          {
-            id: 'credential-1',
-            owner: {
-              email: 'holder@example.com',
-            },
-          },
-        ]
-      : [],
+  useAccessibleCredentialsQuery: () => ({
+    data: [{ id: 'acc-1', holder: { email: 'holder@example.com' } }],
+    isLoading: false,
+    error: null,
+    isFetching: false,
   }),
 }));
 
-// Mock notifications
 vi.mock('@mantine/notifications', () => ({
-  notifications: {
-    show: vi.fn(),
-  },
+  notifications: { show: vi.fn() },
 }));
 
-function renderSettingsWithProviders(user: any) {
-  const queryClient = new QueryClient();
-  return render(
-    <MemoryRouter>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <ModalsProvider>
-            <MockAuthProvider user={user}>
-              <Settings />
-            </MockAuthProvider>
-          </ModalsProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </MemoryRouter>,
-  );
-}
+afterEach(() => {
+  vi.clearAllMocks();
+  if (queryClient) {
+    queryClient.clear();
+  }
+});
 
-// Sample users for testing different roles
 const issuerUser = {
   id: 'u1',
-  email: 'uni@example.com',
+  email: 'issuer@example.com',
   role: 'issuer',
   username: 'issuerUser',
   orgName: 'orgissuer',
@@ -184,7 +136,7 @@ const issuerUser = {
 
 const holderUser = {
   id: 'i1',
-  email: 'ind@example.com',
+  email: 'holder@example.com',
   role: 'holder',
   username: 'holderUser',
   orgName: 'orgholder',
@@ -196,7 +148,7 @@ const holderUser = {
 
 const verifierUser = {
   id: 'e1',
-  email: 'emp@example.com',
+  email: 'verifier@example.com',
   role: 'verifier',
   username: 'verifierUser',
   orgName: 'orgverifier',
@@ -219,88 +171,74 @@ describe('Settings Page', () => {
     expect(screen.getByText(holderUser.email)).toBeInTheDocument();
 
     const roleBadges = screen.getAllByText('Holder');
-    const roleBadgeElement = roleBadges.find(
-      element => element.closest('.mantine-Badge-root') !== null,
-    );
-    expect(roleBadgeElement).toBeInTheDocument();
+    expect(roleBadges.find(el => el.closest('.mantine-Badge-root'))).toBeInTheDocument();
 
     const orgBadges = screen.getAllByText(holderUser.orgName);
-    const orgBadgeElement = orgBadges.find(
-      element => element.closest('.mantine-Badge-root') !== null,
-    );
-    expect(orgBadgeElement).toBeInTheDocument();
+    expect(orgBadges.find(el => el.closest('.mantine-Badge-root'))).toBeInTheDocument();
 
-    // Check tabs are present
     expect(screen.getByRole('tab', { name: /profile/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /security/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /preferences/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /appearance/i })).toBeInTheDocument();
 
-    // Verify holder-specific stats are displayed
     expect(screen.getByText('Your Credentials')).toBeInTheDocument();
     expect(screen.getByText('Pending Access Requests')).toBeInTheDocument();
 
-    // Find the value "1" that represents credential count
+    const credentialCountElement = await screen.findByTestId(
+      'stat-card-value-your-credentials',
+      {},
+      { timeout: 3000 },
+    );
+    expect(credentialCountElement).toHaveTextContent('1');
+
     const credentialsCard = screen
       .getAllByText('Your Credentials')[0]
       .closest('.mantine-Card-root') as HTMLElement;
     expect(credentialsCard).toBeInTheDocument();
-
-    const credentialCountText = within(credentialsCard).getByText('1');
-    expect(credentialCountText).toBeInTheDocument();
+    expect(
+      within(credentialsCard).getByTestId('stat-card-value-your-credentials'),
+    ).toHaveTextContent('1');
   });
 
   it('displays issuer-specific tab and logo section for issuer users', async () => {
     renderSettingsWithProviders(issuerUser);
 
-    // Should have issuer tab
-    expect(screen.getByRole('tab', { name: /issuer/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /organization/i })).toBeInTheDocument();
 
-    // Click on issuer tab
-    await userEvent.click(screen.getByRole('tab', { name: /issuer/i }));
+    await userEvent.click(screen.getByRole('tab', { name: /organization/i }));
 
-    // Should show issuer-specific content
-    await waitFor(() => {
-      expect(screen.getByText('Issuer Logo')).toBeInTheDocument();
-    });
+    await waitFor(() => expect(screen.getByText('Organization Branding')).toBeInTheDocument());
 
-    // Verify issuer-specific stats are displayed
     expect(screen.getByText('Issued Credentials')).toBeInTheDocument();
     expect(screen.getByText('Last Activity')).toBeInTheDocument();
   });
 
   it('displays verifier-specific stats for verifier users', () => {
     renderSettingsWithProviders(verifierUser);
-
-    // Verify verifier-specific stats are displayed
-    expect(screen.getByText('Unique Holders')).toBeInTheDocument();
+    expect(screen.getByText('Credential Holders')).toBeInTheDocument();
     expect(screen.getByText('Accessible Credentials')).toBeInTheDocument();
   });
 
   it('shows enabled 2FA interface for users with 2FA enabled', async () => {
     renderSettingsWithProviders(verifierUser);
 
-    // Click on security tab
     await userEvent.click(screen.getByRole('tab', { name: /security/i }));
 
-    await waitFor(() => {
-      expect(screen.getByText('Two-factor authentication is enabled')).toBeInTheDocument();
-    });
+    await waitFor(() =>
+      expect(screen.getByText('Two-factor authentication is enabled')).toBeInTheDocument(),
+    );
 
-    // Should have disable 2FA button
     expect(screen.getByRole('button', { name: /disable 2fa/i })).toBeInTheDocument();
   });
 
   it('shows setup 2FA interface for users without 2FA enabled', async () => {
     renderSettingsWithProviders(holderUser);
 
-    // Click on security tab
     await userEvent.click(screen.getByRole('tab', { name: /security/i }));
 
-    await waitFor(() => {
-      expect(screen.getByText(/adds an extra layer of security/i)).toBeInTheDocument();
-    });
+    await waitFor(() =>
+      expect(screen.getByText(/adds an extra layer of security/i)).toBeInTheDocument(),
+    );
 
-    // Should have setup 2FA button
     expect(
       screen.getByRole('button', { name: /setup two-factor authentication/i }),
     ).toBeInTheDocument();
@@ -309,66 +247,49 @@ describe('Settings Page', () => {
   it('shows theme selection options in preferences tab', async () => {
     renderSettingsWithProviders(holderUser);
 
-    // Click on preferences tab
-    await userEvent.click(screen.getByRole('tab', { name: /preferences/i }));
+    await userEvent.click(screen.getByRole('tab', { name: /appearance/i }));
 
-    await waitFor(() => {
-      expect(screen.getByText('Appearance')).toBeInTheDocument();
-    });
+    await waitFor(() => expect(screen.getByText('Appearance')).toBeInTheDocument());
 
-    // Should have light/dark theme buttons
     expect(screen.getByRole('button', { name: /light/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /dark/i })).toBeInTheDocument();
   });
 
-  it('shows appropriate form fields in profile section', async () => {
+  it('shows appropriate form fields in profile section', () => {
     renderSettingsWithProviders(holderUser);
 
-    // Profile section should be default active tab
     expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-
-    // Email should be disabled as mentioned in component
     const emailInput = screen.getByLabelText(/email/i);
     expect(emailInput).toBeDisabled();
 
-    // Should show account information section
     expect(screen.getByText('Account Information')).toBeInTheDocument();
     expect(screen.getByText('Account Type')).toBeInTheDocument();
     expect(screen.getByText('Organization')).toBeInTheDocument();
     expect(screen.getByText('Account Created')).toBeInTheDocument();
     expect(screen.getByText('Last Updated')).toBeInTheDocument();
 
-    // Check dates are formatted correctly
-    expect(screen.getByText('January 1, 2024')).toBeInTheDocument(); // createdAt
-    expect(screen.getByText('January 2, 2024')).toBeInTheDocument(); // updatedAt
+    expect(screen.getByText('January 1, 2024')).toBeInTheDocument();
+    expect(screen.getByText('January 2, 2024')).toBeInTheDocument();
   });
 
   it('shows password change form in security tab', async () => {
     renderSettingsWithProviders(holderUser);
 
-    // Click on security tab
     await userEvent.click(screen.getByRole('tab', { name: /security/i }));
 
-    // Wait for the security tab to be active
-    const securityPanel = await waitFor(() => {
-      return screen.getByRole('tabpanel', { name: /security/i });
-    });
+    const securityPanel = await waitFor(() => screen.getByRole('tabpanel', { name: /security/i }));
 
-    // Find the heading within the security tab panel
-    const changePasswordHeading = within(securityPanel).getByRole('heading', {
-      name: /change password/i,
-    });
-    expect(changePasswordHeading).toBeInTheDocument();
+    expect(
+      within(securityPanel).getByRole('heading', { name: /change password/i }),
+    ).toBeInTheDocument();
 
-    // Should have password fields
     expect(screen.getByLabelText(/current password/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Enter your new password')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Confirm your new password')).toBeInTheDocument();
 
-    // Change Password button should be present but disabled (since fields are empty)
-    const changePasswordButton = screen.getByRole('button', { name: /^change password$/i });
-    expect(changePasswordButton).toBeInTheDocument();
+    const changePasswordButton = screen.getByRole('button', {
+      name: /^change password$/i,
+    });
     expect(changePasswordButton).toBeDisabled();
   });
 });

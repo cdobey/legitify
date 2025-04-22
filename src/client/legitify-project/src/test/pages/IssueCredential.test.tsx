@@ -6,7 +6,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // --- Mock Auth Context ---
 const AuthContext = React.createContext<any>(null);
@@ -46,7 +46,8 @@ vi.mock('@/api/issuers/issuer.queries', () => ({
     data: [
       {
         id: 'uni1',
-        displayName: 'Test Issuer',
+        shorthand: 'Test Issuer', // Add shorthand field which is used in Select
+        displayName: 'Test University Issuer',
       },
     ],
     isLoading: false,
@@ -128,6 +129,11 @@ function createMockFile(name = 'test.pdf', size = 1024, type = 'application/pdf'
 }
 
 describe('IssueCredential Component', () => {
+  beforeEach(() => {
+    // Reset any mocks before each test
+    vi.clearAllMocks();
+  });
+
   it('shows access denied for holder users', () => {
     renderWithProviders(holderUser);
     expect(screen.getByText(/only issuers can issue credentials/i)).toBeInTheDocument();
@@ -146,11 +152,11 @@ describe('IssueCredential Component', () => {
 
     // First step should be active and show issuer selection
     expect(screen.getByText('Holder & Issuer')).toBeInTheDocument();
-    expect(screen.getByText('Issuing Issuer')).toBeInTheDocument();
+    expect(screen.getByText('Issuing Organization')).toBeInTheDocument();
     expect(screen.getByText('Holder Email')).toBeInTheDocument();
 
     // Check for the Next Step button
-    expect(screen.getByText('Next Step')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /next step/i })).toBeInTheDocument();
   });
 
   it('navigates through steps when filling out the form', async () => {
@@ -158,23 +164,21 @@ describe('IssueCredential Component', () => {
     const user = userEvent.setup();
 
     // Step 1: Holder & Issuer
-    await user.click(screen.getByPlaceholderText(/select a issuer/i));
+    const issuerSelect = screen.getByLabelText('Issuing Organization Select');
+    await user.click(issuerSelect);
     await user.click(screen.getByText('Test Issuer'));
     await user.type(screen.getByLabelText(/holder email/i), 'holder@example.com');
-    await user.click(screen.getByText('Next Step'));
+    await user.click(screen.getByRole('button', { name: /next step/i }));
 
     // Step 2: Credential Details should now be visible
     await waitFor(() => {
-      expect(screen.getByText('Credential Title')).toBeInTheDocument();
+      expect(screen.getByText('Required Information')).toBeInTheDocument();
     });
 
     // Fill out Step 2
-    await user.type(screen.getByLabelText(/credential title/i), 'Bachelor of Science');
-    await user.type(screen.getByLabelText(/field of study/i), 'Computer Science');
-    await user.type(screen.getByLabelText(/graduation date/i), '2025-05-20');
-    await user.type(screen.getByLabelText(/holder id/i), '12345678');
-    await user.type(screen.getByLabelText(/program duration/i), '4 years');
-    await user.type(screen.getByLabelText(/gpa/i), '3.85');
+    await user.type(screen.getByLabelText(/credential title/i), 'Test Credential');
+    await user.type(screen.getByLabelText(/credential type/i), 'Certificate');
+    await user.type(screen.getByLabelText(/description/i), 'Test Description');
 
     // Move to Step 3
     await user.click(screen.getByRole('button', { name: /next step/i }));
@@ -190,52 +194,45 @@ describe('IssueCredential Component', () => {
     const user = userEvent.setup();
 
     // Step 1: Fill out first step
-    await user.click(screen.getByPlaceholderText(/select a issuer/i));
+    const issuerSelect = screen.getByLabelText('Issuing Organization Select');
+    await user.click(issuerSelect);
     await user.click(screen.getByText('Test Issuer'));
     await user.type(screen.getByLabelText(/holder email/i), 'holder@example.com');
     await user.click(screen.getByRole('button', { name: /next step/i }));
 
     // Step 2: Fill out second step
     await waitFor(() => expect(screen.getByLabelText(/credential title/i)).toBeInTheDocument());
-    await user.type(screen.getByLabelText(/credential title/i), 'Bachelor of Science');
-    await user.type(screen.getByLabelText(/field of study/i), 'Computer Science');
-    await user.type(screen.getByLabelText(/graduation date/i), '2025-05-20');
-    await user.type(screen.getByLabelText(/holder id/i), '12345678');
-    await user.type(screen.getByLabelText(/program duration/i), '4 years');
-    await user.type(screen.getByLabelText(/gpa/i), '3.85');
+    await user.type(screen.getByLabelText(/credential title/i), 'Test Credential');
+    await user.type(screen.getByLabelText(/credential type/i), 'Certificate');
+    await user.type(screen.getByLabelText(/description/i), 'Test Description');
     await user.click(screen.getByRole('button', { name: /next step/i }));
 
     // Step 3: Document Upload page should be visible
     await waitFor(() => expect(screen.getByText('Upload Credential Document')).toBeInTheDocument());
 
-    // Check that the "Issue Credential" button exists and is disabled because no file is uploaded
-    const issueButton = screen.getByRole('button', { name: /issue credential/i });
-    expect(issueButton).toBeInTheDocument();
-    expect(issueButton).toBeDisabled();
+    // Try to submit without a file
+    const submitButton = screen.getByRole('button', { name: /issue credential/i });
+    expect(submitButton).toBeInTheDocument();
+    expect(submitButton).toBeDisabled();
   });
 
-  // Test for the file upload functionality
   it('handles file upload correctly', async () => {
-    // Global.File mock for testing environment
     global.URL.createObjectURL = vi.fn(() => 'mock-url');
-
     renderWithProviders(issuerUser);
     const user = userEvent.setup();
 
     // Step 1: Fill out first step
-    await user.click(screen.getByPlaceholderText(/select a issuer/i));
+    const issuerSelect = screen.getByLabelText('Issuing Organization Select');
+    await user.click(issuerSelect);
     await user.click(screen.getByText('Test Issuer'));
     await user.type(screen.getByLabelText(/holder email/i), 'holder@example.com');
-    await user.click(screen.getByText('Next Step'));
+    await user.click(screen.getByRole('button', { name: /next step/i }));
 
     // Step 2: Fill out second step
     await waitFor(() => expect(screen.getByLabelText(/credential title/i)).toBeInTheDocument());
-    await user.type(screen.getByLabelText(/credential title/i), 'Bachelor of Science');
-    await user.type(screen.getByLabelText(/field of study/i), 'Computer Science');
-    await user.type(screen.getByLabelText(/graduation date/i), '2025-05-20');
-    await user.type(screen.getByLabelText(/holder id/i), '12345678');
-    await user.type(screen.getByLabelText(/program duration/i), '4 years');
-    await user.type(screen.getByLabelText(/gpa/i), '3.85');
+    await user.type(screen.getByLabelText(/credential title/i), 'Test Credential');
+    await user.type(screen.getByLabelText(/credential type/i), 'Certificate');
+    await user.type(screen.getByLabelText(/description/i), 'Test Description');
     await user.click(screen.getByRole('button', { name: /next step/i }));
 
     // Step 3: Upload page should be visible
@@ -253,5 +250,9 @@ describe('IssueCredential Component', () => {
       expect(screen.getByText('File Selected')).toBeInTheDocument();
       expect(screen.getByText('test.pdf')).toBeInTheDocument();
     });
+
+    // Submit button should be enabled
+    const submitButton = screen.getByRole('button', { name: /issue credential/i });
+    expect(submitButton).toBeEnabled();
   });
 });

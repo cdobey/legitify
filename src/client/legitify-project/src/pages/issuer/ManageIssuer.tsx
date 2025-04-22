@@ -137,14 +137,14 @@ export default function ManageIssuer() {
       foundedYear: '',
     },
     validate: {
-      name: value => (value ? null : 'Identifier is required'),
-      shorthand: value => (value ? null : 'Short name is required'),
+      name: value => (!value ? 'Name is required' : null),
+      shorthand: value => (!value ? 'Short name is required' : null),
     },
   });
 
   const joinIssuerForm = useForm({
     initialValues: { issuerId: '' },
-    validate: { issuerId: value => (value ? null : 'Please select an issuer') },
+    validate: { issuerId: value => (!value ? 'Please select an issuer' : null) },
   });
 
   const registerHolderForm = useForm<RegisterHolderForm>({
@@ -891,8 +891,9 @@ export default function ManageIssuer() {
           styles={modalStyles}
           centered
           size="lg"
+          data-testid="create-issuer-modal"
         >
-          <form onSubmit={createIssuerForm.onSubmit(handleCreateIssuer)} noValidate>
+          <form onSubmit={createIssuerForm.onSubmit(handleCreateIssuer)} noValidate role="form">
             <Stack>
               <TextInput
                 label="Name"
@@ -900,6 +901,7 @@ export default function ManageIssuer() {
                 placeholder="e.g. Dublin City University"
                 required
                 {...createIssuerForm.getInputProps('name')}
+                data-testid="issuer-name-input"
               />
               <TextInput
                 label="Short Name"
@@ -907,6 +909,7 @@ export default function ManageIssuer() {
                 placeholder="e.g. DCU"
                 required
                 {...createIssuerForm.getInputProps('shorthand')}
+                data-testid="issuer-shortname-input"
               />
               <TextInput
                 label="Description"
@@ -964,8 +967,10 @@ export default function ManageIssuer() {
           styles={modalStyles}
           centered
           size="md"
+          role="dialog"
+          data-testid="join-issuer-modal"
         >
-          <form onSubmit={joinIssuerForm.onSubmit(handleJoinIssuer)}>
+          <form onSubmit={joinIssuerForm.onSubmit(handleJoinIssuer)} role="form">
             <Stack>
               {joinModalError && (
                 <Alert
@@ -981,11 +986,18 @@ export default function ManageIssuer() {
                 label="Select Issuer"
                 description="Request to join an existing issuer"
                 placeholder={isLoadingAllIssuers ? 'Loading...' : 'Select an issuer'}
-                data={allIssuers.map(uni => ({ value: uni.id, label: uni.shorthand }))}
+                data={
+                  allIssuers?.map(uni => ({
+                    value: uni.id,
+                    label: uni.shorthand || '',
+                  })) || []
+                }
                 searchable
                 required
                 disabled={isLoadingAllIssuers || joinIssuerMutation.isPending}
                 {...joinIssuerForm.getInputProps('issuerId')}
+                error={joinIssuerForm.errors.issuerId || null}
+                data-testid="issuer-select"
               />
               <Text size="sm" c="dimmed">
                 Your request will need to be approved by the issuer administrators.
@@ -1062,7 +1074,7 @@ export default function ManageIssuer() {
           centered
           size="md"
         >
-          <form onSubmit={registerHolderForm.onSubmit(handleRegisterHolder)}>
+          <form onSubmit={registerHolderForm.onSubmit(handleRegisterHolder)} role="form">
             <Stack>
               <TextInput
                 label="Email"
