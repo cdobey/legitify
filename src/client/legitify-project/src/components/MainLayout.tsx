@@ -90,19 +90,19 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const getPageIcon = () => {
     const path = location.pathname;
     if (path === '/') return <IconHome size={28} stroke={1.5} />;
-    if (path.includes('/degree/issue')) return <IconCertificate size={28} stroke={1.5} />;
-    if (path.includes('/degree/manage')) return <IconFiles size={28} stroke={1.5} />;
-    if (path.includes('/degree/requests')) return <IconInbox size={28} stroke={1.5} />;
-    if (path.includes('/degree/verify')) return <IconCheck size={28} stroke={1.5} />;
-    if (path.includes('/degree/accessible')) return <IconFileCheck size={28} stroke={1.5} />;
-    if (path.includes('/degree/view/')) return <IconCertificate2 size={28} stroke={1.5} />;
-    if (path.includes('/degree/all')) return <IconList size={28} stroke={1.5} />;
-    if (path === '/degrees') return <IconList size={28} stroke={1.5} />;
+    if (path.includes('/credential/issue')) return <IconCertificate size={28} stroke={1.5} />;
+    if (path.includes('/credential/manage')) return <IconFiles size={28} stroke={1.5} />;
+    if (path.includes('/credential/requests')) return <IconInbox size={28} stroke={1.5} />;
+    if (path.includes('/credential/verify')) return <IconCheck size={28} stroke={1.5} />;
+    if (path.includes('/credential/accessible')) return <IconFileCheck size={28} stroke={1.5} />;
+    if (path.includes('/credential/view/')) return <IconCertificate2 size={28} stroke={1.5} />;
+    if (path.includes('/credential/all')) return <IconList size={28} stroke={1.5} />;
+    if (path === '/credentials') return <IconList size={28} stroke={1.5} />;
     if (path.includes('/profile')) return <IconUser size={28} stroke={1.5} />;
     if (path.includes('/dashboard')) return <IconHome size={28} stroke={1.5} />;
     if (path.includes('/settings')) return <IconSettings size={28} stroke={1.5} />;
-    if (path.includes('/universities')) return <IconSchool size={28} stroke={1.5} />;
-    if (path.includes('/university')) return <IconSchool size={28} stroke={1.5} />;
+    if (path.includes('/issuers')) return <IconSchool size={28} stroke={1.5} />;
+    if (path.includes('/issuer')) return <IconSchool size={28} stroke={1.5} />;
     if (path.includes('/users/search')) return <IconUserPlus size={28} stroke={1.5} />;
     return <IconHome size={28} stroke={1.5} />;
   };
@@ -114,19 +114,19 @@ export default function MainLayout({ children }: MainLayoutProps) {
       return 'Home';
     }
     if (path === '/dashboard') return 'Dashboard';
-    if (path === '/degree/issue') return 'Issue Degree';
-    if (path === '/degree/manage') return 'Manage Degrees';
-    if (path === '/degree/requests') return 'Access Requests';
-    if (path === '/degree/verify') return 'Verify Degree';
-    if (path === '/degree/accessible') return 'Accessible Degrees';
-    if (path === '/degree/all-records') return 'Blockchain Records';
-    if (path === '/degrees') {
-      return user?.role === 'employer' ? 'Accessible Degrees' : 'Blockchain Records';
+    if (path === '/credential/issue') return 'Issue Credential';
+    if (path === '/credential/manage') return 'Manage Credentials';
+    if (path === '/credential/requests') return 'Access Requests';
+    if (path === '/credential/verify') return 'Verify Credential';
+    if (path === '/credential/accessible') return 'Accessible Credentials';
+    if (path === '/credential/all-records') return 'Blockchain Records';
+    if (path === '/credentials') {
+      return user?.role === 'verifier' ? 'Accessible Credentials' : 'Blockchain Records';
     }
-    if (path.includes('/degree/view/')) return 'Degree Certificate';
+    if (path.includes('/credential/view/')) return 'Credential Certificate';
     if (path === '/profile') return 'Profile';
     if (path === '/settings') return 'Settings';
-    if (path.includes('/university')) return 'Manage University';
+    if (path.includes('/issuer')) return 'Manage Issuer';
     if (path.includes('/users/search')) return 'Search Users';
 
     // Convert path to title case
@@ -145,21 +145,21 @@ export default function MainLayout({ children }: MainLayoutProps) {
     const path = location.pathname;
     if (path === '/') return 'Welcome to LegiTify';
     if (path === '/dashboard') return 'Manage your academic credentials';
-    if (path === '/degree/issue') return 'Issue new academic credentials securely';
-    if (path === '/degree/manage') return 'Manage and view your academic credentials';
-    if (path === '/degree/requests') return 'Manage access requests for your credentials';
-    if (path === '/degree/verify') return 'Verify the authenticity of credentials';
-    if (path === '/degree/accessible') return 'View credentials you have access to';
-    if (path === '/degree/all-records') return 'View all records stored on the blockchain';
-    if (path === '/degrees') {
-      return user?.role === 'employer'
+    if (path === '/credential/issue') return 'Issue new academic credentials securely';
+    if (path === '/credential/manage') return 'Manage and view your academic credentials';
+    if (path === '/credential/requests') return 'Manage access requests for your credentials';
+    if (path === '/credential/verify') return 'Verify the authenticity of credentials';
+    if (path === '/credential/accessible') return 'View credentials you have access to';
+    if (path === '/credential/all-records') return 'View all records stored on the blockchain';
+    if (path === '/credentials') {
+      return user?.role === 'verifier'
         ? 'View credentials you have access to'
         : 'View all records stored on the blockchain';
     }
-    if (path.includes('/degree/view/')) return 'View verified certificate details';
+    if (path.includes('/credential/view/')) return 'View verified certificate details';
     if (path === '/profile') return 'View and manage your profile information';
     if (path === '/settings') return 'Manage your account settings';
-    if (path.includes('/university')) return 'Manage your university affiliations';
+    if (path.includes('/issuer')) return 'Manage your issuer affiliations';
     if (path.includes('/users/search')) return 'Search for users to request credential access';
 
     return '';

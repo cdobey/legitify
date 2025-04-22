@@ -1,10 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import React from 'react';
-import AppNavigation from '../../components/AppNavigation'; // Adjust the path as needed
 import { MantineProvider, MantineThemeOverride } from '@mantine/core';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import AppNavigation from '../../components/AppNavigation'; // Adjust the path as needed
 
 // Define interface types
 interface User {
@@ -52,7 +51,18 @@ vi.mock('../../contexts/ThemeContext', () => ({
 // Create a custom theme that includes primaryBlue
 const mockMantineTheme: MantineThemeOverride = {
   colors: {
-    primaryBlue: ['#e7f5ff', '#d0ebff', '#a5d8ff', '#74c0fc', '#4dabf7', '#339af0', '#228be6', '#1c7ed6', '#1971c2', '#1864ab'],
+    primaryBlue: [
+      '#e7f5ff',
+      '#d0ebff',
+      '#a5d8ff',
+      '#74c0fc',
+      '#4dabf7',
+      '#339af0',
+      '#228be6',
+      '#1c7ed6',
+      '#1971c2',
+      '#1864ab',
+    ],
   },
 };
 
@@ -73,11 +83,7 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-function setup(
-  user: User | null = null, 
-  collapsed = false, 
-  pathname = '/'
-) {
+function setup(user: User | null = null, collapsed = false, pathname = '/') {
   // Update the mock states before rendering
   mockAuthState.user = user;
   mockLocation.pathname = pathname;
@@ -87,7 +93,7 @@ function setup(
       <MemoryRouter initialEntries={[pathname]}>
         <AppNavigation collapsed={collapsed} onToggleCollapse={mockToggleCollapse} />
       </MemoryRouter>
-    </MantineProvider>
+    </MantineProvider>,
   );
 
   return {
@@ -120,66 +126,66 @@ describe('AppNavigation Component', () => {
     expect(links.length).toBeGreaterThan(0);
   });
 
-  it('displays university-specific links for university users', () => {
+  it('displays issuer-specific links for issuer users', () => {
     setup({
-      username: 'university1',
+      username: 'issuer1',
       email: 'uni@example.com',
-      role: 'university',
+      role: 'issuer',
     });
-    
-    expect(screen.getByText('Issue Degree')).toBeInTheDocument();
-    expect(screen.getByText('Manage University')).toBeInTheDocument();
+
+    expect(screen.getByText('Issue Credential')).toBeInTheDocument();
+    expect(screen.getByText('Manage Issuer')).toBeInTheDocument();
   });
 
-  it('displays individual-specific links for individual users', () => {
+  it('displays holder-specific links for holder users', () => {
     setup({
-      username: 'studentuser',
-      email: 'student@example.com',
-      role: 'individual',
+      username: 'holderuser',
+      email: 'holder@example.com',
+      role: 'holder',
     });
-    
-    expect(screen.getByText('My Degrees')).toBeInTheDocument();
-    expect(screen.getByText('My Universities')).toBeInTheDocument();
+
+    expect(screen.getByText('My Credentials')).toBeInTheDocument();
+    expect(screen.getByText('My Issuers')).toBeInTheDocument();
     expect(screen.getByText('Access Requests')).toBeInTheDocument();
   });
 
-  it('displays employer-specific links for employer users', () => {
+  it('displays verifier-specific links for verifier users', () => {
     setup({
-      username: 'employeruser',
-      email: 'employer@example.com',
-      role: 'employer',
+      username: 'verifieruser',
+      email: 'verifier@example.com',
+      role: 'verifier',
     });
-    
-    expect(screen.getByText('Verify Degree')).toBeInTheDocument();
+
+    expect(screen.getByText('Verify Credential')).toBeInTheDocument();
     expect(screen.getByText('Search Users')).toBeInTheDocument();
-    expect(screen.getByText('Accessible Degrees')).toBeInTheDocument();
+    expect(screen.getByText('Accessible Credentials')).toBeInTheDocument();
   });
 
   it('highlights the active link based on current location', () => {
     setup(
       {
-        username: 'studentuser',
-        email: 'student@example.com',
-        role: 'individual',
+        username: 'holderuser',
+        email: 'holder@example.com',
+        role: 'holder',
       },
       false,
-      '/degree/manage'
+      '/credential/manage',
     );
-    
-    // Find the NavLink for My Degrees
-    const myDegreesLink = screen.getByText('My Degrees').closest('a');
-    
+
+    // Find the NavLink for My Credentials
+    const myCredentialsLink = screen.getByText('My Credentials').closest('a');
+
     // Instead of checking for a specific class, check for data-active attribute or aria-current
-    expect(myDegreesLink).toHaveAttribute('data-active', 'true');
+    expect(myCredentialsLink).toHaveAttribute('data-active', 'true');
   });
 
   it('displays user avatar and username in expanded mode when logged in', () => {
     setup({
       username: 'testuser',
       email: 'test@example.com',
-      role: 'individual',
+      role: 'holder',
     });
-    
+
     expect(screen.getByText('testuser')).toBeInTheDocument();
     // Avatar should display the first letter of username
     expect(screen.getByText('T')).toBeInTheDocument();
@@ -189,25 +195,25 @@ describe('AppNavigation Component', () => {
     setup({
       username: 'testuser',
       email: 'test@example.com',
-      role: 'individual',
+      role: 'holder',
     });
-    
+
     const logoutButton = screen.getByText('Logout');
     expect(logoutButton).toBeInTheDocument();
   });
 
   it('calls onToggleCollapse when burger button is clicked', async () => {
     const { user } = setup();
-    
+
     const burgerButton = screen.getByLabelText('Toggle navigation');
     await user.click(burgerButton);
-    
+
     expect(mockToggleCollapse).toHaveBeenCalledTimes(1);
   });
 
   it('renders company logo in expanded mode', () => {
     setup();
-    
+
     // Logo is an image with alt text
     const logo = screen.getByAltText('LegiTify Logo');
     expect(logo).toBeInTheDocument();
@@ -215,7 +221,7 @@ describe('AppNavigation Component', () => {
 
   it('does not render logo in collapsed mode', () => {
     setup(null, true);
-    
+
     // Logo should not be present in collapsed mode
     expect(screen.queryByAltText('LegiTify Logo')).not.toBeInTheDocument();
   });
@@ -224,36 +230,39 @@ describe('AppNavigation Component', () => {
     const { user } = setup({
       username: 'testuser',
       email: 'test@example.com',
-      role: 'individual',
+      role: 'holder',
     });
-    
+
     const logoutButton = screen.getByText('Logout');
     await user.click(logoutButton);
-    
+
     expect(mockLogout).toHaveBeenCalledTimes(1);
   });
-  
+
   it('displays section headers only in expanded mode', () => {
     setup({
       username: 'testuser',
       email: 'test@example.com',
-      role: 'individual',
+      role: 'holder',
     });
-    
+
     // Section headers should be visible in expanded mode
-    expect(screen.getByText('INDIVIDUAL ACTIONS')).toBeInTheDocument();
+    expect(screen.getByText('HOLDER ACTIONS')).toBeInTheDocument();
     expect(screen.getByText('ACCOUNT')).toBeInTheDocument();
   });
-  
+
   it('does not display section headers in collapsed mode', () => {
-    setup({
-      username: 'testuser',
-      email: 'test@example.com',
-      role: 'individual',
-    }, true);
-    
+    setup(
+      {
+        username: 'testuser',
+        email: 'test@example.com',
+        role: 'holder',
+      },
+      true,
+    );
+
     // Section headers should not be visible in collapsed mode
-    expect(screen.queryByText('INDIVIDUAL ACTIONS')).not.toBeInTheDocument();
+    expect(screen.queryByText('HOLDER ACTIONS')).not.toBeInTheDocument();
     expect(screen.queryByText('ACCOUNT')).not.toBeInTheDocument();
   });
 
@@ -261,22 +270,22 @@ describe('AppNavigation Component', () => {
     setup({
       username: 'testuser',
       email: 'test@example.com',
-      role: 'individual',
+      role: 'holder',
       profilePictureUrl: 'https://example.com/profile.jpg',
     });
-    
+
     // Profile picture should be rendered as img in the avatar
     const avatar = document.querySelector('.mantine-Avatar-root img');
     expect(avatar).toHaveAttribute('src', 'https://example.com/profile.jpg');
   });
-  
+
   it('renders settings link for all logged-in users', () => {
     setup({
       username: 'testuser',
       email: 'test@example.com',
-      role: 'individual',
+      role: 'holder',
     });
-    
+
     expect(screen.getByText('Settings')).toBeInTheDocument();
   });
 });

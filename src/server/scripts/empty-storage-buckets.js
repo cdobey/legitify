@@ -24,7 +24,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 });
 
 // Bucket names for clearing
-const BUCKET_NAMES = ['profile-pictures', 'university-logos'];
+const BUCKET_NAMES = ['profile-pictures', 'issuer-logos'];
 
 /**
  * Empty all contents of a bucket without deleting the bucket itself

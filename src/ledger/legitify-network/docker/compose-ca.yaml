@@ -8,66 +8,66 @@ networks:
     name: fabric_test
 
 services:
-  ca.orguniversity.com:
+  ca.orgissuer.com:
     image: hyperledger/fabric-ca:1.5
     labels:
       service: hyperledger-fabric
     environment:
       - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
-      - FABRIC_CA_SERVER_CA_NAME=ca-orguniversity
+      - FABRIC_CA_SERVER_CA_NAME=ca-orgissuer
       - FABRIC_CA_SERVER_TLS_ENABLED=true
       - FABRIC_CA_SERVER_PORT=7054
       - FABRIC_CA_SERVER_OPERATIONS_LISTENADDRESS=0.0.0.0:17054
-      - FABRIC_CA_SERVER_CSR_HOSTS=ca.orguniversity.com,localhost,localhost
+      - FABRIC_CA_SERVER_CSR_HOSTS=ca.orgissuer.com,localhost,localhost
     ports:
       - '7054:7054'
       - '17054:17054'
     command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
     volumes:
-      - ../organizations/fabric-ca/orguniversity:/etc/hyperledger/fabric-ca-server
-    container_name: ca.orguniversity.com
+      - ../organizations/fabric-ca/orgissuer:/etc/hyperledger/fabric-ca-server
+    container_name: ca.orgissuer.com
     networks:
       - test
 
-  ca.orgemployer.com:
+  ca.orgverifier.com:
     image: hyperledger/fabric-ca:1.5
     labels:
       service: hyperledger-fabric
     environment:
       - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
-      - FABRIC_CA_SERVER_CA_NAME=ca-orgemployer
+      - FABRIC_CA_SERVER_CA_NAME=ca-orgverifier
       - FABRIC_CA_SERVER_TLS_ENABLED=true
       - FABRIC_CA_SERVER_PORT=8054
       - FABRIC_CA_SERVER_OPERATIONS_LISTENADDRESS=0.0.0.0:18054
-      - FABRIC_CA_SERVER_CSR_HOSTS=ca.orgemployer.com,localhost,localhost
+      - FABRIC_CA_SERVER_CSR_HOSTS=ca.orgverifier.com,localhost,localhost
     ports:
       - '8054:8054'
       - '18054:18054'
     command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
     volumes:
-      - ../organizations/fabric-ca/orgemployer:/etc/hyperledger/fabric-ca-server
-    container_name: ca.orgemployer.com
+      - ../organizations/fabric-ca/orgverifier:/etc/hyperledger/fabric-ca-server
+    container_name: ca.orgverifier.com
     networks:
       - test
 
-  ca.orgindividual.com:
+  ca.orgholder.com:
     image: hyperledger/fabric-ca:1.5
     labels:
       service: hyperledger-fabric
     environment:
       - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
-      - FABRIC_CA_SERVER_CA_NAME=ca-orgindividual
+      - FABRIC_CA_SERVER_CA_NAME=ca-orgholder
       - FABRIC_CA_SERVER_TLS_ENABLED=true
       - FABRIC_CA_SERVER_PORT=9054
       - FABRIC_CA_SERVER_OPERATIONS_LISTENADDRESS=0.0.0.0:19054
-      - FABRIC_CA_SERVER_CSR_HOSTS=ca.orgindividual.com,localhost,localhost
+      - FABRIC_CA_SERVER_CSR_HOSTS=ca.orgholder.com,localhost,localhost
     ports:
       - '9054:9054'
       - '19054:19054'
     command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
     volumes:
-      - ../organizations/fabric-ca/orgindividual:/etc/hyperledger/fabric-ca-server
-    container_name: ca.orgindividual.com
+      - ../organizations/fabric-ca/orgholder:/etc/hyperledger/fabric-ca-server
+    container_name: ca.orgholder.com
     networks:
       - test
 

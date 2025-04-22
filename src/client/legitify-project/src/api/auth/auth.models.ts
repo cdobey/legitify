@@ -20,14 +20,28 @@ export interface RegisterParams {
   email: string;
   password: string;
   username: string;
+  firstName?: string;
+  lastName?: string;
+  country?: string;
   role: UserRole;
   orgName?: OrgName;
-  // University registration fields
-  universityName?: string;
-  universityDisplayName?: string;
-  universityDescription?: string;
-  joinUniversityId?: string;
-  universityIds?: string[];
+  // Issuer registration fields
+  issuerName?: string;
+  issuerDisplayName?: string;
+  issuerDescription?: string;
+  joinIssuerId?: string;
+  issuerIds?: string[];
 }
 
 export type UserProfile = User;
+
+export interface ServiceStatus {
+  online: boolean;
+  message?: string;
+  timestamp?: string;
+}
+
+export interface SystemStatus {
+  backend: ServiceStatus;
+  ledger: ServiceStatus;
+}

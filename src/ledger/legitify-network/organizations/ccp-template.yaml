@@ -8,62 +8,62 @@ client:
   connection:
     timeout:
       peer:
-        endorser: "300"
+        endorser: '300'
 
 organizations:
-  OrgUniversity:
-    mspid: OrgUniversityMSP
+  OrgIssuer:
+    mspid: OrgIssuerMSP
     peers:
-      - peer0.orguniversity.com
+      - peer0.orgissuer.com
     certificateAuthorities:
-      - ca.orguniversity.com
+      - ca.orgissuer.com
 
-  OrgEmployer:
-    mspid: OrgEmployerMSP
+  OrgVerifier:
+    mspid: OrgVerifierMSP
     peers:
-      - peer0.orgemployer.com
+      - peer0.orgverifier.com
     certificateAuthorities:
-      - ca.orgemployer.com
+      - ca.orgverifier.com
 
-  OrgIndividual:
-    mspid: OrgIndividualMSP
+  OrgHolder:
+    mspid: OrgHolderMSP
     peers:
-      - peer0.orgindividual.com
+      - peer0.orgholder.com
     certificateAuthorities:
-      - ca.orgindividual.com
+      - ca.orgholder.com
 
 peers:
-  peer0.orguniversity.com:
+  peer0.orgissuer.com:
     url: grpcs://localhost:7051
     tlsCACerts:
       pem: |
         ${PEERPEM}
     grpcOptions:
-      ssl-target-name-override: peer0.orguniversity.com
-      hostnameOverride: peer0.orguniversity.com
+      ssl-target-name-override: peer0.orgissuer.com
+      hostnameOverride: peer0.orgissuer.com
 
-  peer0.orgemployer.com:
+  peer0.orgverifier.com:
     url: grpcs://localhost:8051
     tlsCACerts:
       pem: |
         ${PEERPEM}
     grpcOptions:
-      ssl-target-name-override: peer0.orgemployer.com
-      hostnameOverride: peer0.orgemployer.com
+      ssl-target-name-override: peer0.orgverifier.com
+      hostnameOverride: peer0.orgverifier.com
 
-  peer0.orgindividual.com:
+  peer0.orgholder.com:
     url: grpcs://localhost:9051
     tlsCACerts:
       pem: |
         ${PEERPEM}
     grpcOptions:
-      ssl-target-name-override: peer0.orgindividual.com
-      hostnameOverride: peer0.orgindividual.com
+      ssl-target-name-override: peer0.orgholder.com
+      hostnameOverride: peer0.orgholder.com
 
 certificateAuthorities:
-  ca.orguniversity.com:
+  ca.orgissuer.com:
     url: https://localhost:7054
-    caName: ca-orguniversity
+    caName: ca-orgissuer
     tlsCACerts:
       pem:
         - |
@@ -71,9 +71,9 @@ certificateAuthorities:
     httpOptions:
       verify: false
 
-  ca.orgemployer.com:
+  ca.orgverifier.com:
     url: https://localhost:8054
-    caName: ca-orgemployer
+    caName: ca-orgverifier
     tlsCACerts:
       pem:
         - |
@@ -81,9 +81,9 @@ certificateAuthorities:
     httpOptions:
       verify: false
 
-  ca.orgindividual.com:
+  ca.orgholder.com:
     url: https://localhost:9054
-    caName: ca-orgindividual
+    caName: ca-orgholder
     tlsCACerts:
       pem:
         - |

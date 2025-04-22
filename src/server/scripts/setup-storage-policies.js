@@ -34,8 +34,8 @@ async function setupStoragePolicies() {
       console.log(`Configuring bucket: ${bucket.name}...`);
 
       // Make sure the buckets are properly configured for public access
-      // Profile pictures and university logos should be public
-      const isPublic = bucket.name === 'university-logos' || bucket.name === 'profile-pictures';
+      // Profile pictures and issuer logos should be public
+      const isPublic = bucket.name === 'issuer-logos' || bucket.name === 'profile-pictures';
 
       try {
         // Update the bucket configuration

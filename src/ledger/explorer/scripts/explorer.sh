@@ -15,7 +15,7 @@ show_usage() {
 
 # Function to prepare certificates
 prepare_certificates() {
-  local orgs=("orguniversity.com" "orgemployer.com" "orgindividual.com")
+  local orgs=("orgissuer.com" "orgverifier.com" "orgholder.com")
   
   for org in "${orgs[@]}"; do
     # Set up admin certificate symlinks
@@ -47,7 +47,7 @@ start_explorer() {
   mkdir -p "${EXPLORER_BASE_DIR}/connection-profile"
 
   # Check if the fabric network is running
-  if [ ! "$(docker ps | grep peer0.orguniversity)" ]; then
+  if [ ! "$(docker ps | grep peer0.orgissuer)" ]; then
     echo "The Fabric network doesn't seem to be running. Start it first!"
     exit 1
   fi

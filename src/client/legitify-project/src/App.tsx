@@ -4,18 +4,18 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { useAuth } from './contexts/AuthContext';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import AccessRequests from './pages/credential/AccessRequests';
+import AllRecords from './pages/credential/AllRecords';
+import IssueCredential from './pages/credential/IssueCredential';
+import ManageCredentials from './pages/credential/ManageCredentials';
+import VerifyCredential from './pages/credential/VerifyCredential';
+import ViewCredential from './pages/credential/ViewCredential';
 import Dashboard from './pages/Dashboard';
-import AccessRequests from './pages/degree/AccessRequests';
-import AllRecords from './pages/degree/AllRecords';
-import IssueDegree from './pages/degree/IssueDegree';
-import ManageDegrees from './pages/degree/ManageDegrees';
-import VerifyDegree from './pages/degree/VerifyDegree';
-import ViewDegree from './pages/degree/ViewDegree';
 import HomePage from './pages/HomePage';
+import ManageIssuers from './pages/issuer/ManageIssuer';
 import ProfilePage from './pages/Profile';
 import Settings from './pages/Settings';
-import ManageUniversities from './pages/university/ManageUniversity';
-import MyUniversities from './pages/user/MyUniversities';
+import MyIssuers from './pages/user/MyIssuers';
 import SearchUsers from './pages/users/SearchUsers';
 
 export default function App() {
@@ -37,29 +37,29 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route
-          path="/degree/issue"
+          path="/credential/issue"
           element={
             <ProtectedRoute
-              requiredRole="university"
-              deniedMessage="Only universities can issue degrees."
+              requiredRole="issuer"
+              deniedMessage="Only issuers can issue credentials."
             >
-              <IssueDegree />
+              <IssueCredential />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/degree/all-records"
+          path="/credential/all-records"
           element={
-            <ProtectedRoute requiredRole="university">
+            <ProtectedRoute requiredRole="issuer">
               <AllRecords />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/degree/manage"
+          path="/credential/manage"
           element={
-            <ProtectedRoute requiredRole="individual">
-              <ManageDegrees />
+            <ProtectedRoute requiredRole="holder">
+              <ManageCredentials />
             </ProtectedRoute>
           }
         />
@@ -72,58 +72,58 @@ export default function App() {
           }
         />
         <Route
-          path="/degree/requests"
+          path="/credential/requests"
           element={
-            <ProtectedRoute requiredRole="individual">
+            <ProtectedRoute requiredRole="holder">
               <AccessRequests />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/degree/view/:docId"
+          path="/credential/view/:docId"
           element={
-            <ProtectedRoute allowedRoles={['employer', 'university']}>
-              <ViewDegree />
+            <ProtectedRoute allowedRoles={['verifier', 'issuer']}>
+              <ViewCredential />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/degree/verify"
+          path="/credential/verify"
           element={
-            <ProtectedRoute requiredRole="employer">
-              <VerifyDegree />
+            <ProtectedRoute requiredRole="verifier">
+              <VerifyCredential />
             </ProtectedRoute>
           }
         />
         <Route
           path="/users/search"
           element={
-            <ProtectedRoute requiredRole="employer">
+            <ProtectedRoute requiredRole="verifier">
               <SearchUsers />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/universities"
+          path="/issuers"
           element={
-            <ProtectedRoute requiredRole="individual">
-              <MyUniversities />
+            <ProtectedRoute requiredRole="holder">
+              <MyIssuers />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/university/manage"
+          path="/issuer/manage"
           element={
-            <ProtectedRoute requiredRole="university">
-              <ManageUniversities />
+            <ProtectedRoute requiredRole="issuer">
+              <ManageIssuers />
             </ProtectedRoute>
           }
         />
         <Route path="/settings" element={<Settings />} />
         <Route
-          path="/degrees"
+          path="/credentials"
           element={
-            <ProtectedRoute allowedRoles={['university', 'employer']}>
+            <ProtectedRoute allowedRoles={['issuer', 'verifier']}>
               <AllRecords />
             </ProtectedRoute>
           }

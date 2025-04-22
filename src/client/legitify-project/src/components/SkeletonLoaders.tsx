@@ -13,7 +13,7 @@ import { ReactNode } from 'react';
 
 // Props for role-specific dashboard skeletons
 interface DashboardSkeletonProps {
-  userRole?: 'university' | 'individual' | 'employer';
+  userRole?: 'issuer' | 'holder' | 'verifier';
 }
 
 // Generic card skeleton for consistent spacing
@@ -82,21 +82,23 @@ export function QuickActionsSkeleton({ columns = 2 }: { columns?: number }) {
 // Reusable component for stats grid skeleton
 export function StatsGridSkeleton({ columns = 4 }: { columns?: number }) {
   return (
-    <Grid mb="xl">
-      {Array(columns)
-        .fill(0)
-        .map((_, i) => (
-          <Grid.Col span={{ base: 12, sm: 6, md: 3 }} key={i}>
-            <Paper withBorder p="md" radius="md">
-              <Group justify="space-between">
-                <Skeleton height={12} width={80} />
-                <Skeleton height={38} circle />
-              </Group>
-              <Skeleton height={30} mt="sm" />
-            </Paper>
-          </Grid.Col>
-        ))}
-    </Grid>
+    <div data-testid="stats-grid-skeleton" data-columns={columns}>
+      <Grid mb="xl">
+        {Array(columns)
+          .fill(0)
+          .map((_, i) => (
+            <Grid.Col span={{ base: 12, sm: 6, md: 3 }} key={i}>
+              <Paper withBorder p="md" radius="md">
+                <Group justify="space-between">
+                  <Skeleton height={12} width={80} />
+                  <Skeleton height={38} circle />
+                </Group>
+                <Skeleton height={30} mt="sm" />
+              </Paper>
+            </Grid.Col>
+          ))}
+      </Grid>
+    </div>
   );
 }
 
@@ -138,7 +140,7 @@ export function ProgressBarsSkeleton({ bars = 3 }: { bars?: number }) {
       {Array(bars)
         .fill(0)
         .map((_, i) => (
-          <Box key={i} mb={i < bars - 1 ? 'md' : 0}>
+          <Box key={i} mb={i < bars - 1 ? 'md' : 0} data-testid="box">
             <Group justify="space-between" mb={5}>
               <Skeleton height={14} width={80} />
               <Skeleton height={14} width={50} />
@@ -183,27 +185,27 @@ export function DualColumnSkeleton() {
 }
 
 // Role-specific dashboard skeletons
-export function UniversityDashboardSkeleton() {
+export function IssuerDashboardSkeleton() {
   return (
-    <>
+    <div data-testid="issuer-dashboard-skeleton">
       <StatsGridSkeleton columns={4} />
       <ActivityListSkeleton items={3} />
-    </>
+    </div>
   );
 }
 
-export function IndividualDashboardSkeleton() {
+export function HolderDashboardSkeleton() {
   return (
-    <>
+    <div data-testid="holder-dashboard-skeleton">
       <ProgressBarsSkeleton bars={3} />
       <DualColumnSkeleton />
-    </>
+    </div>
   );
 }
 
-export function EmployerDashboardSkeleton() {
+export function VerifierDashboardSkeleton() {
   return (
-    <>
+    <div data-testid="verifier-dashboard-skeleton">
       <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md" mb="xl">
         <Paper withBorder radius="md" p="md">
           <Skeleton height={24} width="40%" mb="md" />
@@ -258,7 +260,7 @@ export function EmployerDashboardSkeleton() {
           <Skeleton height={40} />
         </Card>
       </Paper>
-    </>
+    </div>
   );
 }
 
@@ -269,11 +271,11 @@ export function DashboardSkeleton({ userRole }: DashboardSkeletonProps) {
   return (
     <Container size="xl" py="xl">
       <WelcomeCardSkeleton />
-      <QuickActionsSkeleton columns={userRole === 'employer' ? 3 : 2} />
+      <QuickActionsSkeleton columns={userRole === 'verifier' ? 3 : 2} />
 
-      {userRole === 'university' && <UniversityDashboardSkeleton />}
-      {userRole === 'individual' && <IndividualDashboardSkeleton />}
-      {userRole === 'employer' && <EmployerDashboardSkeleton />}
+      {userRole === 'issuer' && <IssuerDashboardSkeleton />}
+      {userRole === 'holder' && <HolderDashboardSkeleton />}
+      {userRole === 'verifier' && <VerifierDashboardSkeleton />}
     </Container>
   );
 }

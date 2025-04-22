@@ -5,11 +5,11 @@ All of your documentation should be placed in subdirectories of this directory.
 - Use the `documentation` sub-directory for your user manual and technical documentation.
 - Use the `video-walk-through` sub-directory for you video walk through.
 
-There are additional instructions in each of those sub-directories.  Please read them.
+There are additional instructions in each of those sub-directories. Please read them.
 
-** Excluding the proposal document, The general rule of thumb that you should 
+** Excluding the proposal document, The general rule of thumb that you should
 adopt is that documents should be converted to PDF when finalised - and
 available for collection from your repo in time for the appropriate deadlines.
-While templates are provided in MS Word format, individual students may select
+While templates are provided in MS Word format, holder holders may select
 whichever editing software they prefer - the only constraint is that
 the final revision of these documents should be converted to PDF.**

@@ -2,70 +2,70 @@
   Warnings:
 
   - You are about to drop the `Affiliation` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `_UniversityMembers` table. If the table is not empty, all the data it contains will be lost.
+  - You are about to drop the `_IssuerMembers` table. If the table is not empty, all the data it contains will be lost.
 
 */
 -- CreateEnum
 CREATE TYPE "MembershipStatus" AS ENUM ('pending', 'active', 'rejected');
 
 -- DropForeignKey
-ALTER TABLE "Affiliation" DROP CONSTRAINT "Affiliation_universityId_fkey";
+ALTER TABLE "Affiliation" DROP CONSTRAINT "Affiliation_issuerId_fkey";
 
 -- DropForeignKey
 ALTER TABLE "Affiliation" DROP CONSTRAINT "Affiliation_userId_fkey";
 
 -- DropForeignKey
-ALTER TABLE "_UniversityMembers" DROP CONSTRAINT "_UniversityMembers_A_fkey";
+ALTER TABLE "_IssuerMembers" DROP CONSTRAINT "_IssuerMembers_A_fkey";
 
 -- DropForeignKey
-ALTER TABLE "_UniversityMembers" DROP CONSTRAINT "_UniversityMembers_B_fkey";
+ALTER TABLE "_IssuerMembers" DROP CONSTRAINT "_IssuerMembers_B_fkey";
 
 -- DropTable
 DROP TABLE "Affiliation";
 
 -- DropTable
-DROP TABLE "_UniversityMembers";
+DROP TABLE "_IssuerMembers";
 
 -- CreateTable
-CREATE TABLE "UniversityMember" (
+CREATE TABLE "IssuerMember" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "universityId" TEXT NOT NULL,
+    "issuerId" TEXT NOT NULL,
     "role" TEXT NOT NULL DEFAULT 'admin',
     "status" "MembershipStatus" NOT NULL DEFAULT 'pending',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "UniversityMember_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "IssuerMember_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "StudentAffiliation" (
+CREATE TABLE "HolderAffiliation" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "universityId" TEXT NOT NULL,
+    "issuerId" TEXT NOT NULL,
     "status" "AffiliationStatus" NOT NULL DEFAULT 'pending',
-    "initiatedBy" TEXT DEFAULT 'student',
+    "initiatedBy" TEXT DEFAULT 'holder',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "StudentAffiliation_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "HolderAffiliation_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "UniversityMember_userId_universityId_key" ON "UniversityMember"("userId", "universityId");
+CREATE UNIQUE INDEX "IssuerMember_userId_issuerId_key" ON "IssuerMember"("userId", "issuerId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "StudentAffiliation_userId_universityId_key" ON "StudentAffiliation"("userId", "universityId");
+CREATE UNIQUE INDEX "HolderAffiliation_userId_issuerId_key" ON "HolderAffiliation"("userId", "issuerId");
 
 -- AddForeignKey
-ALTER TABLE "UniversityMember" ADD CONSTRAINT "UniversityMember_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "IssuerMember" ADD CONSTRAINT "IssuerMember_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "UniversityMember" ADD CONSTRAINT "UniversityMember_universityId_fkey" FOREIGN KEY ("universityId") REFERENCES "University"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "IssuerMember" ADD CONSTRAINT "IssuerMember_issuerId_fkey" FOREIGN KEY ("issuerId") REFERENCES "Issuer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "StudentAffiliation" ADD CONSTRAINT "StudentAffiliation_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HolderAffiliation" ADD CONSTRAINT "HolderAffiliation_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "StudentAffiliation" ADD CONSTRAINT "StudentAffiliation_universityId_fkey" FOREIGN KEY ("universityId") REFERENCES "University"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "HolderAffiliation" ADD CONSTRAINT "HolderAffiliation_issuerId_fkey" FOREIGN KEY ("issuerId") REFERENCES "Issuer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

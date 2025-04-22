@@ -1,16 +1,18 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import {
   changePassword,
   deleteProfilePicture,
   disableTwoFactor,
   enableTwoFactor,
+  getUserCredentials,
   searchUsers,
   updateProfile,
   uploadProfilePicture,
   verifyTwoFactor,
 } from './user.api';
 import {
+  Credential,
   TwoFactorDisableRequest,
   TwoFactorSetupResponse,
   TwoFactorVerifyRequest,
@@ -22,9 +24,27 @@ export const useSearchUserMutation = () =>
     mutationFn: email => searchUsers(email),
   });
 
+// Added query hook for user credentials
+export const useUserCredentialsQuery = (userId: string) =>
+  useQuery<{ credentials: Credential[] }, AxiosError>({
+    queryKey: ['userCredentials', userId],
+    queryFn: () => getUserCredentials(userId),
+    enabled: !!userId,
+  });
+
 export const useUpdateProfileMutation = () => {
   const queryClient = useQueryClient();
-  return useMutation<User, AxiosError, { username?: string; email?: string }>({
+  return useMutation<
+    User,
+    AxiosError,
+    {
+      username?: string;
+      email?: string;
+      firstName?: string;
+      lastName?: string;
+      country?: string;
+    }
+  >({
     mutationFn: data => updateProfile(data),
     onSuccess: updatedUser => {
       queryClient.invalidateQueries({ queryKey: ['userProfile'] });

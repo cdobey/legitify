@@ -168,30 +168,30 @@ function createOrgs() {
     fi
     infoln "Generating certificates using cryptogen tool"
 
-    infoln "Creating orguniversity Identities"
+    infoln "Creating orgissuer Identities"
 
     set -x
-    cryptogen generate --config=./organizations/cryptogen/crypto-config-orguniversity.yaml --output="organizations"
+    cryptogen generate --config=./organizations/cryptogen/crypto-config-orgissuer.yaml --output="organizations"
     res=$?
     { set +x; } 2>/dev/null
     if [ $res -ne 0 ]; then
       fatalln "Failed to generate certificates..."
     fi
 
-    infoln "Creating orgemployer Identities"
+    infoln "Creating orgverifier Identities"
 
     set -x
-    cryptogen generate --config=./organizations/cryptogen/crypto-config-orgemployer.yaml --output="organizations"
+    cryptogen generate --config=./organizations/cryptogen/crypto-config-orgverifier.yaml --output="organizations"
     res=$?
     { set +x; } 2>/dev/null
     if [ $res -ne 0 ]; then
       fatalln "Failed to generate certificates..."
     fi
 
-    infoln "Creating orgindividual Identities"
+    infoln "Creating orgholder Identities"
 
     set -x
-    cryptogen generate --config=./organizations/cryptogen/crypto-config-orgindividual.yaml --output="organizations"
+    cryptogen generate --config=./organizations/cryptogen/crypto-config-orgholder.yaml --output="organizations"
     res=$?
     { set +x; } 2>/dev/null
     if [ $res -ne 0 ]; then
@@ -215,18 +215,18 @@ function createOrgs() {
 
     . organizations/cfssl/registerEnroll.sh
     #function_name cert-type   CN   org
-    peer_cert peer peer0.orguniversity.com orguniversity
-    peer_cert admin Admin@orguniversity.com orguniversity
+    peer_cert peer peer0.orgissuer.com orgissuer
+    peer_cert admin Admin@orgissuer.com orgissuer
 
-    infoln "Creating orgemployer Identities"
+    infoln "Creating orgverifier Identities"
     #function_name cert-type   CN   org
-    peer_cert peer peer0.orgemployer.com orgemployer
-    peer_cert admin Admin@orgemployer.com orgemployer
+    peer_cert peer peer0.orgverifier.com orgverifier
+    peer_cert admin Admin@orgverifier.com orgverifier
 
-    infoln "Creating orgindividual Identities"
+    infoln "Creating orgholder Identities"
     #function_name cert-type   CN   org
-    peer_cert peer peer0.orgindividual.com orgindividual
-    peer_cert admin Admin@orgindividual.com orgindividual
+    peer_cert peer peer0.orgholder.com orgholder
+    peer_cert admin Admin@orgholder.com orgholder
 
     infoln "Creating Orderer Org Identities"
     #function_name cert-type   CN   
@@ -244,24 +244,24 @@ function createOrgs() {
 
     while :
     do
-      if [ ! -f "organizations/fabric-ca/orguniversity/tls-cert.pem" ]; then
+      if [ ! -f "organizations/fabric-ca/orgissuer/tls-cert.pem" ]; then
         sleep 1
       else
         break
       fi
     done
 
-    infoln "Creating OrgUniversity Identities"
+    infoln "Creating OrgIssuer Identities"
 
-    createOrgUniversity
+    createOrgIssuer
 
-    infoln "Creating OrgEmployer Identities"
+    infoln "Creating OrgVerifier Identities"
 
-    createOrgEmployer
+    createOrgVerifier
 
-    infoln "Creating OrgIndividual Identities"
+    infoln "Creating OrgHolder Identities"
 
-    createOrgIndividual
+    createOrgHolder
 
     infoln "Creating Orderer Org Identities"
 
@@ -269,7 +269,7 @@ function createOrgs() {
 
   fi
 
-  infoln "Generating CCP files for OrgUniversity, OrgEmployer and OrgIndividual"
+  infoln "Generating CCP files for OrgIssuer, OrgVerifier and OrgHolder"
   ./organizations/ccp-generate.sh
 }
 
@@ -432,7 +432,7 @@ function networkDown() {
   # Don't remove the generated artifacts -- note, the ledgers are always removed
   if [ "$MODE" != "restart" ]; then
     # Bring down the network, deleting the volumes
-    for volume in docker_orderer.legitifyapp.com docker_peer0.orguniversity.com docker_peer0.orgemployer.com docker_peer0.orgindividual.com; do
+    for volume in docker_orderer.legitifyapp.com docker_peer0.orgissuer.com docker_peer0.orgverifier.com docker_peer0.orgholder.com; do
       if ${CONTAINER_CLI} volume inspect $volume > /dev/null 2>&1; then
         ${CONTAINER_CLI} volume rm $volume
       else
@@ -446,9 +446,9 @@ function networkDown() {
     # remove orderer block and other channel configuration transactions and certs
     ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf system-genesis-block/*.block organizations/peerOrganizations organizations/ordererOrganizations'
     ## remove fabric ca artifacts
-    ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf organizations/fabric-ca/orguniversity/msp organizations/fabric-ca/orguniversity/tls-cert.pem organizations/fabric-ca/orguniversity/ca-cert.pem organizations/fabric-ca/orguniversity/IssuerPublicKey organizations/fabric-ca/orguniversity/IssuerRevocationPublicKey organizations/fabric-ca/orguniversity/fabric-ca-server.db'
-    ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf organizations/fabric-ca/orgemployer/msp organizations/fabric-ca/orgemployer/tls-cert.pem organizations/fabric-ca/orgemployer/ca-cert.pem organizations/fabric-ca/orgemployer/IssuerPublicKey organizations/fabric-ca/orgemployer/IssuerRevocationPublicKey organizations/fabric-ca/orgemployer/fabric-ca-server.db'
-    ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf organizations/fabric-ca/orgindividual/msp organizations/fabric-ca/orgindividual/tls-cert.pem organizations/fabric-ca/orgindividual/ca-cert.pem organizations/fabric-ca/orgindividual/IssuerPublicKey organizations/fabric-ca/orgindividual/IssuerRevocationPublicKey organizations/fabric-ca/orgindividual/fabric-ca-server.db'
+    ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf organizations/fabric-ca/orgissuer/msp organizations/fabric-ca/orgissuer/tls-cert.pem organizations/fabric-ca/orgissuer/ca-cert.pem organizations/fabric-ca/orgissuer/IssuerPublicKey organizations/fabric-ca/orgissuer/IssuerRevocationPublicKey organizations/fabric-ca/orgissuer/fabric-ca-server.db'
+    ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf organizations/fabric-ca/orgverifier/msp organizations/fabric-ca/orgverifier/tls-cert.pem organizations/fabric-ca/orgverifier/ca-cert.pem organizations/fabric-ca/orgverifier/IssuerPublicKey organizations/fabric-ca/orgverifier/IssuerRevocationPublicKey organizations/fabric-ca/orgverifier/fabric-ca-server.db'
+    ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf organizations/fabric-ca/orgholder/msp organizations/fabric-ca/orgholder/tls-cert.pem organizations/fabric-ca/orgholder/ca-cert.pem organizations/fabric-ca/orgholder/IssuerPublicKey organizations/fabric-ca/orgholder/IssuerRevocationPublicKey organizations/fabric-ca/orgholder/fabric-ca-server.db'
     ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf organizations/fabric-ca/ordererOrg/msp organizations/fabric-ca/ordererOrg/tls-cert.pem organizations/fabric-ca/ordererOrg/ca-cert.pem organizations/fabric-ca/ordererOrg/IssuerPublicKey organizations/fabric-ca/ordererOrg/IssuerRevocationPublicKey organizations/fabric-ca/ordererOrg/fabric-ca-server.db'
     # remove channel and script artifacts
     ${CONTAINER_CLI} run --rm -v "$(pwd):/data" busybox sh -c 'cd /data && rm -rf channel-artifacts log.txt *.tar.gz'

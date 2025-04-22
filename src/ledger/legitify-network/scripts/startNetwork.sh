@@ -4,8 +4,8 @@
 FABRIC_VERSION="2.5.10"
 FABRIC_CA_VERSION="1.5.13"
 CHANNEL_NAME="legitifychannel"
-CHAINCODE_NAME="degreeCC"
-CHAINCODE_PATH="../chaincode/degreeChaincode/"
+CHAINCODE_NAME="credentialCC"
+CHAINCODE_PATH="../chaincode/credentialChaincode/"
 CHAINCODE_LANGUAGE="go"
 START_EXPLORER=false
 

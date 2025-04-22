@@ -27,67 +27,67 @@ Organizations:
       - orderer3.legitifyapp.com:7056
       - orderer4.legitifyapp.com:7058
 
-  - &OrgUniversity
-    Name: OrgUniversity
-    ID: OrgUniversityMSP
-    MSPDir: ../organizations/peerOrganizations/orguniversity.com/msp
+  - &OrgIssuer
+    Name: OrgIssuer
+    ID: OrgIssuerMSP
+    MSPDir: ../organizations/peerOrganizations/orgissuer.com/msp
     Policies:
       Readers:
         Type: Signature
-        Rule: "OR('OrgUniversityMSP.member')"
+        Rule: "OR('OrgIssuerMSP.member')"
       Writers:
         Type: Signature
-        Rule: "OR('OrgUniversityMSP.member')"
+        Rule: "OR('OrgIssuerMSP.member')"
       Admins:
         Type: Signature
-        Rule: "OR('OrgUniversityMSP.admin')"
+        Rule: "OR('OrgIssuerMSP.admin')"
       Endorsement:
         Type: Signature
-        Rule: "OR('OrgUniversityMSP.peer')"
+        Rule: "OR('OrgIssuerMSP.peer')"
     AnchorPeers:
-      - Host: peer0.orguniversity.com
+      - Host: peer0.orgissuer.com
         Port: 7051
 
-  - &OrgEmployer
-    Name: OrgEmployer
-    ID: OrgEmployerMSP
-    MSPDir: ../organizations/peerOrganizations/orgemployer.com/msp
+  - &OrgVerifier
+    Name: OrgVerifier
+    ID: OrgVerifierMSP
+    MSPDir: ../organizations/peerOrganizations/orgverifier.com/msp
     Policies:
       Readers:
         Type: Signature
-        Rule: "OR('OrgEmployerMSP.member')"
+        Rule: "OR('OrgVerifierMSP.member')"
       Writers:
         Type: Signature
-        Rule: "OR('OrgEmployerMSP.member')"
+        Rule: "OR('OrgVerifierMSP.member')"
       Admins:
         Type: Signature
-        Rule: "OR('OrgEmployerMSP.admin')"
+        Rule: "OR('OrgVerifierMSP.admin')"
       Endorsement:
         Type: Signature
-        Rule: "OR('OrgEmployerMSP.peer')"
+        Rule: "OR('OrgVerifierMSP.peer')"
     AnchorPeers:
-      - Host: peer0.orgemployer.com
+      - Host: peer0.orgverifier.com
         Port: 8051
 
-  - &OrgIndividual
-    Name: OrgIndividual
-    ID: OrgIndividualMSP
-    MSPDir: ../organizations/peerOrganizations/orgindividual.com/msp
+  - &OrgHolder
+    Name: OrgHolder
+    ID: OrgHolderMSP
+    MSPDir: ../organizations/peerOrganizations/orgholder.com/msp
     Policies:
       Readers:
         Type: Signature
-        Rule: "OR('OrgIndividualMSP.member')"
+        Rule: "OR('OrgHolderMSP.member')"
       Writers:
         Type: Signature
-        Rule: "OR('OrgIndividualMSP.member')"
+        Rule: "OR('OrgHolderMSP.member')"
       Admins:
         Type: Signature
-        Rule: "OR('OrgIndividualMSP.admin')"
+        Rule: "OR('OrgHolderMSP.admin')"
       Endorsement:
         Type: Signature
-        Rule: "OR('OrgIndividualMSP.peer')"
+        Rule: "OR('OrgHolderMSP.peer')"
     AnchorPeers:
-      - Host: peer0.orgindividual.com
+      - Host: peer0.orgholder.com
         Port: 9051
 
 ################################################################################
@@ -261,7 +261,7 @@ Profiles:
     Application:
       <<: *ApplicationDefaults
       Organizations:
-        - *OrgUniversity
-        - *OrgEmployer
-        - *OrgIndividual
+        - *OrgIssuer
+        - *OrgVerifier
+        - *OrgHolder
       Capabilities: *ApplicationCapabilities

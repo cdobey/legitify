@@ -5,7 +5,7 @@ Welcome! This README will walk you through:
 1. [Setting up the Hyperledger Fabric Ledger](#1-setting-up-the-hyperledger-fabric-ledger)
 2. [Starting the Backend Server (TypeScript + PostgreSQL + Prisma)](#2-setting-up-the-backend-server)
 
-By the end, you’ll be able to issue and manage degrees on the Fabric ledger and test the APIs via Swagger UI.
+By the end, you’ll be able to issue and manage credentials on the Fabric ledger and test the APIs via Swagger UI.
 
 ---
 
@@ -44,12 +44,12 @@ my-project/
 │   ├── ledger/
 │   │   ├── bin/               <- Fabric binaries go here
 │   │   ├── chaincode/
-│   │   │   └── degreeChaincode.go
+│   │   │   └── credentialChaincode.go
 │   │   ├── legitify-network/
 │   │   │   ├── scripts/
 │   │   │   │   ├── startNetwork.sh
 │   │   │   │   ├── stopNetwork.sh
-│   │   │   │   └── testDegreeChaincode.sh
+│   │   │   │   └── testCredentialChaincode.sh
 │   │   │   ├── network.sh
 │   │   │   ├── .env
 │   │   │   └── ...
@@ -111,14 +111,14 @@ my-project/
      1. Shuts down any existing Fabric network.
      2. Spins up the new network with CouchDB.
      3. Creates a channel (`legitifychannel`).
-     4. Deploys the chaincode (`degreeChaincode.go`).
+     4. Deploys the chaincode (`credentialChaincode.go`).
    - **Duration**: Can take a few minutes, especially on first run.
 
 3. **Confirm** the network is running:
    ```bash
    docker ps
    ```
-   You should see containers for peers, orderers, and CAs for **OrgUniversity**, **OrgEmployer**, and **OrgIndividual**.
+   You should see containers for peers, orderers, and CAs for **OrgIssuer**, **OrgVerifier**, and **OrgHolder**.
 
 ---
 
@@ -126,9 +126,9 @@ my-project/
 
 1. **Optional**: Once the network is up, run:
    ```bash
-   bash scripts/testDegreeChaincode.sh
+   bash scripts/testCredentialChaincode.sh
    ```
-   - This script **issues a degree**, **accepts it**, **denies it**, and **verifies** the document hash.
+   - This script **issues a credential**, **accepts it**, **denies it**, and **verifies** the document hash.
    - If successful, you’ll see output ending with:
      ```
      All tests completed!
@@ -140,7 +140,7 @@ Congrats! Your Fabric ledger is up and working.
 
 # **2. Setting up the Backend Server**
 
-Our backend is a **TypeScript** + **Express** app that uses **Prisma** (PostgreSQL ORM) and integrates with **Fabric CA** to handle registration, login, and degree management transactions on the Fabric network.
+Our backend is a **TypeScript** + **Express** app that uses **Prisma** (PostgreSQL ORM) and integrates with **Fabric CA** to handle registration, login, and credential management transactions on the Fabric network.
 
 ## **2.1 Prerequisites**
 
@@ -162,10 +162,10 @@ In `src/server/server.env`, you’ll typically have:
 
 ```bash
 # Example .env
-FABRIC_CONNECTION=../ledger/legitify-network/organizations/peerOrganizations/orguniversity.com/connection-orguniversity.json
+FABRIC_CONNECTION=../ledger/legitify-network/organizations/peerOrganizations/orgissuer.com/connection-orgissuer.json
 FABRIC_WALLET=./src/wallet
 FABRIC_CHANNEL=legitifychannel
-FABRIC_CHAINCODE=degreeCC
+FABRIC_CHAINCODE=credentialCC
 FABRIC_USER=appUser
 DB_HOST=localhost
 DB_NAME=my_fabric_db
@@ -247,7 +247,7 @@ http://localhost:3001/docs
 
 - **Register** users: `POST /auth/register`
 - **Login** (JWT): `POST /auth/login`
-- **Degree Management**: `POST /degree/issue`, `POST /degree/accept`, etc.
+- **Credential Management**: `POST /credential/issue`, `POST /credential/accept`, etc.
 
 Each endpoint’s parameters and expected responses are documented in Swagger.
 
@@ -268,8 +268,8 @@ Each endpoint’s parameters and expected responses are documented in Swagger.
      {
        "username": "alice",
        "password": "alicepw",
-       "role": "individual",
-       "orgName": "orgindividual"
+       "role": "holder",
+       "orgName": "orgholder"
      }
      ```
    - This enrolls the user in **Fabric CA** and creates a record in **PostgreSQL**.
@@ -278,10 +278,10 @@ Each endpoint’s parameters and expected responses are documented in Swagger.
    - Use the same credentials (`alice`, `alicepw`).
    - **Response**: Returns a JWT token. Copy it.
 6. **Test an Endpoint**
-   - For example, if you have a user with role `"university"`, you can **issue a degree**:
+   - For example, if you have a user with role `"issuer"`, you can **issue a credential**:
      ```json
      {
-       "individualId": "uuid-of-user",
+       "holderId": "uuid-of-user",
        "base64File": "base64-encoded-document"
      }
      ```
@@ -336,4 +336,4 @@ Each endpoint’s parameters and expected responses are documented in Swagger.
    - `npm install`, migrate with Prisma.
    - Start the server, visit **Swagger** at `/docs`.
 
-With both components running, you can **create users**, **issue degrees**, and **interact** with the chaincode via the **TypeScript** backend and **PostgreSQL** database.
+With both components running, you can **create users**, **issue credentials**, and **interact** with the chaincode via the **TypeScript** backend and **PostgreSQL** database.

@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "University" ADD COLUMN     "logoUrl" TEXT;
+ALTER TABLE "Issuer" ADD COLUMN     "logoUrl" TEXT;

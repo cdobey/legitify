@@ -55,7 +55,7 @@ dist-ssr
 build/
 
 ## Go
-src/ledger/chaincode/degreeChaincode/vendor/
+src/ledger/chaincode/credentialChaincode/vendor/
 
 ## Gradle
 .gradle
@@ -101,12 +101,18 @@ src/ledger/legitify-network/organizations/fabric-ca/ordererOrg/*
 src/ledger/legitify-network/organizations/fabric-ca/orguniversity/*
 src/ledger/legitify-network/organizations/fabric-ca/orgemployer/*
 src/ledger/legitify-network/organizations/fabric-ca/orgindividual/*
+src/ledger/legitify-network/organizations/fabric-ca/orgissuer/*
+src/ledger/legitify-network/organizations/fabric-ca/orgverifier/*
+src/ledger/legitify-network/organizations/fabric-ca/orgholder/*
 
 # Keep specific config files
 !src/ledger/full-stack-asset-transfer-guide/infrastructure/sample-network/config
 !src/ledger/legitify-network/organizations/fabric-ca/orguniversity/fabric-ca-server-config.yaml
 !src/ledger/legitify-network/organizations/fabric-ca/orgemployer/fabric-ca-server-config.yaml
 !src/ledger/legitify-network/organizations/fabric-ca/orgindividual/fabric-ca-server-config.yaml
+!src/ledger/legitify-network/organizations/fabric-ca/orgissuer/fabric-ca-server-config.yaml
+!src/ledger/legitify-network/organizations/fabric-ca/orgverifier/fabric-ca-server-config.yaml
+!src/ledger/legitify-network/organizations/fabric-ca/orgholder/fabric-ca-server-config.yaml
 !src/ledger/legitify-network/organizations/fabric-ca/ordererorg/fabric-ca-server-config.yaml
 
 # Server Specific

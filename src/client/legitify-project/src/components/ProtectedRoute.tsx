@@ -5,9 +5,9 @@ import { Alert, Container } from '@mantine/core';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: 'university' | 'individual' | 'employer';
+  requiredRole?: 'issuer' | 'holder' | 'verifier';
   deniedMessage?: string;
-  allowedRoles?: ('university' | 'individual' | 'employer')[];
+  allowedRoles?: ('issuer' | 'holder' | 'verifier')[];
 }
 
 const ProtectedRoute = ({

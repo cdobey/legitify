@@ -3,7 +3,7 @@ import prisma from '@/prisma/client';
 import { enrollUser } from '@/utils/fabric-helpers';
 import { OrgName, Role } from '@prisma/client';
 import { Request, RequestHandler, Response } from 'express';
-import { createUniversityHelper } from './university-management.controller';
+import { createIssuerHelper } from './issuer-management.controller';
 
 async function createSupabaseUser(
   email: string,
@@ -36,6 +36,9 @@ async function createDatabaseUser(
   role: Role,
   orgName: OrgName,
   email: string,
+  firstName?: string,
+  lastName?: string,
+  country?: string,
 ) {
   return prisma.user.create({
     data: {
@@ -44,6 +47,9 @@ async function createDatabaseUser(
       role,
       orgName,
       email,
+      firstName,
+      lastName,
+      country,
     },
   });
 }
@@ -129,12 +135,15 @@ export const register: RequestHandler = async (req: Request, res: Response): Pro
       email,
       password,
       username,
+      firstName,
+      lastName,
+      country,
       role,
-      universityName,
-      universityDisplayName,
-      universityDescription,
-      joinUniversityId,
-      universityIds,
+      issuerName,
+      issuerDisplayName,
+      issuerDescription,
+      joinIssuerId,
+      issuerIds,
     } = req.body;
 
     if (!email || !password || !username || !role) {
@@ -146,15 +155,15 @@ export const register: RequestHandler = async (req: Request, res: Response): Pro
 
     // Map role to organization name
     let actualOrgName: OrgName;
-    if (role === 'individual') {
-      actualOrgName = OrgName.orgindividual;
-    } else if (role === 'university') {
-      actualOrgName = OrgName.orguniversity;
-    } else if (role === 'employer') {
-      actualOrgName = OrgName.orgemployer;
+    if (role === 'holder') {
+      actualOrgName = OrgName.orgholder;
+    } else if (role === 'issuer') {
+      actualOrgName = OrgName.orgissuer;
+    } else if (role === 'verifier') {
+      actualOrgName = OrgName.orgverifier;
     } else {
       res.status(400).json({
-        error: 'Invalid role. Must be "individual", "university", or "employer"',
+        error: 'Invalid role. Must be "holder", "issuer", or "verifier"',
       });
       return;
     }
@@ -181,51 +190,60 @@ export const register: RequestHandler = async (req: Request, res: Response): Pro
     await enrollUser(userId, actualOrgName);
 
     // Create user in database
-    await createDatabaseUser(userId, username, role as Role, actualOrgName, email);
+    await createDatabaseUser(
+      userId,
+      username,
+      role as Role,
+      actualOrgName,
+      email,
+      firstName,
+      lastName,
+      country,
+    );
 
-    // Handle university-specific registration
-    if (role === 'university') {
-      if (universityName && universityDisplayName) {
+    // Handle issuer-specific registration
+    if (role === 'issuer') {
+      if (issuerName && issuerDisplayName) {
         try {
-          const university = await createUniversityHelper(
+          const issuer = await createIssuerHelper(
             userId,
-            universityName,
-            universityDisplayName,
-            universityDescription,
+            issuerName,
+            issuerDisplayName,
+            issuerDescription,
           );
 
           res.status(201).json({
-            message: 'University user and university created successfully',
+            message: 'Issuer user and issuer created successfully',
             uid: userId,
             metadata: supabaseUser.user_metadata,
-            university,
+            issuer,
           });
           return;
-        } catch (uniError) {
-          console.error('Failed to create university during registration:', uniError);
-          // Continue with user creation even if university creation fails
+        } catch (issuerError) {
+          console.error('Failed to create issuer during registration:', issuerError);
+          // Continue with user creation even if issuer creation fails
         }
-      } else if (joinUniversityId) {
-        // Handle join request - this will be processed as a university join request
-        await prisma.universityJoinRequest.create({
+      } else if (joinIssuerId) {
+        // Handle join request - this will be processed as an issuer join request
+        await prisma.issuerJoinRequest.create({
           data: {
             requesterId: userId,
-            universityId: joinUniversityId,
+            issuerId: joinIssuerId,
             status: 'pending',
           },
         });
       }
     }
 
-    // Handle individual university affiliations
-    if (role === 'individual' && universityIds?.length > 0) {
-      const affiliationPromises = universityIds.map((universityId: string) =>
-        prisma.studentAffiliation.create({
+    // Handle holder issuer affiliations
+    if (role === 'holder' && issuerIds?.length > 0) {
+      const affiliationPromises = issuerIds.map((issuerId: string) =>
+        prisma.issuerAffiliation.create({
           data: {
             userId,
-            universityId,
+            issuerId,
             status: 'pending',
-            initiatedBy: 'student',
+            initiatedBy: 'holder',
           },
         }),
       );

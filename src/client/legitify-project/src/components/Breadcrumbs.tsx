@@ -23,7 +23,6 @@ interface BreadcrumbItem {
   isClickable: boolean;
 }
 
-// Define valid routes structure with proper titles and icons
 const routeConfig: Record<
   string,
   {
@@ -49,38 +48,37 @@ const routeConfig: Record<
     icon: <IconSettings size={16} stroke={1.5} />,
     isClickable: true,
   },
-  degree: {
-    title: 'Degrees',
+  credential: {
+    title: 'Credentials',
     icon: <IconCertificate size={16} stroke={1.5} />,
     validPaths: ['issue', 'manage', 'requests', 'verify', 'accessible', 'all-records', 'view'],
     isClickable: true,
-    redirectPath: '/degrees',
+    redirectPath: '/credentials',
   },
-  degrees: {
-    title: 'Degrees',
+  credentials: {
+    title: 'Credentials',
     icon: <IconCertificate size={16} stroke={1.5} />,
     isClickable: true,
   },
-  universities: {
-    title: 'University',
+  issuers: {
+    title: 'Issuer',
     icon: <IconSchool size={16} stroke={1.5} />,
     validPaths: ['manage'],
-    isClickable: false, // Mark universities as non-clickable
+    isClickable: false,
     redirectPath: '/dashboard',
   },
   users: {
     title: 'Users',
     icon: <IconUser size={16} stroke={1.5} />,
     validPaths: ['search'],
-    isClickable: false, // The /users route doesn't exist
+    isClickable: false,
     redirectPath: '/dashboard',
   },
 };
 
-// Define titles for second-level paths
 const subPathTitles: Record<string, { title: string; icon: ReactNode }> = {
   issue: {
-    title: 'Issue Degree',
+    title: 'Issue Credential',
     icon: <IconCertificate size={16} stroke={1.5} />,
   },
   manage: {
@@ -96,7 +94,7 @@ const subPathTitles: Record<string, { title: string; icon: ReactNode }> = {
     icon: <IconFileCheck size={16} stroke={1.5} />,
   },
   accessible: {
-    title: 'Accessible Degrees',
+    title: 'Accessible Credentials',
     icon: <IconFiles size={16} stroke={1.5} />,
   },
   'all-records': {
@@ -127,12 +125,10 @@ export default function Breadcrumbs() {
 
     const segments = path.split('/').filter(Boolean);
 
-    // First level validation (e.g., /degree, /universities, /users)
     if (segments.length === 1) {
       return routeConfig[segments[0]] !== undefined;
     }
 
-    // Second level validation (e.g., /degree/issue, /universities/manage)
     if (segments.length >= 2) {
       const parentRoute = routeConfig[segments[0]];
 
@@ -141,12 +137,11 @@ export default function Breadcrumbs() {
         return false;
       }
 
-      // For paths with ID parameters (e.g., /degree/view/abc123)
-      if (segments[0] === 'degree' && segments[1] === 'view' && segments.length === 3) {
+      // For paths with ID parameters (e.g., /credential/view/abc123)
+      if (segments[0] === 'credential' && segments[1] === 'view' && segments.length === 3) {
         return true;
       }
 
-      // Check if the subpath is valid
       return parentRoute.validPaths.includes(segments[1]);
     }
 
@@ -174,15 +169,18 @@ export default function Breadcrumbs() {
     }
 
     // Special handling for certificate view to maintain context
-    if (pathSegments[0] === 'degree' && pathSegments[1] === 'view' && pathSegments.length === 3) {
+    if (
+      pathSegments[0] === 'credential' &&
+      pathSegments[1] === 'view' &&
+      pathSegments.length === 3
+    ) {
       breadcrumbs.push({
-        title: 'Degrees',
-        path: '/degrees',
+        title: 'Credentials',
+        path: '/credentials',
         icon: <IconCertificate size={16} stroke={1.5} />,
         isClickable: true,
       });
 
-      // Add the certificate itself
       breadcrumbs.push({
         title: 'View Certificate',
         path: location.pathname,
@@ -193,7 +191,6 @@ export default function Breadcrumbs() {
       return breadcrumbs;
     }
 
-    // Regular breadcrumb generation for other pages
     let currentPath = '';
 
     for (let i = 0; i < pathSegments.length; i++) {
@@ -203,15 +200,13 @@ export default function Breadcrumbs() {
 
       currentPath += `/${segment}`;
 
-      // Skip invalid paths
       if (!isPathValid(currentPath)) {
         continue;
       }
 
-      // Special case for document IDs in URLs like /degree/view/:docId
       if (
         i === 2 &&
-        pathSegments[0] === 'degree' &&
+        pathSegments[0] === 'credential' &&
         pathSegments[1] === 'view' &&
         segment.length > 10
       ) {
@@ -229,7 +224,6 @@ export default function Breadcrumbs() {
       let isClickable = true;
       let redirectPath: string | undefined;
 
-      // First segment (top-level route)
       if (i === 0) {
         const routeInfo = routeConfig[segment];
         if (routeInfo) {
@@ -240,9 +234,7 @@ export default function Breadcrumbs() {
         } else {
           title = segment.charAt(0).toUpperCase() + segment.slice(1);
         }
-      }
-      // Second segment (sub-route)
-      else if (i === 1) {
+      } else if (i === 1) {
         const subRouteInfo = subPathTitles[segment];
         if (subRouteInfo) {
           title = subRouteInfo.title;
@@ -250,9 +242,7 @@ export default function Breadcrumbs() {
         } else {
           title = segment.charAt(0).toUpperCase() + segment.slice(1);
         }
-      }
-      // Default for any other segments
-      else {
+      } else {
         title = segment.charAt(0).toUpperCase() + segment.slice(1);
       }
 

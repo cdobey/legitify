@@ -22,13 +22,13 @@ createAnchorPeerUpdate() {
   infoln "Generating anchor peer update transaction for Org${ORG} on channel $CHANNEL_NAME"
 
   if [ $ORG -eq 1 ]; then
-    HOST="peer0.orguniversity.com"
+    HOST="peer0.orgissuer.com"
     PORT=7051
   elif [ $ORG -eq 2 ]; then
-    HOST="peer0.orgemployer.com"
+    HOST="peer0.orgverifier.com"
     PORT=8051
   elif [ $ORG -eq 3 ]; then
-    HOST="peer0.orgindividual.com"
+    HOST="peer0.orgholder.com"
     PORT=9051
   else
     errorln "Org${ORG} unknown"

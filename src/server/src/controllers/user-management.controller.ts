@@ -24,6 +24,9 @@ export const getProfile: RequestHandler = async (
         id: true,
         username: true,
         email: true,
+        firstName: true,
+        lastName: true,
+        country: true,
         role: true,
         orgName: true,
         profilePictureUrl: true,
@@ -46,7 +49,7 @@ export const getProfile: RequestHandler = async (
 };
 
 /**
- * Updates the current user's profile information (username, email).
+ * Updates the current user's profile information (username, email, firstName, lastName, country).
  */
 export const updateProfile: RequestHandler = async (
   req: RequestWithUser,
@@ -59,15 +62,21 @@ export const updateProfile: RequestHandler = async (
       return;
     }
 
-    const { username, email } = req.body;
+    const { username, email, firstName, lastName, country } = req.body;
 
     // Validate input: at least one field must be provided
-    if (!username && !email) {
-      res.status(400).json({ error: 'Username or email must be provided for update' });
+    if (!username && !email && !firstName && !lastName && !country) {
+      res.status(400).json({ error: 'At least one profile field must be provided for update' });
       return;
     }
 
-    const updateData: { username?: string; email?: string } = {};
+    const updateData: {
+      username?: string;
+      email?: string;
+      firstName?: string;
+      lastName?: string;
+      country?: string;
+    } = {};
     let updateSupabaseEmail = false;
 
     // Get current user data
@@ -112,6 +121,19 @@ export const updateProfile: RequestHandler = async (
       updateSupabaseEmail = true;
     }
 
+    // Add firstName, lastName, and country to updateData if provided
+    if (firstName !== undefined) {
+      updateData.firstName = firstName;
+    }
+
+    if (lastName !== undefined) {
+      updateData.lastName = lastName;
+    }
+
+    if (country !== undefined) {
+      updateData.country = country;
+    }
+
     // Update Supabase Auth email if necessary
     if (updateSupabaseEmail && updateData.email) {
       const { error: supabaseError } = await supabase.auth.admin.updateUserById(userId, {
@@ -139,11 +161,15 @@ export const updateProfile: RequestHandler = async (
         id: true,
         username: true,
         email: true,
+        firstName: true,
+        lastName: true,
+        country: true,
         role: true,
         orgName: true,
-        profilePictureUrl: true, // Include profile picture URL
+        profilePictureUrl: true,
         createdAt: true,
         updatedAt: true,
+        twoFactorEnabled: true,
       },
     });
 
@@ -248,7 +274,7 @@ export const searchUsers: RequestHandler = async (
     const user = await prisma.user.findFirst({
       where: {
         email: email.toString(),
-        role: Role.individual,
+        role: Role.holder, // Changed from holder to holder
       },
       select: {
         id: true,

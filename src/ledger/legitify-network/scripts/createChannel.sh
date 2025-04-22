@@ -109,18 +109,18 @@ createChannel
 successln "Channel '$CHANNEL_NAME' created"
 
 ## Join all the peers to the channel
-infoln "Joining university peer to the channel..."
+infoln "Joining issuer peer to the channel..."
 joinChannel 1
-infoln "Joining employer peer to the channel..."
+infoln "Joining verifier peer to the channel..."
 joinChannel 2
-infoln "Joining individual peer to the channel..."
+infoln "Joining holder peer to the channel..."
 joinChannel 3
 
 ## Set the anchor peers for each org in the channel
-infoln "Setting anchor peer for university..."
+infoln "Setting anchor peer for issuer..."
 setAnchorPeer 1
-infoln "Setting anchor peer for employer..."
+infoln "Setting anchor peer for verifier..."
 setAnchorPeer 2
-infoln "Setting anchor peer for individual..."
+infoln "Setting anchor peer for holder..."
 setAnchorPeer 3
 successln "Channel '$CHANNEL_NAME' joined"

@@ -43,7 +43,7 @@ app.use(morgan('dev'));
 
 // Basic test route
 app.get('/', (req: Request, res: Response) => {
-  res.send('TypeScript + Go Chaincode Degree API with Prisma');
+  res.send('TypeScript + Go Chaincode Credential API with Prisma');
 });
 
 app.use('/', indexRoutes);

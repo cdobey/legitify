@@ -68,8 +68,8 @@ extract_error() {
     echo $error
 }
 
-extract_university_id() {
-    echo $1 | grep -o '"university":{"id":"[^"]*' | grep -o '[^"]*$' || echo ""
+extract_issuer_id() {
+    echo $1 | grep -o '"issuer":{"id":"[^"]*' | grep -o '[^"]*$' || echo ""
 }
 
 # Add a delay function to avoid rate limiting
@@ -157,279 +157,272 @@ fi
 
 echo -e "\n${BLUE}1. Registering users...${NC}"
 
-# Register university with stronger password
-echo -e "\n${BLUE}Registering university...${NC}"
-UNIVERSITY_REGISTER_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/register" \
+# Register issuer with stronger password
+echo -e "\n${BLUE}Registering issuer...${NC}"
+ISSUER_REGISTER_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/register" \
 -H "Content-Type: application/json" \
 -d '{
-    "email": "university@test.com",
+    "email": "issuer@test.com",
     "password": "Password123!",
-    "username": "testuniversity",
-    "role": "university",
-    "orgName": "orguniversity"
+    "username": "testissuer",
+    "role": "issuer",
+    "issuerName": "test-issuer",
+    "shorthand": "TEST"
 }')
-echo "University Register Response: $UNIVERSITY_REGISTER_RESPONSE"
+echo "Issuer Register Response: $ISSUER_REGISTER_RESPONSE"
 
-validate_response "$UNIVERSITY_REGISTER_RESPONSE" "University registration" || exit 1
+validate_response "$ISSUER_REGISTER_RESPONSE" "Issuer registration" || exit 1
 
 wait_a_bit
 
-# Register individual
-echo -e "\n${BLUE}Registering individual...${NC}"
-INDIVIDUAL_REGISTER_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/register" \
+# Register holder
+echo -e "\n${BLUE}Registering holder...${NC}"
+HOLDER_REGISTER_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/register" \
 -H "Content-Type: application/json" \
 -d '{
-    "email": "individual@test.com",
+    "email": "holder@test.com",
     "password": "Password123!",
-    "username": "testindividual",
-    "role": "individual",
-    "orgName": "orgindividual"
+    "username": "testholder",
+    "role": "holder"
 }')
-echo "Individual Register Response: $INDIVIDUAL_REGISTER_RESPONSE"
+echo "Holder Register Response: $HOLDER_REGISTER_RESPONSE"
 
-validate_response "$INDIVIDUAL_REGISTER_RESPONSE" "Individual registration" || exit 1
+validate_response "$HOLDER_REGISTER_RESPONSE" "Holder registration" || exit 1
 
 wait_a_bit
 
-# Register employer
-echo -e "\n${BLUE}Registering employer...${NC}"
-EMPLOYER_REGISTER_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/register" \
+# Register verifier
+echo -e "\n${BLUE}Registering verifier...${NC}"
+VERIFIER_REGISTER_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/register" \
 -H "Content-Type: application/json" \
 -d '{
-    "email": "employer@test.com",
+    "email": "verifier@test.com",
     "password": "Password123!",
-    "username": "testemployer",
-    "role": "employer",
-    "orgName": "orgemployer"
+    "username": "testverifier",
+    "role": "verifier"
 }')
-echo "Employer Register Response: $EMPLOYER_REGISTER_RESPONSE"
+echo "Verifier Register Response: $VERIFIER_REGISTER_RESPONSE"
 
-validate_response "$EMPLOYER_REGISTER_RESPONSE" "Employer registration" || exit 1
+validate_response "$VERIFIER_REGISTER_RESPONSE" "Verifier registration" || exit 1
 
 wait_a_bit
 
 echo -e "\n${BLUE}2. Logging in users and extracting UIDs...${NC}"
 
-# Login university through login endpoint
-echo -e "\n${BLUE}Logging in university...${NC}"
-UNIVERSITY_LOGIN_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/login" \
+# Login issuer
+echo -e "\n${BLUE}Logging in issuer...${NC}"
+ISSUER_LOGIN_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/login" \
 -H "Content-Type: application/json" \
 -d '{
-    "email": "university@test.com",
+    "email": "issuer@test.com",
     "password": "Password123!"
 }')
-echo "University Login Response: $UNIVERSITY_LOGIN_RESPONSE"
-UNIVERSITY_TOKEN=$(extract_token "$UNIVERSITY_LOGIN_RESPONSE")
-UNIVERSITY_UID=$(extract_uid "$UNIVERSITY_LOGIN_RESPONSE")
-echo "University Token: $UNIVERSITY_TOKEN"
-echo "University UID: $UNIVERSITY_UID"
+echo "Issuer Login Response: $ISSUER_LOGIN_RESPONSE"
+ISSUER_TOKEN=$(extract_token "$ISSUER_LOGIN_RESPONSE")
+ISSUER_UID=$(extract_uid "$ISSUER_LOGIN_RESPONSE")
+echo "Issuer Token: $ISSUER_TOKEN"
+echo "Issuer UID: $ISSUER_UID"
 
-if [ -z "$UNIVERSITY_TOKEN" ]; then
-    echo -e "${RED}Failed to get token for university user${NC}"
+if [ -z "$ISSUER_TOKEN" ]; then
+    echo -e "${RED}Failed to get token for issuer user${NC}"
     echo -e "${YELLOW}Check server logs for details${NC}"
     exit 1
 fi
 
 wait_a_bit
 
-echo -e "\n${BLUE}2a. University creates a university entity...${NC}"
-UNIVERSITY_CREATE_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/university/create" \
+# Login holder
+echo -e "\n${BLUE}Logging in holder...${NC}"
+HOLDER_LOGIN_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/login" \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer $UNIVERSITY_TOKEN" \
 -d '{
-    "name": "test-university", 
-    "displayName": "Test University",
-    "description": "A university for testing"
+    "email": "holder@test.com",
+    "password": "Password123!"
 }')
-echo "University Create Response: $UNIVERSITY_CREATE_RESPONSE"
-UNIVERSITY_ID=$(echo $UNIVERSITY_CREATE_RESPONSE | grep -o '"id":"[^"]*' | head -1 | grep -o '[^"]*$')
-echo "University ID: $UNIVERSITY_ID"
+echo "Holder Login Response: $HOLDER_LOGIN_RESPONSE"
+HOLDER_TOKEN=$(extract_token "$HOLDER_LOGIN_RESPONSE")
+HOLDER_UID=$(extract_uid "$HOLDER_LOGIN_RESPONSE")
+echo "Holder Token: $HOLDER_TOKEN"
+echo "Holder UID: $HOLDER_UID"
 
-if [ -z "$UNIVERSITY_ID" ]; then
-    echo -e "${RED}Failed to create university entity. Response: $UNIVERSITY_CREATE_RESPONSE${NC}"
+if [ -z "$HOLDER_TOKEN" ]; then
+    echo -e "${RED}Failed to get token for holder user${NC}"
+    echo -e "${YELLOW}Check server logs for details${NC}"
     exit 1
 fi
 
 wait_a_bit
 
-echo -e "\n${BLUE}2b. University adds the student to the university...${NC}"
-ADD_STUDENT_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/university/add-student" \
+# Login verifier
+echo -e "\n${BLUE}Logging in verifier...${NC}"
+VERIFIER_LOGIN_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/login" \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer $UNIVERSITY_TOKEN" \
+-d '{
+    "email": "verifier@test.com",
+    "password": "Password123!"
+}')
+echo "Verifier Login Response: $VERIFIER_LOGIN_RESPONSE"
+VERIFIER_TOKEN=$(extract_token "$VERIFIER_LOGIN_RESPONSE")
+VERIFIER_UID=$(extract_uid "$VERIFIER_LOGIN_RESPONSE")
+echo "Verifier Token: $VERIFIER_TOKEN"
+echo "Verifier UID: $VERIFIER_UID"
+
+if [ -z "$VERIFIER_TOKEN" ]; then
+    echo -e "${RED}Failed to get token for verifier user${NC}"
+    echo -e "${YELLOW}Check server logs for details${NC}"
+    exit 1
+fi
+
+wait_a_bit
+
+# Explicitly create an issuer entity if not created during registration
+echo -e "\n${BLUE}2a. Creating issuer organization...${NC}"
+ISSUER_CREATE_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/issuer/create" \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer $ISSUER_TOKEN" \
+-d '{
+    "name": "test-issuer-org", 
+    "shorthand": "TEST",
+    "description": "An organization that issues professional credentials"
+}')
+echo "Issuer Create Response: $ISSUER_CREATE_RESPONSE"
+
+# Get the issuer organization ID whether creation succeeded or already exists
+echo -e "\n${BLUE}2b. Getting issuer organization ID...${NC}"
+ISSUER_ORG_RESPONSE=$(curl -s -X GET "$LEGITIFY_API_URL/issuer/my" \
+-H "Authorization: Bearer $ISSUER_TOKEN")
+echo "Issuer Org Response: $ISSUER_ORG_RESPONSE"
+ISSUER_ID=$(echo $ISSUER_ORG_RESPONSE | grep -o '"id":"[^"]*' | head -1 | grep -o '[^"]*$')
+echo "Issuer ID: $ISSUER_ID"
+
+if [ -z "$ISSUER_ID" ]; then
+    echo -e "${RED}Failed to get issuer organization ID. Response: $ISSUER_ORG_RESPONSE${NC}"
+    exit 1
+fi
+
+wait_a_bit
+
+echo -e "\n${BLUE}2c. Issuer adds the holder to the organization...${NC}"
+ADD_HOLDER_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/issuer/add-holder" \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer $ISSUER_TOKEN" \
 -d "{
-    \"universityId\": \"$UNIVERSITY_ID\",
-    \"studentEmail\": \"individual@test.com\"
+    \"issuerId\": \"$ISSUER_ID\",
+    \"holderEmail\": \"holder@test.com\"
 }")
-echo "Add Student Response: $ADD_STUDENT_RESPONSE"
+echo "Add Holder Response: $ADD_HOLDER_RESPONSE"
 
-if [[ "$ADD_STUDENT_RESPONSE" == *"error"* ]]; then
-    echo -e "${RED}Failed to add student to university. Response: $ADD_STUDENT_RESPONSE${NC}"
-    exit 1
+# Store whether the holder is already affiliated to use in the next step
+HOLDER_ALREADY_AFFILIATED=false
+if [[ "$ADD_HOLDER_RESPONSE" == *"error"* ]]; then
+    # Check if the error is because the holder is already affiliated
+    if [[ "$ADD_HOLDER_RESPONSE" == *"already affiliated"* ]]; then
+        echo -e "${YELLOW}Holder is already affiliated with this issuer, continuing...${NC}"
+        HOLDER_ALREADY_AFFILIATED=true
+    else
+        echo -e "${RED}Failed to add holder to issuer. Response: $ADD_HOLDER_RESPONSE${NC}"
+        exit 1
+    fi
 fi
 
 wait_a_bit
 
-# Reorder these steps - now we'll log in individual first, then approve the affiliation
-echo -e "\n${BLUE}Logging in individual...${NC}"
-INDIVIDUAL_LOGIN_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/login" \
--H "Content-Type: application/json" \
--d '{
-    "email": "individual@test.com",
-    "password": "Password123!"
-}')
-echo "Individual Login Response: $INDIVIDUAL_LOGIN_RESPONSE"
-INDIVIDUAL_TOKEN=$(extract_token "$INDIVIDUAL_LOGIN_RESPONSE")
-INDIVIDUAL_UID=$(extract_uid "$INDIVIDUAL_LOGIN_RESPONSE")
-echo "Individual Token: $INDIVIDUAL_TOKEN"
-echo "Individual UID: $INDIVIDUAL_UID"
-
-if [ -z "$INDIVIDUAL_TOKEN" ]; then
-    echo -e "${RED}Failed to get token for individual user${NC}"
-    echo -e "${YELLOW}Check server logs for details${NC}"
-    exit 1
-fi
-
-wait_a_bit
-
-echo -e "\n${BLUE}2c. Individual approves the university affiliation request...${NC}"
-# First get the affiliations to find the affiliation ID - now with the correct token
-PENDING_AFFILIATIONS_RESPONSE=$(curl -s -X GET "$LEGITIFY_API_URL/university/pending-affiliations" \
--H "Authorization: Bearer $INDIVIDUAL_TOKEN")
-echo "Pending Affiliations Response: $PENDING_AFFILIATIONS_RESPONSE"
-
-# Extract the affiliation ID from the response
-AFFILIATION_ID=$(echo $PENDING_AFFILIATIONS_RESPONSE | grep -o '"id":"[^"]*' | head -1 | grep -o '[^"]*$')
-echo "Affiliation ID: $AFFILIATION_ID"
-
-# Approve the affiliation
-if [ -n "$AFFILIATION_ID" ]; then
-  APPROVE_AFFILIATION_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/university/respond-affiliation" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $INDIVIDUAL_TOKEN" \
-  -d "{
-      \"affiliationId\": \"$AFFILIATION_ID\",
-      \"accept\": true
-  }")
-  echo "Approve Affiliation Response: $APPROVE_AFFILIATION_RESPONSE"
-  
-  # Check if there was an error in the approval
-  if [[ "$APPROVE_AFFILIATION_RESPONSE" == *"error"* ]]; then
-    echo -e "${RED}Failed to approve affiliation: $APPROVE_AFFILIATION_RESPONSE${NC}"
-    exit 1
-  else
-    echo -e "${GREEN}Affiliation successfully approved!${NC}"
-  fi
+echo -e "\n${BLUE}2c. Holder approves the issuer affiliation request...${NC}"
+# Skip the approval process if the holder is already affiliated
+if [ "$HOLDER_ALREADY_AFFILIATED" = true ]; then
+    echo -e "${YELLOW}Holder is already affiliated, skipping approval step...${NC}"
 else
-  echo -e "${RED}No pending affiliation found, the university might not have added the student yet${NC}"
-  exit 1
+    # First get the affiliations to find the affiliation ID
+    PENDING_AFFILIATIONS_RESPONSE=$(curl -s -X GET "$LEGITIFY_API_URL/issuer/pending-affiliations" \
+    -H "Authorization: Bearer $HOLDER_TOKEN")
+    echo "Pending Affiliations Response: $PENDING_AFFILIATIONS_RESPONSE"
+
+    # Extract the affiliation ID from the response
+    AFFILIATION_ID=$(echo $PENDING_AFFILIATIONS_RESPONSE | grep -o '"id":"[^"]*' | head -1 | grep -o '[^"]*$')
+    echo "Affiliation ID: $AFFILIATION_ID"
+
+    # Approve the affiliation
+    if [ -n "$AFFILIATION_ID" ]; then
+      APPROVE_AFFILIATION_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/issuer/respond-affiliation" \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer $HOLDER_TOKEN" \
+      -d "{
+          \"affiliationId\": \"$AFFILIATION_ID\",
+          \"accept\": true
+      }")
+      echo "Approve Affiliation Response: $APPROVE_AFFILIATION_RESPONSE"
+      
+      # Check if there was an error in the approval
+      if [[ "$APPROVE_AFFILIATION_RESPONSE" == *"error"* ]]; then
+        echo -e "${RED}Failed to approve affiliation: $APPROVE_AFFILIATION_RESPONSE${NC}"
+        exit 1
+      else
+        echo -e "${GREEN}Affiliation successfully approved!${NC}"
+      fi
+    else
+      echo -e "${RED}No pending affiliation found, the issuer might not have added the holder yet${NC}"
+      exit 1
+    fi
 fi
 
 wait_a_bit
 
-# Login employer
-echo -e "\n${BLUE}Logging in employer...${NC}"
-EMPLOYER_LOGIN_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/auth/login" \
+echo -e "\n${BLUE}3. Issuer issues credential to holder...${NC}"
+ISSUE_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/credential/issue" \
 -H "Content-Type: application/json" \
--d '{
-    "email": "employer@test.com",
-    "password": "Password123!"
-}')
-echo "Employer Login Response: $EMPLOYER_LOGIN_RESPONSE"
-EMPLOYER_TOKEN=$(extract_token "$EMPLOYER_LOGIN_RESPONSE")
-EMPLOYER_UID=$(extract_uid "$EMPLOYER_LOGIN_RESPONSE")
-echo "Employer Token: $EMPLOYER_TOKEN"
-echo "Employer UID: $EMPLOYER_UID"
-
-if [ -z "$EMPLOYER_TOKEN" ]; then
-    echo -e "${RED}Failed to get token for employer user${NC}"
-    echo -e "${YELLOW}Check server logs for details${NC}"
-    exit 1
-fi
-
-wait_a_bit
-
-# Test authentication to verify tokens
-echo -e "\n${BLUE}Testing authentication for university...${NC}"
-AUTH_TEST_RESPONSE=$(curl -s -X GET "$LEGITIFY_API_URL/me" \
--H "Authorization: Bearer $UNIVERSITY_TOKEN")
-echo "Auth test response: $AUTH_TEST_RESPONSE"
-
-if [[ "$AUTH_TEST_RESPONSE" == *"error"* ]]; then
-    echo -e "${RED}Authentication test failed. Token may be invalid.${NC}"
-    echo -e "${YELLOW}Check auth middleware and server logs for details${NC}"
-else
-    echo -e "${GREEN}Authentication test successful!${NC}"
-fi
-
-wait_a_bit
-
-echo -e "\n${BLUE}3. University issues degree to individual...${NC}"
-ISSUE_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/degree/issue" \
--H "Content-Type: application/json" \
--H "Authorization: Bearer $UNIVERSITY_TOKEN" \
+-H "Authorization: Bearer $ISSUER_TOKEN" \
 -d "{
-    \"email\": \"individual@test.com\",
-    \"universityId\": \"$UNIVERSITY_ID\",
+    \"email\": \"holder@test.com\",
+    \"issuerOrgId\": \"$ISSUER_ID\",
     \"base64File\": \"JVBERi0xLjcKCjEgMCBvYmogICUgZW50cnkgcG9pbnQKPDwKICAvVHlwZSAvQ2F0YWxvZwogIC9QYWdlcyAyIDAgUgo+PgplbmRvYmoKCjIgMCBvYmoKPDwKICAvVHlwZSAvUGFnZXMKICAvTWVkaWFCb3ggWyAwIDAgMjAwIDIwMCBdCiAgL0NvdW50IDEKICAvS2lkcyBbIDMgMCBSIF0KPj4KZW5kb2JqCgozIDAgb2JqCjw8CiAgL1R5cGUgL1BhZ2UKICAvUGFyZW50IDIgMCBSCiAgL1Jlc291cmNlcyA8PAogICAgL0ZvbnQgPDwKICAgICAgL0YxIDQgMCBSIAogICAgPj4KICA+PgogIC9Db250ZW50cyA1IDAgUgo+PgplbmRvYmoKCjQgMCBvYmoKPDwKICAvVHlwZSAvRm9udAogIC9TdWJ0eXBlIC9UeXBlMQogIC9CYXNlRm9udCAvVGltZXMtUm9tYW4KPj4KZW5kb2JqCgo1IDAgb2JqICAlIHBhZ2UgY29udGVudAo8PAogIC9MZW5ndGggNDQKPj4Kc3RyZWFtCkJUCjcwIDUwIFRECi9GMSAxMiBUZgooSGVsbG8sIHdvcmxkISkgVGoKRVQKZW5kc3RyZWFtCmVuZG9iagoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDEwIDAwMDAwIG4gCjAwMDAwMDAwNzkgMDAwMDAgbiAKMDAwMDAwMDE3MyAwMDAwMCBuIAowMDAwMDAwMzAxIDAwMDAwIG4gCjAwMDAwMDAzODAgMDAwMDAgbiAKdHJhaWxlcgo8PAogIC9TaXplIDYKICAvUm9vdCAxIDAgUgo+PgpzdGFydHhyZWYKNDkyCiUlRU9G\",
-    \"degreeTitle\": \"Test Degree\",
-    \"fieldOfStudy\": \"Computer Science\",
-    \"graduationDate\": \"2024-05-01T00:00:00.000Z\",
-    \"honors\": \"First Class\",
-    \"studentId\": \"12345\",
-    \"programDuration\": \"4 years\",
-    \"gpa\": 3.8,
-    \"additionalNotes\": \"Test degree for integration testing\"
+    \"title\": \"Test Credential\",
+    \"description\": \"Professional Certificate\",
+    \"achievementDate\": \"2024-05-01T00:00:00.000Z\",
+    \"programLength\": \"4 years\",
+    \"domain\": \"Computer Science\",
+    \"type\": \"certificate\",
+    \"attributes\": {
+        \"honors\": \"First Class\",
+        \"holderId\": \"12345\",
+        \"duration\": \"4 years\",
+        \"grade\": \"3.8\"
+    }
 }")
 echo "Issue response: $ISSUE_RESPONSE"
 
 # Extract the document ID from the response
 DOC_ID=$(extract_doc_id "$ISSUE_RESPONSE")
-echo "Degree issued with DOC_ID: $DOC_ID"
+echo "Credential issued with DOC_ID: $DOC_ID"
 
-# Check if DOC_ID was successfully extracted
-if [ -z "$DOC_ID" ]; then
-    # Try an alternative extraction method if the first one failed
-    DOC_ID=$(echo $ISSUE_RESPONSE | grep -o '"docId":"[^"]*' | grep -o '[^"]*$')
-    echo "Extracted DOC_ID using alternative method: $DOC_ID"
-    
-    # If still empty, try another format that might appear in the response
-    if [ -z "$DOC_ID" ]; then
-        DOC_ID=$(echo $ISSUE_RESPONSE | grep -o '"docId":[^,}]*' | cut -d':' -f2 | tr -d ' "')
-        echo "Extracted DOC_ID using second alternative method: $DOC_ID"
-    fi
-fi
-
-# Final check to ensure we have a document ID
 if [ -z "$DOC_ID" ]; then
     echo -e "${RED}Failed to extract document ID from response:${NC} $ISSUE_RESPONSE"
-    echo -e "${YELLOW}Skipping remaining steps that require the document ID.${NC}"
     exit 1
 fi
 
 wait_a_bit
 
-echo -e "\n${BLUE}4. Individual accepts degree...${NC}"
-ACCEPT_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/degree/accept" \
+echo -e "\n${BLUE}4. Holder accepts credential...${NC}"
+ACCEPT_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/credential/accept" \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer $INDIVIDUAL_TOKEN" \
+-H "Authorization: Bearer $HOLDER_TOKEN" \
 -d "{
     \"docId\": \"$DOC_ID\"
 }")
-echo "Degree acceptance response: $ACCEPT_RESPONSE"
+echo "Credential acceptance response: $ACCEPT_RESPONSE"
 
 if [[ "$ACCEPT_RESPONSE" == *"error"* ]]; then
-    echo -e "${RED}Failed to accept degree. Response: $ACCEPT_RESPONSE${NC}"
+    echo -e "${RED}Failed to accept credential. Response: $ACCEPT_RESPONSE${NC}"
     echo -e "${YELLOW}Check server logs for more details.${NC}"
 else
-    echo -e "${GREEN}Degree accepted successfully!${NC}"
+    echo -e "${GREEN}Credential accepted successfully!${NC}"
 fi
 
 wait_a_bit
 
-echo -e "\n${BLUE}5. Employer requests access to degree...${NC}"
-REQUEST_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/degree/requestAccess" \
+echo -e "\n${BLUE}5. Verifier requests access to credential...${NC}"
+REQUEST_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/credential/requestAccess" \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer $EMPLOYER_TOKEN" \
+-H "Authorization: Bearer $VERIFIER_TOKEN" \
 -d "{
     \"docId\": \"$DOC_ID\"
 }")
@@ -444,10 +437,10 @@ fi
 
 wait_a_bit
 
-echo -e "\n${BLUE}6. Individual grants access to employer...${NC}"
-GRANT_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/degree/grantAccess" \
+echo -e "\n${BLUE}6. Holder grants access to verifier...${NC}"
+GRANT_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/credential/grantAccess" \
 -H "Content-Type: application/json" \
--H "Authorization: Bearer $INDIVIDUAL_TOKEN" \
+-H "Authorization: Bearer $HOLDER_TOKEN" \
 -d "{
     \"requestId\": \"$REQUEST_ID\",
     \"granted\": true
@@ -463,29 +456,41 @@ fi
 
 wait_a_bit
 
-echo -e "\n${BLUE}7. Employer verifies degree...${NC}"
-VERIFY_RESPONSE=$(curl -s -X GET "$LEGITIFY_API_URL/degree/view/$DOC_ID" \
--H "Authorization: Bearer $EMPLOYER_TOKEN")
+echo -e "\n${BLUE}7. Verifier views credential...${NC}"
+VERIFY_RESPONSE=$(curl -s -X GET "$LEGITIFY_API_URL/credential/view/$DOC_ID" \
+-H "Authorization: Bearer $VERIFIER_TOKEN")
 echo "Verification response: $VERIFY_RESPONSE"
 
 if [[ "$VERIFY_RESPONSE" == *"error"* ]]; then
-    echo -e "${RED}Failed to verify degree. Response: $VERIFY_RESPONSE${NC}"
+    echo -e "${RED}Failed to view credential. Response: $VERIFY_RESPONSE${NC}"
     echo -e "${YELLOW}Check server logs for more details.${NC}"
 else
-    echo -e "${GREEN}Degree verified successfully!${NC}"
+    echo -e "${GREEN}Credential viewed successfully!${NC}"
 fi
 
-# The test is complete, let's also check if university names display correctly
-echo -e "\n${BLUE}8. Checking university information in degree records...${NC}"
-MY_DEGREES_RESPONSE=$(curl -s -X GET "$LEGITIFY_API_URL/degree/list" \
--H "Authorization: Bearer $INDIVIDUAL_TOKEN")
-echo "Individual's degrees: $MY_DEGREES_RESPONSE"
+# The test is complete, let's also check if holder can see their credentials
+echo -e "\n${BLUE}8. Checking holder's credentials...${NC}"
+MY_CREDENTIALS_RESPONSE=$(curl -s -X GET "$LEGITIFY_API_URL/credential/list" \
+-H "Authorization: Bearer $HOLDER_TOKEN")
+echo "Holder's credentials: $MY_CREDENTIALS_RESPONSE"
 
-# Verify the university info is properly displayed
-if [[ "$MY_DEGREES_RESPONSE" == *"Test University"* ]]; then
-    echo -e "${GREEN}University name displayed correctly in degree records!${NC}"
+# Verify the issuer info is properly displayed
+if [[ "$MY_CREDENTIALS_RESPONSE" == *"Test Issuer"* ]]; then
+    echo -e "${GREEN}Issuer name displayed correctly in credential records!${NC}"
 else
-    echo -e "${YELLOW}Note: University name might not be showing up correctly in degree records${NC}"
+    echo -e "${YELLOW}Note: Issuer name might not be showing up correctly in credential records${NC}"
+fi
+
+# Let's also check that the verifier can see the credentials they have access to
+echo -e "\n${BLUE}9. Checking verifier's accessible credentials...${NC}"
+ACCESSIBLE_CREDENTIALS_RESPONSE=$(curl -s -X GET "$LEGITIFY_API_URL/credential/accessible" \
+-H "Authorization: Bearer $VERIFIER_TOKEN")
+echo "Verifier's accessible credentials: $ACCESSIBLE_CREDENTIALS_RESPONSE"
+
+if [[ "$ACCESSIBLE_CREDENTIALS_RESPONSE" == *"$DOC_ID"* ]]; then
+    echo -e "${GREEN}Verifier can see the accessible credential!${NC}"
+else
+    echo -e "${YELLOW}Note: Verifier might not be able to see the accessible credential${NC}"
 fi
 
 echo -e "\n${GREEN}Test flow completed successfully!${NC}"

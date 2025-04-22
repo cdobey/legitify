@@ -2,7 +2,7 @@ import supabase from '@/config/supabase';
 import { randomUUID } from 'crypto';
 
 // Bucket names for storage
-const UNIVERSITY_LOGOS_BUCKET = 'university-logos';
+const ISSUER_LOGOS_BUCKET = 'issuer-logos';
 const PROFILE_PICTURES_BUCKET = 'profile-pictures';
 
 // Initialize the storage bucket if it doesn't exist yet
@@ -16,19 +16,19 @@ export async function initStorageBuckets() {
       return false;
     }
 
-    // Create the university logos bucket if it doesn't exist
-    if (!buckets?.find(bucket => bucket.name === UNIVERSITY_LOGOS_BUCKET)) {
-      const { error: createError } = await supabase.storage.createBucket(UNIVERSITY_LOGOS_BUCKET, {
+    // Create the issuer logos bucket if it doesn't exist
+    if (!buckets?.find(bucket => bucket.name === ISSUER_LOGOS_BUCKET)) {
+      const { error: createError } = await supabase.storage.createBucket(ISSUER_LOGOS_BUCKET, {
         public: true, // Make the bucket public so logos can be accessed without authentication
         fileSizeLimit: 2 * 1024 * 1024, // 2MB limit for logo files
       });
 
       if (createError) {
-        console.error('Error creating university logos bucket:', createError);
+        console.error('Error creating issuer logos bucket:', createError);
         return false;
       }
 
-      console.log(`Created storage bucket: ${UNIVERSITY_LOGOS_BUCKET}`);
+      console.log(`Created storage bucket: ${ISSUER_LOGOS_BUCKET}`);
     }
 
     // Create the profile pictures bucket if it doesn't exist
@@ -53,22 +53,22 @@ export async function initStorageBuckets() {
   }
 }
 
-// Upload a university logo file
-export async function uploadUniversityLogo(
-  universityId: string,
+// Upload a issuer logo file
+export async function uploadIssuerLogo(
+  issuerId: string,
   fileBuffer: Buffer,
   fileExt: string,
 ): Promise<string | null> {
   try {
     // Generate a unique filename
-    const filename = `${universityId}-${randomUUID()}.${fileExt}`;
-    const filePath = `${universityId}/${filename}`;
+    const filename = `${issuerId}-${randomUUID()}.${fileExt}`;
+    const filePath = `${issuerId}/${filename}`;
 
-    console.log(`Attempting to upload file to ${UNIVERSITY_LOGOS_BUCKET}/${filePath}`);
+    console.log(`Attempting to upload file to ${ISSUER_LOGOS_BUCKET}/${filePath}`);
 
     // Upload the file to Supabase Storage with explicit content type
     const { data, error } = await supabase.storage
-      .from(UNIVERSITY_LOGOS_BUCKET)
+      .from(ISSUER_LOGOS_BUCKET)
       .upload(filePath, fileBuffer, {
         contentType: `image/${fileExt}`,
         upsert: true, // Overwrite if exists
@@ -81,24 +81,22 @@ export async function uploadUniversityLogo(
     }
 
     // Get the public URL for the uploaded file
-    const { data: urlData } = supabase.storage.from(UNIVERSITY_LOGOS_BUCKET).getPublicUrl(filePath);
+    const { data: urlData } = supabase.storage.from(ISSUER_LOGOS_BUCKET).getPublicUrl(filePath);
 
     console.log(`Successfully uploaded to ${urlData.publicUrl}`);
     return urlData.publicUrl;
   } catch (error) {
-    console.error('Error in uploadUniversityLogo:', error);
+    console.error('Error in uploadIssuerLogo:', error);
     return null;
   }
 }
 
-// Delete a university logo from storage
-export async function deleteUniversityLogo(logoUrl: string): Promise<boolean> {
+// Delete a issuer logo from storage
+export async function deleteIssuerLogo(logoUrl: string): Promise<boolean> {
   try {
     // Extract the path from the URL
     const urlObj = new URL(logoUrl);
-    const pathMatch = urlObj.pathname.match(
-      /\/storage\/v1\/object\/public\/university-logos\/(.+)/,
-    );
+    const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/issuer-logos\/(.+)/);
 
     if (!pathMatch || !pathMatch[1]) {
       console.error('Could not extract path from logo URL:', logoUrl);
@@ -108,7 +106,7 @@ export async function deleteUniversityLogo(logoUrl: string): Promise<boolean> {
     const filePath = pathMatch[1];
 
     // Delete the file
-    const { error } = await supabase.storage.from(UNIVERSITY_LOGOS_BUCKET).remove([filePath]);
+    const { error } = await supabase.storage.from(ISSUER_LOGOS_BUCKET).remove([filePath]);
 
     if (error) {
       console.error('Error deleting logo:', error);
@@ -117,7 +115,7 @@ export async function deleteUniversityLogo(logoUrl: string): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.error('Error in deleteUniversityLogo:', error);
+    console.error('Error in deleteIssuerLogo:', error);
     return false;
   }
 }

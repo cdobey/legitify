@@ -1,5 +1,9 @@
-import { useRequestAccessMutation } from '@/api/degrees/degree.mutations';
-import { useAccessibleDegreesQuery, useUserDegreesQuery } from '@/api/degrees/degree.queries';
+import { CredentialDocument } from '@/api/credentials/credential.models';
+import { useRequestAccessMutation } from '@/api/credentials/credential.mutations';
+import {
+  useAccessibleCredentialsQuery,
+  useUserCredentialsQuery,
+} from '@/api/credentials/credential.queries';
 import { useSearchUserMutation } from '@/api/users/user.mutations';
 import {
   Alert,
@@ -61,36 +65,6 @@ const cardVariants = {
   visible: { opacity: 1, y: 0 },
 };
 
-interface DegreeDocument {
-  docId: string;
-  issuer: string;
-  issueDate: string;
-  degreeTitle?: string;
-  fieldOfStudy?: string;
-  graduationDate?: string;
-  honors?: string;
-  studentId?: string;
-  programDuration?: string;
-  gpa?: number | null;
-}
-
-interface AccessibleDegree {
-  requestId: string;
-  docId: string;
-  issuer: string;
-  owner: {
-    name: string;
-    email: string;
-  };
-  status: string;
-  dateGranted: string;
-}
-
-interface RequestedAccess {
-  docId: string;
-  timestamp: number;
-}
-
 export default function SearchUsers() {
   const theme = useMantineTheme();
   const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`);
@@ -105,41 +79,40 @@ export default function SearchUsers() {
   const searchMutation = useSearchUserMutation();
   const requestAccessMutation = useRequestAccessMutation();
 
-  // Fetch accessible degrees (ones the employer already has access to)
-  const { data: accessibleDegrees = [], isLoading: accessibleLoading } =
-    useAccessibleDegreesQuery();
+  const { data: accessibleCredentials = [], isLoading: accessibleLoading } =
+    useAccessibleCredentialsQuery();
 
   const {
-    data: degrees,
-    isLoading: degreesLoading,
-    error: degreesError,
-  } = useUserDegreesQuery(searchMutation.data?.id || '', {
+    data: credentials,
+    isLoading: credentialsLoading,
+    error: credentialsError,
+  } = useUserCredentialsQuery(searchMutation.data?.id || '', {
     enabled: !!searchMutation.data?.id,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
   const isAccessRequested = (docId: string) => {
-    const accessDegree = accessibleDegrees.find(d => d.docId === docId);
-    return accessDegree && accessDegree.status === 'pending';
+    const accessCredential = accessibleCredentials.find(d => d.credentialId === docId);
+    return accessCredential && accessCredential.status === 'pending';
   };
 
   const isAccessible = (docId: string) => {
-    const accessDegree = accessibleDegrees.find(d => d.docId === docId);
-    return accessDegree && accessDegree.status === 'granted';
+    const accessCredential = accessibleCredentials.find(d => d.credentialId === docId);
+    return accessCredential && accessCredential.status === 'granted';
   };
 
   const isAccessDenied = (docId: string) => {
-    const accessDegree = accessibleDegrees.find(d => d.docId === docId);
-    return accessDegree && accessDegree.status === 'denied';
+    const accessCredential = accessibleCredentials.find(d => d.credentialId === docId);
+    return accessCredential && accessCredential.status === 'denied';
   };
 
-  // Format the date for a specific degree
   const getRequestDate = (docId: string) => {
-    const accessDegree = accessibleDegrees.find(d => d.docId === docId);
-    return accessDegree && accessDegree.requestedAt ? formatDate(accessDegree.requestedAt) : '';
+    const accessCredential = accessibleCredentials.find(d => d.credentialId === docId);
+    return accessCredential && accessCredential.requestedAt
+      ? formatDate(accessCredential.requestedAt)
+      : '';
   };
 
-  // Format a date string safely handling null values
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'N/A';
 
@@ -151,70 +124,75 @@ export default function SearchUsers() {
   };
 
   const fieldsOfStudy = useMemo(() => {
-    if (!degrees) return [];
-    const fields = degrees.map(doc => doc.fieldOfStudy).filter((field): field is string => !!field);
+    if (!credentials) return [];
+    const fields = credentials
+      .map(doc => doc.attributes?.fieldOfStudy || doc.domain)
+      .filter((field): field is string => !!field);
     return [...new Set(fields)].sort();
-  }, [degrees]);
+  }, [credentials]);
 
   const accessibleDocIds = useMemo(() => {
-    return new Set(accessibleDegrees.map(doc => doc.docId));
-  }, [accessibleDegrees]);
+    return new Set(accessibleCredentials.map(doc => doc.credentialId));
+  }, [accessibleCredentials]);
 
-  const filteredDegrees = useMemo(() => {
-    if (!degrees) return [];
+  const filteredCredentials = useMemo(() => {
+    if (!credentials) return [];
 
-    let filtered = [...degrees];
+    let filtered = [...credentials];
 
     if (filterByField) {
-      filtered = filtered.filter(doc => doc.fieldOfStudy === filterByField);
+      filtered = filtered.filter(
+        doc => doc.attributes?.fieldOfStudy === filterByField || doc.domain === filterByField,
+      );
     }
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         doc =>
-          doc.degreeTitle?.toLowerCase().includes(query) ||
+          doc.title?.toLowerCase().includes(query) ||
           doc.issuer?.toLowerCase().includes(query) ||
-          doc.fieldOfStudy?.toLowerCase().includes(query) ||
-          doc.honors?.toLowerCase().includes(query),
+          doc.domain?.toLowerCase().includes(query) ||
+          doc.attributes?.fieldOfStudy?.toLowerCase().includes(query) ||
+          doc.attributes?.honors?.toLowerCase().includes(query),
       );
     }
 
-    // Apply tab filter
     if (activeTab === 'requested') {
       filtered = filtered.filter(doc => isAccessRequested(doc.docId));
     } else if (activeTab === 'accessible') {
       filtered = filtered.filter(doc => isAccessible(doc.docId));
     }
 
-    // Sort documents
+    console.log('Filtered credentials:', filtered);
     filtered.sort((a, b) => {
       let valueA: any;
       let valueB: any;
 
       switch (sortBy) {
         case 'issueDate':
-          valueA = new Date(a.issueDate);
-          valueB = new Date(b.issueDate);
+          valueA = new Date(a.issueDate || a.issueDate || '');
+          valueB = new Date(b.issueDate || b.issueDate || '');
           break;
         case 'graduationDate':
-          valueA = a.graduationDate ? new Date(a.graduationDate) : new Date(0);
-          valueB = b.graduationDate ? new Date(b.graduationDate) : new Date(0);
+        case 'achievementDate':
+          valueA = a.achievementDate ? new Date(a.achievementDate) : new Date(0);
+          valueB = b.achievementDate ? new Date(b.achievementDate) : new Date(0);
           break;
-        case 'degreeTitle':
-          valueA = a.degreeTitle || '';
-          valueB = b.degreeTitle || '';
+        case 'credentialTitle':
+        case 'title':
+          valueA = a.title || '';
+          valueB = b.title || '';
           break;
         case 'issuer':
           valueA = a.issuer || '';
           valueB = b.issuer || '';
           break;
         default:
-          valueA = a.issueDate;
-          valueB = b.issueDate;
+          valueA = a.issueDate || a.issueDate || '';
+          valueB = b.issueDate || b.issueDate || '';
       }
 
-      // Handle comparison
       if (sortDirection === 'asc') {
         return valueA > valueB ? 1 : -1;
       } else {
@@ -224,7 +202,7 @@ export default function SearchUsers() {
 
     return filtered;
   }, [
-    degrees,
+    credentials,
     filterByField,
     searchQuery,
     activeTab,
@@ -232,7 +210,7 @@ export default function SearchUsers() {
     sortDirection,
     isAccessRequested,
     isAccessible,
-    accessibleDegrees,
+    accessibleCredentials,
   ]);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -262,8 +240,12 @@ export default function SearchUsers() {
     }
   };
 
-  const getDegreeTypeIcon = (degree: DegreeDocument) => {
-    const fieldLower = degree.fieldOfStudy?.toLowerCase() || '';
+  const getCredentialTypeIcon = (credential: CredentialDocument) => {
+    const fieldLower =
+      credential.attributes?.fieldOfStudy?.toLowerCase() ||
+      credential.domain?.toLowerCase() ||
+      credential.type?.toLowerCase() ||
+      '';
 
     if (
       fieldLower.includes('computer') ||
@@ -290,7 +272,6 @@ export default function SearchUsers() {
     }
   };
 
-  // Clear filters
   const clearFilters = () => {
     setFilterByField(null);
     setSearchQuery('');
@@ -299,24 +280,21 @@ export default function SearchUsers() {
     setSortDirection('desc');
   };
 
-  // Get counts for different categories
   const requestedCount = useMemo(() => {
-    if (!degrees) return 0;
-    return degrees.filter(doc => isAccessRequested(doc.docId)).length;
-  }, [degrees, accessibleDegrees]);
+    if (!credentials) return 0;
+    return credentials.filter(doc => isAccessRequested(doc.docId)).length;
+  }, [credentials, accessibleCredentials]);
 
   const accessibleCount = useMemo(() => {
-    if (!degrees) return 0;
-    return degrees.filter(doc => isAccessible(doc.docId)).length;
-  }, [degrees, accessibleDegrees]);
+    if (!credentials) return 0;
+    return credentials.filter(doc => isAccessible(doc.docId)).length;
+  }, [credentials, accessibleCredentials]);
 
-  // Determine status of each degree by checking backend data
   const getCredentialStatus = (docId: string) => {
-    // Find the degree in our accessible degrees list
-    const accessDegree = accessibleDegrees.find(d => d.docId === docId);
+    const accessCredential = accessibleCredentials.find(d => d.credentialId === docId);
 
-    if (accessDegree) {
-      if (accessDegree.status === 'granted') {
+    if (accessCredential) {
+      if (accessCredential.status === 'granted') {
         return {
           badge: (
             <Badge color="teal" variant="light" radius="sm">
@@ -328,7 +306,7 @@ export default function SearchUsers() {
           color: 'teal' as const,
           buttonText: 'View Credential',
         };
-      } else if (accessDegree.status === 'pending') {
+      } else if (accessCredential.status === 'pending') {
         return {
           badge: (
             <Badge color="orange" variant="light" radius="sm">
@@ -340,7 +318,7 @@ export default function SearchUsers() {
           color: 'orange' as const,
           buttonText: 'Request Pending',
         };
-      } else if (accessDegree.status === 'denied') {
+      } else if (accessCredential.status === 'denied') {
         return {
           badge: (
             <Badge color="red" variant="light" radius="sm">
@@ -355,7 +333,6 @@ export default function SearchUsers() {
       }
     }
 
-    // Default case - not requested
     return {
       badge: (
         <Badge color="blue" variant="light" radius="sm">
@@ -370,7 +347,7 @@ export default function SearchUsers() {
   };
 
   const findAccessInfo = (docId: string) => {
-    return accessibleDegrees.find(deg => deg.docId === docId);
+    return accessibleCredentials.find(cred => cred.credentialId === docId);
   };
 
   return (
@@ -384,7 +361,7 @@ export default function SearchUsers() {
         </Group>
 
         <Text c="dimmed" mb="lg">
-          Find candidates by email to request access to their academic credentials.
+          Find candidates by email to request access to their credentials.
         </Text>
 
         <form onSubmit={handleSearch}>
@@ -480,9 +457,9 @@ export default function SearchUsers() {
                     value="all"
                     leftSection={<IconDatabase size={16} />}
                     rightSection={
-                      degrees?.length ? (
+                      credentials?.length ? (
                         <Badge size="xs" variant="filled" color="gray">
-                          {degrees.length}
+                          {credentials.length}
                         </Badge>
                       ) : null
                     }
@@ -563,10 +540,10 @@ export default function SearchUsers() {
                         Sort by:{' '}
                         {sortBy === 'issueDate'
                           ? 'Issue Date'
-                          : sortBy === 'graduationDate'
-                          ? 'Graduation Date'
-                          : sortBy === 'degreeTitle'
-                          ? 'Degree Title'
+                          : sortBy === 'achievementDate' || sortBy === 'graduationDate'
+                          ? 'Achievement Date'
+                          : sortBy === 'credentialTitle' || sortBy === 'title'
+                          ? 'Credential Title'
                           : 'Issuer'}
                       </Button>
                     </Menu.Target>
@@ -582,17 +559,23 @@ export default function SearchUsers() {
                       </Menu.Item>
                       <Menu.Item
                         leftSection={<IconCalendar size={16} />}
-                        onClick={() => setSortBy('graduationDate')}
-                        color={sortBy === 'graduationDate' ? 'blue' : undefined}
+                        onClick={() => setSortBy('achievementDate')}
+                        color={
+                          sortBy === 'achievementDate' || sortBy === 'graduationDate'
+                            ? 'blue'
+                            : undefined
+                        }
                       >
-                        Graduation Date
+                        Achievement Date
                       </Menu.Item>
                       <Menu.Item
                         leftSection={<IconCertificate size={16} />}
-                        onClick={() => setSortBy('degreeTitle')}
-                        color={sortBy === 'degreeTitle' ? 'blue' : undefined}
+                        onClick={() => setSortBy('title')}
+                        color={
+                          sortBy === 'title' || sortBy === 'credentialTitle' ? 'blue' : undefined
+                        }
                       >
-                        Degree Title
+                        Credential Title
                       </Menu.Item>
                       <Menu.Item
                         leftSection={<IconBuildingBank size={16} />}
@@ -623,17 +606,17 @@ export default function SearchUsers() {
                 </Group>
               </Group>
 
-              {degreesLoading || accessibleLoading ? (
+              {credentialsLoading || accessibleLoading ? (
                 <Stack>
                   {[1, 2, 3].map(i => (
                     <Skeleton key={i} height={160} radius="md" />
                   ))}
                 </Stack>
-              ) : degreesError ? (
+              ) : credentialsError ? (
                 <Alert color="red" mb="lg">
                   Error loading credentials
                 </Alert>
-              ) : filteredDegrees.length === 0 ? (
+              ) : filteredCredentials.length === 0 ? (
                 <Center p="xl">
                   <Stack align="center" gap="xs">
                     <ThemeIcon size="xl" radius="xl" color="gray">
@@ -656,7 +639,7 @@ export default function SearchUsers() {
               ) : (
                 <Stack gap="md">
                   <AnimatePresence>
-                    {filteredDegrees.map(doc => {
+                    {filteredCredentials.map(doc => {
                       const status = getCredentialStatus(doc.docId);
                       const accessInfo = findAccessInfo(doc.docId);
                       return (
@@ -685,24 +668,27 @@ export default function SearchUsers() {
                               <Grid.Col span={isMobile ? 12 : 8}>
                                 <Group wrap="nowrap" align="flex-start" mb={isMobile ? 'xs' : 0}>
                                   <ThemeIcon size="lg" radius="md" variant="light">
-                                    {getDegreeTypeIcon(doc)}
+                                    {getCredentialTypeIcon(doc)}
                                   </ThemeIcon>
 
                                   <div>
                                     <Group gap="xs" mb={2}>
                                       <Text fw={700} size="lg">
-                                        {doc.degreeTitle || 'Degree'}
+                                        {doc.title || 'Credential'}
                                       </Text>
                                       {status.badge}
-                                      {doc.honors && (
+                                      {doc.attributes?.honors && (
                                         <Badge color="green" variant="light">
-                                          {doc.honors}
+                                          {doc.attributes.honors}
                                         </Badge>
                                       )}
                                     </Group>
 
                                     <Text size="sm" c="dimmed" mb={4}>
-                                      {doc.fieldOfStudy || 'Field not specified'}
+                                      {doc.domain ||
+                                        doc.attributes?.fieldOfStudy ||
+                                        doc.type ||
+                                        'Field not specified'}
                                     </Text>
 
                                     <SimpleGrid cols={2} spacing="xs" verticalSpacing="xs">
@@ -716,18 +702,23 @@ export default function SearchUsers() {
                                         <Text size="sm">Issued: {formatDate(doc.issueDate)}</Text>
                                       </Group>
 
-                                      {doc.programDuration && (
+                                      {(doc.programLength || doc.attributes?.programDuration) && (
                                         <Group gap={4} wrap="nowrap">
                                           <IconCertificate size={16} color={theme.colors.gray[6]} />
-                                          <Text size="sm">{doc.programDuration}</Text>
+                                          <Text size="sm">
+                                            {doc.programLength || doc.attributes?.programDuration}
+                                          </Text>
                                         </Group>
                                       )}
 
-                                      {doc.graduationDate && (
+                                      {(doc.achievementDate || doc.attributes?.graduationDate) && (
                                         <Group gap={4} wrap="nowrap">
                                           <IconSchool size={16} color={theme.colors.gray[6]} />
                                           <Text size="sm">
-                                            Graduated: {formatDate(doc.graduationDate)}
+                                            Achieved:{' '}
+                                            {formatDate(
+                                              doc.achievementDate || doc.attributes?.graduationDate,
+                                            )}
                                           </Text>
                                         </Group>
                                       )}
@@ -752,7 +743,7 @@ export default function SearchUsers() {
                                   {isAccessible(doc.docId) ? (
                                     <Button
                                       component={Link}
-                                      to={`/degree/view/${doc.docId}`}
+                                      to={`/credential/view/${doc.docId}`}
                                       variant="light"
                                       color="green"
                                       fullWidth={isMobile}
@@ -807,14 +798,14 @@ export default function SearchUsers() {
                 </Stack>
               )}
 
-              {degrees && degrees.length === 0 && (
+              {credentials && credentials.length === 0 && (
                 <Center p="xl">
                   <Stack align="center" gap="xs">
                     <ThemeIcon size="xl" radius="xl" color="gray">
                       <IconCertificate size={24} />
                     </ThemeIcon>
                     <Text c="dimmed" ta="center">
-                      This user has no accessible documents
+                      This user has no accessible credentials
                     </Text>
                   </Stack>
                 </Center>

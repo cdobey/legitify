@@ -9,6 +9,10 @@ export const useLoginMutation = () =>
   });
 
 export const useRegisterMutation = () =>
-  useMutation<{ uid: string }, AxiosError, RegisterParams>({
+  useMutation<
+    { uid: string; message: string; metadata?: any; issuer?: any },
+    AxiosError,
+    RegisterParams
+  >({
     mutationFn: params => register(params),
   });

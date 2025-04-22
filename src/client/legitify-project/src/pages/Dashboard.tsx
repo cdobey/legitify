@@ -32,7 +32,7 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
-import { AccessRequest } from '../api/degrees/degree.models';
+import { AccessRequest } from '../api/credentials/credential.models';
 import { DashboardSkeleton } from '../components/SkeletonLoaders';
 import { useAuth } from '../contexts/AuthContext';
 import { useDashboardData } from '../hooks/useDashboardData';
@@ -45,8 +45,8 @@ export default function Dashboard() {
   const { data, isLoading, error, refetch } = useDashboardData();
 
   // Use data directly from the dashboard query
-  const myDegrees = data?.myDegrees || [];
-  const accessibleDegrees = data?.accessibleDegrees || [];
+  const myCredentials = data?.myCredentials || [];
+  const accessibleCredentials = data?.accessibleCredentials || [];
   const pendingRequests =
     data?.accessRequests?.filter((req: AccessRequest) => req.status === 'pending') || [];
 
@@ -59,7 +59,7 @@ export default function Dashboard() {
   }
 
   if (isLoading) {
-    return <DashboardSkeleton userRole={user?.role as 'university' | 'individual' | 'employer'} />;
+    return <DashboardSkeleton userRole={user?.role as 'issuer' | 'holder' | 'verifier'} />;
   }
 
   if (error) {
@@ -85,17 +85,17 @@ export default function Dashboard() {
             Welcome back, {user.username}!
           </Title>
           <Text c="dimmed" size="sm">
-            {user.role === 'university'
+            {user.role === 'issuer'
               ? 'Manage and issue credentials'
-              : user.role === 'individual'
+              : user.role === 'holder'
               ? 'Manage your academic credentials'
               : 'Verify and access academic credentials'}
           </Text>
         </div>
         <ThemeIcon size={50} radius="md" className="accent-theme-icon">
-          {user.role === 'university' ? (
+          {user.role === 'issuer' ? (
             <IconSchool size={30} />
-          ) : user.role === 'individual' ? (
+          ) : user.role === 'holder' ? (
             <IconFiles size={30} />
           ) : (
             <IconSearch size={30} />
@@ -107,47 +107,47 @@ export default function Dashboard() {
 
   const renderQuickActions = () => {
     const actions =
-      user.role === 'university'
+      user.role === 'issuer'
         ? [
             {
-              title: 'Issue New Degree',
+              title: 'Issue New Credential',
               icon: <IconCertificate size={22} />,
               color: theme.colors.primaryBlue?.[5] || theme.colors.blue[5],
-              link: '/degree/issue',
-              description: 'Issue a new credential to a student',
+              link: '/credential/issue',
+              description: 'Issue a new credential to a holder',
             },
             {
               title: 'View All Records',
               icon: <IconEye size={22} />,
               color: theme.colors.accentTeal?.[5] || theme.colors.teal[5],
-              link: '/degree/all-records',
+              link: '/credential/all-records',
               description: 'View all records on the blockchain',
             },
           ]
-        : user.role === 'individual'
+        : user.role === 'holder'
         ? [
             {
-              title: 'Manage Degrees',
+              title: 'Manage Credentials',
               icon: <IconFiles size={22} />,
               color: theme.colors.primaryBlue?.[5] || theme.colors.blue[5],
-              link: '/degree/manage',
+              link: '/credential/manage',
               description: 'View and manage your credentials',
             },
             {
               title: 'Access Requests',
               icon: <IconInbox size={22} />,
               color: theme.colors.accentOrange?.[5] || theme.colors.orange[5],
-              link: '/degree/requests',
+              link: '/credential/requests',
               description: `View access requests (${pendingRequests.length} pending)`,
               accent: pendingRequests.length > 0,
             },
           ]
         : [
             {
-              title: 'Verify Degree',
+              title: 'Verify Credential',
               icon: <IconCheck size={22} />,
               color: theme.colors.primaryBlue?.[5] || theme.colors.blue[5],
-              link: '/degree/verify',
+              link: '/credential/verify',
               description: 'Verify a credential document',
             },
             {
@@ -158,10 +158,10 @@ export default function Dashboard() {
               description: 'Find users and request access',
             },
             {
-              title: 'Accessible Degrees',
+              title: 'Accessible Credentials',
               icon: <IconFileCheck size={22} />,
               color: theme.colors.accentOrange?.[5] || theme.colors.orange[5],
-              link: '/degrees',
+              link: '/credentials',
               description: 'View credentials you have access to',
             },
           ];
@@ -206,7 +206,7 @@ export default function Dashboard() {
     );
   };
 
-  const renderUniversityDashboard = () => {
+  const renderIssuerDashboard = () => {
     const stats = [
       {
         title: 'Total Issued',
@@ -259,43 +259,43 @@ export default function Dashboard() {
         <Paper withBorder radius="md" p="md" mb="xl">
           <Group justify="space-between" mb="md">
             <Title order={4}>Recent Activity</Title>
-            <Button variant="light" size="sm" component={Link} to="/degree/issue">
-              Issue New Degree
+            <Button variant="light" size="sm" component={Link} to="/credential/issue">
+              Issue New Credential
             </Button>
           </Group>
 
           {data?.recentIssued && data.recentIssued.length > 0 ? (
             <Stack>
-              {data.recentIssued.map((degree, index) => (
+              {data.recentIssued.map((credential, index) => (
                 <Card key={index} withBorder p="sm">
                   <Group justify="space-between">
                     <div>
-                      <Text fw={500}>{degree.recipientName || degree.issuedTo}</Text>
+                      <Text fw={500}>{credential.recipientName || credential.issuedTo}</Text>
                       <Text size="xs" c="dimmed">
-                        Document ID: {degree.docId}
+                        Document ID: {credential.docId}
                       </Text>
                     </div>
                     <Badge
                       color={
-                        degree.status === 'accepted'
+                        credential.status === 'accepted'
                           ? 'green'
-                          : degree.status === 'denied'
+                          : credential.status === 'denied'
                           ? 'red'
                           : 'blue'
                       }
                     >
-                      {degree.status}
+                      {credential.status}
                     </Badge>
                   </Group>
                   <Text size="xs" mt="xs">
-                    Issued on: {new Date(degree.issueDate).toLocaleDateString()}
+                    Issued on: {new Date(credential.issueDate).toLocaleDateString()}
                   </Text>
                 </Card>
               ))}
             </Stack>
           ) : (
             <Text c="dimmed" ta="center" p="lg">
-              No recently issued degrees found. Try issuing a degree first.
+              No recently issued credentials found. Try issuing a credential first.
             </Text>
           )}
         </Paper>
@@ -303,7 +303,7 @@ export default function Dashboard() {
     );
   };
 
-  const renderIndividualDashboard = () => {
+  const renderHolderDashboard = () => {
     // Calculate percentages for the progress bars
     const total = data?.stats?.total || 0;
     const acceptedPercent =
@@ -316,7 +316,7 @@ export default function Dashboard() {
       <>
         <Paper withBorder radius="md" p="md" mb="xl">
           <Title order={4} mb="md">
-            Degree Status
+            Credential Status
           </Title>
           <Box mb="md">
             <Group justify="space-between" mb={5}>
@@ -350,46 +350,46 @@ export default function Dashboard() {
         <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md" mb="xl">
           <Paper withBorder radius="md" p="md">
             <Group justify="space-between" mb="md">
-              <Title order={4}>Your Degrees</Title>
-              <Button variant="light" size="sm" component={Link} to="/degree/manage">
+              <Title order={4}>Your Credentials</Title>
+              <Button variant="light" size="sm" component={Link} to="/credential/manage">
                 View All
               </Button>
             </Group>
 
-            {myDegrees && myDegrees.length > 0 ? (
+            {myCredentials && myCredentials.length > 0 ? (
               <Stack>
-                {myDegrees.slice(0, 3).map((degree: any, index: number) => (
+                {myCredentials.slice(0, 3).map((credential: any, index: number) => (
                   <Card key={index} withBorder p="sm">
                     <Group justify="space-between">
                       <div>
-                        <Text fw={500}>From: {degree.issuer}</Text>
+                        <Text fw={500}>From: {credential.issuer}</Text>
                         <Text size="xs" c="dimmed">
-                          ID: {degree.docId}
+                          ID: {credential.docId}
                         </Text>
                       </div>
                       <Badge
                         color={
-                          degree.status === 'accepted'
+                          credential.status === 'accepted'
                             ? 'green'
-                            : degree.status === 'denied'
+                            : credential.status === 'denied'
                             ? 'red'
                             : 'blue'
                         }
                       >
-                        {degree.status}
+                        {credential.status}
                       </Badge>
                     </Group>
                   </Card>
                 ))}
-                {myDegrees.length > 3 && (
+                {myCredentials.length > 3 && (
                   <Text ta="center" size="sm" c="dimmed">
-                    + {myDegrees.length - 3} more degrees
+                    + {myCredentials.length - 3} more credentials
                   </Text>
                 )}
               </Stack>
             ) : (
               <Text c="dimmed" ta="center" p="lg">
-                No degrees found
+                No credentials found
               </Text>
             )}
           </Paper>
@@ -397,7 +397,7 @@ export default function Dashboard() {
           <Paper withBorder radius="md" p="md">
             <Group justify="space-between" mb="md">
               <Title order={4}>Access Requests</Title>
-              <Button variant="light" size="sm" component={Link} to="/degree/requests">
+              <Button variant="light" size="sm" component={Link} to="/credential/requests">
                 View All
               </Button>
             </Group>
@@ -406,15 +406,19 @@ export default function Dashboard() {
               <Stack>
                 {pendingRequests.slice(0, 3).map((request: AccessRequest, index: number) => (
                   <Card key={index} withBorder p="sm">
-                    <Text fw={500}>From: {request.employerName}</Text>
+                    <Text fw={500}>From: {request.verifierName || 'Unknown Verifier'}</Text>
                     <Group justify="space-between">
                       <Text size="xs" c="dimmed">
-                        Document: {request.docId.substring(0, 8)}...
+                        Document:
+                        {request.docId ? request.docId.substring(0, 8) + '...' : 'ID unavailable'}
                       </Text>
                       <Badge color="yellow">Pending</Badge>
                     </Group>
                     <Text size="xs" mt="xs">
-                      Requested on: {new Date(request.requestDate).toLocaleDateString()}
+                      Requested on:
+                      {request.requestDate
+                        ? new Date(request.requestDate).toLocaleDateString()
+                        : 'Date unavailable'}
                     </Text>
                   </Card>
                 ))}
@@ -435,14 +439,15 @@ export default function Dashboard() {
     );
   };
 
-  const renderEmployerDashboard = () => {
-    // Calculate stats from accessible degrees
-    const statsFromAccessibleDegrees = {
-      totalAccessible: accessibleDegrees.length,
-      uniqueIndividuals: new Set(accessibleDegrees.map(degree => degree.owner.email)).size,
-      uniqueUniversities: new Set(accessibleDegrees.map(degree => degree.issuer)).size,
-      recentlyGranted: accessibleDegrees.filter(degree => {
-        const grantDate = new Date(degree.dateGranted);
+  const renderVerifierDashboard = () => {
+    // Calculate stats from accessible credentials
+    const statsFromAccessibleCredentials = {
+      totalAccessible: accessibleCredentials.length,
+      uniqueHolders: new Set(accessibleCredentials.map(credential => credential.holder.email)).size,
+      uniqueIssuers: new Set(accessibleCredentials.map(credential => credential.issuer)).size,
+      recentlyGranted: accessibleCredentials.filter(credential => {
+        if (!credential.dateGranted) return false;
+        const grantDate = new Date(credential.dateGranted);
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         return grantDate > thirtyDaysAgo;
@@ -462,25 +467,25 @@ export default function Dashboard() {
                 {[
                   {
                     title: 'Accessible Credentials',
-                    value: statsFromAccessibleDegrees.totalAccessible,
+                    value: statsFromAccessibleCredentials.totalAccessible,
                     icon: <IconFileCheck size={22} />,
                     color: 'blue',
                   },
                   {
-                    title: 'From Universities',
-                    value: statsFromAccessibleDegrees.uniqueUniversities,
+                    title: 'From Issuers',
+                    value: statsFromAccessibleCredentials.uniqueIssuers,
                     icon: <IconSchool size={22} />,
                     color: 'green',
                   },
                   {
-                    title: 'Unique Individuals',
-                    value: statsFromAccessibleDegrees.uniqueIndividuals,
+                    title: 'Unique Holders',
+                    value: statsFromAccessibleCredentials.uniqueHolders,
                     icon: <IconUserPlus size={22} />,
                     color: 'teal',
                   },
                   {
                     title: 'Recently Granted',
-                    value: statsFromAccessibleDegrees.recentlyGranted,
+                    value: statsFromAccessibleCredentials.recentlyGranted,
                     icon: <IconClock size={22} />,
                     color: 'violet',
                   },
@@ -509,26 +514,26 @@ export default function Dashboard() {
 
           <Paper withBorder radius="md" p="md">
             <Group justify="space-between" mb="md">
-              <Title order={4}>Accessible Degrees</Title>
-              <Button variant="light" size="sm" component={Link} to="/degrees">
+              <Title order={4}>Accessible Credentials</Title>
+              <Button variant="light" size="sm" component={Link} to="/credentials">
                 View All
               </Button>
             </Group>
 
-            {accessibleDegrees && accessibleDegrees.length > 0 ? (
+            {accessibleCredentials && accessibleCredentials.length > 0 ? (
               <Stack>
-                {accessibleDegrees.slice(0, 2).map((degree: any, index: number) => (
+                {accessibleCredentials.slice(0, 2).map((credential: any, index: number) => (
                   <Card key={index} withBorder p="sm">
-                    <Text fw={500}>Owner: {degree.owner?.name || 'Unknown'}</Text>
+                    <Text fw={500}>Owner: {credential.holder?.name || 'Unknown'}</Text>
                     <Group justify="space-between">
                       <Text size="xs" c="dimmed">
-                        Issued by: {degree.issuer}
+                        Issued by: {credential.issuer}
                       </Text>
                       <Button
                         variant="subtle"
                         size="sm"
                         component={Link}
-                        to={`/degree/view/${degree.docId}`}
+                        to={`/credential/view/${credential.credentialId}`}
                         rightSection={<IconArrowUpRight size={rem(16)} />}
                       >
                         View
@@ -536,15 +541,15 @@ export default function Dashboard() {
                     </Group>
                   </Card>
                 ))}
-                {accessibleDegrees.length > 3 && (
+                {accessibleCredentials.length > 3 && (
                   <Text ta="center" size="sm" c="dimmed">
-                    + {accessibleDegrees.length - 2} more accessible degrees
+                    + {accessibleCredentials.length - 2} more accessible credentials
                   </Text>
                 )}
               </Stack>
             ) : (
               <Text c="dimmed" ta="center" p="lg">
-                No accessible degrees found
+                No accessible credentials found
               </Text>
             )}
           </Paper>
@@ -555,7 +560,7 @@ export default function Dashboard() {
             Quick Search
           </Title>
           <Card withBorder p="md">
-            <Text mb="md">Search for individuals to request access to their credentials:</Text>
+            <Text mb="md">Search for holders to request access to their credentials:</Text>
             <Button
               fullWidth
               leftSection={<IconSearch size={20} />}
@@ -575,9 +580,9 @@ export default function Dashboard() {
       {renderWelcomeCard()}
       {renderQuickActions()}
 
-      {user.role === 'university' && renderUniversityDashboard()}
-      {user.role === 'individual' && renderIndividualDashboard()}
-      {user.role === 'employer' && renderEmployerDashboard()}
+      {user.role === 'issuer' && renderIssuerDashboard()}
+      {user.role === 'holder' && renderHolderDashboard()}
+      {user.role === 'verifier' && renderVerifierDashboard()}
     </Container>
   );
 }

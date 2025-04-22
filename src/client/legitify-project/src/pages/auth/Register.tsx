@@ -1,9 +1,11 @@
 import { register } from '@/api/auth/auth.api';
-import { University } from '@/api/universities/university.models';
+import { Issuer } from '@/api/issuers/issuer.models';
 import { UserRole } from '@/api/users/user.models';
+import { StatusIndicator } from '@/components/StatusIndicator';
 import {
   Alert,
   Anchor,
+  Box,
   Button,
   Card,
   Checkbox,
@@ -15,7 +17,6 @@ import {
   Select,
   SimpleGrid,
   Stepper,
-  Switch,
   Text,
   TextInput,
   Title,
@@ -47,24 +48,24 @@ interface FormValues {
   role: UserRole;
   country: string;
   organizationName: string;
-  universityName: string;
-  universityDisplayName: string;
-  universityDescription: string;
+  issuerName: string;
+  issuerDisplayName: string;
+  issuerDescription: string;
   termsAccepted: boolean;
   provideOrgInfoLater: boolean;
-  joinUniversityId: string;
+  joinIssuerId: string;
+  issuerAction: 'create' | 'join' | 'skip'; // Updated to include 'skip'
 }
 
 const Register = () => {
   const [active, setActive] = useState(0);
-  const [universities, setUniversities] = useState<University[]>([]);
-  const [isLoadingUniversities, setIsLoadingUniversities] = useState(false);
+  const [issuers, setIssuers] = useState<Issuer[]>([]);
+  const [isLoadingIssuers, setIsLoadingIssuers] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  // Create a comprehensive form with all fields for both steps
   const form = useForm<FormValues>({
     initialValues: {
       username: '',
@@ -73,15 +74,16 @@ const Register = () => {
       confirmPassword: '',
       firstName: '',
       lastName: '',
-      role: 'individual',
+      role: 'holder',
       country: '',
       organizationName: '',
-      universityName: '',
-      universityDisplayName: '',
-      universityDescription: '',
+      issuerName: '',
+      issuerDisplayName: '',
+      issuerDescription: '',
       termsAccepted: false,
       provideOrgInfoLater: false,
-      joinUniversityId: '',
+      joinIssuerId: '',
+      issuerAction: 'create', // Default to create
     },
     validate: {
       email: value => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
@@ -92,25 +94,28 @@ const Register = () => {
     },
   });
 
-  // Fetch universities for individual registration
   useEffect(() => {
-    if (active === 1 && form.values.role === 'individual') {
-      const fetchUniversities = async () => {
+    if (
+      active === 1 &&
+      (form.values.role === 'holder' ||
+        (form.values.role === 'issuer' && form.values.issuerAction === 'join'))
+    ) {
+      const fetchIssuers = async () => {
         try {
-          setIsLoadingUniversities(true);
+          setIsLoadingIssuers(true);
           const baseUrl = import.meta.env.VITE_API_URL || '/api';
-          const response = await axios.get(`${baseUrl}/university/all`);
-          setUniversities(response.data);
+          const response = await axios.get(`${baseUrl}/issuer/all`);
+          setIssuers(response.data);
         } catch (error) {
-          console.error('Error fetching universities:', error);
-          setError('Failed to load universities. Please try again.');
+          console.error('Error fetching issuers:', error);
+          setError('Failed to load issuers. Please try again.');
         } finally {
-          setIsLoadingUniversities(false);
+          setIsLoadingIssuers(false);
         }
       };
-      fetchUniversities();
+      fetchIssuers();
     }
-  }, [form.values.role, active]);
+  }, [form.values.role, form.values.issuerAction, active]);
 
   const nextStep = () => {
     form.validate();
@@ -135,20 +140,29 @@ const Register = () => {
         password: form.values.password,
         username: form.values.username,
         role: form.values.role,
+        country: form.values.country,
       };
 
       // Add role-specific data
-      if (form.values.role === 'university' && !form.values.provideOrgInfoLater) {
-        registrationData.universityName = form.values.universityName;
-        registrationData.universityDisplayName = form.values.universityDisplayName;
-        registrationData.universityDescription = form.values.universityDescription;
-      } else if (form.values.role === 'employer') {
+      if (form.values.role === 'issuer') {
+        if (form.values.issuerAction === 'create') {
+          // Create new issuer
+          registrationData.issuerName = form.values.issuerName;
+          registrationData.issuerDisplayName = form.values.issuerDisplayName;
+          registrationData.issuerDescription = form.values.issuerDescription;
+        } else if (form.values.issuerAction === 'join' && form.values.joinIssuerId) {
+          // Issuer joining existing issuer
+          registrationData.joinIssuerId = form.values.joinIssuerId;
+        }
+        // If issuerAction is 'skip', we don't add any issuer data
+      } else if (form.values.role === 'verifier') {
+        // Verifier data
         registrationData.orgName = form.values.organizationName;
       }
 
-      // Add university join request for individuals
-      if (form.values.role === 'individual' && form.values.joinUniversityId) {
-        registrationData.joinUniversityId = form.values.joinUniversityId;
+      // For holders joining an issuer - convert to expected array format
+      if (form.values.role === 'holder' && form.values.joinIssuerId) {
+        registrationData.issuerIds = [form.values.joinIssuerId];
       }
 
       // Register the user
@@ -161,7 +175,7 @@ const Register = () => {
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.message || 'Failed to register');
-      setIsLoading(false); // Only set loading to false on error
+      setIsLoading(false);
     }
   };
 
@@ -181,17 +195,24 @@ const Register = () => {
       role,
       country,
       termsAccepted,
-      universityName,
-      universityDisplayName,
-      provideOrgInfoLater,
+      issuerName,
+      issuerDisplayName,
+      issuerAction,
+      joinIssuerId,
     } = form.values;
 
     // Basic validation that applies to all roles
     const basicValid = !!role && country !== '' && termsAccepted;
 
-    // Additional validation for university role when not choosing to provide info later
-    if (role === 'university' && !provideOrgInfoLater) {
-      return basicValid && !!universityName && !!universityDisplayName;
+    // Additional validation for issuer role
+    if (role === 'issuer') {
+      if (issuerAction === 'create') {
+        return basicValid && !!issuerName && !!issuerDisplayName;
+      } else if (issuerAction === 'join') {
+        return basicValid && !!joinIssuerId;
+      } else if (issuerAction === 'skip') {
+        return basicValid; // Only basic validation required if skipping
+      }
     }
 
     return basicValid;
@@ -235,12 +256,12 @@ const Register = () => {
               mt="md"
               value={form.values.role}
               onChange={value =>
-                form.setFieldValue('role', value as 'individual' | 'university' | 'employer')
+                form.setFieldValue('role', value as 'holder' | 'issuer' | 'verifier')
               }
               data={[
-                { value: 'individual', label: 'Individual' },
-                { value: 'employer', label: 'Employer' },
-                { value: 'university', label: 'University' },
+                { value: 'holder', label: 'Holder' },
+                { value: 'verifier', label: 'Verifier' },
+                { value: 'issuer', label: 'Issuer' },
               ]}
               fullWidth
               className="orange-segment"
@@ -258,14 +279,13 @@ const Register = () => {
                 data={[
                   { value: 'us', label: 'United States' },
                   { value: 'uk', label: 'United Kingdom' },
-                  { value: 'ca', label: 'Canada' },
-                  // Add more countries as needed
+                  { value: 'ie', label: 'Ireland' },
                 ]}
                 searchable
                 {...form.getInputProps('country')}
               />
 
-              {form.values.role === 'employer' && (
+              {form.values.role === 'verifier' && (
                 <TextInput
                   label="Organization Name (Optional)"
                   placeholder="Organization Name"
@@ -273,60 +293,100 @@ const Register = () => {
                 />
               )}
 
-              {form.values.role === 'university' && (
+              {form.values.role === 'issuer' && (
                 <>
-                  <Switch
-                    label="I'll provide university information later"
-                    checked={form.values.provideOrgInfoLater}
-                    onChange={event =>
-                      form.setFieldValue('provideOrgInfoLater', event.currentTarget.checked)
-                    }
-                    mt="md"
-                  />
+                  <Box mb="md">
+                    <Text fw={500} mb="xs">
+                      Issuer Organization
+                    </Text>
+                    <Group grow mb="xs">
+                      <Button
+                        variant={form.values.issuerAction === 'create' ? 'filled' : 'light'}
+                        onClick={() => form.setFieldValue('issuerAction', 'create')}
+                      >
+                        Create New Issuer
+                      </Button>
+                      <Button
+                        variant={form.values.issuerAction === 'join' ? 'filled' : 'light'}
+                        onClick={() => form.setFieldValue('issuerAction', 'join')}
+                      >
+                        Join Existing Issuer
+                      </Button>
+                    </Group>
+                    <Button
+                      variant="subtle"
+                      fullWidth
+                      onClick={() => {
+                        form.setFieldValue('issuerAction', 'skip');
+                        form.setFieldValue('issuerName', '');
+                        form.setFieldValue('issuerDisplayName', '');
+                        form.setFieldValue('issuerDescription', '');
+                        form.setFieldValue('joinIssuerId', '');
+                      }}
+                    >
+                      I'll create or join an issuer later from my dashboard
+                    </Button>
+                  </Box>
 
-                  {!form.values.provideOrgInfoLater && (
+                  {form.values.issuerAction === 'create' && (
                     <>
                       <TextInput
-                        label="University Name"
-                        placeholder="Official university name"
+                        label="Issuer Name"
+                        placeholder="Full name (e.g., Dublin City University)"
                         required
                         mt="md"
-                        {...form.getInputProps('universityName')}
+                        {...form.getInputProps('issuerName')}
                       />
                       <TextInput
-                        label="Display Name"
-                        placeholder="Name to display to users"
+                        label="Short Name"
+                        placeholder="Abbreviation (e.g., DCU)"
                         required
                         mt="md"
-                        {...form.getInputProps('universityDisplayName')}
+                        {...form.getInputProps('issuerDisplayName')}
                       />
                       <TextInput
                         label="Description"
-                        placeholder="Brief description of the university"
+                        placeholder="Brief description of the issuer"
                         mt="md"
-                        {...form.getInputProps('universityDescription')}
+                        {...form.getInputProps('issuerDescription')}
                       />
                     </>
+                  )}
+
+                  {form.values.issuerAction === 'join' && (
+                    <Select
+                      label="Join an Issuer"
+                      description="Request to join an existing issuer"
+                      placeholder={isLoadingIssuers ? 'Loading issuers...' : 'Select an issuer'}
+                      data={issuers.map(issuer => ({
+                        value: issuer.id,
+                        label: `${issuer.name} (${issuer.shorthand})`,
+                      }))}
+                      searchable
+                      clearable
+                      required
+                      mt="md"
+                      disabled={isLoadingIssuers}
+                      {...form.getInputProps('joinIssuerId')}
+                    />
                   )}
                 </>
               )}
 
-              {form.values.role === 'individual' && (
+              {form.values.role === 'holder' && (
                 <Select
-                  label="Join a University (Optional)"
-                  description="Request to join an existing university"
-                  placeholder={
-                    isLoadingUniversities ? 'Loading universities...' : 'Select a university'
-                  }
-                  data={universities.map(uni => ({
-                    value: uni.id,
-                    label: uni.displayName || uni.name,
+                  label="Join an Issuer (Optional)"
+                  description="Request to join an existing issuer"
+                  placeholder={isLoadingIssuers ? 'Loading issuers...' : 'Select an issuer'}
+                  data={issuers.map(issuer => ({
+                    value: issuer.id,
+                    label: `${issuer.name} (${issuer.shorthand})`,
                   }))}
                   searchable
                   clearable
                   mt="md"
-                  disabled={isLoadingUniversities}
-                  {...form.getInputProps('joinUniversityId')}
+                  disabled={isLoadingIssuers}
+                  {...form.getInputProps('joinIssuerId')}
                 />
               )}
 
@@ -422,6 +482,8 @@ const Register = () => {
           </Anchor>
         </Text>
       </Card>
+
+      <StatusIndicator position="bottom-right" />
     </Container>
   );
 };

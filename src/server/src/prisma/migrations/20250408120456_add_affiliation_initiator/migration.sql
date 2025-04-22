@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "Affiliation" ADD COLUMN     "initiatedBy" TEXT DEFAULT 'student';
+ALTER TABLE "Affiliation" ADD COLUMN     "initiatedBy" TEXT DEFAULT 'holder';
