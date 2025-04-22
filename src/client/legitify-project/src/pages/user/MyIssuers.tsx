@@ -59,6 +59,20 @@ export default function MyIssuers() {
   const holderJoinMutation = useHolderJoinIssuerMutation();
   const respondToAffiliationMutation = useRespondToAffiliationMutation();
 
+  // Function to generate a consistent color for each issuer based on its ID
+  const getIssuerColor = (issuerId: string) => {
+    // Array of Mantine color options to choose from
+    const colors = ['blue', 'cyan', 'grape', 'green', 'indigo', 'orange', 'pink', 'teal', 'violet'];
+
+    // Simple hash function to create a consistent index from the issuer ID
+    let hash = 0;
+    for (let i = 0; i < issuerId.length; i++) {
+      hash = (hash + issuerId.charCodeAt(i)) % colors.length;
+    }
+
+    return colors[hash];
+  };
+
   const openJoinModal = () => {
     modals.open({
       title: 'Request to Join Issuer',
@@ -81,27 +95,29 @@ export default function MyIssuers() {
     const [localSelectedIssuerId, setLocalSelectedIssuerId] = useState<string | null>(null);
 
     // Filter out issuers the user is already affiliated with
-    const filteredIssuers = availableIssuers.filter(uni => {
+    const filteredIssuers = availableIssuers.filter(issuer => {
       const alreadyAffiliatedIds = new Set([
         ...issuers.map(u => u.id),
         ...pendingAffiliations.map(aff => aff.issuerId),
       ]);
-      return !alreadyAffiliatedIds.has(uni.id);
+      return !alreadyAffiliatedIds.has(issuer.id);
     });
 
     return (
       <Stack>
         <Text size="sm" mb="md">
-          Select a issuer to request affiliation with. Your request will need to be approved by the
+          Select an issuer to request affiliation with. Your request will need to be approved by the
           issuer administrator.
         </Text>
 
         <Select
           label="Select Issuer"
-          placeholder={isLoadingAll ? 'Loading issuers...' : 'Choose a issuer'}
-          data={filteredIssuers.map(uni => ({
-            value: uni.id,
-            label: `${uni.displayName} (by ${uni.owner?.username || 'Unknown'})`,
+          placeholder={isLoadingAll ? 'Loading issuers...' : 'Choose an issuer'}
+          data={filteredIssuers.map(issuer => ({
+            value: issuer.id,
+            label: `${issuer.shorthand} - ${issuer.name} (by ${
+              issuer.owner?.username || 'Unknown'
+            })`,
           }))}
           value={localSelectedIssuerId}
           onChange={setLocalSelectedIssuerId}
@@ -159,6 +175,8 @@ export default function MyIssuers() {
   };
 
   const openDetailsModal = (issuer: Issuer) => {
+    const issuerColor = getIssuerColor(issuer.id);
+
     modals.open({
       title: '',
       size: 'lg',
@@ -177,7 +195,7 @@ export default function MyIssuers() {
         <Box>
           <Box
             p="lg"
-            bg="blue.6"
+            bg={`${issuerColor}.6`}
             style={{
               color: 'white',
               borderTopLeftRadius: 'var(--mantine-radius-md)',
@@ -189,16 +207,16 @@ export default function MyIssuers() {
                 {issuer.logoUrl ? (
                   <Avatar src={issuer.logoUrl} size={50} radius="md" bg="white" />
                 ) : (
-                  <ThemeIcon size={50} radius="md" variant="filled" color="blue.3">
+                  <ThemeIcon size={50} radius="md" variant="filled" color={`${issuerColor}.3`}>
                     <IconSchool size={30} color="white" />
                   </ThemeIcon>
                 )}
                 <Box>
                   <Text size="xl" fw={700} c="white">
-                    {issuer.displayName}
+                    {issuer.shorthand}
                   </Text>
                   <Badge
-                    color="blue.2"
+                    color={`${issuerColor}.2`}
                     size="sm"
                     variant="filled"
                     leftSection={<IconCheck size={14} />}
@@ -332,193 +350,202 @@ export default function MyIssuers() {
     }
   };
 
-  const renderIssuerCard = (issuer: Issuer) => (
-    <Grid.Col span={{ base: 12, sm: 6, md: 4 }} key={issuer.id}>
-      <Paper shadow="xs" p={0} radius="md" withBorder>
-        <Flex direction="column" h="100%">
-          <Box
-            bg="blue.6"
-            p="md"
-            style={{
-              borderTopLeftRadius: 'var(--mantine-radius-md)',
-              borderTopRightRadius: 'var(--mantine-radius-md)',
-            }}
-          >
-            <Flex gap="md" align="center">
-              {issuer.logoUrl ? (
-                <Avatar src={issuer.logoUrl} size={64} radius="md" bg="white" />
-              ) : (
-                <ThemeIcon size={64} radius="md" variant="filled" color="blue.3">
-                  <IconSchool size={40} color="white" />
-                </ThemeIcon>
-              )}
-              <Box>
-                <Text fw={700} size="lg" c="white" lh={1.3}>
-                  {issuer.displayName}
-                </Text>
-                <Badge variant="filled" size="sm" color="blue.8">
-                  Active Member
-                </Badge>
-              </Box>
-            </Flex>
-          </Box>
+  const renderIssuerCard = (issuer: Issuer) => {
+    const issuerColor = getIssuerColor(issuer.id);
 
-          <Stack p="md" style={{ flex: 1 }}>
-            <Text size="sm" lineClamp={2} style={{ flex: 1 }}>
-              {issuer.description || 'No description available.'}
-            </Text>
-
-            <Group gap="xs">
-              <Text size="sm" c="dimmed">
-                Admin: {issuer.owner?.username || 'Unknown admin'}
-              </Text>
-            </Group>
-          </Stack>
-
-          <Box p="md" pt={0}>
-            <Button
-              fullWidth
-              variant="light"
-              onClick={() => openDetailsModal(issuer)}
-              rightSection={<IconInfoCircle size={16} />}
+    return (
+      <Grid.Col span={{ base: 12, sm: 6, md: 4 }} key={issuer.id}>
+        <Paper shadow="xs" p={0} radius="md" withBorder>
+          <Flex direction="column" h="100%">
+            <Box
+              bg={`${issuerColor}.6`}
+              p="md"
+              style={{
+                borderTopLeftRadius: 'var(--mantine-radius-md)',
+                borderTopRightRadius: 'var(--mantine-radius-md)',
+              }}
             >
-              View Details
-            </Button>
-          </Box>
-        </Flex>
-      </Paper>
-    </Grid.Col>
-  );
-
-  const renderPendingAffiliationCard = (affiliation: any) => (
-    <Grid.Col span={{ base: 12, sm: 6, md: 4 }} key={affiliation.id}>
-      <Paper shadow="xs" p={0} radius="md" withBorder>
-        <Flex direction="column" h="100%">
-          <Box
-            bg="yellow.6"
-            p="md"
-            style={{
-              borderTopLeftRadius: 'var(--mantine-radius-md)',
-              borderTopRightRadius: 'var(--mantine-radius-md)',
-            }}
-          >
-            <Flex gap="md" align="center">
-              {affiliation.issuer.logoUrl ? (
-                <Avatar src={affiliation.issuer.logoUrl} size={64} radius="md" bg="white" />
-              ) : (
-                <ThemeIcon size={64} radius="md" variant="filled" color="yellow.3">
-                  <IconSchool size={40} color="white" />
-                </ThemeIcon>
-              )}
-              <Box>
-                <Text fw={700} size="lg" c="white" lh={1.3}>
-                  {affiliation.issuer.displayName}
-                </Text>
-                <Badge
-                  variant="filled"
-                  size="sm"
-                  color="yellow.8"
-                  leftSection={getStatusIcon(affiliation.status)}
-                >
-                  {affiliation.status.charAt(0).toUpperCase() + affiliation.status.slice(1)}
-                </Badge>
-              </Box>
-            </Flex>
-          </Box>
-
-          <Stack p="md" style={{ flex: 1 }}>
-            <Text size="sm" lineClamp={2} style={{ flex: 1 }}>
-              {affiliation.issuer.description || 'No description available.'}
-            </Text>
-
-            <Group gap="xs">
-              <IconCalendar size={16} stroke={1.5} />
-              <Text size="sm" c="dimmed">
-                Request Date: {new Date(affiliation.createdAt).toLocaleDateString()}
-              </Text>
-            </Group>
-          </Stack>
-
-          {affiliation.initiatedBy === 'issuer' && (
-            <Box p="md" pt={0}>
-              <Group gap="xs" grow>
-                <Button
-                  variant="light"
-                  color="green"
-                  radius="md"
-                  leftSection={<IconCheck size={16} />}
-                  onClick={async () => {
-                    try {
-                      await refreshSession();
-                      await respondToAffiliationMutation.mutateAsync({
-                        affiliationId: affiliation.id,
-                        accept: true,
-                      });
-                      notifications.show({
-                        title: 'Success',
-                        message: 'Invitation accepted successfully.',
-                        color: 'green',
-                      });
-                    } catch (err: any) {
-                      notifications.show({
-                        title: 'Error',
-                        message: err.message || 'Failed to accept invitation',
-                        color: 'red',
-                      });
-                    }
-                  }}
-                >
-                  Accept
-                </Button>
-                <Button
-                  variant="light"
-                  color="red"
-                  radius="md"
-                  leftSection={<IconX size={16} />}
-                  onClick={async () => {
-                    try {
-                      await refreshSession();
-                      await respondToAffiliationMutation.mutateAsync({
-                        affiliationId: affiliation.id,
-                        accept: false,
-                      });
-                      notifications.show({
-                        title: 'Success',
-                        message: 'Invitation rejected.',
-                        color: 'gray',
-                      });
-                    } catch (err: any) {
-                      notifications.show({
-                        title: 'Error',
-                        message: err.message || 'Failed to reject invitation',
-                        color: 'red',
-                      });
-                    }
-                  }}
-                >
-                  Reject
-                </Button>
-              </Group>
+              <Flex gap="md" align="center">
+                {issuer.logoUrl ? (
+                  <Avatar src={issuer.logoUrl} size={64} radius="md" bg="white" />
+                ) : (
+                  <ThemeIcon size={64} radius="md" variant="filled" color={`${issuerColor}.3`}>
+                    <IconSchool size={40} color="white" />
+                  </ThemeIcon>
+                )}
+                <Box>
+                  <Text fw={700} size="lg" c="white" lh={1.3}>
+                    {issuer.shorthand}
+                  </Text>
+                  <Badge variant="filled" size="sm" color={`${issuerColor}.8`}>
+                    Active Member
+                  </Badge>
+                </Box>
+              </Flex>
             </Box>
-          )}
 
-          {affiliation.initiatedBy === 'holder' && (
+            <Stack p="md" style={{ flex: 1 }}>
+              <Text size="sm" lineClamp={2} style={{ flex: 1 }}>
+                {issuer.description || 'No description available.'}
+              </Text>
+
+              <Group gap="xs">
+                <Text size="sm" c="dimmed">
+                  Admin: {issuer.owner?.username || 'Unknown admin'}
+                </Text>
+              </Group>
+            </Stack>
+
             <Box p="md" pt={0}>
               <Button
                 fullWidth
                 variant="light"
-                color="yellow"
-                disabled
-                leftSection={<IconClockHour4 size={16} />}
+                onClick={() => openDetailsModal(issuer)}
+                rightSection={<IconInfoCircle size={16} />}
               >
-                Awaiting Response
+                View Details
               </Button>
             </Box>
-          )}
-        </Flex>
-      </Paper>
-    </Grid.Col>
-  );
+          </Flex>
+        </Paper>
+      </Grid.Col>
+    );
+  };
+
+  const renderPendingAffiliationCard = (affiliation: any) => {
+    const issuerColor = getIssuerColor(affiliation.issuer.id);
+    const statusColor = affiliation.status === 'pending' ? 'yellow' : issuerColor;
+
+    return (
+      <Grid.Col span={{ base: 12, sm: 6, md: 4 }} key={affiliation.id}>
+        <Paper shadow="xs" p={0} radius="md" withBorder>
+          <Flex direction="column" h="100%">
+            <Box
+              bg={`${statusColor}.6`}
+              p="md"
+              style={{
+                borderTopLeftRadius: 'var(--mantine-radius-md)',
+                borderTopRightRadius: 'var(--mantine-radius-md)',
+              }}
+            >
+              <Flex gap="md" align="center">
+                {affiliation.issuer.logoUrl ? (
+                  <Avatar src={affiliation.issuer.logoUrl} size={64} radius="md" bg="white" />
+                ) : (
+                  <ThemeIcon size={64} radius="md" variant="filled" color={`${statusColor}.3`}>
+                    <IconSchool size={40} color="white" />
+                  </ThemeIcon>
+                )}
+                <Box>
+                  <Text fw={700} size="lg" c="white" lh={1.3}>
+                    {affiliation.issuer.shorthand}
+                  </Text>
+                  <Badge
+                    variant="filled"
+                    size="sm"
+                    color={`${statusColor}.8`}
+                    leftSection={getStatusIcon(affiliation.status)}
+                  >
+                    {affiliation.status.charAt(0).toUpperCase() + affiliation.status.slice(1)}
+                  </Badge>
+                </Box>
+              </Flex>
+            </Box>
+
+            <Stack p="md" style={{ flex: 1 }}>
+              <Text size="sm" lineClamp={2} style={{ flex: 1 }}>
+                {affiliation.issuer.description || 'No description available.'}
+              </Text>
+
+              <Group gap="xs">
+                <IconCalendar size={16} stroke={1.5} />
+                <Text size="sm" c="dimmed">
+                  Request Date: {new Date(affiliation.createdAt).toLocaleDateString()}
+                </Text>
+              </Group>
+            </Stack>
+
+            {affiliation.initiatedBy === 'issuer' && (
+              <Box p="md" pt={0}>
+                <Group gap="xs" grow>
+                  <Button
+                    variant="light"
+                    color="green"
+                    radius="md"
+                    leftSection={<IconCheck size={16} />}
+                    onClick={async () => {
+                      try {
+                        await refreshSession();
+                        await respondToAffiliationMutation.mutateAsync({
+                          affiliationId: affiliation.id,
+                          accept: true,
+                        });
+                        notifications.show({
+                          title: 'Success',
+                          message: 'Invitation accepted successfully.',
+                          color: 'green',
+                        });
+                      } catch (err: any) {
+                        notifications.show({
+                          title: 'Error',
+                          message: err.message || 'Failed to accept invitation',
+                          color: 'red',
+                        });
+                      }
+                    }}
+                  >
+                    Accept
+                  </Button>
+                  <Button
+                    variant="light"
+                    color="red"
+                    radius="md"
+                    leftSection={<IconX size={16} />}
+                    onClick={async () => {
+                      try {
+                        await refreshSession();
+                        await respondToAffiliationMutation.mutateAsync({
+                          affiliationId: affiliation.id,
+                          accept: false,
+                        });
+                        notifications.show({
+                          title: 'Success',
+                          message: 'Invitation rejected.',
+                          color: 'gray',
+                        });
+                      } catch (err: any) {
+                        notifications.show({
+                          title: 'Error',
+                          message: err.message || 'Failed to reject invitation',
+                          color: 'red',
+                        });
+                      }
+                    }}
+                  >
+                    Reject
+                  </Button>
+                </Group>
+              </Box>
+            )}
+
+            {affiliation.initiatedBy === 'holder' && (
+              <Box p="md" pt={0}>
+                <Button
+                  fullWidth
+                  variant="light"
+                  color="yellow"
+                  disabled
+                  leftSection={<IconClockHour4 size={16} />}
+                >
+                  Awaiting Response
+                </Button>
+              </Box>
+            )}
+          </Flex>
+        </Paper>
+      </Grid.Col>
+    );
+  };
 
   const isLoading =
     isLoadingIssuers ||
