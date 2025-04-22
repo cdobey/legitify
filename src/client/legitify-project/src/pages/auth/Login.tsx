@@ -25,6 +25,7 @@ const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    organization: '',
   });
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [error, setError] = useState('');
@@ -32,21 +33,22 @@ const Login = () => {
   const navigate = useNavigate();
   const { login, twoFactorState, verifyTwoFactor, clearTwoFactorState, user } = useAuth();
 
-  // Handle redirection when user is authenticated
-  useEffect(() => {
-    if (user && !twoFactorState.required) {
-      // Only navigate to home if user is authenticated and 2FA is not required
-      navigate('/');
-    }
-  }, [user, twoFactorState.required, navigate]);
+  const organizations = [
+    { value: 'Individual', label: 'Individual' },
+    { value: 'Employer', label: 'Employer' },
+    { value: 'University', label: 'University' },
+  ];
 
-  // Handle normal login
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
     try {
+      if (formData.organization) {
+        localStorage.setItem('selectedOrganization', formData.organization);
+      }
+      
       await login(formData.email, formData.password);
       // Don't navigate here - let the useEffect handle it
     } catch (err: any) {
@@ -181,6 +183,17 @@ const Login = () => {
             required
             mb="lg"
             className="accent-focus"
+          />
+          <Select
+            label="Organization"
+            placeholder="Select your organization"
+            leftSection={<IconBuilding size={16} />}
+            data={organizations}
+            value={formData.organization}
+            onChange={(value) => setFormData({ ...formData, organization: value || '' })}
+            required
+            mb="lg"
+            searchable
           />
 
           {error && (
