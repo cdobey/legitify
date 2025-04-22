@@ -312,44 +312,57 @@ ADD_HOLDER_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/issuer/add-holder" \
 }")
 echo "Add Holder Response: $ADD_HOLDER_RESPONSE"
 
+# Store whether the holder is already affiliated to use in the next step
+HOLDER_ALREADY_AFFILIATED=false
 if [[ "$ADD_HOLDER_RESPONSE" == *"error"* ]]; then
-    echo -e "${RED}Failed to add holder to issuer. Response: $ADD_HOLDER_RESPONSE${NC}"
-    exit 1
+    # Check if the error is because the holder is already affiliated
+    if [[ "$ADD_HOLDER_RESPONSE" == *"already affiliated"* ]]; then
+        echo -e "${YELLOW}Holder is already affiliated with this issuer, continuing...${NC}"
+        HOLDER_ALREADY_AFFILIATED=true
+    else
+        echo -e "${RED}Failed to add holder to issuer. Response: $ADD_HOLDER_RESPONSE${NC}"
+        exit 1
+    fi
 fi
 
 wait_a_bit
 
 echo -e "\n${BLUE}2c. Holder approves the issuer affiliation request...${NC}"
-# First get the affiliations to find the affiliation ID
-PENDING_AFFILIATIONS_RESPONSE=$(curl -s -X GET "$LEGITIFY_API_URL/issuer/pending-affiliations" \
--H "Authorization: Bearer $HOLDER_TOKEN")
-echo "Pending Affiliations Response: $PENDING_AFFILIATIONS_RESPONSE"
-
-# Extract the affiliation ID from the response
-AFFILIATION_ID=$(echo $PENDING_AFFILIATIONS_RESPONSE | grep -o '"id":"[^"]*' | head -1 | grep -o '[^"]*$')
-echo "Affiliation ID: $AFFILIATION_ID"
-
-# Approve the affiliation
-if [ -n "$AFFILIATION_ID" ]; then
-  APPROVE_AFFILIATION_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/issuer/respond-affiliation" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $HOLDER_TOKEN" \
-  -d "{
-      \"affiliationId\": \"$AFFILIATION_ID\",
-      \"accept\": true
-  }")
-  echo "Approve Affiliation Response: $APPROVE_AFFILIATION_RESPONSE"
-  
-  # Check if there was an error in the approval
-  if [[ "$APPROVE_AFFILIATION_RESPONSE" == *"error"* ]]; then
-    echo -e "${RED}Failed to approve affiliation: $APPROVE_AFFILIATION_RESPONSE${NC}"
-    exit 1
-  else
-    echo -e "${GREEN}Affiliation successfully approved!${NC}"
-  fi
+# Skip the approval process if the holder is already affiliated
+if [ "$HOLDER_ALREADY_AFFILIATED" = true ]; then
+    echo -e "${YELLOW}Holder is already affiliated, skipping approval step...${NC}"
 else
-  echo -e "${RED}No pending affiliation found, the issuer might not have added the holder yet${NC}"
-  exit 1
+    # First get the affiliations to find the affiliation ID
+    PENDING_AFFILIATIONS_RESPONSE=$(curl -s -X GET "$LEGITIFY_API_URL/issuer/pending-affiliations" \
+    -H "Authorization: Bearer $HOLDER_TOKEN")
+    echo "Pending Affiliations Response: $PENDING_AFFILIATIONS_RESPONSE"
+
+    # Extract the affiliation ID from the response
+    AFFILIATION_ID=$(echo $PENDING_AFFILIATIONS_RESPONSE | grep -o '"id":"[^"]*' | head -1 | grep -o '[^"]*$')
+    echo "Affiliation ID: $AFFILIATION_ID"
+
+    # Approve the affiliation
+    if [ -n "$AFFILIATION_ID" ]; then
+      APPROVE_AFFILIATION_RESPONSE=$(curl -s -X POST "$LEGITIFY_API_URL/issuer/respond-affiliation" \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer $HOLDER_TOKEN" \
+      -d "{
+          \"affiliationId\": \"$AFFILIATION_ID\",
+          \"accept\": true
+      }")
+      echo "Approve Affiliation Response: $APPROVE_AFFILIATION_RESPONSE"
+      
+      # Check if there was an error in the approval
+      if [[ "$APPROVE_AFFILIATION_RESPONSE" == *"error"* ]]; then
+        echo -e "${RED}Failed to approve affiliation: $APPROVE_AFFILIATION_RESPONSE${NC}"
+        exit 1
+      else
+        echo -e "${GREEN}Affiliation successfully approved!${NC}"
+      fi
+    else
+      echo -e "${RED}No pending affiliation found, the issuer might not have added the holder yet${NC}"
+      exit 1
+    fi
 fi
 
 wait_a_bit

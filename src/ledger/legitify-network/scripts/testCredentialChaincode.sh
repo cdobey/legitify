@@ -264,7 +264,7 @@ sleep 2
 
 # 2.3: Try to retrieve issuer records
 echo -e "\n${YELLOW}Getting issuer records${NC}"
-ISSUER_RECORDS=$(query_chaincode "GetIssuerCredentials" "\"$ISSUER_ID\"")
+ISSUER_RECORDS=$(query_chaincode "GetIssuerCredentials" "\"$ISSUER_ORG_ID\"")
 echo "Issuer records: $ISSUER_RECORDS"
 
 # Simplified check for issuer records - just check if it contains array markers and the credential ID
