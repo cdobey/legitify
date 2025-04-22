@@ -1,5 +1,6 @@
 import '@mantine/core/styles.css';
 import { Notifications } from '@mantine/notifications';
+import '@mantine/notifications/styles.css';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import React from 'react';
@@ -31,7 +32,7 @@ root.render(
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <ModalsProvider>
-          <Notifications />
+          <Notifications position="bottom-right" zIndex={9999} />
           <BrowserRouter>
             <StatusProvider>
               <AuthProvider>

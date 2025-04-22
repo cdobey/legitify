@@ -1407,3 +1407,148 @@ button.accent-orange:hover {
   font-size: var(--mantine-font-size-sm);
   font-weight: 500;
 }
+
+/* Notification Styling */
+.mantine-Notifications-root {
+  position: fixed !important;
+  bottom: 16px !important;
+  right: 16px !important;
+  top: unset !important;
+  left: unset !important;
+  z-index: 9999;
+  max-width: 400px;
+}
+
+.mantine-Notification-root {
+  box-shadow: var(--shadow-md);
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  backdrop-filter: blur(10px);
+  animation: notification-slide-right 0.3s ease-out;
+}
+
+[data-theme='dark'] .mantine-Notification-root {
+  background-color: #323642;
+  border-color: #3f4356;
+}
+
+/* Success notification */
+.mantine-Notification-root[data-type='success'] {
+  background-color: rgba(21, 226, 181, 0.15);
+  border-color: rgba(21, 226, 181, 0.3);
+}
+
+[data-theme='dark'] .mantine-Notification-root[data-type='success'] {
+  background-color: rgba(21, 226, 181, 0.15);
+  border-color: rgba(21, 226, 181, 0.3);
+}
+
+/* Error notification */
+.mantine-Notification-root[data-type='error'] {
+  background-color: rgba(255, 71, 87, 0.15);
+  border-color: rgba(255, 71, 87, 0.3);
+}
+
+[data-theme='dark'] .mantine-Notification-root[data-type='error'] {
+  background-color: rgba(255, 71, 87, 0.15);
+  border-color: rgba(255, 71, 87, 0.3);
+}
+
+/* Warning notification */
+.mantine-Notification-root[data-type='warning'] {
+  background-color: rgba(255, 153, 19, 0.15);
+  border-color: rgba(255, 153, 19, 0.3);
+}
+
+[data-theme='dark'] .mantine-Notification-root[data-type='warning'] {
+  background-color: rgba(255, 153, 19, 0.15);
+  border-color: rgba(255, 153, 19, 0.3);
+}
+
+/* Info notification */
+.mantine-Notification-root[data-type='info'] {
+  background-color: rgba(44, 166, 211, 0.15);
+  border-color: rgba(44, 166, 211, 0.3);
+}
+
+[data-theme='dark'] .mantine-Notification-root[data-type='info'] {
+  background-color: rgba(44, 166, 211, 0.15);
+  border-color: rgba(44, 166, 211, 0.3);
+}
+
+/* Default notification */
+.mantine-Notification-root[data-type='default'] {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-color: var(--border-light);
+}
+
+[data-theme='dark'] .mantine-Notification-root[data-type='default'] {
+  background-color: rgba(50, 54, 66, 0.95);
+  border-color: #3f4356;
+}
+
+/* Notification title */
+.mantine-Notification-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--text-dark);
+}
+
+[data-theme='dark'] .mantine-Notification-title {
+  color: #e9ecef;
+}
+
+/* Notification description */
+.mantine-Notification-description {
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+[data-theme='dark'] .mantine-Notification-description {
+  color: #a0aec0;
+}
+
+/* Notification close button */
+.mantine-Notification-closeButton {
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.mantine-Notification-closeButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--text-dark);
+}
+
+[data-theme='dark'] .mantine-Notification-closeButton:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #e9ecef;
+}
+
+/* Notification slide-in animation */
+@keyframes notification-slide-right {
+  from {
+    transform: translateX(100%) translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Notification icon colors */
+.mantine-Notification-root[data-type='success'] .mantine-Notification-icon {
+  color: var(--accent-teal);
+}
+
+.mantine-Notification-root[data-type='error'] .mantine-Notification-icon {
+  color: #ff4757;
+}
+
+.mantine-Notification-root[data-type='warning'] .mantine-Notification-icon {
+  color: var(--accent-orange);
+}
+
+.mantine-Notification-root[data-type='info'] .mantine-Notification-icon {
+  color: var(--primary-blue);
+}
