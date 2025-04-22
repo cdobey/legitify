@@ -61,11 +61,15 @@ export interface TwoFactorSetupResponse {
 export interface Issuer {
   id: string;
   name: string;
-  displayName: string;
+  shorthand: string; // Changed from displayName to match backend
   description?: string;
   logoUrl?: string;
   ownerId: string;
   issuerType?: string;
+  country?: string;
+  address?: string;
+  website?: string;
+  foundedYear?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -82,8 +86,11 @@ export interface Credential {
   title: string;
   description?: string;
   status: CredentialStatus;
-  issuanceDate: string;
+  ledgerTimestamp?: string; // Renamed from issuanceDate to match backend
+  achievementDate?: string;
   expirationDate?: string;
+  programLength?: string; // Added to match backend
+  domain?: string; // Added to match backend
   attributes?: Record<string, any>;
   createdAt: string;
   updatedAt: string;

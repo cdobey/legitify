@@ -13,9 +13,11 @@ import {
   Container,
   Divider,
   FileButton,
+  Grid,
   Group,
   Image,
   Modal,
+  NumberInput,
   Paper,
   PasswordInput,
   SimpleGrid,
@@ -23,7 +25,9 @@ import {
   Tabs,
   Text,
   TextInput,
+  Textarea,
   Title,
+  rem,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useDisclosure } from '@mantine/hooks';
@@ -31,22 +35,26 @@ import { notifications } from '@mantine/notifications';
 import {
   IconAlertCircle,
   IconBadge,
+  IconBuilding,
   IconCheck,
   IconCloudUpload,
+  IconCreditCard,
   IconFingerprint,
   IconLock,
   IconMoonStars,
+  IconPencil,
   IconPhoto,
   IconShield,
   IconSun,
   IconTrash,
   IconUser,
   IconUserCircle,
+  IconWorld,
 } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
 import {
-  useAccessibleCredentialsQuery,
   useAccessRequestsQuery,
+  useAccessibleCredentialsQuery,
   useLedgerRecordsQuery,
   useMyCredentialsQuery,
 } from '../api/credentials/credential.queries';
@@ -66,9 +74,8 @@ import StatCard from './StatCard';
 export default function SettingsPage() {
   const { user, refreshUser } = useAuth();
   const { isDarkMode, setLightTheme, setDarkTheme } = useTheme();
-  const [loading, setLoading] = useState(false);
-  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [profilePictureFile, setProfilePictureFile] = useState<File | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [logoModalOpened, { open: openLogoModal, close: closeLogoModal }] = useDisclosure(false);
@@ -76,16 +83,6 @@ export default function SettingsPage() {
     profilePictureModalOpened,
     { open: openProfilePictureModal, close: closeProfilePictureModal },
   ] = useDisclosure(false);
-
-  const openProfilePictureModalWithCurrentImage = () => {
-    if (user?.profilePictureUrl) {
-    }
-    openProfilePictureModal();
-  };
-
-  const openLogoModalWithCurrentImage = () => {
-    openLogoModal();
-  };
 
   // 2FA states
   const [twoFactorSetupOpened, { open: openTwoFactorSetup, close: closeTwoFactorSetup }] =
@@ -95,12 +92,15 @@ export default function SettingsPage() {
   const [twoFactorVerificationCode, setTwoFactorVerificationCode] = useState('');
   const [twoFactorDisableCode, setTwoFactorDisableCode] = useState('');
 
+  // Issuer editing state
+  const [isEditingIssuer, setIsEditingIssuer] = useState(false);
+
   const { data: userCredentials } = useMyCredentialsQuery({ enabled: user?.role === 'holder' });
   const { data: accessRequests } = useAccessRequestsQuery({ enabled: user?.role === 'holder' });
   const { data: ledgerRecords } = useLedgerRecordsQuery({
     enabled: user?.role === 'issuer',
   });
-  const { data: issuers } = useMyIssuersQuery({
+  const { data: issuers, refetch: refetchIssuers } = useMyIssuersQuery({
     enabled: user?.role === 'issuer',
   });
   const { data: accessibleCredentials } = useAccessibleCredentialsQuery({
@@ -124,15 +124,31 @@ export default function SettingsPage() {
   const pendingAccessRequestsCount =
     accessRequests?.filter(request => request.status === 'pending').length ?? 0;
 
-  // Profile form
+  // Enhanced profile form with all user editable fields
   const profileForm = useForm({
     initialValues: {
       username: user?.username || '',
       email: user?.email || '',
+      firstName: user?.firstName || '',
+      lastName: user?.lastName || '',
+      country: user?.country || '',
     },
     validate: {
       username: value => (value.length < 2 ? 'Username must be at least 2 characters' : null),
       email: value => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
+    },
+  });
+
+  // Issuer form with all editable fields
+  const issuerForm = useForm({
+    initialValues: {
+      name: issuer?.name || '',
+      shorthand: issuer?.shorthand || '',
+      description: issuer?.description || '',
+      country: issuer?.country || '',
+      address: issuer?.address || '',
+      website: issuer?.website || '',
+      foundedYear: issuer?.foundedYear || undefined,
     },
   });
 
@@ -158,19 +174,53 @@ export default function SettingsPage() {
       profileForm.setValues({
         username: user.username,
         email: user.email,
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        country: user.country || '',
       });
     }
   }, [user]);
 
-  // Handle profile update
+  // Effect to reset issuer form when issuer data changes
+  useEffect(() => {
+    if (issuer) {
+      issuerForm.setValues({
+        name: issuer.name,
+        shorthand: issuer.shorthand,
+        description: issuer.description || '',
+        country: issuer.country || '',
+        address: issuer.address || '',
+        website: issuer.website || '',
+        foundedYear: issuer.foundedYear,
+      });
+    }
+  }, [issuer]);
+
+  // Handle profile update with all fields
   const handleProfileUpdate = async (values: typeof profileForm.values) => {
     // Only submit changed values
-    const changedValues: { username?: string; email?: string } = {};
+    const changedValues: {
+      username?: string;
+      email?: string;
+      firstName?: string;
+      lastName?: string;
+      country?: string;
+    } = {};
+
     if (values.username !== user?.username) {
       changedValues.username = values.username;
     }
     if (values.email !== user?.email) {
       changedValues.email = values.email;
+    }
+    if (values.firstName !== user?.firstName) {
+      changedValues.firstName = values.firstName;
+    }
+    if (values.lastName !== user?.lastName) {
+      changedValues.lastName = values.lastName;
+    }
+    if (values.country !== user?.country) {
+      changedValues.country = values.country;
     }
 
     if (Object.keys(changedValues).length === 0) {
@@ -182,15 +232,29 @@ export default function SettingsPage() {
       return;
     }
 
+    setSuccess(null);
+    setError(null);
+
     try {
       await updateProfileMutation.mutateAsync(changedValues);
+
+      // Display a persistent success message in the page
+      setSuccess('Profile updated successfully');
+
+      // Also show a notification
       notifications.show({
         title: 'Profile Updated',
         message: 'Your profile information has been updated successfully.',
         color: 'green',
         icon: <IconCheck size={16} />,
+        autoClose: 3000,
       });
+
+      await refreshUser();
     } catch (error: any) {
+      // Display a persistent error message in the page
+      setError(error.message || 'Failed to update profile. Please try again.');
+
       notifications.show({
         title: 'Update Failed',
         message: error.message || 'Failed to update profile. Please try again.',
@@ -198,6 +262,18 @@ export default function SettingsPage() {
         icon: <IconAlertCircle size={16} />,
       });
     }
+  };
+
+  // Handle issuer update
+  const handleIssuerUpdate = async (values: typeof issuerForm.values) => {
+    // In a real implementation, you would have a mutation to update issuer details
+    // For now, we'll just show a notification
+    notifications.show({
+      title: 'Issuer Update',
+      message: 'Issuer update functionality will be implemented soon.',
+      color: 'blue',
+    });
+    setIsEditingIssuer(false);
   };
 
   // Handle password change
@@ -257,9 +333,17 @@ export default function SettingsPage() {
         logoFile,
       });
 
+      notifications.show({
+        title: 'Success',
+        message: 'Issuer logo uploaded successfully',
+        color: 'green',
+        icon: <IconCheck size={16} />,
+      });
+
       setSuccess('Issuer logo uploaded successfully');
       setLogoFile(null);
       closeLogoModal();
+      refetchIssuers();
     } catch (err: any) {
       console.error('Failed to upload logo:', err);
       setError(err.message || 'Failed to upload issuer logo');
@@ -290,6 +374,7 @@ export default function SettingsPage() {
         icon: <IconCheck size={16} />,
       });
       setSuccess('Issuer logo deleted successfully');
+      refetchIssuers();
     } catch (err: any) {
       console.error('Failed to delete logo:', err);
       setError(err.message || 'Failed to delete issuer logo');
@@ -324,7 +409,15 @@ export default function SettingsPage() {
         return;
       }
 
-      const updatedUser = await uploadProfilePictureMutation.mutateAsync(profilePictureFile);
+      await uploadProfilePictureMutation.mutateAsync(profilePictureFile);
+
+      notifications.show({
+        title: 'Success',
+        message: 'Profile picture uploaded successfully',
+        color: 'green',
+        icon: <IconCheck size={16} />,
+      });
+
       setSuccess('Profile picture uploaded successfully');
       setProfilePictureFile(null);
       closeProfilePictureModal();
@@ -404,6 +497,13 @@ export default function SettingsPage() {
         token: twoFactorVerificationCode,
       });
 
+      notifications.show({
+        title: 'Success',
+        message: 'Two-factor authentication has been enabled successfully',
+        color: 'green',
+        icon: <IconCheck size={16} />,
+      });
+
       setSuccess('Two-factor authentication has been enabled successfully');
       closeTwoFactorSetup();
       setTwoFactorQrCode(null);
@@ -421,6 +521,13 @@ export default function SettingsPage() {
     try {
       await disableTwoFactorMutation.mutateAsync({
         token: twoFactorDisableCode,
+      });
+
+      notifications.show({
+        title: 'Success',
+        message: 'Two-factor authentication has been disabled successfully',
+        color: 'green',
+        icon: <IconCheck size={16} />,
       });
 
       setSuccess('Two-factor authentication has been disabled successfully');
@@ -448,7 +555,7 @@ export default function SettingsPage() {
 
     return (
       <Stack gap="md">
-        <Title order={4}>Issuer Logo</Title>
+        <Title order={4}>Organization Branding</Title>
         <Group align="flex-start" wrap="nowrap">
           {issuer.logoUrl ? (
             <Card withBorder p="xs" style={{ width: '150px', height: '150px' }}>
@@ -465,7 +572,7 @@ export default function SettingsPage() {
               >
                 <Image
                   src={issuer.logoUrl}
-                  alt={`${issuer.displayName} logo`}
+                  alt={`${issuer.shorthand} logo`}
                   fit="contain"
                   height={100}
                   style={{
@@ -481,7 +588,7 @@ export default function SettingsPage() {
                   variant="light"
                   size="xs"
                   leftSection={<IconCloudUpload size={14} />}
-                  onClick={openLogoModalWithCurrentImage}
+                  onClick={openLogoModal}
                   style={{ padding: '0 8px', height: '24px' }}
                 >
                   Update
@@ -518,7 +625,7 @@ export default function SettingsPage() {
                   variant="light"
                   size="xs"
                   leftSection={<IconCloudUpload size={14} />}
-                  onClick={openLogoModalWithCurrentImage}
+                  onClick={openLogoModal}
                 >
                   Upload Logo
                 </Button>
@@ -528,7 +635,8 @@ export default function SettingsPage() {
 
           <Stack style={{ flex: 1 }} gap="xs">
             <Text size="sm">
-              Upload your issuer logo to enhance your branding on certificates and profiles.
+              Upload your organization logo to enhance your branding on credentials and your
+              profile.
             </Text>
             <Text size="xs" c="dimmed">
               The logo should be square and less than 2MB in size. Supported formats: JPEG, PNG,
@@ -536,6 +644,161 @@ export default function SettingsPage() {
             </Text>
           </Stack>
         </Group>
+      </Stack>
+    );
+  };
+
+  // Render issuer details - either for viewing or editing
+  const renderIssuerDetails = () => {
+    if (!issuer) return null;
+
+    if (isEditingIssuer) {
+      return (
+        <form onSubmit={issuerForm.onSubmit(handleIssuerUpdate)}>
+          <Stack gap="md">
+            <Title order={4}>Organization Details</Title>
+
+            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+              <TextInput
+                label="Organization Name"
+                placeholder="Full organization name"
+                {...issuerForm.getInputProps('name')}
+                required
+              />
+
+              <TextInput
+                label="Shorthand/Acronym"
+                placeholder="Short name or acronym (e.g., MIT)"
+                {...issuerForm.getInputProps('shorthand')}
+                required
+              />
+            </SimpleGrid>
+
+            <Textarea
+              label="Description"
+              placeholder="Brief description of your organization"
+              {...issuerForm.getInputProps('description')}
+              minRows={3}
+            />
+
+            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+              <TextInput
+                label="Country"
+                placeholder="Country of registration"
+                {...issuerForm.getInputProps('country')}
+                leftSection={<IconWorld size={16} />}
+              />
+
+              <TextInput
+                label="Address"
+                placeholder="Main office address"
+                {...issuerForm.getInputProps('address')}
+                leftSection={<IconBuilding size={16} />}
+              />
+
+              <TextInput
+                label="Website"
+                placeholder="Official website URL"
+                {...issuerForm.getInputProps('website')}
+                type="url"
+              />
+
+              <NumberInput
+                label="Founded Year"
+                placeholder="Year the organization was founded"
+                {...issuerForm.getInputProps('foundedYear')}
+                min={1000}
+                max={new Date().getFullYear()}
+              />
+            </SimpleGrid>
+
+            <Group justify="flex-end" mt="md">
+              <Button variant="light" onClick={() => setIsEditingIssuer(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Save Changes</Button>
+            </Group>
+          </Stack>
+        </form>
+      );
+    }
+
+    return (
+      <Stack gap="md">
+        <Group justify="apart">
+          <Title order={4}>Organization Details</Title>
+          <Button
+            variant="light"
+            leftSection={<IconPencil size={16} />}
+            onClick={() => setIsEditingIssuer(true)}
+          >
+            Edit Details
+          </Button>
+        </Group>
+
+        <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+          <Stack gap="xs">
+            <Text fw={500} size="sm">
+              Organization Name
+            </Text>
+            <Text>{issuer.name}</Text>
+          </Stack>
+
+          <Stack gap="xs">
+            <Text fw={500} size="sm">
+              Shorthand/Acronym
+            </Text>
+            <Text>{issuer.shorthand}</Text>
+          </Stack>
+
+          <Grid.Col span={2}>
+            <Stack gap="xs">
+              <Text fw={500} size="sm">
+                Description
+              </Text>
+              <Text>{issuer.description || 'No description provided'}</Text>
+            </Stack>
+          </Grid.Col>
+
+          <Stack gap="xs">
+            <Text fw={500} size="sm">
+              Country
+            </Text>
+            <Text>{issuer.country || 'Not specified'}</Text>
+          </Stack>
+
+          <Stack gap="xs">
+            <Text fw={500} size="sm">
+              Address
+            </Text>
+            <Text>{issuer.address || 'Not specified'}</Text>
+          </Stack>
+
+          <Stack gap="xs">
+            <Text fw={500} size="sm">
+              Website
+            </Text>
+            {issuer.website ? (
+              <Text
+                component="a"
+                href={issuer.website}
+                target="_blank"
+                style={{ textDecoration: 'underline' }}
+              >
+                {issuer.website}
+              </Text>
+            ) : (
+              <Text>Not specified</Text>
+            )}
+          </Stack>
+
+          <Stack gap="xs">
+            <Text fw={500} size="sm">
+              Founded
+            </Text>
+            <Text>{issuer.foundedYear || 'Not specified'}</Text>
+          </Stack>
+        </SimpleGrid>
       </Stack>
     );
   };
@@ -574,7 +837,9 @@ export default function SettingsPage() {
               />
               <StatCard
                 title="Last Activity"
-                value={credentialCount > 0 ? formatDate(ledgerRecords?.[0]?.issuedAt) : 'N/A'}
+                value={
+                  credentialCount > 0 ? formatDate(ledgerRecords?.[0]?.ledgerTimestamp) : 'N/A'
+                }
                 icon={<IconUser size={24} />}
                 isDate
               />
@@ -592,14 +857,14 @@ export default function SettingsPage() {
             <Title order={4}>Verifier Overview</Title>
             <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
               <StatCard
-                title="Unique Holders"
+                title="Credential Holders"
                 value={uniqueHolders.toString()}
                 icon={<IconUser size={24} />}
               />
               <StatCard
                 title="Accessible Credentials"
                 value={accessibleCredentialsCount.toString()}
-                icon={<IconBadge size={24} />}
+                icon={<IconCreditCard size={24} />}
               />
             </SimpleGrid>
           </Stack>
@@ -622,58 +887,79 @@ export default function SettingsPage() {
   return (
     <Container size="lg" py="xl">
       {error && (
-        <Alert color="red" icon={<IconAlertCircle size="1rem" />} mb="lg">
+        <Alert
+          color="red"
+          icon={<IconAlertCircle size={rem(16)} />}
+          mb="lg"
+          withCloseButton
+          onClose={() => setError(null)}
+        >
           {error}
         </Alert>
       )}
 
       {success && (
-        <Alert color="green" icon={<IconCheck size="1rem" />} mb="lg">
+        <Alert
+          color="green"
+          icon={<IconCheck size={rem(16)} />}
+          mb="lg"
+          withCloseButton
+          onClose={() => setSuccess(null)}
+        >
           {success}
         </Alert>
       )}
 
-      <Group align="center" mb="xl">
-        {user.profilePictureUrl ? (
-          <Avatar
-            size={90}
-            radius="50%"
-            src={user.profilePictureUrl}
-            alt={`${user.username}'s avatar`}
-          />
-        ) : (
-          <Avatar size={90} color="primaryBlue" radius="50%">
-            {user.username.charAt(0).toUpperCase()}
-          </Avatar>
-        )}
-        <Stack gap="xs" style={{ flexGrow: 1 }}>
-          <Title order={3}>{user.username}</Title>
-          <Text c="dimmed">{user.email}</Text>
-          <Group mt="xs" gap="xs">
-            <Badge color="primaryBlue" variant="light">
-              {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-            </Badge>
-            <Badge color="teal" variant="light">
-              {user.orgName}
-            </Badge>
-          </Group>
-        </Stack>
-      </Group>
+      <Card shadow="sm" withBorder mb="xl" p="md">
+        <Group align="center" wrap="nowrap">
+          {user.profilePictureUrl ? (
+            <Avatar
+              size={90}
+              radius="50%"
+              src={user.profilePictureUrl}
+              alt={`${user.username}'s avatar`}
+            />
+          ) : (
+            <Avatar size={90} color="primaryBlue" radius="50%">
+              {user.username.charAt(0).toUpperCase()}
+            </Avatar>
+          )}
+          <Stack gap="xs" style={{ flexGrow: 1 }}>
+            <div>
+              <Title order={3}>{user.username}</Title>
+              <Text c="dimmed">{user.email}</Text>
+            </div>
+            <Group mt="xs" gap="xs">
+              <Badge color="primaryBlue" variant="light" size="lg">
+                {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+              </Badge>
+              <Badge color="teal" variant="light" size="lg">
+                {user.orgName}
+              </Badge>
+              {user.twoFactorEnabled && (
+                <Badge color="green" variant="light" size="lg">
+                  2FA Enabled
+                </Badge>
+              )}
+            </Group>
+          </Stack>
+        </Group>
+      </Card>
 
-      <Tabs defaultValue="profile">
+      <Tabs defaultValue="profile" variant="outline">
         <Tabs.List mb="md">
-          <Tabs.Tab value="profile" leftSection={<IconUserCircle size="0.8rem" />}>
+          <Tabs.Tab value="profile" leftSection={<IconUserCircle size={16} />}>
             Profile
           </Tabs.Tab>
-          <Tabs.Tab value="security" leftSection={<IconShield size="0.8rem" />}>
+          <Tabs.Tab value="security" leftSection={<IconShield size={16} />}>
             Security
           </Tabs.Tab>
-          <Tabs.Tab value="preferences" leftSection={<IconSun size="0.8rem" />}>
-            Preferences
+          <Tabs.Tab value="preferences" leftSection={<IconSun size={16} />}>
+            Appearance
           </Tabs.Tab>
           {user.role === 'issuer' && (
-            <Tabs.Tab value="issuer" leftSection={<IconBadge size="0.8rem" />}>
-              Issuer
+            <Tabs.Tab value="issuer" leftSection={<IconBuilding size={16} />}>
+              Organization
             </Tabs.Tab>
           )}
         </Tabs.List>
@@ -689,92 +975,59 @@ export default function SettingsPage() {
                 <Title order={4}>Profile Picture</Title>
                 <Group align="flex-start" wrap="nowrap">
                   {user.profilePictureUrl ? (
-                    <Card withBorder p="xs" style={{ width: '150px', height: '150px' }}>
-                      <Box
-                        style={{
-                          height: '100px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          position: 'relative',
-                          overflow: 'hidden',
-                        }}
-                        mb="xs"
-                      >
+                    <Card withBorder p="md" style={{ width: '150px', height: '150px' }}>
+                      <Stack align="center" justify="center" style={{ height: '100%' }}>
                         <Avatar
                           size={90}
                           radius="50%"
                           src={user.profilePictureUrl}
                           alt={`${user.username}'s avatar`}
-                          style={{
-                            minWidth: '90px',
-                            minHeight: '90px',
-                            maxWidth: '90px',
-                            maxHeight: '90px',
-                            objectFit: 'cover',
-                          }}
                         />
-                      </Box>
-                      <Group justify="center" style={{ height: '24px' }}>
-                        <Button
-                          variant="light"
-                          size="xs"
-                          leftSection={<IconCloudUpload size={14} />}
-                          onClick={openProfilePictureModalWithCurrentImage}
-                          style={{ padding: '0 8px', height: '24px' }}
-                        >
-                          Update
-                        </Button>
-                        <Button
-                          variant="light"
-                          color="red"
-                          size="xs"
-                          leftSection={<IconTrash size={14} />}
-                          onClick={handleProfilePictureDelete}
-                          loading={deleteProfilePictureMutation.isPending}
-                          disabled={deleteProfilePictureMutation.isPending}
-                          style={{ padding: '0 8px', height: '24px' }}
-                        >
-                          {deleteProfilePictureMutation.isPending ? 'Removing...' : 'Remove'}
-                        </Button>
-                      </Group>
+                      </Stack>
                     </Card>
                   ) : (
-                    <Card withBorder p="xs" style={{ width: '150px', height: '150px' }}>
-                      <Box
-                        style={{
-                          height: '100px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                        mb="xs"
-                      >
+                    <Card withBorder p="md" style={{ width: '150px', height: '150px' }}>
+                      <Stack align="center" justify="center" style={{ height: '100%' }}>
                         <Avatar size={90} color="primaryBlue" radius="50%">
                           {user.username.charAt(0).toUpperCase()}
                         </Avatar>
-                      </Box>
-                      <Group justify="center">
-                        <Button
-                          variant="light"
-                          size="xs"
-                          leftSection={<IconCloudUpload size={14} />}
-                          onClick={openProfilePictureModalWithCurrentImage}
-                        >
-                          Upload
-                        </Button>
-                      </Group>
+                      </Stack>
                     </Card>
                   )}
 
-                  <Stack style={{ flex: 1 }} gap="xs">
-                    <Text size="sm">
-                      Your profile picture will be displayed on your profile and in communications.
-                    </Text>
-                    <Text size="xs" c="dimmed">
-                      The image should be square and less than 2MB in size. Supported formats: JPEG,
-                      PNG, GIF, WEBP.
-                    </Text>
+                  <Stack style={{ flex: 1 }} gap="md">
+                    <div>
+                      <Text>
+                        Your profile picture will be displayed on your profile and in
+                        communications.
+                      </Text>
+                      <Text size="sm" c="dimmed">
+                        Upload a clear, professional image to help others recognize you. The image
+                        should be square and less than 2MB in size.
+                      </Text>
+                    </div>
+
+                    <Group>
+                      <Button
+                        variant="light"
+                        leftSection={<IconCloudUpload size={16} />}
+                        onClick={openProfilePictureModal}
+                      >
+                        {user.profilePictureUrl ? 'Change Picture' : 'Upload Picture'}
+                      </Button>
+
+                      {user.profilePictureUrl && (
+                        <Button
+                          variant="light"
+                          color="red"
+                          leftSection={<IconTrash size={16} />}
+                          onClick={handleProfilePictureDelete}
+                          loading={deleteProfilePictureMutation.isPending}
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </Group>
                   </Stack>
                 </Group>
               </Stack>
@@ -783,27 +1036,82 @@ export default function SettingsPage() {
 
               <form onSubmit={profileForm.onSubmit(handleProfileUpdate)}>
                 <Stack gap="md">
-                  <Title order={4}>Profile Information</Title>
+                  <Title order={4}>Personal Information</Title>
+
+                  <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                    <TextInput
+                      label="Username"
+                      placeholder="Your username"
+                      leftSection={<IconUser size={16} />}
+                      {...profileForm.getInputProps('username')}
+                    />
+                    <div>
+                      <TextInput
+                        label={
+                          <Group gap={5} style={{ flexWrap: 'nowrap' }}>
+                            <span>Email Address</span>
+                            <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
+                              (Cannot be changed)
+                            </Text>
+                          </Group>
+                        }
+                        placeholder="Your email"
+                        {...profileForm.getInputProps('email')}
+                        disabled
+                      />
+                    </div>
+                  </SimpleGrid>
+
+                  <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                    <TextInput
+                      label="First Name"
+                      placeholder="Your first name"
+                      {...profileForm.getInputProps('firstName')}
+                    />
+                    <TextInput
+                      label="Last Name"
+                      placeholder="Your last name"
+                      {...profileForm.getInputProps('lastName')}
+                    />
+                  </SimpleGrid>
+
                   <TextInput
-                    label="Username"
-                    placeholder="Your username"
-                    {...profileForm.getInputProps('username')}
+                    label="Country"
+                    placeholder="Your country"
+                    leftSection={<IconWorld size={16} />}
+                    {...profileForm.getInputProps('country')}
                   />
-                  <TextInput
-                    label="Email"
-                    placeholder="Your email"
-                    {...profileForm.getInputProps('email')}
-                    disabled
-                    description="Email changes require verification (contact support for assistance)"
-                  />
-                  <Group justify="flex-start" mt="xs">
-                    <Button
-                      type="submit"
-                      loading={updateProfileMutation.isPending}
-                      disabled={!profileForm.isDirty() || updateProfileMutation.isPending}
-                    >
-                      Update Profile
-                    </Button>
+
+                  <Group mt="md" justify="apart">
+                    <Group>
+                      <Button
+                        type="submit"
+                        loading={updateProfileMutation.isPending}
+                        disabled={!profileForm.isDirty() || updateProfileMutation.isPending}
+                        leftSection={
+                          updateProfileMutation.isSuccess ? <IconCheck size={16} /> : null
+                        }
+                        color={updateProfileMutation.isSuccess ? 'green' : 'blue'}
+                      >
+                        {updateProfileMutation.isPending
+                          ? 'Updating...'
+                          : updateProfileMutation.isSuccess
+                          ? 'Updated!'
+                          : 'Update Profile'}
+                      </Button>
+
+                      {updateProfileMutation.isSuccess && (
+                        <Text size="sm" c="green">
+                          Profile was updated successfully!
+                        </Text>
+                      )}
+
+                      {updateProfileMutation.isError && (
+                        <Text size="sm" c="red">
+                          {updateProfileMutation.error?.message || 'Update failed'}
+                        </Text>
+                      )}
+                    </Group>
                   </Group>
                 </Stack>
               </form>
@@ -845,31 +1153,36 @@ export default function SettingsPage() {
 
         <Tabs.Panel value="security">
           <Paper shadow="sm" p="xl" withBorder radius="md">
-            <Stack gap="xl">
-              <form onSubmit={passwordForm.onSubmit(handlePasswordChange)}>
-                <Stack gap="md">
-                  <Group align="center">
-                    <IconLock size={24} />
-                    <Title order={4}>Change Password</Title>
-                  </Group>
-                  <PasswordInput
-                    label="Current Password"
-                    placeholder="Enter your current password"
-                    {...passwordForm.getInputProps('currentPassword')}
-                  />
-                  <PasswordInput
-                    label="New Password"
-                    placeholder="Enter your new password"
-                    {...passwordForm.getInputProps('newPassword')}
-                  />
-                  <PasswordInput
-                    label="Confirm New Password"
-                    placeholder="Confirm your new password"
-                    {...passwordForm.getInputProps('confirmPassword')}
-                  />
-                  <Group justify="flex-start" mt="xs">
+            <Grid gutter={30}>
+              <Grid.Col span={{ base: 12, md: 6 }}>
+                <form onSubmit={passwordForm.onSubmit(handlePasswordChange)}>
+                  <Stack gap="md">
+                    <Title order={4} mb="xs">
+                      <Group gap={8}>
+                        <IconLock size={22} />
+                        <span>Change Password</span>
+                      </Group>
+                    </Title>
+
+                    <PasswordInput
+                      label="Current Password"
+                      placeholder="Enter your current password"
+                      {...passwordForm.getInputProps('currentPassword')}
+                    />
+                    <PasswordInput
+                      label="New Password"
+                      placeholder="Enter your new password"
+                      {...passwordForm.getInputProps('newPassword')}
+                    />
+                    <PasswordInput
+                      label="Confirm New Password"
+                      placeholder="Confirm your new password"
+                      {...passwordForm.getInputProps('confirmPassword')}
+                    />
+
                     <Button
                       type="submit"
+                      mt="md"
                       loading={changePasswordMutation.isPending}
                       disabled={
                         !passwordForm.values.currentPassword ||
@@ -880,64 +1193,71 @@ export default function SettingsPage() {
                     >
                       Change Password
                     </Button>
-                  </Group>
-                </Stack>
-              </form>
+                  </Stack>
+                </form>
+              </Grid.Col>
 
-              <Divider />
-
-              <Stack gap="md">
-                <Group align="center">
-                  <IconFingerprint size={24} />
-                  <Title order={4}>Two-Factor Authentication</Title>
-                </Group>
-
-                {user.twoFactorEnabled ? (
-                  <>
-                    <Alert color="teal" title="Two-factor authentication is enabled">
-                      Your account is protected with an additional layer of security. When you sign
-                      in, you'll need to provide a code from your authenticator app.
-                    </Alert>
-
-                    <Group align="center">
-                      <PasswordInput
-                        label="Authentication Code"
-                        placeholder="Enter code from your authenticator app"
-                        value={twoFactorDisableCode}
-                        onChange={e => setTwoFactorDisableCode(e.target.value)}
-                        style={{ flex: 1 }}
-                      />
-                      <Button
-                        color="red"
-                        onClick={handleDisable2FA}
-                        loading={disableTwoFactorMutation.isPending}
-                        disabled={
-                          twoFactorDisableCode.length !== 6 || disableTwoFactorMutation.isPending
-                        }
-                        style={{ marginTop: 26 }}
-                      >
-                        Disable 2FA
-                      </Button>
+              <Grid.Col span={{ base: 12, md: 6 }}>
+                <Stack gap="md">
+                  <Title order={4} mb="xs">
+                    <Group gap={8}>
+                      <IconFingerprint size={22} />
+                      <span>Two-Factor Authentication</span>
                     </Group>
-                  </>
-                ) : (
-                  <>
-                    <Text size="sm">
-                      Two-factor authentication adds an extra layer of security to your account by
-                      requiring more than just a password to sign in.
-                    </Text>
+                  </Title>
 
-                    <Button
-                      leftSection={<IconShield size={16} />}
-                      onClick={handleSetup2FA}
-                      loading={enableTwoFactorMutation.isPending}
-                    >
-                      Setup Two-Factor Authentication
-                    </Button>
-                  </>
-                )}
-              </Stack>
-            </Stack>
+                  {user.twoFactorEnabled ? (
+                    <>
+                      <Alert color="teal" title="Two-factor authentication is enabled">
+                        Your account is protected with an additional layer of security. When you
+                        sign in, you'll need to provide a code from your authenticator app.
+                      </Alert>
+
+                      <Group align="center" mt="md">
+                        <TextInput
+                          label="Authentication Code"
+                          placeholder="Enter code from your authenticator app"
+                          value={twoFactorDisableCode}
+                          onChange={e => setTwoFactorDisableCode(e.target.value)}
+                          style={{ flex: 1 }}
+                        />
+                        <Button
+                          color="red"
+                          onClick={handleDisable2FA}
+                          loading={disableTwoFactorMutation.isPending}
+                          disabled={
+                            twoFactorDisableCode.length !== 6 || disableTwoFactorMutation.isPending
+                          }
+                          style={{ marginTop: 26 }}
+                        >
+                          Disable 2FA
+                        </Button>
+                      </Group>
+                    </>
+                  ) : (
+                    <>
+                      <Text>
+                        Two-factor authentication adds an extra layer of security to your account by
+                        requiring more than just a password to sign in.
+                      </Text>
+                      <Text c="dimmed" size="sm">
+                        Once enabled, you'll need to enter a code from your authentication app
+                        whenever you sign in.
+                      </Text>
+
+                      <Button
+                        leftSection={<IconShield size={16} />}
+                        onClick={handleSetup2FA}
+                        loading={enableTwoFactorMutation.isPending}
+                        mt="md"
+                      >
+                        Setup Two-Factor Authentication
+                      </Button>
+                    </>
+                  )}
+                </Stack>
+              </Grid.Col>
+            </Grid>
           </Paper>
         </Tabs.Panel>
 
@@ -945,27 +1265,29 @@ export default function SettingsPage() {
           <Paper shadow="sm" p="xl" withBorder radius="md">
             <Stack gap="xl">
               <Stack gap="md">
-                <Group align="center">
-                  {isDarkMode ? <IconMoonStars size={24} /> : <IconSun size={24} />}
-                  <Title order={4}>Appearance</Title>
-                </Group>
+                <Title order={4} mb="xs">
+                  <Group gap={8}>
+                    {isDarkMode ? <IconMoonStars size={22} /> : <IconSun size={22} />}
+                    <span>Theme Preferences</span>
+                  </Group>
+                </Title>
 
-                <Text size="sm">Choose the theme that suits your preference.</Text>
+                <Text>Choose the theme that best suits your working environment.</Text>
 
-                <Group>
+                <Group mt="md">
                   <Button
                     variant={isDarkMode ? 'outline' : 'filled'}
                     leftSection={<IconSun size={16} />}
                     onClick={setLightTheme}
                   >
-                    Light
+                    Light Mode
                   </Button>
                   <Button
                     variant={!isDarkMode ? 'outline' : 'filled'}
                     leftSection={<IconMoonStars size={16} />}
                     onClick={setDarkTheme}
                   >
-                    Dark
+                    Dark Mode
                   </Button>
                 </Group>
               </Stack>
@@ -976,7 +1298,13 @@ export default function SettingsPage() {
         {user.role === 'issuer' && (
           <Tabs.Panel value="issuer">
             <Paper shadow="sm" p="xl" withBorder radius="md">
-              <Stack gap="xl">{renderLogoSection()}</Stack>
+              <Stack gap="xl">
+                {renderLogoSection()}
+
+                <Divider />
+
+                {renderIssuerDetails()}
+              </Stack>
             </Paper>
           </Tabs.Panel>
         )}
@@ -986,38 +1314,12 @@ export default function SettingsPage() {
       <Modal
         opened={profilePictureModalOpened}
         onClose={closeProfilePictureModal}
-        title={profilePictureFile ? 'Preview New Profile Picture' : 'Profile Picture'}
-        styles={{
-          header: {
-            background: 'transparent',
-            borderBottom: isDarkMode ? '1px solid #2C2E33' : '1px solid #e9ecef',
-            paddingBottom: 10,
-          },
-          title: {
-            fontSize: '1.1rem',
-            fontWeight: 600,
-          },
-          body: {
-            paddingTop: 15,
-            paddingBottom: 15,
-          },
-          close: {
-            color: isDarkMode ? '#909296' : '#495057',
-            '&:hover': {
-              background: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-            },
-          },
-          content: {
-            maxHeight: '90vh',
-            overflow: 'auto',
-          },
-        }}
+        title="Profile Picture"
         centered
         size="sm"
-        withCloseButton
       >
         <Stack gap="md">
-          <Text size="sm" c={isDarkMode ? 'dimmed' : 'dark'}>
+          <Text size="sm">
             {profilePictureFile
               ? 'Preview your new profile picture.'
               : 'Upload a new profile picture or manage your existing one.'}
@@ -1025,56 +1327,23 @@ export default function SettingsPage() {
 
           <Group justify="center">
             {profilePictureFile ? (
-              <Box
-                style={{
-                  width: '150px',
-                  height: '150px',
-                  position: 'relative',
-                  borderRadius: '8px',
-                  overflow: 'hidden',
-                  border: isDarkMode ? '1px solid #373A40' : '1px solid #ced4da',
-                }}
-              >
-                <Image
-                  src={URL.createObjectURL(profilePictureFile)}
-                  alt="Profile picture preview"
-                  fit="cover"
-                  style={{ width: '100%', height: '100%' }}
-                />
-              </Box>
+              <Avatar
+                size={150}
+                radius={75}
+                src={URL.createObjectURL(profilePictureFile)}
+                alt="Profile picture preview"
+              />
             ) : user?.profilePictureUrl ? (
-              <Box
-                style={{
-                  width: '150px',
-                  height: '150px',
-                  position: 'relative',
-                  borderRadius: '8px',
-                  overflow: 'hidden',
-                  border: isDarkMode ? '1px solid #373A40' : '1px solid #ced4da',
-                }}
-              >
-                <Image
-                  src={user.profilePictureUrl}
-                  alt="Current profile picture"
-                  fit="cover"
-                  style={{ width: '100%', height: '100%' }}
-                />
-              </Box>
+              <Avatar
+                size={150}
+                radius={75}
+                src={user.profilePictureUrl}
+                alt="Current profile picture"
+              />
             ) : (
-              <Box
-                style={{
-                  width: '150px',
-                  height: '150px',
-                  border: isDarkMode ? '2px dashed #373A40' : '2px dashed #ced4da',
-                  borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: isDarkMode ? '#1A1B1E' : '#f8f9fa',
-                }}
-              >
-                <IconPhoto size={48} opacity={0.5} color={isDarkMode ? '#5c5f66' : '#adb5bd'} />
-              </Box>
+              <Avatar size={150} radius={75} color="primaryBlue">
+                {user?.username.charAt(0).toUpperCase()}
+              </Avatar>
             )}
           </Group>
 
@@ -1088,12 +1357,7 @@ export default function SettingsPage() {
               accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
             >
               {props => (
-                <Button
-                  {...props}
-                  variant="light"
-                  size="sm"
-                  leftSection={<IconCloudUpload size={16} />}
-                >
+                <Button {...props} variant="light" leftSection={<IconCloudUpload size={16} />}>
                   {user?.profilePictureUrl && !profilePictureFile
                     ? 'Choose New Image'
                     : 'Select Image'}
@@ -1105,7 +1369,6 @@ export default function SettingsPage() {
               <Button
                 variant="light"
                 color="red"
-                size="sm"
                 leftSection={<IconTrash size={16} />}
                 onClick={() => setProfilePictureFile(null)}
               >
@@ -1117,11 +1380,9 @@ export default function SettingsPage() {
               <Button
                 variant="light"
                 color="red"
-                size="sm"
                 leftSection={<IconTrash size={16} />}
                 onClick={handleProfilePictureDelete}
                 loading={deleteProfilePictureMutation.isPending}
-                disabled={deleteProfilePictureMutation.isPending}
               >
                 {deleteProfilePictureMutation.isPending ? 'Removing...' : 'Remove'}
               </Button>
@@ -1134,7 +1395,6 @@ export default function SettingsPage() {
                 disabled={!profilePictureFile || uploadProfilePictureMutation.isPending}
                 onClick={handleProfilePictureUpload}
                 loading={uploadProfilePictureMutation.isPending}
-                size="sm"
               >
                 Upload Picture
               </Button>
@@ -1147,40 +1407,14 @@ export default function SettingsPage() {
       <Modal
         opened={logoModalOpened}
         onClose={closeLogoModal}
-        title={logoFile ? 'Preview New Logo' : 'Issuer Logo'}
-        styles={{
-          header: {
-            background: 'transparent',
-            borderBottom: isDarkMode ? '1px solid #2C2E33' : '1px solid #e9ecef',
-            paddingBottom: 10,
-          },
-          title: {
-            fontSize: '1.1rem',
-            fontWeight: 600,
-          },
-          body: {
-            paddingTop: 15,
-            paddingBottom: 15,
-          },
-          close: {
-            color: isDarkMode ? '#909296' : '#495057',
-            '&:hover': {
-              background: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-            },
-          },
-          content: {
-            maxHeight: '90vh',
-            overflow: 'auto',
-          },
-        }}
+        title="Organization Logo"
         centered
         size="sm"
-        withCloseButton
       >
         <Stack gap="md">
-          <Text size="sm" c={isDarkMode ? 'dimmed' : 'dark'}>
+          <Text size="sm">
             {logoFile
-              ? 'Preview your new issuer logo.'
+              ? 'Preview your new organization logo.'
               : 'Upload a new logo or manage your existing one.'}
           </Text>
 
@@ -1190,15 +1424,13 @@ export default function SettingsPage() {
                 style={{
                   width: '150px',
                   height: '150px',
-                  position: 'relative',
-                  borderRadius: '8px',
-                  overflow: 'hidden',
-                  border: isDarkMode ? '1px solid #373A40' : '1px solid #ced4da',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  border: '1px solid #ced4da',
+                  borderRadius: '8px',
                   padding: '10px',
-                  backgroundColor: isDarkMode ? '#1A1B1E' : '#f8f9fa',
+                  backgroundColor: '#f8f9fa',
                 }}
               >
                 <Image
@@ -1213,20 +1445,18 @@ export default function SettingsPage() {
                 style={{
                   width: '150px',
                   height: '150px',
-                  position: 'relative',
-                  borderRadius: '8px',
-                  overflow: 'hidden',
-                  border: isDarkMode ? '1px solid #373A40' : '1px solid #ced4da',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  border: '1px solid #ced4da',
+                  borderRadius: '8px',
                   padding: '10px',
-                  backgroundColor: isDarkMode ? '#1A1B1E' : '#f8f9fa',
+                  backgroundColor: '#f8f9fa',
                 }}
               >
                 <Image
                   src={issuer.logoUrl}
-                  alt="Current issuer logo"
+                  alt="Current organization logo"
                   fit="contain"
                   style={{ maxWidth: '100%', maxHeight: '100%' }}
                 />
@@ -1236,15 +1466,15 @@ export default function SettingsPage() {
                 style={{
                   width: '150px',
                   height: '150px',
-                  border: isDarkMode ? '2px dashed #373A40' : '2px dashed #ced4da',
+                  border: '2px dashed #ced4da',
                   borderRadius: '8px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: isDarkMode ? '#1A1B1E' : '#f8f9fa',
+                  backgroundColor: '#f8f9fa',
                 }}
               >
-                <IconPhoto size={48} opacity={0.5} color={isDarkMode ? '#5c5f66' : '#adb5bd'} />
+                <IconPhoto size={48} opacity={0.5} color="#adb5bd" />
               </Box>
             )}
           </Group>
@@ -1259,12 +1489,7 @@ export default function SettingsPage() {
               accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
             >
               {props => (
-                <Button
-                  {...props}
-                  variant="light"
-                  size="sm"
-                  leftSection={<IconCloudUpload size={16} />}
-                >
+                <Button {...props} variant="light" leftSection={<IconCloudUpload size={16} />}>
                   {issuer?.logoUrl && !logoFile ? 'Choose New Logo' : 'Select Image'}
                 </Button>
               )}
@@ -1274,7 +1499,6 @@ export default function SettingsPage() {
               <Button
                 variant="light"
                 color="red"
-                size="sm"
                 leftSection={<IconTrash size={16} />}
                 onClick={() => setLogoFile(null)}
               >
@@ -1286,11 +1510,9 @@ export default function SettingsPage() {
               <Button
                 variant="light"
                 color="red"
-                size="sm"
                 leftSection={<IconTrash size={16} />}
                 onClick={handleLogoDelete}
                 loading={deleteLogoMutation.isPending}
-                disabled={deleteLogoMutation.isPending}
               >
                 {deleteLogoMutation.isPending ? 'Removing...' : 'Remove'}
               </Button>
@@ -1303,7 +1525,6 @@ export default function SettingsPage() {
                 disabled={!logoFile || uploadLogoMutation.isPending}
                 onClick={handleLogoUpload}
                 loading={uploadLogoMutation.isPending}
-                size="sm"
               >
                 Upload Logo
               </Button>

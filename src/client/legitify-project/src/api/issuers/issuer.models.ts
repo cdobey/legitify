@@ -1,10 +1,11 @@
 export interface Issuer {
   id: string;
   name: string;
-  shorthand: string;
+  shorthand: string; // Changed from displayName to match backend
   description: string;
   logoUrl?: string;
   ownerId: string;
+  issuerType?: string;
   country?: string;
   address?: string;
   website?: string;
@@ -43,7 +44,7 @@ export interface Affiliation {
 
 export interface CreateIssuerParams {
   name: string;
-  shorthand: string;
+  shorthand: string; // Changed from displayName to match backend
   description?: string;
   logoUrl?: string;
   country?: string;
