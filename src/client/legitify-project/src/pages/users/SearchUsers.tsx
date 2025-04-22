@@ -1,3 +1,4 @@
+import { CredentialDocument } from '@/api/credentials/credential.models';
 import { useRequestAccessMutation } from '@/api/credentials/credential.mutations';
 import {
   useAccessibleCredentialsQuery,
@@ -64,36 +65,6 @@ const cardVariants = {
   visible: { opacity: 1, y: 0 },
 };
 
-interface CredentialDocument {
-  docId: string;
-  issuer: string;
-  issueDate: string;
-  credentialTitle?: string;
-  fieldOfStudy?: string;
-  graduationDate?: string;
-  honors?: string;
-  holderId?: string;
-  programDuration?: string;
-  gpa?: number | null;
-}
-
-interface AccessibleCredential {
-  requestId: string;
-  docId: string;
-  issuer: string;
-  owner: {
-    name: string;
-    email: string;
-  };
-  status: string;
-  dateGranted: string;
-}
-
-interface RequestedAccess {
-  docId: string;
-  timestamp: number;
-}
-
 export default function SearchUsers() {
   const theme = useMantineTheme();
   const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`);
@@ -108,7 +79,6 @@ export default function SearchUsers() {
   const searchMutation = useSearchUserMutation();
   const requestAccessMutation = useRequestAccessMutation();
 
-  // Fetch accessible credentials (ones the verifier already has access to)
   const { data: accessibleCredentials = [], isLoading: accessibleLoading } =
     useAccessibleCredentialsQuery();
 
@@ -118,7 +88,7 @@ export default function SearchUsers() {
     error: credentialsError,
   } = useUserCredentialsQuery(searchMutation.data?.id || '', {
     enabled: !!searchMutation.data?.id,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
   const isAccessRequested = (docId: string) => {
@@ -136,7 +106,6 @@ export default function SearchUsers() {
     return accessCredential && accessCredential.status === 'denied';
   };
 
-  // Format the date for a specific credential
   const getRequestDate = (docId: string) => {
     const accessCredential = accessibleCredentials.find(d => d.credentialId === docId);
     return accessCredential && accessCredential.requestedAt
@@ -144,7 +113,6 @@ export default function SearchUsers() {
       : '';
   };
 
-  // Format a date string safely handling null values
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'N/A';
 
@@ -158,7 +126,7 @@ export default function SearchUsers() {
   const fieldsOfStudy = useMemo(() => {
     if (!credentials) return [];
     const fields = credentials
-      .map(doc => doc.fieldOfStudy)
+      .map(doc => doc.attributes?.fieldOfStudy || doc.domain)
       .filter((field): field is string => !!field);
     return [...new Set(fields)].sort();
   }, [credentials]);
@@ -173,55 +141,58 @@ export default function SearchUsers() {
     let filtered = [...credentials];
 
     if (filterByField) {
-      filtered = filtered.filter(doc => doc.fieldOfStudy === filterByField);
+      filtered = filtered.filter(
+        doc => doc.attributes?.fieldOfStudy === filterByField || doc.domain === filterByField,
+      );
     }
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         doc =>
-          doc.credentialTitle?.toLowerCase().includes(query) ||
+          doc.title?.toLowerCase().includes(query) ||
           doc.issuer?.toLowerCase().includes(query) ||
-          doc.fieldOfStudy?.toLowerCase().includes(query) ||
-          doc.honors?.toLowerCase().includes(query),
+          doc.domain?.toLowerCase().includes(query) ||
+          doc.attributes?.fieldOfStudy?.toLowerCase().includes(query) ||
+          doc.attributes?.honors?.toLowerCase().includes(query),
       );
     }
 
-    // Apply tab filter
     if (activeTab === 'requested') {
       filtered = filtered.filter(doc => isAccessRequested(doc.docId));
     } else if (activeTab === 'accessible') {
       filtered = filtered.filter(doc => isAccessible(doc.docId));
     }
 
-    // Sort documents
+    console.log('Filtered credentials:', filtered);
     filtered.sort((a, b) => {
       let valueA: any;
       let valueB: any;
 
       switch (sortBy) {
         case 'issueDate':
-          valueA = new Date(a.issueDate);
-          valueB = new Date(b.issueDate);
+          valueA = new Date(a.issueDate || a.issueDate || '');
+          valueB = new Date(b.issueDate || b.issueDate || '');
           break;
         case 'graduationDate':
-          valueA = a.graduationDate ? new Date(a.graduationDate) : new Date(0);
-          valueB = b.graduationDate ? new Date(b.graduationDate) : new Date(0);
+        case 'achievementDate':
+          valueA = a.achievementDate ? new Date(a.achievementDate) : new Date(0);
+          valueB = b.achievementDate ? new Date(b.achievementDate) : new Date(0);
           break;
         case 'credentialTitle':
-          valueA = a.credentialTitle || '';
-          valueB = b.credentialTitle || '';
+        case 'title':
+          valueA = a.title || '';
+          valueB = b.title || '';
           break;
         case 'issuer':
           valueA = a.issuer || '';
           valueB = b.issuer || '';
           break;
         default:
-          valueA = a.issueDate;
-          valueB = b.issueDate;
+          valueA = a.issueDate || a.issueDate || '';
+          valueB = b.issueDate || b.issueDate || '';
       }
 
-      // Handle comparison
       if (sortDirection === 'asc') {
         return valueA > valueB ? 1 : -1;
       } else {
@@ -270,7 +241,11 @@ export default function SearchUsers() {
   };
 
   const getCredentialTypeIcon = (credential: CredentialDocument) => {
-    const fieldLower = credential.fieldOfStudy?.toLowerCase() || '';
+    const fieldLower =
+      credential.attributes?.fieldOfStudy?.toLowerCase() ||
+      credential.domain?.toLowerCase() ||
+      credential.type?.toLowerCase() ||
+      '';
 
     if (
       fieldLower.includes('computer') ||
@@ -297,7 +272,6 @@ export default function SearchUsers() {
     }
   };
 
-  // Clear filters
   const clearFilters = () => {
     setFilterByField(null);
     setSearchQuery('');
@@ -306,7 +280,6 @@ export default function SearchUsers() {
     setSortDirection('desc');
   };
 
-  // Get counts for different categories
   const requestedCount = useMemo(() => {
     if (!credentials) return 0;
     return credentials.filter(doc => isAccessRequested(doc.docId)).length;
@@ -317,9 +290,7 @@ export default function SearchUsers() {
     return credentials.filter(doc => isAccessible(doc.docId)).length;
   }, [credentials, accessibleCredentials]);
 
-  // Determine status of each credential by checking backend data
   const getCredentialStatus = (docId: string) => {
-    // Find the credential in our accessible credentials list
     const accessCredential = accessibleCredentials.find(d => d.credentialId === docId);
 
     if (accessCredential) {
@@ -362,7 +333,6 @@ export default function SearchUsers() {
       }
     }
 
-    // Default case - not requested
     return {
       badge: (
         <Badge color="blue" variant="light" radius="sm">
@@ -377,7 +347,7 @@ export default function SearchUsers() {
   };
 
   const findAccessInfo = (docId: string) => {
-    return accessibleCredentials.find(deg => deg.credentialId === docId);
+    return accessibleCredentials.find(cred => cred.credentialId === docId);
   };
 
   return (
@@ -391,7 +361,7 @@ export default function SearchUsers() {
         </Group>
 
         <Text c="dimmed" mb="lg">
-          Find candidates by email to request access to their academic credentials.
+          Find candidates by email to request access to their credentials.
         </Text>
 
         <form onSubmit={handleSearch}>
@@ -570,9 +540,9 @@ export default function SearchUsers() {
                         Sort by:{' '}
                         {sortBy === 'issueDate'
                           ? 'Issue Date'
-                          : sortBy === 'graduationDate'
-                          ? 'Graduation Date'
-                          : sortBy === 'credentialTitle'
+                          : sortBy === 'achievementDate' || sortBy === 'graduationDate'
+                          ? 'Achievement Date'
+                          : sortBy === 'credentialTitle' || sortBy === 'title'
                           ? 'Credential Title'
                           : 'Issuer'}
                       </Button>
@@ -589,15 +559,21 @@ export default function SearchUsers() {
                       </Menu.Item>
                       <Menu.Item
                         leftSection={<IconCalendar size={16} />}
-                        onClick={() => setSortBy('graduationDate')}
-                        color={sortBy === 'graduationDate' ? 'blue' : undefined}
+                        onClick={() => setSortBy('achievementDate')}
+                        color={
+                          sortBy === 'achievementDate' || sortBy === 'graduationDate'
+                            ? 'blue'
+                            : undefined
+                        }
                       >
-                        Graduation Date
+                        Achievement Date
                       </Menu.Item>
                       <Menu.Item
                         leftSection={<IconCertificate size={16} />}
-                        onClick={() => setSortBy('credentialTitle')}
-                        color={sortBy === 'credentialTitle' ? 'blue' : undefined}
+                        onClick={() => setSortBy('title')}
+                        color={
+                          sortBy === 'title' || sortBy === 'credentialTitle' ? 'blue' : undefined
+                        }
                       >
                         Credential Title
                       </Menu.Item>
@@ -698,18 +674,21 @@ export default function SearchUsers() {
                                   <div>
                                     <Group gap="xs" mb={2}>
                                       <Text fw={700} size="lg">
-                                        {doc.credentialTitle || 'Credential'}
+                                        {doc.title || 'Credential'}
                                       </Text>
                                       {status.badge}
-                                      {doc.honors && (
+                                      {doc.attributes?.honors && (
                                         <Badge color="green" variant="light">
-                                          {doc.honors}
+                                          {doc.attributes.honors}
                                         </Badge>
                                       )}
                                     </Group>
 
                                     <Text size="sm" c="dimmed" mb={4}>
-                                      {doc.fieldOfStudy || 'Field not specified'}
+                                      {doc.domain ||
+                                        doc.attributes?.fieldOfStudy ||
+                                        doc.type ||
+                                        'Field not specified'}
                                     </Text>
 
                                     <SimpleGrid cols={2} spacing="xs" verticalSpacing="xs">
@@ -723,18 +702,23 @@ export default function SearchUsers() {
                                         <Text size="sm">Issued: {formatDate(doc.issueDate)}</Text>
                                       </Group>
 
-                                      {doc.programDuration && (
+                                      {(doc.programLength || doc.attributes?.programDuration) && (
                                         <Group gap={4} wrap="nowrap">
                                           <IconCertificate size={16} color={theme.colors.gray[6]} />
-                                          <Text size="sm">{doc.programDuration}</Text>
+                                          <Text size="sm">
+                                            {doc.programLength || doc.attributes?.programDuration}
+                                          </Text>
                                         </Group>
                                       )}
 
-                                      {doc.graduationDate && (
+                                      {(doc.achievementDate || doc.attributes?.graduationDate) && (
                                         <Group gap={4} wrap="nowrap">
                                           <IconSchool size={16} color={theme.colors.gray[6]} />
                                           <Text size="sm">
-                                            Graduated: {formatDate(doc.graduationDate)}
+                                            Achieved:{' '}
+                                            {formatDate(
+                                              doc.achievementDate || doc.attributes?.graduationDate,
+                                            )}
                                           </Text>
                                         </Group>
                                       )}
@@ -821,7 +805,7 @@ export default function SearchUsers() {
                       <IconCertificate size={24} />
                     </ThemeIcon>
                     <Text c="dimmed" ta="center">
-                      This user has no accessible documents
+                      This user has no accessible credentials
                     </Text>
                   </Stack>
                 </Center>
