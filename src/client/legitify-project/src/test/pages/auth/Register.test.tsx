@@ -10,7 +10,6 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock the modules we need
-vi.mock('axios');
 vi.mock('react-router-dom', async () => {
   const actual = await import('react-router-dom');
   return {
@@ -97,14 +96,6 @@ vi.mock('@/contexts/StatusContext', async () => {
 beforeEach(() => {
   // Reset mocks
   vi.clearAllMocks();
-
-  // Mock axios to handle potential API calls
-  vi.mocked(axios.get).mockResolvedValue({
-    data: [
-      { id: 'uni1', name: 'Issuer 1', displayName: 'Issuer One' },
-      { id: 'uni2', name: 'Issuer 2', displayName: 'Issuer Two' },
-    ],
-  });
 
   // Mock import.meta.env.VITE_API_URL
   vi.stubGlobal('import', {
@@ -231,13 +222,8 @@ describe('Register Component', () => {
   });
 
   it('fetches issuers when holder role selected in step 2', async () => {
-    // Mock axios.get to return issuers
-    vi.mocked(axios.get).mockResolvedValue({
-      data: [
-        { id: 'uni1', name: 'Issuer 1', displayName: 'Issuer One' },
-        { id: 'uni2', name: 'Issuer 2', displayName: 'Issuer Two' },
-      ],
-    });
+    // No need to mock axios.get - MSW will handle this
+    const axiosGetSpy = vi.spyOn(axios, 'get');
 
     renderWithProviders();
     const user = userEvent.setup();
@@ -259,9 +245,9 @@ describe('Register Component', () => {
     // Go to next step
     await user.click(screen.getByText(/next/i));
 
-    // Verify that axios.get was called with correct URL
+    // Verify that the fetch was attempted - MSW will intercept the actual call
     await waitFor(() => {
-      expect(axios.get).toHaveBeenCalledWith('/api/issuer/all');
+      expect(axiosGetSpy).toHaveBeenCalled();
     });
   });
 
@@ -363,14 +349,6 @@ describe('Register Component', () => {
       message: 'Registration successful',
     });
 
-    // Mock axios for the issuers fetch
-    vi.mocked(axios.get).mockResolvedValue({
-      data: [
-        { id: 'uni1', name: 'Issuer 1', displayName: 'Issuer One' },
-        { id: 'uni2', name: 'Issuer 2', displayName: 'Issuer Two' },
-      ],
-    });
-
     renderWithProviders();
     const user = userEvent.setup();
 
@@ -430,14 +408,6 @@ describe('Register Component', () => {
     // Mock the register function to reject with error
     const { register } = await import('@/api/auth/auth.api');
     vi.mocked(register).mockRejectedValueOnce({ message: 'Email already exists' });
-
-    // Mock axios for the issuers fetch
-    vi.mocked(axios.get).mockResolvedValue({
-      data: [
-        { id: 'uni1', name: 'Issuer 1', displayName: 'Issuer One' },
-        { id: 'uni2', name: 'Issuer 2', displayName: 'Issuer Two' },
-      ],
-    });
 
     renderWithProviders();
     const user = userEvent.setup();

@@ -35,6 +35,12 @@ export const handlers = [
   }),
 
   // --- Issuer Handlers ---
+  http.get(`${apiUrl}/issuer/all`, async () => {
+    return HttpResponse.json([
+      { id: 'uni1', name: 'Issuer 1', displayName: 'Issuer One' },
+      { id: 'uni2', name: 'Issuer 2', displayName: 'Issuer Two' },
+    ]);
+  }),
   http.get(`${apiUrl}/issuer/my`, async () => {
     // Return a sample issuer if needed for tests, or empty array
     return HttpResponse.json([
