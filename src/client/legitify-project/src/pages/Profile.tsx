@@ -177,6 +177,7 @@ export default function ProfilePage() {
 
       case 'issuer':
         const credentialCount = ledgerRecords?.length || 0;
+        const latestRecord = ledgerRecords?.[0];
         return (
           <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md">
             <StatCard
@@ -193,7 +194,7 @@ export default function ProfilePage() {
             />
             <StatCard
               title="Last Activity"
-              value={credentialCount > 0 ? formatDate(ledgerRecords?.[0]?.issuedAt) : 'N/A'}
+              value={credentialCount > 0 ? formatDate(latestRecord?.ledgerTimestamp) : 'N/A'}
               icon={<IconCalendar size={24} />}
               color="teal"
               isDate
@@ -343,14 +344,14 @@ export default function ProfilePage() {
                     {issuers[0].logoUrl && (
                       <Avatar
                         src={issuers[0].logoUrl}
-                        alt={issuers[0].displayName}
+                        alt={issuers[0].name}
                         size={100}
                         radius="md"
                       />
                     )}
                     <Stack gap="xs" style={{ flex: 1 }}>
-                      <ProfileDetailItem label="Issuer Name" value={issuers[0].displayName} />
-                      <ProfileDetailItem label="Short Name" value={issuers[0].name} />
+                      <ProfileDetailItem label="Issuer Name" value={issuers[0].name} />
+                      <ProfileDetailItem label="Short Name" value={issuers[0].shorthand} />
                       <ProfileDetailItem label="Issuer ID" value={issuers[0].id} color="blue" />
                     </Stack>
                   </Group>
@@ -379,13 +380,29 @@ export default function ProfilePage() {
                       <Group align="flex-start" justify="space-between">
                         <div>
                           <Title order={5}>{credential.title}</Title>
-                          <Text size="sm">Issued by: {credential.issuer}</Text>
-                          <Text size="sm">Date: {formatDate(credential.issueDate)}</Text>
+                          <Text size="sm">
+                            Issuer: {credential.issuerInfo?.name || credential.issuer}
+                          </Text>
+                          <Text size="sm">Type: {credential.type}</Text>
+                          <Text size="sm">
+                            Issue Date: {formatDate(credential.ledgerTimestamp)}
+                          </Text>
                           <Text size="sm">Credential ID: {credential.docId.slice(0, 10)}...</Text>
+                          {credential.domain && <Text size="sm">Domain: {credential.domain}</Text>}
                         </div>
-                        <Badge color="green" size="lg">
-                          Verified
-                        </Badge>
+                        <Group>
+                          {credential.verified && (
+                            <Badge color="green" size="lg">
+                              Verified
+                            </Badge>
+                          )}
+                          <Badge
+                            color={credential.status === 'accepted' ? 'blue' : 'yellow'}
+                            size="lg"
+                          >
+                            {credential.status.charAt(0).toUpperCase() + credential.status.slice(1)}
+                          </Badge>
+                        </Group>
                       </Group>
                     </Card>
                   ))}
@@ -410,12 +427,17 @@ export default function ProfilePage() {
                       <Group align="flex-start" justify="space-between">
                         <div>
                           <Title order={5}>{record.title}</Title>
-                          <Text size="sm">Recipient: {record.holderEmail}</Text>
-                          <Text size="sm">Date: {formatDate(record.issuedAt)}</Text>
+                          <Text size="sm">Holder: {record.holderEmail}</Text>
+                          <Text size="sm">Type: {record.type}</Text>
+                          <Text size="sm">Issue Date: {formatDate(record.ledgerTimestamp)}</Text>
                           <Text size="sm">Credential ID: {record.docId.slice(0, 10)}...</Text>
+                          {record.domain && <Text size="sm">Domain: {record.domain}</Text>}
                         </div>
-                        <Badge color="blue" size="lg">
-                          Issued
+                        <Badge
+                          color={record.accepted ? 'green' : record.denied ? 'red' : 'blue'}
+                          size="lg"
+                        >
+                          {record.accepted ? 'Accepted' : record.denied ? 'Denied' : 'Issued'}
                         </Badge>
                       </Group>
                     </Card>
@@ -437,19 +459,30 @@ export default function ProfilePage() {
               {accessibleCredentials && accessibleCredentials.length > 0 ? (
                 <Stack>
                   {accessibleCredentials.map(credential => (
-                    <Card key={credential.credentialId} withBorder className="accent-card">
+                    <Card key={credential.requestId} withBorder className="accent-card">
                       <Group align="flex-start" justify="space-between">
                         <div>
-                          <Title order={5}>Credential Document</Title>
+                          <Title order={5}>{credential.title || 'Credential'}</Title>
                           <Text size="sm">
                             Holder: {credential.holder.name || credential.holder.email}
                           </Text>
+                          <Text size="sm">Type: {credential.type || 'Not specified'}</Text>
                           <Text size="sm">Issuer: {credential.issuer}</Text>
-                          <Text size="sm">Date Granted: {formatDate(credential.dateGranted)}</Text>
+                          <Text size="sm">
+                            Access Granted: {formatDate(credential.dateGranted)}
+                          </Text>
                         </div>
-                        <Badge color="indigo" size="lg">
-                          Accessible
-                        </Badge>
+                        <Group>
+                          <Badge color="indigo" size="lg">
+                            Accessible
+                          </Badge>
+                          <Badge
+                            color={credential.status === 'granted' ? 'green' : 'yellow'}
+                            size="lg"
+                          >
+                            {credential.status.charAt(0).toUpperCase() + credential.status.slice(1)}
+                          </Badge>
+                        </Group>
                       </Group>
                     </Card>
                   ))}

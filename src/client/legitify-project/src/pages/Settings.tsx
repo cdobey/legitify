@@ -751,14 +751,14 @@ export default function SettingsPage() {
             <Text>{issuer.shorthand}</Text>
           </Stack>
 
-          <Grid.Col span={2}>
+          <SimpleGrid cols={1}>
             <Stack gap="xs">
               <Text fw={500} size="sm">
                 Description
               </Text>
               <Text>{issuer.description || 'No description provided'}</Text>
             </Stack>
-          </Grid.Col>
+          </SimpleGrid>
 
           <Stack gap="xs">
             <Text fw={500} size="sm">
