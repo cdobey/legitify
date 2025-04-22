@@ -42,7 +42,7 @@ import {
   IconWifiOff,
   IconX,
 } from '@tabler/icons-react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 export default function VerifyCredential() {
   const theme = useMantineTheme();
@@ -80,7 +80,7 @@ export default function VerifyCredential() {
       if (!file) {
         notifications.show({
           title: 'Missing File',
-          message: 'Please upload a certificate file to verify',
+          message: 'Please upload a credential document to verify',
           color: 'red',
         });
         return;
@@ -100,14 +100,14 @@ export default function VerifyCredential() {
         if (result.verified) {
           notifications.show({
             title: 'Verification Successful',
-            message: 'The certificate is authentic and verified on the blockchain.',
+            message: 'The credential is authentic and verified on the blockchain.',
             color: 'green',
             icon: <IconCheck size={16} />,
           });
         } else {
           notifications.show({
             title: 'Verification Failed',
-            message: result.message || 'Certificate could not be verified.',
+            message: result.message || 'Credential could not be verified.',
             color: 'orange',
             icon: <IconAlertCircle size={16} />,
           });
@@ -128,7 +128,7 @@ export default function VerifyCredential() {
         } else {
           notifications.show({
             title: 'Verification Error',
-            message: error.message || 'An error occurred while verifying the certificate.',
+            message: error.message || 'An error occurred while verifying the credential.',
             color: 'red',
             icon: <IconAlertCircle size={16} />,
           });
@@ -139,7 +139,7 @@ export default function VerifyCredential() {
       setFormSubmitted(false);
       notifications.show({
         title: 'File Error',
-        message: 'Error reading the certificate file. Please try again with a valid file.',
+        message: 'Error reading the credential file. Please try again with a valid file.',
         color: 'red',
       });
     }
@@ -150,8 +150,8 @@ export default function VerifyCredential() {
   };
 
   const handleCopyDocId = () => {
-    if (result?.docId) {
-      navigator.clipboard.writeText(result.docId);
+    if (result?.credentialId) {
+      navigator.clipboard.writeText(result.credentialId);
       notifications.show({
         title: 'ID Copied',
         message: 'Document ID copied to clipboard',
@@ -177,8 +177,8 @@ export default function VerifyCredential() {
         </Title>
         <TextInput
           label="Email Address"
-          description="Enter the graduate's email address"
-          placeholder="graduate@example.com"
+          description="Enter the credential holder's email address"
+          placeholder="holder@example.com"
           {...form.getInputProps('email')}
           onFocus={() => setEmailTouched(true)}
           error={emailTouched || formSubmitted ? form.getInputProps('email').error : null}
@@ -306,6 +306,11 @@ export default function VerifyCredential() {
       return renderFailedResult();
     }
 
+    // Get credential type for display
+    const credentialType = result.details?.type || 'credential';
+    // Get credential title with appropriate fallback
+    const credentialTitle = result.details?.title || 'Credential';
+
     return (
       <Paper shadow="md" p="xl" radius="md" withBorder>
         <Group justify="space-between" mb="md">
@@ -320,11 +325,12 @@ export default function VerifyCredential() {
             </ThemeIcon>
             <div>
               <Title order={2}>
-                {result.details?.credentialTitle || 'Academic Certificate'}
-                {result.details?.fieldOfStudy && ` in ${result.details.fieldOfStudy}`}
+                {credentialTitle}
+                {result.details?.attributes?.fieldOfStudy &&
+                  ` in ${result.details.attributes.fieldOfStudy}`}
               </Title>
               <Text c="dimmed" size="sm">
-                {result.details?.issuer || 'Unknown Institution'}
+                {result.details?.issuer || 'Unknown Issuer'}
               </Text>
             </div>
           </Group>
@@ -417,7 +423,7 @@ export default function VerifyCredential() {
       </Text>
       <Text mt="sm" size="sm">
         The document could not be verified. Please ensure you have the correct document and that the
-        graduate's email is correct.
+        holder's email is correct.
       </Text>
 
       <Group mt="xl">
@@ -430,6 +436,22 @@ export default function VerifyCredential() {
 
   const renderCredentialDetailsTab = () => {
     if (!result?.details) return null;
+
+    // Extract attributes for display
+    const attributes = result.details.attributes || {};
+    const credentialType = result.details.type || 'credential';
+    const graduationDate =
+      attributes.graduationDate ||
+      attributes.achievementDate ||
+      result.details.issuedAt ||
+      'Not specified';
+
+    // Filter for additional attributes to display
+    const additionalAttributes = Object.entries(attributes).filter(
+      ([key]) =>
+        !['fieldOfStudy', 'honors', 'holderId', 'graduationDate', 'achievementDate'].includes(key),
+    );
+
     return (
       <Grid gutter="lg">
         <Grid.Col span={{ base: 12, md: 6 }}>
@@ -447,23 +469,32 @@ export default function VerifyCredential() {
                 <Text fw={700}>Holder Information</Text>
               </Group>
               <Divider mb="sm" />
-              <Stack gap="sm">
-                <Group gap="xs">
-                  <Text size="sm" fw={600} w={120}>
-                    Recipient:
-                  </Text>
-                  <Text size="sm">{result.details.holderName}</Text>
-                </Group>
 
-                {result.details.holderId && (
-                  <Group gap="xs">
-                    <Text size="sm" fw={600} w={120}>
-                      Holder ID:
+              <Box>
+                <Grid gutter="sm">
+                  <Grid.Col span={4}>
+                    <Text size="sm" fw={600}>
+                      Recipient:
                     </Text>
-                    <Text size="sm">{result.details.holderId}</Text>
-                  </Group>
-                )}
-              </Stack>
+                  </Grid.Col>
+                  <Grid.Col span={8}>
+                    <Text size="sm">{result.details.holderName}</Text>
+                  </Grid.Col>
+
+                  {attributes.holderId && (
+                    <>
+                      <Grid.Col span={4}>
+                        <Text size="sm" fw={600}>
+                          Holder ID:
+                        </Text>
+                      </Grid.Col>
+                      <Grid.Col span={8}>
+                        <Text size="sm">{attributes.holderId}</Text>
+                      </Grid.Col>
+                    </>
+                  )}
+                </Grid>
+              </Box>
             </Paper>
 
             <Paper
@@ -479,41 +510,81 @@ export default function VerifyCredential() {
                 <Text fw={700}>Credential Information</Text>
               </Group>
               <Divider mb="sm" />
-              <Stack gap="sm">
-                <Group gap="xs">
-                  <Text size="sm" fw={600} w={120}>
-                    Credential:
-                  </Text>
-                  <Text size="sm">{result.details.title}</Text>
-                </Group>
 
-                <Group gap="xs">
-                  <Text size="sm" fw={600} w={120}>
-                    Graduation Date:
-                  </Text>
-                  <Text size="sm">{result.details.graduationDate}</Text>
-                </Group>
-
-                {result.details.fieldOfStudy && (
-                  <Group gap="xs">
-                    <Text size="sm" fw={600} w={120}>
-                      Field of Study:
+              <Box>
+                <Grid gutter="sm">
+                  <Grid.Col span={4}>
+                    <Text size="sm" fw={600}>
+                      Credential:
                     </Text>
-                    <Text size="sm">{result.details.fieldOfStudy}</Text>
-                  </Group>
-                )}
+                  </Grid.Col>
+                  <Grid.Col span={8}>
+                    <Text size="sm">{result.details.title}</Text>
+                  </Grid.Col>
 
-                {result.details.honors && (
-                  <Group gap="xs">
-                    <Text size="sm" fw={600} w={120}>
-                      Honors:
+                  <Grid.Col span={4}>
+                    <Text size="sm" fw={600}>
+                      Type:
                     </Text>
-                    <Badge color="blue" size="sm">
-                      {result.details.honors}
-                    </Badge>
-                  </Group>
-                )}
-              </Stack>
+                  </Grid.Col>
+                  <Grid.Col span={8}>
+                    <Text size="sm" tt="capitalize">
+                      {credentialType}
+                    </Text>
+                  </Grid.Col>
+
+                  <Grid.Col span={4}>
+                    <Text size="sm" fw={600}>
+                      Issuance Date:
+                    </Text>
+                  </Grid.Col>
+                  <Grid.Col span={8}>
+                    <Text size="sm">{graduationDate}</Text>
+                  </Grid.Col>
+
+                  {attributes.fieldOfStudy && (
+                    <>
+                      <Grid.Col span={4}>
+                        <Text size="sm" fw={600}>
+                          Field of Study:
+                        </Text>
+                      </Grid.Col>
+                      <Grid.Col span={8}>
+                        <Text size="sm">{attributes.fieldOfStudy}</Text>
+                      </Grid.Col>
+                    </>
+                  )}
+
+                  {attributes.honors && (
+                    <>
+                      <Grid.Col span={4}>
+                        <Text size="sm" fw={600}>
+                          Honors:
+                        </Text>
+                      </Grid.Col>
+                      <Grid.Col span={8}>
+                        <Badge color="blue" size="sm">
+                          {attributes.honors}
+                        </Badge>
+                      </Grid.Col>
+                    </>
+                  )}
+
+                  {/* Render additional attributes dynamically */}
+                  {additionalAttributes.map(([key, value]) => (
+                    <React.Fragment key={key}>
+                      <Grid.Col span={4}>
+                        <Text size="sm" fw={600} tt="capitalize">
+                          {key.replace(/([A-Z])/g, ' $1').trim()}:
+                        </Text>
+                      </Grid.Col>
+                      <Grid.Col span={8}>
+                        <Text size="sm">{String(value)}</Text>
+                      </Grid.Col>
+                    </React.Fragment>
+                  ))}
+                </Grid>
+              </Box>
             </Paper>
           </Stack>
         </Grid.Col>
@@ -561,8 +632,8 @@ export default function VerifyCredential() {
               )}
 
               <Text size="sm" c={isDarkMode ? 'gray.4' : 'gray.7'} ta="center">
-                This document has been cryptographically verified and matches the certified record
-                stored on the blockchain.
+                This {credentialType} has been cryptographically verified and matches the certified
+                record stored on the blockchain.
               </Text>
             </Stack>
           </Card>
@@ -572,7 +643,8 @@ export default function VerifyCredential() {
   };
 
   const renderVerificationDataTab = () => {
-    if (!result?.docId) return null;
+    if (!result?.credentialId) return null;
+
     return (
       <Grid>
         <Grid.Col span={12}>
@@ -594,16 +666,30 @@ export default function VerifyCredential() {
               <Grid mt="md">
                 <Grid.Col span={{ base: 12, md: 6 }}>
                   <Stack gap="md">
-                    <Group align="flex-start">
-                      <Text size="sm" fw={600} w={100}>
+                    <Group align="flex-start" wrap="nowrap">
+                      <Text size="sm" fw={600} w={90} maw={90}>
                         Document ID:
                       </Text>
-                      <Stack gap={0}>
-                        <Group gap="xs">
-                          <Text size="sm" ff="monospace" style={{ wordBreak: 'break-all' }}>
-                            {result.docId}
+                      <Stack gap={0} style={{ flex: 1 }}>
+                        <Group gap="xs" style={{ flexWrap: 'nowrap' }}>
+                          <Text
+                            size="sm"
+                            ff="monospace"
+                            style={{
+                              wordBreak: 'keep-all',
+                              overflowWrap: 'anywhere',
+                              whiteSpace: 'pre-wrap',
+                              flex: 1,
+                            }}
+                          >
+                            {result.credentialId}
                           </Text>
-                          <ActionIcon variant="subtle" size="sm" onClick={handleCopyDocId}>
+                          <ActionIcon
+                            variant="subtle"
+                            size="sm"
+                            onClick={handleCopyDocId}
+                            style={{ flexShrink: 0 }}
+                          >
                             <IconCopy size={14} />
                           </ActionIcon>
                         </Group>
@@ -613,11 +699,11 @@ export default function VerifyCredential() {
                       </Stack>
                     </Group>
 
-                    <Group align="flex-start">
-                      <Text size="sm" fw={600} w={100}>
+                    <Group align="flex-start" wrap="nowrap">
+                      <Text size="sm" fw={600} w={90} maw={90}>
                         Verified On:
                       </Text>
-                      <Stack gap={0}>
+                      <Stack gap={0} style={{ flex: 1 }}>
                         <Text size="sm">
                           {new Date().toLocaleString('en-US', {
                             year: 'numeric',
@@ -632,6 +718,20 @@ export default function VerifyCredential() {
                         </Text>
                       </Stack>
                     </Group>
+
+                    {result.details?.ledgerTimestamp && (
+                      <Group align="flex-start" wrap="nowrap">
+                        <Text size="sm" fw={600} w={90} maw={90}>
+                          Issued On:
+                        </Text>
+                        <Stack gap={0} style={{ flex: 1 }}>
+                          <Text size="sm">{result.details.ledgerTimestamp}</Text>
+                          <Text size="xs" c="dimmed">
+                            Blockchain record timestamp
+                          </Text>
+                        </Stack>
+                      </Group>
+                    )}
                   </Stack>
                 </Grid.Col>
 
@@ -652,13 +752,13 @@ export default function VerifyCredential() {
                         <ThemeIcon size="xs" radius="xl" color="green" variant="filled">
                           <IconCheck size={10} />
                         </ThemeIcon>
-                        <Text size="sm">It was genuinely issued by the claimed institution</Text>
+                        <Text size="sm">It was genuinely issued by the claimed organization</Text>
                       </Group>
                       <Group gap="xs">
                         <ThemeIcon size="xs" radius="xl" color="green" variant="filled">
                           <IconCheck size={10} />
                         </ThemeIcon>
-                        <Text size="sm">The document belongs to the specified graduate</Text>
+                        <Text size="sm">The document belongs to the specified holder</Text>
                       </Group>
                     </Stack>
                   </Card>
@@ -672,7 +772,7 @@ export default function VerifyCredential() {
   };
 
   return (
-    <Container size="lg" py="xl">
+    <Container size="xl" py="xl">
       {!result && renderVerificationForm()}
       {result && result.verified && renderSuccessResult()}
       {result && !result.verified && renderFailedResult()}

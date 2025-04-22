@@ -88,6 +88,7 @@ export interface VerificationResult {
     issuedAt?: string;
     issuerLogoUrl?: string;
     issuerId?: string;
+    ledgerTimestamp?: string;
   };
 }
 
