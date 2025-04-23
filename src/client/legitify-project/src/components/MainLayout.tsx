@@ -35,10 +35,18 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const location = useLocation();
   const sidebarRef = useRef<HTMLDivElement>(null);
 
-  const isHomePage =
-    location.pathname === '/' ||
-    location.pathname === '/login' ||
-    location.pathname === '/register';
+  // Check if we're on auth pages
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+
+  // Show navbar when:
+  // 1. User is logged in, regardless of path
+  // 2. Except on login/register pages
+  const shouldShowNavbar = user && !isAuthPage;
+
+  // Hide navbar when:
+  // 1. On login/register pages OR
+  // 2. On homepage when not logged in
+  const shouldHideNavbar = isAuthPage || (location.pathname === '/' && !user);
 
   // Scroll-aware header states
   const [prevScrollPos, setPrevScrollPos] = useState(0);
@@ -198,7 +206,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
         flexDirection: 'column',
       }}
     >
-      {!isHomePage && (
+      {!shouldHideNavbar && (
         <AppShell.Navbar
           p={0}
           ref={sidebarRef}
@@ -235,7 +243,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           position: 'fixed',
           top: 0,
           right: 0,
-          left: isHomePage ? 0 : navCollapsed ? 80 : 280,
+          left: shouldHideNavbar ? 0 : navCollapsed ? 80 : 280,
           transform: visible ? 'translateY(0)' : 'translateY(-100%)',
           transition: 'transform 0.25s ease-in-out, left 0.3s ease, box-shadow 0.3s ease',
           background: getHeaderBackground(),
@@ -254,12 +262,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
           style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: isHomePage ? 'center' : 'space-between',
+            justifyContent: shouldHideNavbar ? 'center' : 'space-between',
             height: '100%',
             padding: '0 16px',
           }}
         >
-          {isHomePage ? (
+          {shouldHideNavbar ? (
             <Link
               to="/"
               style={{
@@ -278,8 +286,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   objectFit: 'contain',
                   cursor: 'pointer',
                   transition: 'transform 0.2s ease',
-                  display: 'block', // Removes any default spacing
-                  margin: 'auto', // Center in all directions
+                  display: 'block',
+                  margin: 'auto',
                 }}
                 onMouseEnter={e => {
                   e.currentTarget.style.transform = 'scale(1.05)';
@@ -360,7 +368,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             </>
           )}
 
-          {isHomePage && (
+          {shouldHideNavbar && (
             <div
               style={{
                 position: 'absolute',
@@ -377,7 +385,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
       <AppShell.Main
         style={{
-          marginLeft: isHomePage ? 0 : navCollapsed ? 80 : 280,
+          marginLeft: shouldHideNavbar ? 0 : navCollapsed ? 80 : 280,
           marginTop: 60,
           transition: 'margin-left 0.3s ease',
           background: getMainBackground(),
