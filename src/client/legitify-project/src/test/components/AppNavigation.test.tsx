@@ -215,7 +215,7 @@ describe('AppNavigation Component', () => {
     setup();
 
     // Logo is an image with alt text
-    const logo = screen.getByAltText('LegiTify Logo');
+    const logo = screen.getByAltText('Legitify Logo');
     expect(logo).toBeInTheDocument();
   });
 
@@ -223,7 +223,7 @@ describe('AppNavigation Component', () => {
     setup(null, true);
 
     // Logo should not be present in collapsed mode
-    expect(screen.queryByAltText('LegiTify Logo')).not.toBeInTheDocument();
+    expect(screen.queryByAltText('Legitify Logo')).not.toBeInTheDocument();
   });
 
   it('calls logout function when logout button is clicked', async () => {

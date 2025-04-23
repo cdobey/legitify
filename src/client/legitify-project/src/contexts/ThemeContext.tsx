@@ -10,7 +10,7 @@ type ThemeContextType = {
 };
 
 const ThemeContext = createContext<ThemeContextType>({
-  isDarkMode: false,
+  isDarkMode: true,
   toggleTheme: () => {},
   setLightTheme: () => {},
   setDarkTheme: () => {},
@@ -21,11 +21,17 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  // Initialize theme from localStorage or default to light
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+  // Initialize theme with dark mode as the default
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
+
+  // Load saved theme preference from localStorage on initial render
+  useEffect(() => {
     const savedTheme = localStorage.getItem('legitify-theme');
-    return savedTheme === 'dark';
-  });
+    // Still respect saved preferences if they exist
+    if (savedTheme) {
+      setIsDarkMode(savedTheme === 'dark');
+    }
+  }, []);
 
   // Toggle theme function
   const toggleTheme = () => {

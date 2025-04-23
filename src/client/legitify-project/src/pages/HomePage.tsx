@@ -96,7 +96,7 @@ export default function HomePage() {
                 size="xl"
                 style={{ maxWidth: 600, fontSize: '1.25rem', lineHeight: 1.6, opacity: 0.9 }}
               >
-                LegiTify transforms how academic credentials are issued, shared, and verified with
+                Legitify transforms how academic credentials are issued, shared, and verified with
                 our cutting-edge blockchain solution.
               </Text>
               <Group mt="xl">
@@ -119,11 +119,14 @@ export default function HomePage() {
                       component={Link}
                       to="/login"
                       size="lg"
-                      variant="outline"
-                      color="white"
+                      variant="filled"
+                      color="accentOrange"
                       radius="xl"
                       px="xl"
-                      style={{ backdropFilter: 'blur(8px)' }}
+                      style={{
+                        boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                      }}
                     >
                       Log In
                     </Button>
@@ -214,7 +217,7 @@ export default function HomePage() {
   const renderFeatures = () => (
     <Container size="xl" py={80}>
       <Title order={2} ta="center" mb={20} c="primaryBlue" size={36} fw={700}>
-        How LegiTify Works
+        How Legitify Works
       </Title>
       <Text ta="center" size="lg" c="dimmed" maw={700} mx="auto" mb={50}>
         Our platform simplifies credential verification through blockchain technology, creating a
@@ -326,7 +329,7 @@ export default function HomePage() {
         <Grid gutter={60} align="center">
           <Grid.Col span={{ base: 12, md: 6 }}>
             <Title order={2} mb={30} size={36} fw={700} c={isDarkMode ? 'gray.3' : 'primaryBlue'}>
-              Why Choose LegiTify?
+              Why Choose Legitify?
             </Title>
 
             <List
@@ -530,9 +533,9 @@ export default function HomePage() {
         {[
           {
             id: 'what-is-legitify',
-            title: 'What is LegiTify?',
+            title: 'What is Legitify?',
             content:
-              'LegiTify is a blockchain-based credential verification system that allows issuers to issue digital credentials, graduates to manage and share them, and verifiers to instantly verify their authenticity. Our platform eliminates credential fraud and streamlines the verification process using secure, tamper-proof blockchain technology.',
+              'Legitify is a blockchain-based credential verification system that allows issuers to issue digital credentials, graduates to manage and share them, and verifiers to instantly verify their authenticity. Our platform eliminates credential fraud and streamlines the verification process using secure, tamper-proof blockchain technology.',
           },
           {
             id: 'how-secure',
@@ -542,9 +545,9 @@ export default function HomePage() {
           },
           {
             id: 'who-can-use',
-            title: 'Who can use LegiTify?',
+            title: 'Who can use Legitify?',
             content:
-              "LegiTify serves three main user types: issuers that issue credentials, holders who receive and manage their credentials, and verifiers who need to verify the authenticity of applicants' credentials. Each user type has a dedicated interface designed to address their specific needs, creating a seamless experience across the credential ecosystem.",
+              "Legitify serves three main user types: issuers that issue credentials, holders who receive and manage their credentials, and verifiers who need to verify the authenticity of applicants' credentials. Each user type has a dedicated interface designed to address their specific needs, creating a seamless experience across the credential ecosystem.",
           },
           {
             id: 'how-verify',
@@ -643,7 +646,7 @@ export default function HomePage() {
           Ready to transform credential verification?
         </Title>
         <Text c="white" size="xl" maw={700} mx="auto" mb={40} opacity={0.9} lh={1.6}>
-          Join LegiTify today and be part of the future of secure, efficient credential management.
+          Join Legitify today and be part of the future of secure, efficient credential management.
         </Text>
 
         <Group justify="center" gap="md">

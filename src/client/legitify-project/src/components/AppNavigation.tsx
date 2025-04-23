@@ -141,7 +141,7 @@ export default function AppNavigation({ collapsed, onToggleCollapse }: AppNaviga
         {!collapsed && (
           <img
             src={isDarkMode ? '/dark-mode-header-logo.png' : '/header-image.png'}
-            alt="LegiTify Logo"
+            alt="Legitify Logo"
             style={{
               maxHeight: '35px',
               objectFit: 'contain',

@@ -17,7 +17,7 @@ import {
   IconSun,
   IconUserCircle,
 } from '@tabler/icons-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -26,6 +26,9 @@ export default function AppHeader() {
   const { isDarkMode, toggleTheme, setLightTheme, setDarkTheme } = useTheme();
   const navigate = useNavigate();
   const theme = useMantineTheme();
+  const location = useLocation();
+
+  const isRegisterPage = location.pathname === '/register';
 
   const handleLogout = async () => {
     await logout();
@@ -279,7 +282,7 @@ export default function AppHeader() {
 
           <Button
             component={Link}
-            to="/register"
+            to={isRegisterPage ? '/login' : '/register'}
             className="accent-button"
             style={{
               padding: '8px 20px',
@@ -289,7 +292,7 @@ export default function AppHeader() {
               transition: 'all 0.2s ease',
             }}
           >
-            Register
+            {isRegisterPage ? 'Login' : 'Register'}
           </Button>
         </>
       )}
