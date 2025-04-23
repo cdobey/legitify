@@ -433,7 +433,7 @@ const Register = () => {
         <LoadingOverlay visible={isLoading} />
 
         <Title order={2} ta="center" mb="sm" className="accent-gradient-text">
-          Join LegiTify
+          Join Legitify
         </Title>
         <Text size="sm" c="dimmed" ta="center" mb="xl">
           Create your account to start using the platform

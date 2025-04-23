@@ -145,7 +145,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   const getPageDescription = () => {
     const path = location.pathname;
-    if (path === '/') return 'Welcome to LegiTify';
+    if (path === '/') return 'Welcome to Legitify';
     if (path === '/dashboard') return 'Manage your academic credentials';
     if (path === '/credential/issue') return 'Issue new academic credentials securely';
     if (path === '/credential/manage') return 'Manage and view your academic credentials';
@@ -272,7 +272,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             >
               <img
                 src={isDarkMode ? '/dark-mode-header-logo.png' : '/header-image.png'}
-                alt="LegiTify Logo"
+                alt="Legitify Logo"
                 style={{
                   height: '40px',
                   objectFit: 'contain',
