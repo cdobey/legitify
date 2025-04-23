@@ -119,11 +119,14 @@ export default function HomePage() {
                       component={Link}
                       to="/login"
                       size="lg"
-                      variant="outline"
-                      color="white"
+                      variant="filled"
+                      color="accentOrange"
                       radius="xl"
                       px="xl"
-                      style={{ backdropFilter: 'blur(8px)' }}
+                      style={{
+                        boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                      }}
                     >
                       Log In
                     </Button>

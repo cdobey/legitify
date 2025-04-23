@@ -7,10 +7,11 @@
     <link rel="stylesheet" href="/src/styles/initial-loader.css" />
     <script>
       const savedTheme = localStorage.getItem('legitify-theme');
-      if (savedTheme === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-      } else {
+      // Default to dark theme if no preference is found
+      if (savedTheme === 'light') {
         document.documentElement.setAttribute('data-theme', 'light');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
       }
     </script>
     <!-- Favicon links for Vite -->

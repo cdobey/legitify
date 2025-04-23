@@ -1,6 +1,7 @@
 import { register } from '@/api/auth/auth.api';
 import { Issuer } from '@/api/issuers/issuer.models';
 import { UserRole } from '@/api/users/user.models';
+import { AuthPageBackground } from '@/components/AuthPageBackground';
 import { StatusIndicator } from '@/components/StatusIndicator';
 import {
   Alert,
@@ -9,7 +10,6 @@ import {
   Button,
   Card,
   Checkbox,
-  Container,
   Group,
   LoadingOverlay,
   PasswordInput,
@@ -36,6 +36,7 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 // Define form values interface
 interface FormValues {
@@ -54,7 +55,7 @@ interface FormValues {
   termsAccepted: boolean;
   provideOrgInfoLater: boolean;
   joinIssuerId: string;
-  issuerAction: 'create' | 'join' | 'skip'; // Updated to include 'skip'
+  issuerAction: 'create' | 'join' | 'skip';
 }
 
 const Register = () => {
@@ -65,6 +66,7 @@ const Register = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { isDarkMode } = useTheme();
 
   const form = useForm<FormValues>({
     initialValues: {
@@ -403,15 +405,30 @@ const Register = () => {
     }
   };
 
+  const cardStyle = {
+    maxWidth: 550,
+    width: '100%',
+    position: 'relative' as const,
+    backdropFilter: 'blur(10px)',
+    backgroundColor: isDarkMode ? 'rgba(42, 45, 54, 0.85)' : 'rgba(255, 255, 255, 0.85)',
+    borderColor: isDarkMode ? 'rgba(63, 67, 86, 0.7)' : 'rgba(234, 236, 239, 0.7)',
+    transition: 'all 0.3s ease',
+    animationName: 'cardAppear',
+    animationDuration: '0.6s',
+    animationFillMode: 'forwards',
+    animationTimingFunction: 'ease-out',
+    margin: '1rem auto',
+  };
+
   return (
-    <Container size="xs" py="xl">
+    <AuthPageBackground>
       <Card
-        shadow="md"
+        shadow="lg"
         padding="xl"
         radius="lg"
         withBorder
         className="accent-top-card"
-        style={{ maxWidth: 600, margin: '0 auto' }}
+        style={cardStyle}
       >
         <LoadingOverlay visible={isLoading} />
 
@@ -484,7 +501,7 @@ const Register = () => {
       </Card>
 
       <StatusIndicator position="bottom-right" />
-    </Container>
+    </AuthPageBackground>
   );
 };
 
