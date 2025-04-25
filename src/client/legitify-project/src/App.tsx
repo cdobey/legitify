@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 import MainLayout from './components/MainLayout';
 import ProtectedRoute from './components/ProtectedRoute';
+import { DashboardSkeleton } from './components/SkeletonLoaders';
 import { useAuth } from './contexts/AuthContext';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
@@ -19,13 +20,36 @@ import MyIssuers from './pages/user/MyIssuers';
 import SearchUsers from './pages/users/SearchUsers';
 
 export default function App() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  // Determines what to show on the homepage route
+  const renderHomePage = () => {
+    // When loading auth state and we might have a user (not initial load)
+    if (isLoading && sessionStorage.getItem('token')) {
+      const storedUser = sessionStorage.getItem('user');
+      let userRole = 'holder';
+
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          userRole = parsedUser.role;
+        } catch (e) {
+          console.error('Failed to parse stored user data', e);
+        }
+      }
+
+      return <DashboardSkeleton userRole={userRole as any} />;
+    }
+
+    // When auth is complete, show Dashboard or HomePage
+    return user ? <Dashboard /> : <HomePage />;
+  };
 
   return (
     <MainLayout>
       <Routes>
-        {/* Show Dashboard for authenticated users, HomePage for others */}
-        <Route path="/" element={user ? <Dashboard /> : <HomePage />} />
+        <Route path="/" element={renderHomePage()} />
+
         <Route
           path="/dashboard"
           element={

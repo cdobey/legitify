@@ -48,7 +48,7 @@ describe('App routing', () => {
 
   it('renders Register page on /register', () => {
     renderWithProviders(<App />, { route: '/register' });
-    // Check for Join LegiTify heading which is unique to the registration page
+    // Check for Join Legitify heading which is unique to the registration page
     expect(screen.getByRole('heading', { name: /join legitify/i })).toBeInTheDocument();
   });
 });
