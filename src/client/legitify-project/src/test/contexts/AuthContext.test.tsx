@@ -6,6 +6,35 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import axios from 'axios';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+// Import the missing functions
+import { useLoginMutation } from '@/api/auth/auth.mutations';
+import { useUserProfileQuery } from '@/api/auth/auth.queries';
+import { AxiosError } from 'axios';
+
+// Define interfaces for your data types
+// Use User instead of UserProfile to match the expected type
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  [key: string]: any; // For any additional properties
+}
+
+interface LoginResponse {
+  token?: string;
+  requiresTwoFactor?: boolean;
+  tempToken?: string;
+  userId?: string;
+}
+
+interface UserProfileQueryResult {
+  data: User | undefined;
+  error: AxiosError | null;
+  isLoading: boolean;
+  isSuccess?: boolean;
+  refetch: () => Promise<{ data: User; isSuccess: boolean }>;
+}
+
 // Mock React Router's useNavigate
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -51,10 +80,10 @@ vi.mock('@/config/queryClient', () => ({
 
 // Setup mocks and test variables
 const mockNavigate = vi.fn();
-const mockLoginMutateAsync = vi.fn();
-const mockUserProfileRefetch = vi.fn();
-let mockUserProfileData = null;
-let mockUserProfileError = null;
+const mockLoginMutateAsync = vi.fn<[{ email: string; password: string; twoFactorCode?: string }], Promise<LoginResponse>>();
+const mockUserProfileRefetch = vi.fn<[], Promise<{ data: User; isSuccess: boolean }>>();
+let mockUserProfileData: User | undefined = undefined;
+let mockUserProfileError: AxiosError | null = null;
 
 // Test component to access auth context
 function TestComponent() {
@@ -134,7 +163,7 @@ describe('AuthProvider', () => {
       mutateAsync: mockLoginMutateAsync,
     });
     
-    vi.mocked(useUserProfileQuery).mockImplementation(() => ({
+    vi.mocked(useUserProfileQuery).mockImplementation((): UserProfileQueryResult => ({
       data: mockUserProfileData,
       error: mockUserProfileError,
       isLoading: false,
@@ -143,7 +172,7 @@ describe('AuthProvider', () => {
   });
 
   afterEach(() => {
-    mockUserProfileData = null;
+    mockUserProfileData = undefined;
     mockUserProfileError = null;
   });
 
@@ -168,7 +197,7 @@ describe('AuthProvider', () => {
   });
 
   it('should login successfully and set user data', async () => {
-    const mockUser = { id: '123', email: 'test@example.com', name: 'Test User' };
+    const mockUser: User = { id: '123', email: 'test@example.com', name: 'Test User' };
     
     mockLoginMutateAsync.mockResolvedValueOnce({ token: 'fake-token' });
     mockUserProfileRefetch.mockResolvedValueOnce({
@@ -213,7 +242,7 @@ describe('AuthProvider', () => {
   });
 
   it('should handle two-factor authentication flow', async () => {
-    const mockUser = { id: '123', email: 'test@example.com', name: 'Test User' };
+    const mockUser: User = { id: '123', email: 'test@example.com', name: 'Test User' };
     
     // First login attempt requires 2FA
     mockLoginMutateAsync.mockResolvedValueOnce({
@@ -292,7 +321,7 @@ describe('AuthProvider', () => {
 
   it('should logout successfully', async () => {
     // First set up a logged in state
-    const mockUser = { id: '123', email: 'test@example.com', name: 'Test User' };
+    const mockUser: User = { id: '123', email: 'test@example.com', name: 'Test User' };
     mockUserProfileData = mockUser;
     
     sessionStorage.setItem('token', 'fake-token');
@@ -334,8 +363,8 @@ describe('AuthProvider', () => {
   });
 
   it('should refresh user profile', async () => {
-    const mockUser = { id: '123', email: 'test@example.com', name: 'Test User' };
-    const updatedUser = { id: '123', email: 'updated@example.com', name: 'Updated User' };
+    const mockUser: User = { id: '123', email: 'test@example.com', name: 'Test User' };
+    const updatedUser: User = { id: '123', email: 'updated@example.com', name: 'Updated User' };
     
     mockUserProfileData = mockUser;
     sessionStorage.setItem('token', 'fake-token');
@@ -381,7 +410,7 @@ describe('AuthProvider', () => {
   });
 
   it('should handle session refresh', async () => {
-    const mockUser = { id: '123', email: 'test@example.com', name: 'Test User' };
+    const mockUser: User = { id: '123', email: 'test@example.com', name: 'Test User' };
     sessionStorage.setItem('token', 'fake-token');
     
     mockUserProfileRefetch.mockResolvedValueOnce({
@@ -411,14 +440,14 @@ describe('AuthProvider', () => {
   });
 
   it('should recover user from session storage if API call fails', async () => {
-    const mockUser = { id: '123', email: 'test@example.com', name: 'Test User' };
+    const mockUser: User = { id: '123', email: 'test@example.com', name: 'Test User' };
     
     // Set up session storage with a user
     sessionStorage.setItem('token', 'fake-token');
     sessionStorage.setItem('user', JSON.stringify(mockUser));
     
     // Make the API call fail
-    mockUserProfileError = new Error('API Error');
+    mockUserProfileError = new AxiosError('API Error');
     
     render(
       <AuthProvider>
