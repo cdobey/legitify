@@ -15,6 +15,7 @@ app.use(
     origin: [
       'http://localhost:5173',
       'https://legitify-project-client.onrender.com',
+      'https://legitify-project-client-8644.onrender.com',
       'https://legitifyapp.com',
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
