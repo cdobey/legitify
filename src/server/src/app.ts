@@ -66,7 +66,10 @@ const startServer = async () => {
   }
 };
 
-startServer();
+// Only start the server if this file is run directly (not imported)
+if (process.env.NODE_ENV !== 'test' && require.main === module) {
+  startServer();
+}
 
 // Graceful shutdown
 const shutdown = async () => {
