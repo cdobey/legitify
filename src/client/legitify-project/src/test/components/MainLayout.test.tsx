@@ -125,7 +125,14 @@ const originalScrollY = window.scrollY;
 const originalAddEventListener = window.addEventListener;
 const originalRemoveEventListener = window.removeEventListener;
 
-function setup(user: User | null = null, pathname = '/') {
+// Default test user
+const defaultUser: User = {
+  username: 'testuser',
+  email: 'test@example.com',
+  role: 'holder',
+};
+
+function setup(user: User | null = defaultUser, pathname = '/') {
   // Update the mock states before rendering
   mockAuthState.user = user;
   mockLocation.pathname = pathname;
@@ -149,7 +156,7 @@ describe('MainLayout Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset mock states
-    mockAuthState.user = null;
+    mockAuthState.user = defaultUser; // Always default to having a user logged in
     mockLocation.pathname = '/';
     mockThemeState.isDarkMode = false;
 
@@ -206,12 +213,12 @@ describe('MainLayout Component', () => {
   });
 
   it('renders breadcrumbs for non-home pages', () => {
-    setup(null, '/profile');
+    setup(defaultUser, '/profile');
     expect(screen.getByTestId('breadcrumbs')).toBeInTheDocument();
   });
 
   it('does not render breadcrumbs for home page', () => {
-    setup(null, '/');
+    setup(defaultUser, '/');
     expect(screen.queryByTestId('breadcrumbs')).not.toBeInTheDocument();
   });
 
@@ -236,45 +243,45 @@ describe('MainLayout Component', () => {
   });
 
   it('displays correct page title for dashboard', () => {
-    setup(null, '/dashboard');
+    setup(defaultUser, '/dashboard');
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
   });
 
   it('displays correct page title for profile', () => {
-    setup(null, '/profile');
+    setup(defaultUser, '/profile');
     expect(screen.getByText('Profile', { selector: '.header-title' })).toBeInTheDocument();
   });
 
   it('displays correct page title for settings', () => {
-    setup(null, '/settings');
+    setup(defaultUser, '/settings');
     expect(screen.getByText('Settings', { selector: '.header-title' })).toBeInTheDocument();
   });
 
   it('displays correct page title for credential management', () => {
-    setup(null, '/credential/manage');
+    setup(defaultUser, '/credential/manage');
     expect(
       screen.getByText('Manage Credentials', { selector: '.header-title' }),
     ).toBeInTheDocument();
   });
 
   it('displays correct page title for issuer management', () => {
-    setup(null, '/issuer/manage');
+    setup(defaultUser, '/issuer/manage');
     expect(screen.getByText('Manage Issuer', { selector: '.header-title' })).toBeInTheDocument();
   });
 
   it('displays correct page description for dashboard', () => {
-    setup(null, '/dashboard');
+    setup(defaultUser, '/dashboard');
     expect(screen.getByText('Manage your academic credentials')).toBeInTheDocument();
   });
 
   it('displays correct page description for profile', () => {
-    setup(null, '/profile');
+    setup(defaultUser, '/profile');
     expect(screen.getByText('View and manage your profile information')).toBeInTheDocument();
   });
 
   it('applies different styling in dark mode', () => {
     mockThemeState.isDarkMode = true;
-    setup(null, '/dashboard');
+    setup(defaultUser, '/dashboard');
 
     // Just checking that the component renders in dark mode
     expect(screen.getByTestId('layout-children')).toBeInTheDocument();
@@ -282,7 +289,7 @@ describe('MainLayout Component', () => {
   });
 
   it('shows appropriate icon for different pages', () => {
-    setup(null, '/dashboard');
+    setup(defaultUser, '/dashboard');
     const headerIcon = document.querySelector('.header-icon');
     expect(headerIcon).toBeInTheDocument();
   });
@@ -324,5 +331,20 @@ describe('MainLayout Component', () => {
 
     // The sidebar should be collapsed again
     expect(screen.getByTestId('nav-collapsed-state')).toHaveTextContent('collapsed');
+  });
+
+  it('hides navigation on auth pages', () => {
+    setup(null, '/login');
+    expect(screen.queryByTestId('app-navigation')).not.toBeInTheDocument();
+  });
+
+  it('shows navigation when user is logged in', () => {
+    setup(defaultUser);
+    expect(screen.getByTestId('app-navigation')).toBeInTheDocument();
+  });
+
+  it('hides navigation on homepage when not logged in', () => {
+    setup(null, '/');
+    expect(screen.queryByTestId('app-navigation')).not.toBeInTheDocument();
   });
 });
