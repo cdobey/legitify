@@ -10,8 +10,8 @@ variables:
   SERVER_STARTUP_TIMEOUT: 120
   TEST_FLOW_TIMEOUT: 300
   SKIP_TESTS: 'true'
-  SKIP_DEPLOY: 'false'
-  SKIP_DB_INIT: 'false'
+  SKIP_DEPLOY: 'true'
+  SKIP_DB_INIT: 'true'
 
 test_flow:
   stage: test
