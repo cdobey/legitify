@@ -51,11 +51,21 @@ test_flow:
     - sudo chown -R gitlab-runner:gitlab-runner .
 
   script:
+    # Run server tests
+    - echo "Running server tests..."
     - cd $CI_PROJECT_DIR/src/server
     - npm install
     - npm ci
+    - npm test
 
-    # Prepare Fabric environment
+    # Run client tests
+    - echo "Running client tests..."
+    - cd $CI_PROJECT_DIR/src/client/legitify-project
+    - npm install
+    - npm ci
+    - npm test
+
+    # Continue with existing Fabric setup and network tests
     - cd $CI_PROJECT_DIR/src/ledger
     - export ARCH=amd64
     - export FABRIC_PATH=$PWD
