@@ -41,9 +41,9 @@ describe('App routing', () => {
 
   it('renders Login page on /login', () => {
     renderWithProviders(<App />, { route: '/login' });
-    // Check for Welcome Back heading and Sign In button
+    // Check for Welcome Back heading and Login button
     expect(screen.getByRole('heading', { name: /welcome back/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /login/i })).toBeInTheDocument();
   });
 
   it('renders Register page on /register', () => {
