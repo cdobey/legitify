@@ -13,6 +13,17 @@ variables:
   SKIP_DEPLOY: 'true'
   SKIP_DB_INIT: 'true'
 
+tests_skipped:
+  stage: test
+  rules:
+    - if: $SKIP_TESTS == "true"
+      when: on_success
+  tags:
+    - shell
+  script:
+    - echo "Tests were intentionally skipped by setting SKIP_TESTS=true"
+    - echo "Pipeline will continue as if tests passed successfully"
+
 test_flow:
   stage: test
   rules:
