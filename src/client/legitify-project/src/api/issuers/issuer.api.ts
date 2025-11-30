@@ -1,20 +1,21 @@
 import axios from 'axios';
+import { getEnvConfig } from '../../config/env';
 import { apiCall } from '../apiCall';
 import {
-  AddHolderParams,
-  AffiliationResponse,
-  AffiliationResponseParams,
-  AffiliationsResponse,
-  CreateIssuerParams,
-  CreateIssuerResponse,
-  Issuer,
-  IssuersResponse,
-  JoinIssuerParams,
-  JoinRequestResponse,
-  JoinRequestResponseParams,
-  JoinRequestsResponse,
-  RegisterHolderParams,
-  RegisterHolderResponse,
+    AddHolderParams,
+    AffiliationResponse,
+    AffiliationResponseParams,
+    AffiliationsResponse,
+    CreateIssuerParams,
+    CreateIssuerResponse,
+    Issuer,
+    IssuersResponse,
+    JoinIssuerParams,
+    JoinRequestResponse,
+    JoinRequestResponseParams,
+    JoinRequestsResponse,
+    RegisterHolderParams,
+    RegisterHolderResponse,
 } from './issuer.models';
 
 export const getMyIssuers = () => apiCall<IssuersResponse>({ method: 'get', path: '/issuer/my' });
@@ -91,7 +92,7 @@ export const uploadIssuerLogo = async (issuerId: string, logoFile: File) => {
   formData.append('file', logoFile);
 
   const token = sessionStorage.getItem('token');
-  const baseURL = import.meta.env.VITE_API_URL || '/api';
+  const baseURL = getEnvConfig().VITE_API_URL;
 
   try {
     const response = await axios.post(`${baseURL}/issuer/${issuerId}/logo`, formData, {

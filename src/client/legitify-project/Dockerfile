@@ -1,4 +1,4 @@
-# Simple Dockerfile for Vite React app
+# Dockerfile for Vite React app with runtime environment configuration
 FROM node:18 AS build
 
 # Set working directory
@@ -11,22 +11,21 @@ RUN npm install
 # Copy the source code
 COPY . .
 
-# Build arguments for environment variables
-ARG VITE_API_URL
-
-# Set build environment variables (these won't persist in the final image)
-ENV VITE_API_URL=${VITE_API_URL}
 # Increase Node.js memory limit to prevent out of memory errors
 ENV NODE_OPTIONS="--max-old-space-size=4096"
     
-# Build the app
+# Build the app (no environment variables needed at build time)
 RUN npm run build
     
-# Use Nginx to serve the app - clean image without build args
+# Use Nginx to serve the app with runtime configuration
 FROM nginx:alpine
     
 # Copy built app
 COPY --from=build /app/dist /usr/share/nginx/html
+    
+# Copy the entrypoint script for runtime env injection
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
     
 # Add Nginx config for SPA
 RUN echo 'server { \
@@ -39,4 +38,6 @@ RUN echo 'server { \
 }' > /etc/nginx/conf.d/default.conf
     
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+
+# Use custom entrypoint to inject runtime environment variables
+ENTRYPOINT ["/docker-entrypoint.sh"]

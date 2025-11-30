@@ -3,34 +3,35 @@ import { Issuer } from '@/api/issuers/issuer.models';
 import { UserRole } from '@/api/users/user.models';
 import { AuthPageBackground } from '@/components/AuthPageBackground';
 import { StatusIndicator } from '@/components/StatusIndicator';
+import { getEnvConfig } from '@/config/env';
 import {
-  Alert,
-  Anchor,
-  Box,
-  Button,
-  Card,
-  Checkbox,
-  Group,
-  LoadingOverlay,
-  PasswordInput,
-  SegmentedControl,
-  Select,
-  SimpleGrid,
-  Stepper,
-  Text,
-  TextInput,
-  Title,
+    Alert,
+    Anchor,
+    Box,
+    Button,
+    Card,
+    Checkbox,
+    Group,
+    LoadingOverlay,
+    PasswordInput,
+    SegmentedControl,
+    Select,
+    SimpleGrid,
+    Stepper,
+    Text,
+    TextInput,
+    Title,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import {
-  IconAlertCircle,
-  IconArrowLeft,
-  IconArrowRight,
-  IconLock,
-  IconLockCheck,
-  IconMail,
-  IconSend,
-  IconUser,
+    IconAlertCircle,
+    IconArrowLeft,
+    IconArrowRight,
+    IconLock,
+    IconLockCheck,
+    IconMail,
+    IconSend,
+    IconUser,
 } from '@tabler/icons-react';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
@@ -105,7 +106,7 @@ const Register = () => {
       const fetchIssuers = async () => {
         try {
           setIsLoadingIssuers(true);
-          const baseUrl = import.meta.env.VITE_API_URL || '/api';
+          const baseUrl = getEnvConfig().VITE_API_URL;
           const response = await axios.get(`${baseUrl}/issuer/all`);
           setIssuers(response.data);
         } catch (error) {

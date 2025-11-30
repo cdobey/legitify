@@ -1,7 +1,8 @@
 import { http, HttpResponse } from 'msw';
+import { getEnvConfig } from '../../config/env';
 
 // Define base API URL from environment variables or default
-const apiUrl = import.meta.env.VITE_API_URL || '/api';
+const apiUrl = getEnvConfig().VITE_API_URL;
 const mockCreds = [{ id: 'cred-1', title: 'Mock Credential' }];
 
 export const handlers = [

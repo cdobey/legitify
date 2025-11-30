@@ -5,7 +5,7 @@ import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ mode }) => {
-  // Load environment variables - Render.com will provide these
+  // Load environment variables for local development
   const env = loadEnv(mode, process.cwd(), '');
 
   // Load client.env file only for local development
@@ -16,19 +16,13 @@ export default defineConfig(({ mode }) => {
     }
   }
 
-  // Determine API URL based on mode (use only environment variable in production)
-  const apiUrl = mode === 'production' ? env.VITE_API_URL : 'http://localhost:3001';
+  // Determine API URL based on mode
+  // In production, the app uses runtime configuration (window.ENV_CONFIG)
+  // In development, use environment variable or default to localhost
+  const apiUrl = mode === 'production' ? (env.VITE_API_URL || '/api') : 'http://localhost:3001';
 
-  // Check if required env vars are present during build
-  if (mode === 'production') {
-    const requiredVars = ['VITE_API_URL'];
-    const missingVars = requiredVars.filter(varName => !process.env[varName] && !env[varName]);
-
-    if (missingVars.length > 0) {
-      console.error(`ERROR: Missing required environment variables: ${missingVars.join(', ')}`);
-      throw new Error('Missing required environment variables for production build');
-    }
-  }
+  // Note: We no longer require VITE_API_URL at build time
+  // The app now uses runtime environment variables via docker-entrypoint.sh
 
   return {
     plugins: [react()],

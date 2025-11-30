@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, CancelToken } from 'axios';
+import { getEnvConfig } from '../config/env';
 
 export type ApiCallParams<T> = {
   method: 'get' | 'post' | 'put' | 'delete';
@@ -21,7 +22,7 @@ export type ApiResponse<T> = {
 };
 
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: getEnvConfig().VITE_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },

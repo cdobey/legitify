@@ -2,6 +2,7 @@ import { LoginParams } from '@/api/auth/auth.models';
 import { useLoginMutation } from '@/api/auth/auth.mutations';
 import { useUserProfileQuery } from '@/api/auth/auth.queries';
 import { TwoFactorState, User } from '@/api/users/user.models';
+import { getEnvConfig } from '@/config/env';
 import { queryClient } from '@/config/queryClient';
 import axios, { AxiosInstance } from 'axios';
 import { createContext, useContext, useEffect, useState } from 'react';
@@ -32,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Create authenticated API instance
   const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL,
+    baseURL: getEnvConfig().VITE_API_URL,
   });
 
   // Add request interceptor to include auth token
