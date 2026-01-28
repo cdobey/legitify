@@ -57,7 +57,12 @@ export const uploadProfilePictureHandler: RequestHandler = async (
 
     // Upload the profile picture to storage
     try {
-      const pictureUrl = await uploadProfilePicture(userId, req.file.buffer, fileExt, req.file.mimetype);
+      const pictureUrl = await uploadProfilePicture(
+        userId,
+        req.file.buffer,
+        fileExt,
+        req.file.mimetype,
+      );
 
       if (!pictureUrl) {
         res.status(500).json({ error: 'Failed to upload profile picture' });

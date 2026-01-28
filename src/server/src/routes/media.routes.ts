@@ -1,5 +1,5 @@
-import { Router } from 'express';
 import { serveMedia } from '@/controllers/media.controller';
+import { Router } from 'express';
 
 const router = Router();
 

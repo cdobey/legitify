@@ -316,8 +316,8 @@ services:
     networks:
       - legitify-network
     labels:
-      - "coolify.managed=true"
-      - "coolify.domain=${BACKEND_DOMAIN:-api-legitify.dobey.dev}"
+      - 'coolify.managed=true'
+      - 'coolify.domain=${BACKEND_DOMAIN:-api-legitify.dobey.dev}'
 
   # =============================================================================
   # FRONTEND
@@ -333,5 +333,5 @@ services:
     networks:
       - legitify-network
     labels:
-      - "coolify.managed=true"
-      - "coolify.domain=${FRONTEND_DOMAIN:-legitify.dobey.dev}"
+      - 'coolify.managed=true'
+      - 'coolify.domain=${FRONTEND_DOMAIN:-legitify.dobey.dev}'

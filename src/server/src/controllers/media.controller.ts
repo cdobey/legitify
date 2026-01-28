@@ -1,5 +1,5 @@
 import { getMediaById } from '@/utils/storage/db-storage';
-import { RequestHandler, Response, Request } from 'express';
+import { Request, RequestHandler, Response } from 'express';
 
 /**
  * Serve media file by ID
@@ -26,7 +26,7 @@ export const serveMedia: RequestHandler = async (req: Request, res: Response): P
       'Content-Type': media.mimeType,
       'Content-Length': media.size.toString(),
       'Cache-Control': 'public, max-age=31536000', // Cache for 1 year (images don't change once uploaded)
-      'ETag': `"${media.id}"`,
+      ETag: `"${media.id}"`,
     });
 
     // Check for conditional request (browser cache validation)
