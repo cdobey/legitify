@@ -1,7 +1,7 @@
-import supabase from '@/config/supabase';
 import { login, register } from '@/controllers/authentication.controller';
 import { createIssuerHelper } from '@/controllers/issuer-management.controller';
 import prisma from '@/prisma/client';
+import * as authUtils from '@/utils/auth-utils';
 import { enrollUser } from '@/utils/fabric-helpers';
 import { OrgName, Role } from '@prisma/client';
 import { Request, Response } from 'express';
@@ -23,6 +23,19 @@ vi.mock('@/prisma/client', () => ({
     },
     $disconnect: vi.fn(),
   },
+}));
+
+// Mock auth utilities
+vi.mock('@/utils/auth-utils', () => ({
+  comparePassword: vi.fn(),
+  hashPassword: vi.fn(),
+  generateToken: vi.fn(),
+  verifyToken: vi.fn(),
+}));
+
+// Mock fabric helpers
+vi.mock('@/utils/fabric-helpers', () => ({
+  enrollUser: vi.fn(),
 }));
 
 // Mock for createIssuerHelper function
@@ -70,83 +83,81 @@ describe('Authentication Controller', () => {
       );
     });
 
-    it('should return 401 if supabase authentication fails', async () => {
+    it('should return 401 if user not found', async () => {
       const { req, res } = createMockReqRes();
       req.body = { email: 'test@example.com', password: 'password123' };
 
-      const mockSupabaseError = { message: 'Invalid login credentials' };
-      (supabase.auth.signInWithPassword as any).mockResolvedValue({
-        data: {},
-        error: mockSupabaseError,
-      });
+      (prisma.user.findUnique as any).mockResolvedValue(null);
 
       await login(req, res, {} as any);
 
-      expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'password123',
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { email: 'test@example.com' },
+        select: {
+          id: true,
+          password: true,
+          orgName: true,
+          role: true,
+          twoFactorEnabled: true,
+          twoFactorSecret: true,
+        },
       });
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: 'Authentication failed',
-          details: mockSupabaseError.message,
-        }),
-      );
+      expect(res.json).toHaveBeenCalledWith({ error: 'Invalid email or password' });
     });
 
-    it('should return 401 if no session is returned', async () => {
+    it('should return 401 if password is incorrect', async () => {
       const { req, res } = createMockReqRes();
-      req.body = { email: 'test@example.com', password: 'password123' };
+      req.body = { email: 'test@example.com', password: 'wrongpassword' };
 
-      (supabase.auth.signInWithPassword as any).mockResolvedValue({
-        data: { user: { id: 'user-id' } }, // No session
-        error: null,
-      });
+      const mockUser = {
+        id: 'user-id',
+        password: 'hashed-password',
+        orgName: OrgName.orgholder,
+        role: Role.holder,
+        twoFactorEnabled: false,
+        twoFactorSecret: null,
+      };
+
+      (prisma.user.findUnique as any).mockResolvedValue(mockUser);
+      (authUtils.comparePassword as any).mockResolvedValue(false);
 
       await login(req, res, {} as any);
 
+      expect(authUtils.comparePassword).toHaveBeenCalledWith('wrongpassword', 'hashed-password');
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: 'No session returned from Supabase',
-        }),
-      );
+      expect(res.json).toHaveBeenCalledWith({ error: 'Invalid email or password' });
     });
 
     it('should request 2FA code if user has 2FA enabled', async () => {
       const { req, res } = createMockReqRes();
       req.body = { email: 'test@example.com', password: 'password123' };
 
-      const mockUser = { id: 'user-id' };
-      const mockSession = {
-        access_token: 'mock-access-token',
-        expires_at: 123456,
-        refresh_token: 'mock-refresh-token',
-      };
-
-      (supabase.auth.signInWithPassword as any).mockResolvedValue({
-        data: { user: mockUser, session: mockSession },
-        error: null,
-      });
-
-      (prisma.user.findUnique as any).mockResolvedValue({
+      const mockUser = {
+        id: 'user-id',
+        password: 'hashed-password',
+        orgName: OrgName.orgholder,
+        role: Role.holder,
         twoFactorEnabled: true,
         twoFactorSecret: 'secret',
-      });
+      };
+
+      (prisma.user.findUnique as any).mockResolvedValue(mockUser);
+      (authUtils.comparePassword as any).mockResolvedValue(true);
+      (authUtils.generateToken as any).mockReturnValue('temp-2fa-token');
 
       await login(req, res, {} as any);
 
-      expect(prisma.user.findUnique).toHaveBeenCalledWith({
-        where: { id: mockUser.id },
-        select: { twoFactorEnabled: true, twoFactorSecret: true },
+      expect(authUtils.generateToken).toHaveBeenCalledWith({
+        userId: 'user-id',
+        scope: '2fa_pending',
       });
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         requiresTwoFactor: true,
-        userId: mockUser.id,
-        tempToken: mockSession.access_token,
+        userId: 'user-id',
+        tempToken: 'temp-2fa-token',
       });
     });
 
@@ -154,29 +165,32 @@ describe('Authentication Controller', () => {
       const { req, res } = createMockReqRes();
       req.body = { email: 'test@example.com', password: 'password123' };
 
-      const mockUser = { id: 'user-id' };
-      const mockSession = {
-        access_token: 'mock-access-token',
-        expires_at: 123456,
-        refresh_token: 'mock-refresh-token',
+      const mockUser = {
+        id: 'user-id',
+        password: 'hashed-password',
+        orgName: OrgName.orgholder,
+        role: Role.holder,
+        twoFactorEnabled: false,
+        twoFactorSecret: null,
       };
 
-      (supabase.auth.signInWithPassword as any).mockResolvedValue({
-        data: { user: mockUser, session: mockSession },
-        error: null,
-      });
-
-      (prisma.user.findUnique as any).mockResolvedValue({
-        twoFactorEnabled: false,
-      });
+      (prisma.user.findUnique as any).mockResolvedValue(mockUser);
+      (authUtils.comparePassword as any).mockResolvedValue(true);
+      (authUtils.generateToken as any).mockReturnValue('mock-jwt-token');
 
       await login(req, res, {} as any);
 
+      expect(authUtils.generateToken).toHaveBeenCalledWith({
+        userId: 'user-id',
+        email: 'test@example.com',
+        role: Role.holder,
+        orgName: OrgName.orgholder,
+      });
+
       expect(res.json).toHaveBeenCalledWith({
-        token: mockSession.access_token,
-        expiresIn: mockSession.expires_at,
-        refreshToken: mockSession.refresh_token,
-        uid: mockUser.id,
+        token: 'mock-jwt-token',
+        expiresIn: 86400,
+        uid: 'user-id',
       });
     });
   });
@@ -256,25 +270,10 @@ describe('Authentication Controller', () => {
       };
 
       (prisma.user.findFirst as any).mockResolvedValue(null);
-
-      // Mock Supabase user creation
-      const mockSupabaseUser = {
-        id: 'new-user-id',
-        user_metadata: {
-          username: 'testuser',
-          role: 'holder',
-          orgName: OrgName.orgholder,
-        },
-      };
-
-      (supabase.auth.admin.createUser as any).mockResolvedValue({
-        data: { user: mockSupabaseUser },
-        error: null,
-      });
-
-      // Mock Prisma user creation
+      (authUtils.hashPassword as any).mockResolvedValue('hashed-password');
+      (enrollUser as any).mockResolvedValue(undefined);
       (prisma.user.create as any).mockResolvedValue({
-        id: 'new-user-id',
+        id: expect.any(String),
         username: 'testuser',
         role: Role.holder,
         orgName: OrgName.orgholder,
@@ -283,39 +282,22 @@ describe('Authentication Controller', () => {
         lastName: 'User',
         country: 'Ireland',
       });
+      (authUtils.generateToken as any).mockReturnValue('mock-jwt-token');
 
       await register(req, res, {} as any);
 
-      expect(supabase.auth.admin.createUser).toHaveBeenCalledWith(
-        expect.objectContaining({
-          email: 'test@example.com',
-          password: 'password123',
-          user_metadata: expect.any(Object),
-          email_confirm: true,
-        }),
-      );
-
-      expect(enrollUser).toHaveBeenCalledWith('new-user-id', OrgName.orgholder);
-
-      expect(prisma.user.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          id: 'new-user-id',
-          username: 'testuser',
-          role: 'holder',
-          orgName: OrgName.orgholder,
-          email: 'test@example.com',
-          firstName: 'Test',
-          lastName: 'User',
-          country: 'Ireland',
-        }),
-      });
+      expect(authUtils.hashPassword).toHaveBeenCalledWith('password123');
+      expect(enrollUser).toHaveBeenCalledWith(expect.any(String), OrgName.orgholder);
+      expect(prisma.user.create).toHaveBeenCalled();
 
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({
-        message: 'User created successfully',
-        uid: 'new-user-id',
-        metadata: mockSupabaseUser.user_metadata,
-      });
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'User created successfully',
+          uid: expect.any(String),
+          token: 'mock-jwt-token',
+        }),
+      );
     });
 
     it('should successfully register an issuer user with issuer details', async () => {
@@ -332,25 +314,10 @@ describe('Authentication Controller', () => {
 
       // No existing user
       (prisma.user.findFirst as any).mockResolvedValue(null);
-
-      // Mock Supabase user creation
-      const mockSupabaseUser = {
-        id: 'new-issuer-id',
-        user_metadata: {
-          username: 'testissuer',
-          role: 'issuer',
-          orgName: OrgName.orgissuer,
-        },
-      };
-
-      (supabase.auth.admin.createUser as any).mockResolvedValue({
-        data: { user: mockSupabaseUser },
-        error: null,
-      });
-
-      // Mock Prisma user creation
+      (authUtils.hashPassword as any).mockResolvedValue('hashed-password');
+      (enrollUser as any).mockResolvedValue(undefined);
       (prisma.user.create as any).mockResolvedValue({
-        id: 'new-issuer-id',
+        id: expect.any(String),
         username: 'testissuer',
         role: Role.issuer,
         orgName: OrgName.orgissuer,
@@ -363,31 +330,32 @@ describe('Authentication Controller', () => {
         name: 'test-university',
         shorthand: 'TU',
         description: 'Test University Description',
-        ownerId: 'new-issuer-id',
+        ownerId: expect.any(String),
       };
 
-      // Need to fuigure out proper type csting here
       (createIssuerHelper as any).mockResolvedValue(mockIssuer);
+      (authUtils.generateToken as any).mockReturnValue('mock-jwt-token');
 
       await register(req, res, {} as any);
 
-      expect(supabase.auth.admin.createUser).toHaveBeenCalled();
-      expect(enrollUser).toHaveBeenCalledWith('new-issuer-id', OrgName.orgissuer);
+      expect(enrollUser).toHaveBeenCalledWith(expect.any(String), OrgName.orgissuer);
       expect(prisma.user.create).toHaveBeenCalled();
       expect(createIssuerHelper).toHaveBeenCalledWith(
-        'new-issuer-id',
+        expect.any(String),
         'test-university',
         'Test University',
         'A test university for educational purposes',
       );
 
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({
-        message: 'Issuer user and issuer created successfully',
-        uid: 'new-issuer-id',
-        metadata: mockSupabaseUser.user_metadata,
-        issuer: mockIssuer,
-      });
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Issuer user and issuer created successfully',
+          uid: expect.any(String),
+          token: 'mock-jwt-token',
+          issuer: mockIssuer,
+        }),
+      );
     });
   });
 });
