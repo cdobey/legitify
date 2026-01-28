@@ -114,7 +114,7 @@ export const getIssuerHolders: RequestHandler = async (
     const membership = await prisma.issuerMember.findFirst({
       where: {
         userId: req.user.id,
-        issuerId,
+        issuerId: issuerId as string,
         status: MembershipStatus.active,
       },
     });
@@ -127,7 +127,7 @@ export const getIssuerHolders: RequestHandler = async (
     // Get all active holder affiliations
     const affiliations = await prisma.issuerAffiliation.findMany({
       where: {
-        issuerId,
+        issuerId: issuerId as string,
         status: AffiliationStatus.active,
       },
       include: {
@@ -441,26 +441,12 @@ export const registerHolder: RequestHandler = async (
     }
 
     // Import necessary functions
-    const { default: supabase } = await import('../config/supabase');
     const { enrollUser } = await import('../utils/fabric-helpers');
+    const { hashPassword } = await import('../utils/auth-utils');
+    const { v4: uuidv4 } = await import('uuid');
 
-    // Create user in Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      user_metadata: {
-        username,
-        role: 'holder',
-        orgName: 'orgholder',
-      },
-      email_confirm: true, // Auto-confirm the email for testing purposes
-    });
-
-    if (authError || !authData.user) {
-      throw authError || new Error('Failed to create user in Supabase');
-    }
-
-    const userId = authData.user.id;
+    const hashedPassword = await hashPassword(password);
+    const userId = uuidv4();
 
     // Enroll user with Hyperledger Fabric
     await enrollUser(userId, 'orgholder');
@@ -473,6 +459,7 @@ export const registerHolder: RequestHandler = async (
         role: 'holder',
         orgName: 'orgholder',
         email,
+        password: hashedPassword,
       },
     });
 

@@ -1,0 +1,54 @@
+OrdererOrgs:
+  - Name: Orderer
+    Domain: legitifyapp.com
+    EnableNodeOUs: true
+    Specs:
+      - Hostname: orderer
+        CommonName: orderer.legitifyapp.com
+        SANS:
+          - orderer.legitifyapp.com
+          - orderer
+          - localhost
+      - Hostname: orderer2
+        CommonName: orderer2.legitifyapp.com
+        SANS:
+          - orderer2.legitifyapp.com
+          - orderer2
+          - localhost
+      - Hostname: orderer3
+        CommonName: orderer3.legitifyapp.com
+        SANS:
+          - orderer3.legitifyapp.com
+          - orderer3
+          - localhost
+      - Hostname: orderer4
+        CommonName: orderer4.legitifyapp.com
+        SANS:
+          - orderer4.legitifyapp.com
+          - orderer4
+          - localhost
+
+PeerOrgs:
+  - Name: OrgIssuer
+    Domain: orgissuer.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+  - Name: OrgVerifier
+    Domain: orgverifier.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+  - Name: OrgHolder
+    Domain: orgholder.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1

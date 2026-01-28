@@ -30,52 +30,43 @@ echo -e "${BLUE}Using connection profiles directory: ${CONNECTION_PROFILES_DIR}$
 echo -e "${BLUE}Using certificates directory: ${CERTIFICATES_DIR}${NC}"
 echo -e "${BLUE}Using MSP directory: ${MSP_DIR}${NC}"
 
-# Get the Supabase URL and key from server.env file or environment
-if [ -f server.env ]; then
-  echo "Loading environment variables from server.env"
-  set -a
-  source server.env
-  set +a
-else
-  echo "Using system environment variables"
-fi
+# Default to localhost:3001 if not set
+export LEGITIFY_API_URL=${LEGITIFY_API_URL:-"http://localhost:3001"}
 
-echo -e "${BLUE}Starting test flow...${NC}"
+echo -e "${BLUE}Starting test flow against ${LEGITIFY_API_URL}...${NC}"
 
 # Function to extract token from login response
 extract_token() {
-    echo $1 | grep -o '"token":"[^"]*' | grep -o '[^"]*$' || echo ""
+    # Extract token from {"token":"..."}
+    echo $1 | sed -E 's/.*"token":"([^"]*)".*/\1/'
 }
 
 # Function to extract UID from login response
 extract_uid() {
-    echo $1 | grep -o '"uid":"[^"]*' | grep -o '[^"]*$' || echo ""
+    # Extract id from {"uid":"..."}
+    echo $1 | sed -E 's/.*"uid":"([^"]*)".*/\1/'
 }
 
 extract_doc_id() {
-    echo $1 | grep -o '"docId":"[^"]*' | grep -o '[^"]*$' || echo ""
+    echo $1 | sed -E 's/.*"docId":"([^"]*)".*/\1/'
 }
 
 extract_request_id() {
-    echo $1 | grep -o '"requestId":"[^"]*' | grep -o '[^"]*$' || echo ""
+    echo $1 | sed -E 's/.*"requestId":"([^"]*)".*/\1/'
 }
 
 extract_error() {
-    local error=$(echo $1 | grep -o '"error":"[^"]*' | grep -o '[^"]*$' 2>/dev/null)
-    if [ -z "$error" ]; then
-        error=$(echo $1 | grep -o '"message":"[^"]*' | grep -o '[^"]*$' 2>/dev/null)
-    fi
-    echo $error
+   echo $1 | sed -E 's/.*"error":"([^"]*)".*/\1/'
 }
 
 extract_issuer_id() {
-    echo $1 | grep -o '"issuer":{"id":"[^"]*' | grep -o '[^"]*$' || echo ""
+    echo $1 | sed -E 's/.*"issuer":\{.*"id":"([^"]*)".*/\1/'
 }
 
 # Add a delay function to avoid rate limiting
 wait_a_bit() {
-    echo -e "${BLUE}Waiting 3 seconds...${NC}"
-    sleep 3
+    echo -e "${BLUE}Waiting 1 second...${NC}"
+    sleep 1
 }
 
 # Validate response for critical errors
@@ -85,11 +76,11 @@ validate_response() {
     
     # First check for actual error fields
     if [[ "$response" == *"\"error\":"* ]]; then
-        local error=$(echo $response | grep -o '"error":"[^"]*' | grep -o '[^"]*$' 2>/dev/null)
+        local error=$(echo $response | sed -E 's/.*"error":"([^"]*)".*/\1/')
         echo -e "${RED}$operation failed: $error${NC}"
         
         # If it's because user already exists, that's okay, we'll proceed
-        if [[ "$error" == *"already"* || "$error" == *"exists"* ]]; then
+        if [[ "$error" == *"already registered"* || "$error" == *"already taken"* ]]; then
             echo -e "${YELLOW}User already exists, continuing...${NC}"
             return 0
         else
@@ -97,63 +88,28 @@ validate_response() {
         fi
     fi
     
-    # Check for database connection errors
-    if [[ "$response" == *"FATAL: could not open file"* ]]; then
-        echo -e "${RED}Database permission error. Check your Supabase connection settings:${NC}"
-        echo -e "${YELLOW}1. Verify POSTGRES_CONNECTION_URL in server.env is correct${NC}"
-        echo -e "${YELLOW}2. Check if Prisma needs to be redeployed: npx prisma migrate deploy${NC}"
-        echo -e "${YELLOW}3. Ensure your Supabase database password is correct${NC}"
-        exit 1
-    fi
-    
-    # If we have a message field but no error field, it's likely a success
-    if [[ "$response" == *"\"message\":"* && "$response" == *"success"* ]]; then
-        echo -e "${GREEN}$operation successful!${NC}"
-    fi
-    
     return 0
 }
 
 # Check if server is running
 echo -e "\n${BLUE}Checking server connection...${NC}"
-SERVER_CHECK_RESPONSE=$(curl -s -X GET "$LEGITIFY_API_URL/docs" -m 5 || echo '{"error":"Connection failed"}')
-
-if [[ "$SERVER_CHECK_RESPONSE" == *"error"* ]]; then
-    echo -e "${RED}Server connection failed. Make sure the server is running.${NC}"
-    echo -e "${YELLOW}Possible issues:${NC}"
-    echo -e "${YELLOW}1. Check if LEGITIFY_API_URL in .env is correct (currently: $LEGITIFY_API_URL)${NC}"
-    echo -e "${YELLOW}2. Verify the server is running on the expected port (default: 3001)${NC}"
-    echo -e "${YELLOW}3. Make sure there are no firewall issues blocking the connection${NC}"
-    echo -e "${YELLOW}4. Try running ./src/server/scripts/start-fresh-db.sh first${NC}"
-    
-    # Try to ping the server to check basic connectivity
-    echo -e "\n${BLUE}Attempting to ping server host...${NC}"
-    SERVER_HOST=$(echo $LEGITIFY_API_URL | sed -E 's|https?://||' | sed -E 's|/.*||' | sed -E 's|:.*||')
-    ping -c 1 $SERVER_HOST > /dev/null 2>&1
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}Host $SERVER_HOST is reachable.${NC}"
-        echo -e "${YELLOW}The issue might be with the specific API endpoint or port.${NC}"
-    else
-        echo -e "${RED}Host $SERVER_HOST is not reachable.${NC}"
-        echo -e "${YELLOW}Check your network connection or server address.${NC}"
+echo "Waiting for server to start..."
+MAX_SERVER_RETRIES=30
+SERVER_RETRY_COUNT=0
+while true; do
+    SERVER_CHECK_RESPONSE=$(curl -s -X GET "$LEGITIFY_API_URL/" -m 2 || echo '{"error":"Connection failed"}')
+    if [[ "$SERVER_CHECK_RESPONSE" != *"error"* ]]; then
+        echo -e "${GREEN}Server is running!${NC}"
+        break
     fi
     
-    exit 1
-else
-    echo -e "${GREEN}Server is running!${NC}"
-fi
-
-# Check if database connection is working
-echo -e "\n${BLUE}Checking Supabase connection...${NC}"
-DB_CHECK_RESPONSE=$(curl -s -X GET "$SUPABASE_API_URL/rest/v1/" \
--H "apikey: $SUPABASE_ANON_KEY" || echo '{"error":"Connection failed"}')
-
-if [[ "$DB_CHECK_RESPONSE" == *"error"* ]]; then
-    echo -e "${RED}Supabase connection failed. Check your Supabase URL and API key.${NC}"
-    exit 1
-else
-    echo -e "${GREEN}Supabase connection successful!${NC}"
-fi
+    SERVER_RETRY_COUNT=$((SERVER_RETRY_COUNT + 1))
+    if [ $SERVER_RETRY_COUNT -ge $MAX_SERVER_RETRIES ]; then
+        echo -e "${RED}Server connection failed at $LEGITIFY_API_URL after $MAX_SERVER_RETRIES attempts.${NC}"
+        exit 1
+    fi
+    sleep 2
+done
 
 echo -e "\n${BLUE}1. Registering users...${NC}"
 
@@ -475,8 +431,8 @@ MY_CREDENTIALS_RESPONSE=$(curl -s -X GET "$LEGITIFY_API_URL/credential/list" \
 echo "Holder's credentials: $MY_CREDENTIALS_RESPONSE"
 
 # Verify the issuer info is properly displayed
-if [[ "$MY_CREDENTIALS_RESPONSE" == *"Test Issuer"* ]]; then
-    echo -e "${GREEN}Issuer name displayed correctly in credential records!${NC}"
+if [[ "$MY_CREDENTIALS_RESPONSE" == *"TEST"* ]]; then
+    echo -e "${GREEN}Issuer name (TEST) displayed correctly in credential records!${NC}"
 else
     echo -e "${YELLOW}Note: Issuer name might not be showing up correctly in credential records${NC}"
 fi

@@ -1,7 +1,7 @@
 import { RequestWithUser } from '@/types/user.types';
 import { NextFunction, Response } from 'express';
-import supabase from '../config/supabase';
 import prisma from '../prisma/client';
+import { verifyToken } from '../utils/auth-utils';
 
 export const authMiddleware = async (
   req: RequestWithUser,
@@ -17,40 +17,44 @@ export const authMiddleware = async (
 
     const token = authHeader.split('Bearer ')[1];
 
-    // Verify the Supabase token
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(token);
-
-    if (error || !user) {
-      console.error('Token verification error:', error);
+    // Verify the local JWT token
+    let decoded;
+    try {
+      decoded = verifyToken(token);
+    } catch (err) {
+      console.error('Token verification error:', err);
       res.status(401).json({ error: 'Invalid token' });
       return;
     }
 
+    if (!decoded || !decoded.userId) {
+       res.status(401).json({ error: 'Invalid token payload' });
+       return;
+    }
+
     // Get user from our database to get role and organization
+    // optimizing by using the payload if role/org is in it, but for safety verify with DB
+    // actually, let's trust DB for now or we could encode role in token
     const dbUser = await prisma.user.findUnique({
-      where: { id: user.id },
+      where: { id: decoded.userId },
     });
 
-    if (!dbUser?.role || !dbUser?.orgName) {
-      console.error('Missing role or orgName for user:', user.id);
+    if (!dbUser) {
+        res.status(404).json({ error: 'User not found' });
+        return;
+    }
+
+    if (!dbUser.role || !dbUser.orgName) {
+      console.error('Missing role or orgName for user:', dbUser.id);
       res.status(403).json({ error: 'User missing required claims' });
       return;
     }
 
     req.user = {
-      id: user.id,
+      id: dbUser.id,
       role: dbUser.role,
       orgName: dbUser.orgName,
     };
-
-    console.log('Authenticated user:', {
-      id: req.user.id,
-      role: req.user.role,
-      orgName: req.user.orgName,
-    });
 
     next();
   } catch (error: any) {

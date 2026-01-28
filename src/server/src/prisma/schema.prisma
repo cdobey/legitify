@@ -23,6 +23,7 @@ model User {
   
   twoFactorEnabled   Boolean     @default(false)
   twoFactorSecret    String?
+  password           String      // Hashed password for local auth
 
   // Relations
   issuedCredentials  Credential[] @relation("Issuer")
@@ -41,7 +42,7 @@ model User {
 model Issuer {
   id           String      @id @default(uuid())
   name         String
-  shorthand    String      // (e.g., DCU)
+  shorthand    String      // Short name or abbreviation
   description  String?
   logoUrl      String?
   ownerId      String
@@ -207,4 +208,24 @@ model IssuerJoinRequest {
   // Relations
   requester      User      @relation("IssuerJoinRequester", fields: [requesterId], references: [id])
   issuer         Issuer    @relation("IssuerJoinTarget", fields: [issuerId], references: [id])
+}
+
+// Media storage model for profile pictures, logos, etc.
+model Media {
+  id          String    @id @default(uuid())
+  data        Bytes     // Binary data (BYTEA in PostgreSQL)
+  mimeType    String    // e.g., "image/png", "image/jpeg"
+  filename    String    // Original filename
+  size        Int       // File size in bytes
+  type        MediaType // Type of media (profile_picture, issuer_logo)
+  ownerId     String    // User or Issuer ID that owns this media
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([ownerId, type])
+}
+
+enum MediaType {
+  profile_picture
+  issuer_logo
 }

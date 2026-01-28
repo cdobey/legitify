@@ -1,11 +1,7 @@
-import axios from 'axios';
 import { Request, Response, Router } from 'express';
+import { testFabricConnection } from '../utils/fabric-helpers';
 
 const router = Router();
-const FABRIC_CONNECTION =
-  process.env.FABRIC_CONNECTION || process.env.EC2_IP || 'network.legitifyapp.com';
-const RESOURCE_SERVER_PORT = process.env.RESOURCE_SERVER_PORT || 8080;
-const RESOURCE_SERVER_URL = `http://${FABRIC_CONNECTION}:${RESOURCE_SERVER_PORT}`;
 
 /**
  * @route GET /health
@@ -38,23 +34,41 @@ router.get('/backend', (req: Request, res: Response) => {
  */
 router.get('/ledger', async (req: Request, res: Response) => {
   try {
-    // Try to connect to the Fabric resource server
-    const response = await axios.get(`${RESOURCE_SERVER_URL}/health`, {
-      timeout: 5000, // 5 second timeout
-    });
+    // If mock, return true
+    if (process.env.MOCK_LEDGER === 'true') {
+      res.status(200).json({
+        online: true,
+        service: 'ledger',
+        details: 'Mocked Fabric Network',
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
 
-    res.status(200).json({
-      online: true,
-      service: 'ledger',
-      details: response.data,
-      timestamp: new Date().toISOString(),
-    });
+    // Test Fabric connection using our fabric-helpers
+    const connectionResult = await testFabricConnection('orgissuer');
+
+    if (connectionResult.connected) {
+      res.status(200).json({
+        online: true,
+        service: 'ledger',
+        details: 'Hyperledger Fabric network is connected',
+        timestamp: new Date().toISOString(),
+      });
+    } else {
+      res.status(200).json({
+        online: false,
+        service: 'ledger',
+        error: connectionResult.error || 'Failed to connect to the ledger network',
+        timestamp: new Date().toISOString(),
+      });
+    }
   } catch (error) {
     console.error('Ledger health check error:', error);
     res.status(200).json({
       online: false,
       service: 'ledger',
-      error: 'Failed to connect to the ledger network',
+      error: error instanceof Error ? error.message : 'Failed to connect to the ledger network',
       timestamp: new Date().toISOString(),
     });
   }

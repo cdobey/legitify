@@ -4,7 +4,7 @@ import path from 'path';
 
 /**
  * Load environment variables from server.env file
- * Render.com environment variables take precedence
+ * Production environment variables (set in Coolify) take precedence
  */
 export function loadEnvironment(): void {
   // Try multiple possible locations for server.env

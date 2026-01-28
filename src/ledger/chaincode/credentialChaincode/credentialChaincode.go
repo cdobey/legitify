@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
+	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
@@ -405,7 +407,27 @@ func main() {
 		panic(fmt.Sprintf("Error create credential chaincode: %v", err))
 	}
 
-	if err := chaincode.Start(); err != nil {
-		panic(fmt.Sprintf("Error starting credential chaincode: %v", err))
+	// Check if running as CCaaS (Chaincode as a Service)
+	ccid := os.Getenv("CHAINCODE_ID")
+	ccAddress := os.Getenv("CHAINCODE_SERVER_ADDRESS")
+	
+	if ccid != "" && ccAddress != "" {
+		// Running as external chaincode service
+		server := &shim.ChaincodeServer{
+			CCID:    ccid,
+			Address: ccAddress,
+			CC:      chaincode,
+			TLSProps: shim.TLSProperties{
+				Disabled: true,
+			},
+		}
+		if err := server.Start(); err != nil {
+			panic(fmt.Sprintf("Error starting chaincode server: %v", err))
+		}
+	} else {
+		// Running in traditional embedded mode
+		if err := chaincode.Start(); err != nil {
+			panic(fmt.Sprintf("Error starting credential chaincode: %v", err))
+		}
 	}
 }

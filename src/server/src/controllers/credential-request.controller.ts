@@ -1,7 +1,7 @@
-import { getGateway } from '@/config/gateway';
 import prisma from '@/prisma/client';
 import { RequestWithUser } from '@/types/user.types';
 import {
+  evaluateFabricTransaction,
   getUserInfo,
   sha256,
   submitFabricTransaction,
@@ -148,7 +148,7 @@ export const viewCredential: RequestHandler = async (
       return;
     }
 
-    const docId = req.params.docId;
+    const docId = req.params.docId as string;
     console.log(
       `User ${req.user.id} with role ${req.user.role} attempting to view credential ${docId}`,
     );
@@ -245,13 +245,37 @@ export const viewCredential: RequestHandler = async (
       return;
     }
 
-    // Get hash from Fabric
-    const gateway = await getGateway(req.user.id, req.user.orgName?.toLowerCase() || '');
-    const network = await gateway.getNetwork(process.env.FABRIC_CHANNEL || 'legitifychannel');
-    const contract = network.getContract(process.env.FABRIC_CHAINCODE || 'credentialCC');
-
-    const record = await contract.evaluateTransaction('ReadCredential', docId);
-    const credentialRecord = JSON.parse(record.toString());
+    // Get hash from Fabric via helper (supports mock)
+    let credentialRecord: any = {};
+    try {
+        const result = await evaluateFabricTransaction(
+            req.user.id, 
+            req.user.orgName?.toLowerCase() || '', 
+            'ReadCredential', 
+            docId
+        );
+        
+        if (process.env.MOCK_LEDGER === 'true') {
+             // Mock data structure
+             credentialRecord = {
+                 docHash: sha256(Buffer.from(credential.fileData!)), // Mock verify success
+                 ledgerTimestamp: credential.ledgerTimestamp || new Date().toISOString(),
+                 updatedAt: new Date().toISOString()
+             };
+        } else {
+             credentialRecord = result;
+        }
+    } catch (error) {
+        console.error('Fabric read error:', error);
+        if (process.env.MOCK_LEDGER === 'true') {
+             credentialRecord = {
+                 docHash: sha256(Buffer.from(credential.fileData!)),
+                 ledgerTimestamp: credential.ledgerTimestamp || new Date().toISOString(),
+             };
+        } else {
+             throw error;
+        }
+    }
 
     // Verify hash matches current file
     const currentHash = sha256(Buffer.from(credential.fileData!));

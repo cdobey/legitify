@@ -4,6 +4,7 @@ import credentialRoutes from './credential-management.routes';
 import docsRoutes from './docs.routes';
 import healthRoutes from './health.routes';
 import issuerRoutes from './issuer-management.routes';
+import mediaRoutes from './media.routes';
 import userRoutes from './user-management.routes';
 
 const router = Router();
@@ -13,6 +14,7 @@ router.use('/auth', authRoutes);
 router.use('/user', userRoutes);
 router.use('/credential', credentialRoutes);
 router.use('/issuer', issuerRoutes);
+router.use('/media', mediaRoutes);
 router.use('/docs', docsRoutes);
 
 router.use('/status', healthRoutes);

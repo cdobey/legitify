@@ -1,6 +1,6 @@
 import prisma from '@/prisma/client';
 import { RequestWithUser } from '@/types/user.types';
-import { deleteProfilePicture, uploadProfilePicture } from '@/utils/storage/supabase-storage';
+import { deleteProfilePicture, uploadProfilePicture } from '@/utils/storage/db-storage';
 import { RequestHandler, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
@@ -57,7 +57,7 @@ export const uploadProfilePictureHandler: RequestHandler = async (
 
     // Upload the profile picture to storage
     try {
-      const pictureUrl = await uploadProfilePicture(userId, req.file.buffer, fileExt);
+      const pictureUrl = await uploadProfilePicture(userId, req.file.buffer, fileExt, req.file.mimetype);
 
       if (!pictureUrl) {
         res.status(500).json({ error: 'Failed to upload profile picture' });

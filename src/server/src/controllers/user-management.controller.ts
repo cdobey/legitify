@@ -1,4 +1,3 @@
-import supabase from '@/config/supabase'; // Import supabase client
 import prisma from '@/prisma/client';
 import { RequestWithUser } from '@/types/user.types';
 import { Role } from '@prisma/client';
@@ -134,24 +133,7 @@ export const updateProfile: RequestHandler = async (
       updateData.country = country;
     }
 
-    // Update Supabase Auth email if necessary
-    if (updateSupabaseEmail && updateData.email) {
-      const { error: supabaseError } = await supabase.auth.admin.updateUserById(userId, {
-        email: updateData.email,
-        // Consider email_confirm: true if you want users to re-verify
-      });
-
-      if (supabaseError) {
-        console.error('Supabase email update error:', supabaseError);
-        // Check for specific Supabase errors if needed
-        if (supabaseError.message.includes('duplicate key value violates unique constraint')) {
-          res.status(400).json({ error: 'Email already registered in authentication system.' });
-        } else {
-          res.status(500).json({ error: 'Failed to update email in authentication system' });
-        }
-        return;
-      }
-    }
+    // Removed Supabase email update logic as we are self-hosted
 
     // Update user in Prisma database
     const updatedUser = await prisma.user.update({
@@ -214,10 +196,9 @@ export const changePassword: RequestHandler = async (
       return;
     }
 
-    // Fetch user email from DB to verify current password with Supabase
+    // Fetch user with password from DB to verify current password
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { email: true },
     });
 
     if (!user) {
@@ -225,33 +206,23 @@ export const changePassword: RequestHandler = async (
       return;
     }
 
-    // Verify current password by trying to sign in
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: user.email,
-      password: currentPassword,
-    });
+    // Verify current password
+    const { comparePassword, hashPassword } = await import('../utils/auth-utils');
+    const isMatch = await comparePassword(currentPassword, user.password || '');
 
-    if (signInError) {
-      // Check if it's specifically an invalid login credentials error
-      if (signInError.message.includes('Invalid login credentials')) {
-        res.status(400).json({ error: 'Incorrect current password' });
-      } else {
-        console.error('Supabase sign-in error during password check:', signInError);
-        res.status(500).json({ error: 'Failed to verify current password' });
-      }
+    if (!isMatch) {
+      res.status(400).json({ error: 'Incorrect current password' });
       return;
     }
 
-    // If sign-in was successful, update the password in Supabase Auth
-    const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
-      password: newPassword,
-    });
+    // Hash new password
+    const hashedPassword = await hashPassword(newPassword);
 
-    if (updateError) {
-      console.error('Supabase password update error:', updateError);
-      res.status(500).json({ error: 'Failed to update password' });
-      return;
-    }
+    // Update password in database
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
 
     res.status(200).json({ message: 'Password changed successfully' });
   } catch (error: any) {

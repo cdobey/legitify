@@ -1,0 +1,32 @@
+# Dependencies - should be installed inside container
+node_modules
+
+# Build outputs
+dist
+build
+
+# Development files
+*.log
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files
+coverage
+*.test.ts
+*.spec.ts
+__tests__
+
+# Git
+.git
+.gitignore

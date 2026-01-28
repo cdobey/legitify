@@ -1,0 +1,340 @@
+# Legitify Local Development Compose
+version: '3.8'
+
+networks:
+  legitify-network:
+    name: fabric_test
+    driver: bridge
+
+volumes:
+  pgdata:
+  fabric_data:
+  peer0_orgissuer:
+  peer0_orgverifier:
+  peer0_orgholder:
+  orderer_data:
+  orderer2_data:
+  orderer3_data:
+  orderer4_data:
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: legitify-db-local
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=legitify
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - legitify-network
+
+  fabric-init:
+    image: hyperledger/fabric-tools:2.5.10
+    container_name: fabric-init-local
+    working_dir: /src/ledger/scripts
+    command: /bin/bash -c "chmod +x ./generate-crypto.sh && ./generate-crypto.sh"
+    volumes:
+      - ./src/ledger:/src/ledger
+      - fabric_data:/data
+    networks:
+      - legitify-network
+
+  orderer.legitifyapp.com:
+    image: hyperledger/fabric-orderer:2.5.10
+    container_name: orderer.legitifyapp.com
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/ca.crt]
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.crt
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.key
+      - ORDERER_ADMIN_TLS_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/ca.crt]
+      - ORDERER_CHANNELPARTICIPATION_ENABLED=true
+      - FABRIC_CFG_PATH=/etc/hyperledger/fabric
+    volumes:
+      - fabric_data:/data
+      - ./src/ledger/config:/etc/hyperledger/fabric
+      - orderer_data:/var/hyperledger/production/orderer
+    networks:
+      - legitify-network
+    depends_on:
+      fabric-init:
+        condition: service_completed_successfully
+
+  orderer2.legitifyapp.com:
+    image: hyperledger/fabric-orderer:2.5.10
+    container_name: orderer2.legitifyapp.com
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/ca.crt]
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/server.crt
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/server.key
+      - ORDERER_ADMIN_TLS_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/ca.crt]
+      - ORDERER_CHANNELPARTICIPATION_ENABLED=true
+      - FABRIC_CFG_PATH=/etc/hyperledger/fabric
+    volumes:
+      - fabric_data:/data
+      - ./src/ledger/config:/etc/hyperledger/fabric
+      - orderer2_data:/var/hyperledger/production/orderer
+    networks:
+      - legitify-network
+    depends_on:
+      fabric-init:
+        condition: service_completed_successfully
+
+  orderer3.legitifyapp.com:
+    image: hyperledger/fabric-orderer:2.5.10
+    container_name: orderer3.legitifyapp.com
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/ca.crt]
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/server.crt
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/server.key
+      - ORDERER_ADMIN_TLS_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/ca.crt]
+      - ORDERER_CHANNELPARTICIPATION_ENABLED=true
+      - FABRIC_CFG_PATH=/etc/hyperledger/fabric
+    volumes:
+      - fabric_data:/data
+      - ./src/ledger/config:/etc/hyperledger/fabric
+      - orderer3_data:/var/hyperledger/production/orderer
+    networks:
+      - legitify-network
+    depends_on:
+      fabric-init:
+        condition: service_completed_successfully
+
+  orderer4.legitifyapp.com:
+    image: hyperledger/fabric-orderer:2.5.10
+    container_name: orderer4.legitifyapp.com
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/ca.crt]
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/server.crt
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/server.key
+      - ORDERER_ADMIN_TLS_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/ca.crt]
+      - ORDERER_CHANNELPARTICIPATION_ENABLED=true
+      - FABRIC_CFG_PATH=/etc/hyperledger/fabric
+    volumes:
+      - fabric_data:/data
+      - ./src/ledger/config:/etc/hyperledger/fabric
+      - orderer4_data:/var/hyperledger/production/orderer
+    networks:
+      - legitify-network
+    depends_on:
+      fabric-init:
+        condition: service_completed_successfully
+
+  peer0.orgissuer.com:
+    image: hyperledger/fabric-peer:2.5.10
+    container_name: peer0.orgissuer.com
+    environment:
+      - CORE_VM_ENDPOINT=unix:///var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_ID=peer0.orgissuer.com
+      - CORE_PEER_ADDRESS=peer0.orgissuer.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.orgissuer.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_LOCALMSPID=OrgIssuerMSP
+      - CORE_PEER_MSPCONFIGPATH=/data/organizations/peerOrganizations/orgissuer.com/peers/peer0.orgissuer.com/msp
+      - CORE_PEER_TLS_CERT_FILE=/data/organizations/peerOrganizations/orgissuer.com/peers/peer0.orgissuer.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/data/organizations/peerOrganizations/orgissuer.com/peers/peer0.orgissuer.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/data/organizations/peerOrganizations/orgissuer.com/peers/peer0.orgissuer.com/tls/ca.crt
+      - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
+    volumes:
+      - fabric_data:/data
+      - ./src/ledger/config:/etc/hyperledger/peercfg
+      - peer0_orgissuer:/var/hyperledger/production
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - legitify-network
+    depends_on:
+      - orderer.legitifyapp.com
+
+  peer0.orgverifier.com:
+    image: hyperledger/fabric-peer:2.5.10
+    container_name: peer0.orgverifier.com
+    environment:
+      - CORE_VM_ENDPOINT=unix:///var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_ID=peer0.orgverifier.com
+      - CORE_PEER_ADDRESS=peer0.orgverifier.com:8051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:8051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.orgverifier.com:8052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:8052
+      - CORE_PEER_LOCALMSPID=OrgVerifierMSP
+      - CORE_PEER_MSPCONFIGPATH=/data/organizations/peerOrganizations/orgverifier.com/peers/peer0.orgverifier.com/msp
+      - CORE_PEER_TLS_CERT_FILE=/data/organizations/peerOrganizations/orgverifier.com/peers/peer0.orgverifier.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/data/organizations/peerOrganizations/orgverifier.com/peers/peer0.orgverifier.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/data/organizations/peerOrganizations/orgverifier.com/peers/peer0.orgverifier.com/tls/ca.crt
+      - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
+    volumes:
+      - fabric_data:/data
+      - ./src/ledger/config:/etc/hyperledger/peercfg
+      - peer0_orgverifier:/var/hyperledger/production
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - legitify-network
+    depends_on:
+      - orderer.legitifyapp.com
+
+  peer0.orgholder.com:
+    image: hyperledger/fabric-peer:2.5.10
+    container_name: peer0.orgholder.com
+    environment:
+      - CORE_VM_ENDPOINT=unix:///var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_ID=peer0.orgholder.com
+      - CORE_PEER_ADDRESS=peer0.orgholder.com:9051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.orgholder.com:9052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
+      - CORE_PEER_LOCALMSPID=OrgHolderMSP
+      - CORE_PEER_MSPCONFIGPATH=/data/organizations/peerOrganizations/orgholder.com/peers/peer0.orgholder.com/msp
+      - CORE_PEER_TLS_CERT_FILE=/data/organizations/peerOrganizations/orgholder.com/peers/peer0.orgholder.com/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/data/organizations/peerOrganizations/orgholder.com/peers/peer0.orgholder.com/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/data/organizations/peerOrganizations/orgholder.com/peers/peer0.orgholder.com/tls/ca.crt
+      - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
+    volumes:
+      - fabric_data:/data
+      - ./src/ledger/config:/etc/hyperledger/peercfg
+      - peer0_orgholder:/var/hyperledger/production
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - legitify-network
+    depends_on:
+      - orderer.legitifyapp.com
+
+  fabric-cli:
+    image: hyperledger/fabric-tools:2.5.10
+    container_name: fabric-cli
+    working_dir: /src/ledger/scripts
+    command: /bin/bash -c "chmod +x ./init-channel.sh && ./init-channel.sh && tail -f /dev/null"
+    volumes:
+      - ./src/ledger:/src/ledger
+      - fabric_data:/data
+      - /var/run/docker.sock:/host/var/run/docker.sock
+    networks:
+      - legitify-network
+    depends_on:
+      - peer0.orgissuer.com
+      - peer0.orgverifier.com
+      - peer0.orgholder.com
+
+  credential-chaincode:
+    build:
+      context: ./src/ledger/chaincode/credentialChaincode
+      dockerfile: Dockerfile
+    container_name: credential-chaincode
+    environment:
+      - CHAINCODE_SERVER_ADDRESS=0.0.0.0:9999
+    ports:
+      - '9999:9999'
+    volumes:
+      - fabric_data:/data:ro
+    networks:
+      - legitify-network
+    depends_on:
+      fabric-cli:
+        condition: service_started
+
+  backend:
+    build:
+      context: ./src/server
+      dockerfile: Dockerfile
+    container_name: legitify-backend-local
+    environment:
+      - NODE_ENV=development
+      - POSTGRES_CONNECTION_URL=postgresql://postgres:password@postgres:5432/legitify
+      - JWT_SECRET=local-dev-secret
+      - MOCK_LEDGER=false
+      - FABRIC_CERTIFICATES_PATH=/app/fabric-data/organizations/peerOrganizations
+    volumes:
+      - ./src/server:/app
+      - /app/node_modules
+      - fabric_data:/app/fabric-data:ro
+    ports:
+      - '3001:3001'
+    networks:
+      - legitify-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      fabric-cli:
+        condition: service_started
+
+  frontend:
+    build:
+      context: ./src/client
+      dockerfile: Dockerfile
+    container_name: legitify-frontend-local
+    volumes:
+      - ./src/client:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:3001
+    ports:
+      - '3000:80'
+    networks:
+      - legitify-network
+    depends_on:
+      - backend

@@ -1,7 +1,6 @@
-import { getGateway } from '@/config/gateway';
 import prisma from '@/prisma/client';
 import { RequestWithUser } from '@/types/user.types';
-import { FABRIC_CHAINCODE, FABRIC_CHANNEL } from '@/utils/credential-utils';
+import { evaluateFabricTransaction } from '@/utils/credential-utils';
 import { RequestHandler, Response } from 'express';
 
 /**
@@ -83,39 +82,35 @@ export const getAllLedgerRecords: RequestHandler = async (
 
     const issuer = issuerMembership.issuer;
 
-    const gateway = await getGateway(req.user.id, req.user.orgName?.toLowerCase() || '');
-    const network = await gateway.getNetwork(FABRIC_CHANNEL);
-    const contract = network.getContract(FABRIC_CHAINCODE);
-
-    // Calling the GetIssuerCredentials function with the issuer ID
-    const result = await contract.evaluateTransaction('GetIssuerCredentials', issuer.id);
-
-    // Improved error handling for JSON parsing
+    // Use helper function which supports mocking
     let records: any[] = [];
     try {
-      // Validate that we have a non-empty string before parsing
-      const resultString = result.toString().trim();
-      if (!resultString) {
-        console.warn('Empty result returned from blockchain');
-        records = [];
-      } else {
-        // Try to parse the JSON
-        records = JSON.parse(resultString);
+      const result = await evaluateFabricTransaction(
+        req.user.id, 
+        req.user.orgName?.toLowerCase() || '', 
+        'GetIssuerCredentials', 
+        issuer.id
+      );
 
-        // Ensure records is an array
-        if (!Array.isArray(records)) {
-          console.warn('Expected array but got:', typeof records);
-          records = records ? [records] : [];
-        }
+      // Result is already parsed or a string by evaluateFabricTransaction
+      if (Array.isArray(result)) {
+          records = result;
+      } else if (result && typeof result === 'object') {
+          records = [result];
+      } else if (typeof result === 'string') {
+          try {
+              records = JSON.parse(result);
+              if (!Array.isArray(records)) records = [records];
+          } catch (e) {
+              console.error('Failed to parse result as JSON:', result);
+              records = [];
+          }
       }
-    } catch (parseError) {
-      console.error('JSON parse error:', parseError);
-      console.error('Raw result:', result.toString());
+    } catch (fabricError) {
+      console.error('Fabric evaluation error:', fabricError);
       // Return empty array instead of failing
       records = [];
     }
-
-    gateway.disconnect();
 
     // If no records, return empty array early
     if (records.length === 0) {
@@ -178,7 +173,7 @@ export const getUserCredentials: RequestHandler = async (
       return;
     }
 
-    const userId = req.params.userId;
+    const userId = req.params.userId as string;
     if (!userId) {
       res.status(400).json({ error: 'Missing userId parameter' });
       return;

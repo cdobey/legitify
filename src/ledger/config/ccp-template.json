@@ -1,0 +1,132 @@
+{
+  "name": "legitify-network-${ORG}",
+  "version": "1.0.0",
+  "client": {
+    "organization": "${ORG}",
+    "connection": {
+      "timeout": {
+        "peer": {
+          "endorser": "300"
+        }
+      }
+    }
+  },
+  "channels": {
+    "legitifychannel": {
+      "orderers": ["orderer.legitifyapp.com"],
+      "peers": {
+        "peer0.orgissuer.com": {
+          "endorsingPeer": true,
+          "chaincodeQuery": true,
+          "ledgerQuery": true,
+          "eventSource": true
+        },
+        "peer0.orgverifier.com": {
+          "endorsingPeer": true,
+          "chaincodeQuery": true,
+          "ledgerQuery": true,
+          "eventSource": true
+        },
+        "peer0.orgholder.com": {
+          "endorsingPeer": true,
+          "chaincodeQuery": true,
+          "ledgerQuery": true,
+          "eventSource": true
+        }
+      }
+    }
+  },
+  "organizations": {
+    "OrgIssuer": {
+      "mspid": "OrgIssuerMSP",
+      "peers": ["peer0.orgissuer.com"],
+      "certificateAuthorities": ["ca.orgissuer.com"]
+    },
+    "OrgVerifier": {
+      "mspid": "OrgVerifierMSP",
+      "peers": ["peer0.orgverifier.com"],
+      "certificateAuthorities": ["ca.orgverifier.com"]
+    },
+    "OrgHolder": {
+      "mspid": "OrgHolderMSP",
+      "peers": ["peer0.orgholder.com"],
+      "certificateAuthorities": ["ca.orgholder.com"]
+    }
+  },
+  "orderers": {
+    "orderer.legitifyapp.com": {
+      "url": "grpcs://orderer.legitifyapp.com:7050",
+      "tlsCACerts": {
+        "pem": "${ORDERER_TLS_PEM}"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "orderer.legitifyapp.com",
+        "hostnameOverride": "orderer.legitifyapp.com"
+      }
+    }
+  },
+  "peers": {
+    "peer0.orgissuer.com": {
+      "url": "grpcs://peer0.orgissuer.com:7051",
+      "tlsCACerts": {
+        "pem": "${ISSUER_TLS_PEM}"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "peer0.orgissuer.com",
+        "hostnameOverride": "peer0.orgissuer.com"
+      }
+    },
+    "peer0.orgverifier.com": {
+      "url": "grpcs://peer0.orgverifier.com:8051",
+      "tlsCACerts": {
+        "pem": "${VERIFIER_TLS_PEM}"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "peer0.orgverifier.com",
+        "hostnameOverride": "peer0.orgverifier.com"
+      }
+    },
+    "peer0.orgholder.com": {
+      "url": "grpcs://peer0.orgholder.com:9051",
+      "tlsCACerts": {
+        "pem": "${HOLDER_TLS_PEM}"
+      },
+      "grpcOptions": {
+        "ssl-target-name-override": "peer0.orgholder.com",
+        "hostnameOverride": "peer0.orgholder.com"
+      }
+    }
+  },
+  "certificateAuthorities": {
+    "ca.orgissuer.com": {
+      "url": "https://ca.orgissuer.com:7054",
+      "caName": "ca-orgissuer",
+      "tlsCACerts": {
+        "pem": ["${ISSUER_CA_PEM}"]
+      },
+      "httpOptions": {
+        "verify": false
+      }
+    },
+    "ca.orgverifier.com": {
+      "url": "https://ca.orgverifier.com:8054",
+      "caName": "ca-orgverifier",
+      "tlsCACerts": {
+        "pem": ["${VERIFIER_CA_PEM}"]
+      },
+      "httpOptions": {
+        "verify": false
+      }
+    },
+    "ca.orgholder.com": {
+      "url": "https://ca.orgholder.com:9054",
+      "caName": "ca-orgholder",
+      "tlsCACerts": {
+        "pem": ["${HOLDER_CA_PEM}"]
+      },
+      "httpOptions": {
+        "verify": false
+      }
+    }
+  }
+}

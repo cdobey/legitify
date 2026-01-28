@@ -78,9 +78,15 @@ coverage
 ## Binary and Configuration Files
 src/ledger/bin/
 src/ledger/builders/
-src/ledger/config/
 src/ledger/external-chaincode/
 src/ledger/legitify-network/builders/
+
+## Config folder - track yaml/json configs
+## Organizations symlink (created at runtime, points to Docker volume)
+src/ledger/organizations
+
+## Channel artifacts (generated at runtime)
+src/ledger/channel-artifacts/
 
 ## Network Artifacts
 src/ledger/legitify-network/channel-artifacts/
@@ -125,14 +131,12 @@ src/server/package-lock.json
 src/server.pid
 src/client.pid
 
-# Supabase local configuration
-src/server/supabase-local/supabase/config.toml
-src/server/supabase-local/supabase/.branches
-src/server/supabase-local/supabase/.temp
-.env.keys
-
 # Editor specific file extensions
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
+
+# Local development artifacts
+*.pid
+*.log

@@ -10,6 +10,15 @@ import { getConnectionProfilePath, validateFabricPrerequisites } from '../utils/
  * @returns A connected Gateway instance.
  */
 export async function getGateway(userId: string, orgName: string): Promise<Gateway> {
+  // Check for mock
+  if (process.env.MOCK_LEDGER === 'true') {
+      // Return a mock gateway or just null/throw if used improperly (but we mocked the callers so likely safe to just error or return mock)
+      // Since Gateway is a class, we can mock it partially or just throw error saying "Gateway accessed in Mock mode"
+      // But actually, callers like `submitFabricTransaction` were mocked to RETURN early. 
+      // So this might only be hit if we missed a caller.
+      throw new Error('This should not be reached in MOCK_LEDGER mode');
+  }
+
   // Validate prerequisites
   const validation = validateFabricPrerequisites(orgName);
   if (!validation.success) {

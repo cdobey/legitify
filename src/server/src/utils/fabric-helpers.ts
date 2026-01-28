@@ -1,6 +1,5 @@
 import { OrgName } from '@prisma/client';
-import FabricCAServices from 'fabric-ca-client';
-import { X509Identity } from 'fabric-network';
+import { Wallet, X509Identity } from 'fabric-network';
 import fs from 'fs';
 import path from 'path';
 import { DatabaseWallet } from './db-wallet';
@@ -29,34 +28,84 @@ const orgConfigs: { [key: string]: OrgConfig } = {
   },
 };
 
+// Mock implementation support
+const isMockLedger = process.env.MOCK_LEDGER === 'true';
+
+/**
+ * Import admin identity from pre-generated crypto materials into the wallet
+ * This is used when Fabric CA is not available
+ */
+async function importAdminIdentity(wallet: Wallet, orgConfig: OrgConfig): Promise<void> {
+  const adminId = `${orgConfig.name}admin`;
+
+  // Check if admin already exists in wallet
+  const existingAdmin = await wallet.get(adminId);
+  if (existingAdmin) {
+    console.log(`Admin identity ${adminId} already exists in wallet`);
+    return;
+  }
+
+  // Use environment variable paths for crypto materials
+  const basePath =
+    process.env.FABRIC_CERTIFICATES_PATH || 
+    process.env.FABRIC_CONNECTION_PROFILE_PATH || 
+    '/app/fabric-data/organizations/peerOrganizations';
+  const adminMspPath = path.join(
+    basePath,
+    `${orgConfig.name}.com`,
+    'users',
+    `Admin@${orgConfig.name}.com`,
+    'msp',
+  );
+
+  // Read certificate
+  const certDir = path.join(adminMspPath, 'signcerts');
+  const certFiles = fs.readdirSync(certDir);
+  const certFile = certFiles.find(f => f.endsWith('.pem') || f.endsWith('-cert.pem'));
+  if (!certFile) {
+    throw new Error(`No certificate found in ${certDir}`);
+  }
+  const certificate = fs.readFileSync(path.join(certDir, certFile), 'utf8');
+
+  // Read private key
+  const keyDir = path.join(adminMspPath, 'keystore');
+  const keyFiles = fs.readdirSync(keyDir);
+  const keyFile = keyFiles.find(f => f.endsWith('_sk') || f.endsWith('.pem'));
+  if (!keyFile) {
+    throw new Error(`No private key found in ${keyDir}`);
+  }
+  const privateKey = fs.readFileSync(path.join(keyDir, keyFile), 'utf8');
+
+  // Create and store admin identity
+  const x509Identity: X509Identity = {
+    credentials: {
+      certificate,
+      privateKey,
+    },
+    mspId: orgConfig.mspId,
+    type: 'X.509',
+  };
+
+  await wallet.put(adminId, x509Identity);
+  console.log(`Successfully imported admin identity ${adminId} for ${orgConfig.name}`);
+}
+
 export const enrollUser = async (
   userId: string,
   orgName: OrgName,
   issuerId?: string,
 ): Promise<void> => {
+  if (isMockLedger) {
+    console.log(`[MOCK] Enrolling user ${userId} with org ${orgName}...`);
+    return;
+  }
   try {
     console.log(`Enrolling user ${userId} with org ${orgName}...`);
-
-    // For issuer users, we'll add issuer ID as an attribute
-    const attributes = [];
-    if (orgName === OrgName.orgissuer && issuerId) {
-      attributes.push({
-        name: 'issuerId',
-        value: issuerId,
-        ecert: true,
-      });
-    }
 
     const org = orgConfigs[orgName.toLowerCase()];
     if (!org) {
       throw new Error(`Invalid organization: ${orgName}`);
     }
-
-    const ccpPath = path.resolve(__dirname, `../connectionProfiles/connection-${org.name}.json`);
-    const ccp = JSON.parse(fs.readFileSync(ccpPath, 'utf8'));
-
-    const caURL = ccp.certificateAuthorities[org.caName].url;
-    const ca = new FabricCAServices(caURL);
 
     const wallet = await DatabaseWallet.createInstance(org.name);
 
@@ -66,63 +115,30 @@ export const enrollUser = async (
       return;
     }
 
+    // First, ensure admin identity is imported from pre-generated crypto
+    try {
+      await importAdminIdentity(wallet, org);
+    } catch (err) {
+      console.log(`Admin identity import note: ${err}`);
+    }
+
     // Get admin identity for registering user
     const adminIdentity = await wallet.get(`${org.name}admin`);
     if (!adminIdentity) {
       throw new Error(`Admin for ${org.name} must be enrolled before registering users`);
     }
 
-    // Register and enroll the user
-    const provider = wallet.getProviderRegistry().getProvider(adminIdentity.type);
-    const adminUser = await provider.getUserContext(adminIdentity, `${org.name}admin`);
+    // For simplicity in cryptogen-based setup (no Fabric CA),
+    // we'll use the admin identity for all users in the same org.
+    // This allows transactions to be submitted without Fabric CA.
+    // In production with Fabric CA, each user would have their own identity.
+    console.log(`Using admin identity for user ${userId} in ${org.name} (cryptogen mode)`);
 
-    const registrationRequest: {
-      enrollmentID: string;
-      enrollmentSecret: string;
-      role: string;
-      affiliation: string;
-      maxEnrollments: number;
-      attrs?: { name: string; value: string; ecert: boolean }[];
-    } = {
-      enrollmentID: userId,
-      enrollmentSecret: '',
-      role: 'client',
-      affiliation: org.name,
-      maxEnrollments: -1,
-    };
-
-    // Add attributes if needed
-    if (attributes.length > 0) {
-      registrationRequest['attrs'] = attributes;
-    }
-
-    // Register the user with the CA
-    const secret = await ca.register(registrationRequest, adminUser);
-
-    // When enrolling, include the requested attributes in the certificate
-    const enrollmentRequest: FabricCAServices.IEnrollmentRequest = {
-      enrollmentID: userId,
-      enrollmentSecret: secret,
-    };
-
-    // If we have issuer attributes, request them to be included in the certificate
-    if (attributes.length > 0) {
-      enrollmentRequest.attr_reqs = [
-        {
-          name: 'issuerId',
-          optional: false,
-        },
-      ];
-    }
-
-    // Enroll the user with the attribute request
-    const enrollment = await ca.enroll(enrollmentRequest);
-
-    // Create user identity
+    // Create user identity based on admin (same crypto materials)
     const x509Identity: X509Identity = {
       credentials: {
-        certificate: enrollment.certificate,
-        privateKey: enrollment.key.toBytes(),
+        certificate: (adminIdentity as X509Identity).credentials.certificate,
+        privateKey: (adminIdentity as X509Identity).credentials.privateKey,
       },
       mspId: org.mspId,
       type: 'X.509',
@@ -141,6 +157,10 @@ export const enrollUser = async (
 };
 
 export const updateIssuerIdentity = async (userId: string, issuerId: string): Promise<void> => {
+  if (isMockLedger) {
+    console.log(`[MOCK] Updated identity for user ${userId} with issuerId ${issuerId}`);
+    return;
+  }
   try {
     await enrollUser(userId, OrgName.orgissuer, issuerId);
     console.log(`Updated identity for user ${userId} with issuerId ${issuerId}`);
@@ -159,27 +179,16 @@ export function validateFabricPrerequisites(orgName: string): {
   success: boolean;
   error?: string;
 } {
+  if (isMockLedger) {
+    return { success: true };
+  }
   try {
-    // Check if connection profile exists
-    const connectionProfilePath = path.resolve(
-      __dirname,
-      `../connectionProfiles/connection-${orgName}.json`,
-    );
+    const connectionProfilePath = getConnectionProfilePath(orgName);
 
     if (!fs.existsSync(connectionProfilePath)) {
       return {
         success: false,
-        error: `Connection profile not found at ${connectionProfilePath}. Run fetch-fabric-resources.js first.`,
-      };
-    }
-
-    // Check if certificates directory exists
-    const certsPath = path.resolve(__dirname, `../certificates/${orgName}`);
-
-    if (!fs.existsSync(certsPath)) {
-      return {
-        success: false,
-        error: `Certificates directory not found at ${certsPath}. Run fetch-fabric-resources.js first.`,
+        error: `Connection profile not found at ${connectionProfilePath}. Ensure the fabric-data volume is correctly mounted.`,
       };
     }
 
@@ -188,19 +197,10 @@ export function validateFabricPrerequisites(orgName: string): {
       const ccp = JSON.parse(fs.readFileSync(connectionProfilePath, 'utf8'));
 
       // Check for required elements
-      if (!ccp.peers || !ccp.orderers || !ccp.certificateAuthorities) {
+      if (!ccp.peers || !ccp.organizations) {
         return {
           success: false,
-          error: `Connection profile is missing required elements. Run fetch-fabric-resources.js to get a complete profile.`,
-        };
-      }
-
-      // Check that EC2 IP is used, not localhost
-      const peerKey = Object.keys(ccp.peers)[0];
-      if (peerKey && ccp.peers[peerKey].url.includes('test')) {
-        return {
-          success: false,
-          error: `Connection profile contains test URLs. Run fetch-fabric-resources.js with proper EC2_IP environment variable.`,
+          error: `Connection profile at ${connectionProfilePath} is missing required elements (peers or organizations).`,
         };
       }
     } catch (e) {
@@ -227,6 +227,9 @@ export function validateFabricPrerequisites(orgName: string): {
 export async function testFabricConnection(
   orgName: string,
 ): Promise<{ connected: boolean; error?: string }> {
+  if (isMockLedger) {
+    return { connected: true };
+  }
   try {
     // Validate prerequisites
     const validation = validateFabricPrerequisites(orgName);
@@ -234,17 +237,9 @@ export async function testFabricConnection(
       return { connected: false, error: validation.error };
     }
 
-    // First try to ping the organizations's peer
-    let peerPort;
-    if (orgName === 'orgissuer') peerPort = 7051;
-    else if (orgName === 'orgverifier') peerPort = 8051;
-    else if (orgName === 'orgholder') peerPort = 9051;
-    else return { connected: false, error: 'Unknown organization' };
-
     // Use node's built-in DNS to check hostname resolution
     const dns = require('dns');
     try {
-      // Try to resolve peer hostname
       const peerHostname = `peer0.${orgName}.com`;
       await new Promise((resolve, reject) => {
         dns.lookup(peerHostname, (err: Error, address: string) => {
@@ -255,10 +250,7 @@ export async function testFabricConnection(
     } catch (dnsErr) {
       return {
         connected: false,
-        error:
-          `Hostname resolution issue: ${
-            dnsErr instanceof Error ? dnsErr.message : String(dnsErr)
-          }\n` + `Add entries to /etc/hosts using: node src/server/scripts/update-hosts.js`,
+        error: `Hostname resolution issue: ${dnsErr instanceof Error ? dnsErr.message : String(dnsErr)}. Ensure the network is up and reachable.`,
       };
     }
 
@@ -279,7 +271,12 @@ export async function testFabricConnection(
  * @returns The path to the connection profile
  */
 export function getConnectionProfilePath(orgName: string): string {
-  return path.resolve(__dirname, `../connectionProfiles/connection-${orgName}.json`);
+  const basePath =
+    process.env.FABRIC_CERTIFICATES_PATH || 
+    process.env.FABRIC_CONNECTION_PROFILE_PATH || 
+    '/data/organizations/peerOrganizations';
+    
+  return path.join(basePath, `${orgName}.com`, `connection-${orgName}.json`);
 }
 
 /**
@@ -289,5 +286,14 @@ export function getConnectionProfilePath(orgName: string): string {
  * @returns The path to the certificate
  */
 export function getCertificatePath(orgName: string, certType: 'ca' | 'tlsca'): string {
-  return path.resolve(__dirname, `../certificates/${orgName}/${certType}.pem`);
+  const basePath =
+    process.env.FABRIC_CERTIFICATES_PATH || 
+    '/data/organizations/peerOrganizations';
+
+  if (certType === 'ca') {
+    return path.join(basePath, `${orgName}.com`, 'ca', `ca.${orgName}.com-cert.pem`);
+  } else {
+    return path.join(basePath, `${orgName}.com`, 'tlsca', `tlsca.${orgName}.com-cert.pem`);
+  }
 }
+

@@ -1,0 +1,267 @@
+################################################################################
+#
+#   Section: Organizations
+#
+#   - This section defines the different organizational identities which will
+#   be referenced later in the configuration.
+#
+################################################################################
+Organizations:
+  - &OrdererOrg
+    Name: OrdererOrg
+    ID: OrdererMSP
+    MSPDir: ../organizations/ordererOrganizations/legitifyapp.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererMSP.admin')"
+    OrdererEndpoints:
+      - orderer.legitifyapp.com:7050
+
+  - &OrgIssuer
+    Name: OrgIssuer
+    ID: OrgIssuerMSP
+    MSPDir: ../organizations/peerOrganizations/orgissuer.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrgIssuerMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrgIssuerMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrgIssuerMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('OrgIssuerMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.orgissuer.com
+        Port: 7051
+
+  - &OrgVerifier
+    Name: OrgVerifier
+    ID: OrgVerifierMSP
+    MSPDir: ../organizations/peerOrganizations/orgverifier.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrgVerifierMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrgVerifierMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrgVerifierMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('OrgVerifierMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.orgverifier.com
+        Port: 8051
+
+  - &OrgHolder
+    Name: OrgHolder
+    ID: OrgHolderMSP
+    MSPDir: ../organizations/peerOrganizations/orgholder.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrgHolderMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrgHolderMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrgHolderMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('OrgHolderMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.orgholder.com
+        Port: 9051
+
+################################################################################
+#
+#   SECTION: Capabilities
+#
+#   - This section defines the capabilities of fabric network. This is a new
+#   concept as of v1.1.0 and should not be utilized in mixed networks with
+#   v1.0.x peers and orderers.  Capabilities define features which must be
+#   present in a fabric binary for that binary to safely participate in the
+#   fabric network.  For instance, if a new MSP type is added, newer binaries
+#   might recognize and validate the signatures from this type, while older
+#   binaries without this support would be unable to validate those
+#   transactions.  This could lead to different versions of the fabric binaries
+#   having different world states.  Instead, defining a capability for a channel
+#   informs those binaries without this capability that they must cease
+#   processing transactions until they have been upgraded.  For v1.0.x if any
+#   capabilities are defined (including a map with all capabilities turned off)
+#   then the v1.0.x peer will deliberately crash.
+#
+################################################################################
+Capabilities:
+  Channel: &ChannelCapabilities
+    V2_0: true
+
+  Orderer: &OrdererCapabilities
+    V2_0: true
+
+  Application: &ApplicationCapabilities
+    # V2.5 for Application enables the new non-backwards compatible
+    # features of fabric v2.5, namely the ability to purge private data.
+    # Prior to enabling V2.5 application capabilities, ensure that all
+    # peers on a channel are at v2.5.0 or later.
+    V2_5: true
+
+################################################################################
+#
+#   SECTION: Application
+#
+#   - This section defines the values to encode into a config transaction or
+#   genesis block for application related parameters
+#
+################################################################################
+
+Application: &ApplicationDefaults
+  Organizations:
+
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: 'ANY Readers'
+    Writers:
+      Type: ImplicitMeta
+      Rule: 'ANY Writers'
+    Admins:
+      Type: ImplicitMeta
+      Rule: 'MAJORITY Admins'
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: 'MAJORITY Endorsement'
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: 'MAJORITY Endorsement'
+  Capabilities:
+    <<: *ApplicationCapabilities
+
+################################################################################
+#
+#   SECTION: Orderer
+#
+#   - This section defines the values to encode into a config transaction or
+#   genesis block for orderer related parameters
+#
+################################################################################
+Orderer: &OrdererDefaults
+  OrdererType: etcdraft
+  Addresses:
+    - orderer.legitifyapp.com:7050
+    - orderer2.legitifyapp.com:7050
+    - orderer3.legitifyapp.com:7050
+    - orderer4.legitifyapp.com:7050
+  # Batch Timeout: The amount of time to wait before creating a batch
+  BatchTimeout: 2s
+  # Batch Size: Controls the number of messages batched into a block
+  BatchSize:
+    # Max Message Count: The maximum number of messages to permit in a batch
+    MaxMessageCount: 10
+    # Absolute Max Bytes: The absolute maximum number of bytes allowed for
+    # the serialized messages in a batch.
+    AbsoluteMaxBytes: 99 MB
+    # Preferred Max Bytes: The preferred maximum number of bytes allowed for
+    # the serialized messages in a batch. A message larger than the preferred
+    # max bytes will result in a batch larger than preferred max bytes.
+    PreferredMaxBytes: 512 KB
+  # Organizations is the list of orgs which are defined as participants on
+  # the orderer side of the network
+  Organizations:
+
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: 'ANY Readers'
+    Writers:
+      Type: ImplicitMeta
+      Rule: 'ANY Writers'
+    Admins:
+      Type: ImplicitMeta
+      Rule: 'MAJORITY Admins'
+    # BlockValidation specifies what signatures must be included in the block
+    # from the orderer for the peer to validate it.
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: 'ANY Writers'
+################################################################################
+#
+#   CHANNEL
+#
+#   This section defines the values to encode into a config transaction or
+#   genesis block for channel related parameters.
+#
+################################################################################
+Channel: &ChannelDefaults
+  Policies:
+    # Who may invoke the 'Deliver' API
+    Readers:
+      Type: ImplicitMeta
+      Rule: 'ANY Readers'
+    # Who may invoke the 'Broadcast' API
+    Writers:
+      Type: ImplicitMeta
+      Rule: 'ANY Writers'
+    # By default, who may modify elements at this config level
+    Admins:
+      Type: ImplicitMeta
+      Rule: 'MAJORITY Admins'
+
+  Capabilities:
+    <<: *ChannelCapabilities
+################################################################################
+#
+#   Profile
+#
+#   - Different configuration profiles may be encoded here to be specified
+#   as parameters to the configtxgen tool
+#
+################################################################################
+Profiles:
+  ChannelUsingRaft:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      OrdererType: etcdraft
+      EtcdRaft:
+        Consenters:
+          - Host: orderer.legitifyapp.com
+            Port: 7050
+            ClientTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.crt
+            ServerTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.crt
+          - Host: orderer2.legitifyapp.com
+            Port: 7050
+            ClientTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/server.crt
+            ServerTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/server.crt
+          - Host: orderer3.legitifyapp.com
+            Port: 7050
+            ClientTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/server.crt
+            ServerTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/server.crt
+          - Host: orderer4.legitifyapp.com
+            Port: 7050
+            ClientTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/server.crt
+            ServerTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/server.crt
+      Organizations:
+        - *OrdererOrg
+      Capabilities: *OrdererCapabilities
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *OrgIssuer
+        - *OrgVerifier
+        - *OrgHolder
+      Capabilities: *ApplicationCapabilities

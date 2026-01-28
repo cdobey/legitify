@@ -1,36 +1,35 @@
 # Use Node.js base image
-FROM node:18
+FROM node:18-alpine
 
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json to install dependencies first (improves build caching)
+# Install build dependencies for native modules and netcat for health checks
+RUN apk add --no-cache python3 make g++ netcat-openbsd
+
+# Install dependencies (all, not just production - we need ts-node)
 COPY package*.json ./
+RUN npm ci
 
-# Install dependencies
-RUN npm install
-
-# Copy the entire project (except ignored files)
+# Copy the entire project
 COPY . .
 
-# Generate Prisma client without accessing the database
+# Generate Prisma client
 RUN npx prisma generate
 
 # Make scripts executable
 RUN chmod +x scripts/*.sh
 
-# Set environment variables for automated deployment
+# Set environment variables
+ENV NODE_ENV=production
 ENV IS_DEPLOYMENT=true
-ENV FABRIC_CONNECTION=network.legitifyapp.com
 
-# No database initialization during build - this will be handled by GitLab CI
-# after deployment to Render
-
-# Explicitly setting PORT environment variable for Render
-ENV PORT=3001
-
-# Expose the port that Swagger UI will run on
+# Expose the port
 EXPOSE 3001
 
-# Use our entrypoint script to fetch resources and start the app
-ENTRYPOINT ["/app/scripts/entrypoint.sh"]
+# Use entrypoint for startup tasks
+COPY scripts/docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["npm", "start"]

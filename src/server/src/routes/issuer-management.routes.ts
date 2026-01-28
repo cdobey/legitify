@@ -46,7 +46,7 @@ const router = Router();
  *                 description: Unique identifier name for the issuer
  *               shorthand:
  *                 type: string
- *                 description: Short abbreviated name for the issuer (e.g., DCU)
+ *                 description: Short abbreviated name for the issuer
  *               description:
  *                 type: string
  *                 description: Optional description of the issuer

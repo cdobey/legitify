@@ -1,34 +1,10 @@
-import supabase from '@/config/supabase';
 import prisma from '@/prisma/client';
+import { comparePassword, generateToken, hashPassword } from '@/utils/auth-utils';
 import { enrollUser } from '@/utils/fabric-helpers';
 import { OrgName, Role } from '@prisma/client';
 import { Request, RequestHandler, Response } from 'express';
+import { v4 as uuidv4 } from 'uuid';
 import { createIssuerHelper } from './issuer-management.controller';
-
-async function createSupabaseUser(
-  email: string,
-  password: string,
-  username: string,
-  role: string,
-  orgName: OrgName,
-) {
-  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-    email,
-    password,
-    user_metadata: {
-      username,
-      role,
-      orgName,
-    },
-    email_confirm: true,
-  });
-
-  if (authError || !authData.user) {
-    throw authError || new Error('Failed to create user in Supabase');
-  }
-
-  return authData.user;
-}
 
 async function createDatabaseUser(
   userId: string,
@@ -36,6 +12,7 @@ async function createDatabaseUser(
   role: Role,
   orgName: OrgName,
   email: string,
+  passwordHash: string,
   firstName?: string,
   lastName?: string,
   country?: string,
@@ -47,6 +24,7 @@ async function createDatabaseUser(
       role,
       orgName,
       email,
+      password: passwordHash,
       firstName,
       lastName,
       country,
@@ -63,42 +41,49 @@ export const login: RequestHandler = async (req: Request, res: Response): Promis
       return;
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      console.error('Sign in error:', error);
-      res.status(401).json({
-        error: 'Authentication failed',
-        details: error.message,
-      });
-      return;
-    }
-
-    if (!data.session) {
-      res.status(401).json({ error: 'No session returned from Supabase' });
-      return;
-    }
-
     const user = await prisma.user.findUnique({
-      where: { id: data.user?.id },
-      select: { twoFactorEnabled: true, twoFactorSecret: true },
+      where: { email },
+      select: { 
+        id: true, 
+        password: true, 
+        orgName: true,
+        role: true,
+        twoFactorEnabled: true, 
+        twoFactorSecret: true 
+      },
     });
 
-    if (user?.twoFactorEnabled && !twoFactorCode) {
+    if (!user || !(await comparePassword(password, user.password))) {
+      res.status(401).json({ error: 'Invalid email or password' });
+      return;
+    }
+
+    if (user.twoFactorEnabled && !twoFactorCode) {
+      // 2FA flow
+      // Generate a temporary short-lived token just for verifying 2FA if needed, 
+      // or just return a flag telling frontend to ask for code.
+      // For simplicity here, we assume frontend sends code if it knows 2FA is on?
+      // But frontend doesn't know yet.
+      // So we return `requiresTwoFactor: true`.
+      // We shouldn't return a full access token yet.
+      // Maybe a temp token with limited scope?
+      
+      // For now, let's stick to the existing response structure but we need a way to 
+      // maintain state. The previous implementation returned `tempToken: data.session.access_token`.
+      // Supabase handled this. 
+      // We will generate a temporary JWT with scope '2fa_pending'
+       const tempToken = generateToken({ userId: user.id, scope: '2fa_pending' });
+       
       res.status(200).json({
         requiresTwoFactor: true,
-        userId: data.user?.id,
-        // Don't include the actual token yet, but include a temporary token for the 2FA step
-        tempToken: data.session.access_token,
+        userId: user.id,
+        tempToken: tempToken,
       });
       return;
     }
 
     // If 2FA is enabled and code was provided, verify it
-    if (user?.twoFactorEnabled && twoFactorCode && user.twoFactorSecret) {
+    if (user.twoFactorEnabled && twoFactorCode && user.twoFactorSecret) {
       const { verifyTOTP } = await import('@/utils/totp');
 
       const isCodeValid = verifyTOTP(user.twoFactorSecret, twoFactorCode);
@@ -109,11 +94,21 @@ export const login: RequestHandler = async (req: Request, res: Response): Promis
       }
     }
 
+    const token = generateToken({ 
+      userId: user.id, 
+      email: email,
+      role: user.role,
+      orgName: user.orgName
+    });
+
+    // We can also return a refresh token if we implement that logic later.
+    // For now, just access token.
+
     res.json({
-      token: data.session.access_token,
-      expiresIn: data.session.expires_at,
-      refreshToken: data.session.refresh_token,
-      uid: data.user?.id,
+      token: token,
+      // No explicit refresh token yet unless we add it to schema
+      expiresIn: 86400, // 24h
+      uid: user.id,
     });
   } catch (error: any) {
     console.error('Login error:', {
@@ -182,12 +177,24 @@ export const register: RequestHandler = async (req: Request, res: Response): Pro
       return;
     }
 
-    // Create user in Supabase
-    const supabaseUser = await createSupabaseUser(email, password, username, role, actualOrgName);
-    const userId = supabaseUser.id;
+    const userId = uuidv4();
+    const passwordHash = await hashPassword(password);
 
     // Enroll user with Hyperledger Fabric
-    await enrollUser(userId, actualOrgName);
+    // We do this BEFORE DB creation? Or after?
+    // Supabase logic did: Create Supabase User -> Enroll -> Create DB User.
+    // If Enroll fails, we have a Supabase user but no DB user (orphaned).
+    // Let's try to Enroll first, if it fails, we abort.
+    try {
+        await enrollUser(userId, actualOrgName);
+    } catch (fabricError) {
+        console.error("Fabric enrollment failed:", fabricError);
+         res.status(500).json({
+            error: 'Blockchain enrollment failed. Please try again.',
+            details: (fabricError as any).message,
+        });
+        return;
+    }
 
     // Create user in database
     await createDatabaseUser(
@@ -196,6 +203,7 @@ export const register: RequestHandler = async (req: Request, res: Response): Pro
       role as Role,
       actualOrgName,
       email,
+      passwordHash,
       firstName,
       lastName,
       country,
@@ -212,19 +220,21 @@ export const register: RequestHandler = async (req: Request, res: Response): Pro
             issuerDescription,
           );
 
+          // Return response here if issuer created
+          const token = generateToken({ userId, email, role, orgName: actualOrgName });
           res.status(201).json({
             message: 'Issuer user and issuer created successfully',
             uid: userId,
-            metadata: supabaseUser.user_metadata,
+            token, // Auto-login after register
             issuer,
           });
           return;
         } catch (issuerError) {
           console.error('Failed to create issuer during registration:', issuerError);
-          // Continue with user creation even if issuer creation fails
+          // Continue... user is created but issuer failed?
         }
       } else if (joinIssuerId) {
-        // Handle join request - this will be processed as an issuer join request
+        // Handle join request
         await prisma.issuerJoinRequest.create({
           data: {
             requesterId: userId,
@@ -250,30 +260,18 @@ export const register: RequestHandler = async (req: Request, res: Response): Pro
       await Promise.all(affiliationPromises);
     }
 
+    const token = generateToken({ userId, email, role, orgName: actualOrgName });
+
     res.status(201).json({
       message: 'User created successfully',
       uid: userId,
-      metadata: supabaseUser.user_metadata,
+      token,
     });
   } catch (error: any) {
     console.error('Registration error:', error);
-
-    // Cleanup Supabase user if database creation failed
-    if (error.code === 'P2002') {
-      try {
-        const userEmail = req.body.email;
-        const dbUser = await prisma.user.findUnique({
-          where: { email: userEmail },
-        });
-
-        if (dbUser?.id) {
-          await supabase.auth.admin.deleteUser(dbUser.id);
-        }
-      } catch (cleanupError) {
-        console.error('Failed to cleanup Supabase user:', cleanupError);
-      }
-    }
-
+    // Note: If DB creation failed but Enroll succeeded, we might have a Fabric identity but no DB user.
+    // Ideally we should rollback Fabric enrollment but that's hard.
+    
     res.status(500).json({
       error: 'Registration failed',
       details: error.message,

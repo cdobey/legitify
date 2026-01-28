@@ -1,29 +1,112 @@
-# CA400 template repo
+# Legitify
 
-This is a template for CA400 projects.
+A blockchain-based credential verification platform that enables secure issuance, management, and verification of digital credentials.
 
-## 1. Create your repo
+## Features
 
-One person from your project team should fork this repo, then add other teammates as project members on GitLab.
+- 🔐 **Secure Credential Issuance** - Organizations can issue tamper-proof digital credentials
+- ✅ **Instant Verification** - Verify credentials in real-time against the blockchain
+- 👤 **User-Controlled** - Holders maintain full control over their credentials
+- 🔗 **Blockchain-Backed** - Optional Hyperledger Fabric integration for immutability
+- 🌐 **Modern Web Stack** - React frontend with Node.js/Express backend
 
-## 2. Name your repo appropriately
+## Architecture
 
-The name of your project must be of the form `2024-ca400-XXXXXXX`, where "`XXXXXXX`"
-should be replaced with your usernames (e.g. `2024-ca400-sblott-pclarke`).
-**Note** that the year should be set as appropriate to your year of study. For example, in the
-2022/2023 academic year this would change to '2023-ca400-sblott-pclarke'),
-in the 2023/2024 academic year this would change to '2024-ca400-sblott-pclarke'), etc.
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│    Frontend     │────▶│    Backend      │────▶│   PostgreSQL    │
+│  (React/Vite)   │     │  (Node/Express) │     │   (Database)    │
+│                 │     │                 │     │                 │
+│ legitify.dobey  │     │ api-legitify.   │     │   (Internal)    │
+│     .dev        │     │   dobey.dev     │     │                 │
+└─────────────────┘     └────────┬────────┘     └─────────────────┘
+                                 │
+                        ┌────────▼────────┐
+                        │  Hyperledger    │
+                        │    Fabric       │
+                        │  (Optional)     │
+                        └─────────────────┘
+```
 
-It is the _name of your repo_ which matters (not the name of your project).
+## Quick Start
 
-You can change the name of your repo on GitLab under:
+### Using Docker (Recommended)
 
-- Settings / General / Advanced / Change path
+```bash
+# Clone the repository
+git clone https://github.com/YOUR_USERNAME/legitify.git
+cd legitify
 
-It looks like this:
+# Start all services
+docker compose up -d
 
-![change-repo-path](./res/repo-change-path.png "Change repo path.")
+# View logs
+docker compose logs -f
+```
 
-You should replace all of this file with a README describing your own project.
+Access:
 
-## Additional resources
+- Frontend: http://localhost
+- API: http://localhost:3001
+- API Docs: http://localhost:3001/docs
+
+### Manual Setup
+
+See [src/README.md](src/README.md) for detailed development instructions.
+
+## Deployment
+
+Legitify is designed for deployment on Coolify. See [DEPLOYMENT.md](DEPLOYMENT.md) for:
+
+- Complete deployment instructions
+- Environment variable reference
+- DNS configuration
+- Security checklist
+
+## Tech Stack
+
+| Component  | Technology                             |
+| ---------- | -------------------------------------- |
+| Frontend   | React 18, Vite, Mantine UI, TypeScript |
+| Backend    | Node.js 18, Express, Prisma ORM        |
+| Database   | PostgreSQL 15                          |
+| Blockchain | Hyperledger Fabric 2.5 (optional)      |
+| CI/CD      | GitHub Actions                         |
+| Registry   | GitHub Container Registry (ghcr.io)    |
+
+## Project Structure
+
+```
+legitify/
+├── .github/workflows/     # GitHub Actions CI/CD
+├── docs/                  # Documentation
+├── src/
+│   ├── client/           # React frontend
+│   ├── server/           # Node.js backend
+│   └── ledger/           # Hyperledger Fabric
+├── docker-compose.yml     # Local development
+├── docker-compose.coolify.yml  # Production deployment
+└── DEPLOYMENT.md         # Deployment guide
+```
+
+## Development
+
+```bash
+# Run tests
+cd src/server && npm test
+cd src/client && npm test
+
+# Build Docker images locally
+docker compose build
+
+# Format code
+npm run format
+```
+
+## License
+
+MIT License - See [LICENSE](LICENSE) for details.
+
+## Contributing
+
+Contributions are welcome! Please read our contributing guidelines before submitting PRs.

@@ -16,11 +16,46 @@ export async function submitFabricTransaction(
   transactionName: string,
   ...args: string[]
 ): Promise<void> {
+  // Mock check
+  if (process.env.MOCK_LEDGER === 'true') {
+    console.log(`[MOCK] Submitting fabric transaction ${transactionName} for user ${userId}`);
+    return;
+  }
   const gateway = await getGateway(userId, orgName.toLowerCase());
   try {
     const network = await gateway.getNetwork(FABRIC_CHANNEL);
     const contract = network.getContract(FABRIC_CHAINCODE);
     await contract.submitTransaction(transactionName, ...args);
+  } finally {
+    gateway.disconnect();
+  }
+}
+
+export async function evaluateFabricTransaction(
+  userId: string,
+  orgName: string,
+  transactionName: string,
+  ...args: string[]
+): Promise<any> {
+  // Mock check
+  if (process.env.MOCK_LEDGER === 'true') {
+    console.log(`[MOCK] Evaluating fabric transaction ${transactionName} for user ${userId}`);
+    return [];
+  }
+  const gateway = await getGateway(userId, orgName.toLowerCase());
+  try {
+    const network = await gateway.getNetwork(FABRIC_CHANNEL);
+    const contract = network.getContract(FABRIC_CHAINCODE);
+    const result = await contract.evaluateTransaction(transactionName, ...args);
+    
+    // Result is a Buffer from Fabric. Convert and parse.
+    const resultString = result.toString();
+    try {
+      return JSON.parse(resultString);
+    } catch (e) {
+      // If it's not JSON (e.g., a simple string), return the string
+      return resultString;
+    }
   } finally {
     gateway.disconnect();
   }

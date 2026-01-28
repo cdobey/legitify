@@ -2,12 +2,12 @@ import { getGateway } from '@/config/gateway';
 import prisma from '@/prisma/client';
 import { RequestWithUser } from '@/types/user.types';
 import {
-  FABRIC_CHAINCODE,
-  FABRIC_CHANNEL,
-  getUserInfo,
-  sha256,
-  submitFabricTransaction,
-  validateUserRole,
+    FABRIC_CHAINCODE,
+    FABRIC_CHANNEL,
+    getUserInfo,
+    sha256,
+    submitFabricTransaction,
+    validateUserRole,
 } from '@/utils/credential-utils';
 import { RequestHandler, Response } from 'express';
 
@@ -86,35 +86,42 @@ export const issueCredential: RequestHandler = async (
     // Generate document hash
     const docHash = sha256(fileBuffer);
 
-    // Connect to Fabric
-    const gateway = await getGateway(userInfo.id, userInfo.orgName?.toLowerCase() || '');
-    const network = await gateway.getNetwork(FABRIC_CHANNEL);
-    const contract = network.getContract(FABRIC_CHAINCODE);
+    // Submit to blockchain
+    let txId = '';
+    
+    if (process.env.MOCK_LEDGER === 'true') {
+        console.log(`[MOCK] Issuing credential ${docId} for user ${holder.id}`);
+        txId = `mock_tx_${Date.now()}`;
+    } else {
+        // Connect to Fabric
+        const gateway = await getGateway(userInfo.id, userInfo.orgName?.toLowerCase() || '');
+        const network = await gateway.getNetwork(FABRIC_CHANNEL);
+        const contract = network.getContract(FABRIC_CHAINCODE);
 
-    // Convert attributes to JSON string for chaincode
-    const attributesJSON = JSON.stringify(attributes || {});
+        // Convert attributes to JSON string for chaincode
+        const attributesJSON = JSON.stringify(attributes || {});
 
-    // Submit to blockchain with the new fields
-    const transaction = contract.createTransaction('IssueCredential');
-    const txId = transaction.getTransactionId();
+        const transaction = contract.createTransaction('IssueCredential');
+        txId = transaction.getTransactionId();
 
-    await transaction.submit(
-      docId,
-      docHash,
-      holder.id,
-      userInfo.id,
-      issuerOrgId,
-      type,
-      title,
-      description || '',
-      achievementDate || '',
-      expirationDate || '',
-      programLength || '',
-      domain || '',
-      attributesJSON,
-    );
+        await transaction.submit(
+          docId,
+          docHash,
+          holder.id,
+          userInfo.id,
+          issuerOrgId,
+          type,
+          title,
+          description || '',
+          achievementDate || '',
+          expirationDate || '',
+          programLength || '',
+          domain || '',
+          attributesJSON,
+        );
 
-    gateway.disconnect();
+        gateway.disconnect();
+    }
 
     const credential = await prisma.credential.create({
       data: {

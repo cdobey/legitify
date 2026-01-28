@@ -1,6 +1,6 @@
 import prisma from '@/prisma/client';
 import { RequestWithUser } from '@/types/user.types';
-import { deleteIssuerLogo, uploadIssuerLogo } from '@/utils/storage/supabase-storage';
+import { deleteIssuerLogo, uploadIssuerLogo } from '@/utils/storage/db-storage';
 import { RequestHandler, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
@@ -38,7 +38,7 @@ export const uploadLogo: RequestHandler = async (
       return;
     }
 
-    const { issuerId: issuerId } = req.params;
+    const issuerId = req.params.issuerId as string;
     if (!issuerId) {
       res.status(400).json({ error: 'Issuer ID is required' });
       return;
@@ -79,8 +79,7 @@ export const uploadLogo: RequestHandler = async (
 
     // Upload the logo to storage
     try {
-      // Note: We're still using the existing storage functions but treating the entity as an issuer
-      const logoUrl = await uploadIssuerLogo(issuerId, req.file.buffer, fileExt);
+      const logoUrl = await uploadIssuerLogo(issuerId, req.file.buffer, fileExt, req.file.mimetype);
 
       if (!logoUrl) {
         res.status(500).json({ error: 'Failed to upload logo' });
@@ -134,7 +133,7 @@ export const deleteLogo: RequestHandler = async (
       return;
     }
 
-    const { issuerId: issuerId } = req.params;
+    const issuerId = req.params.issuerId as string;
     if (!issuerId) {
       res.status(400).json({ error: 'Issuer ID is required' });
       return;

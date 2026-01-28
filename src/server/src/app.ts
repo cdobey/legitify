@@ -4,20 +4,26 @@ import morgan from 'morgan';
 import './config/env';
 import prisma from './prisma/client';
 import indexRoutes from './routes/index';
-import { initStorageBuckets } from './utils/storage/supabase-storage';
+import { initStorageBuckets } from './utils/storage/db-storage';
 
 const app = express();
 const PORT = process.env.SERVER_PORT || 3001;
 
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost',
+  'https://legitify.dobey.dev',
+];
+
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 // Middleware
 app.use(
   cors({
-    origin: [
-      'http://localhost:5173',
-      'https://legitify-project-client.onrender.com',
-      'https://legitify-project-client-8644.onrender.com',
-      'https://legitifyapp.com',
-    ],
+    origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
@@ -52,8 +58,8 @@ app.use('/', indexRoutes);
 // Start Server
 const startServer = async () => {
   try {
-    // Initializing Supabase storage buckets
-    console.log('Initializing Supabase storage buckets...');
+    // Initialize storage (DB-based, no-op but kept for API compatibility)
+    console.log('Initializing database storage...');
     await initStorageBuckets();
 
     const server = app.listen(PORT, () => {
