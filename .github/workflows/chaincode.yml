@@ -1,13 +1,16 @@
-name: Build and Push to GHCR
+name: Build and Push Chaincode
 
 on:
   push:
     branches: [ "main", "master" ]
+    paths:
+      - 'src/ledger/chaincode/**'
+      - '.github/workflows/ghcr-publish.yml'
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ${{ github.repository }}-chaincode
 
 jobs:
   build-and-push:
@@ -15,23 +18,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-
-    strategy:
-      matrix:
-        component: [backend, frontend, chaincode]
-        include:
-          - component: backend
-            context: ./src/server
-            dockerfile: ./src/server/Dockerfile
-            image_suffix: -backend
-          - component: frontend
-            context: ./src/client
-            dockerfile: ./src/client/Dockerfile
-            image_suffix: -frontend
-          - component: chaincode
-            context: ./src/ledger/chaincode/credentialChaincode
-            dockerfile: ./src/ledger/chaincode/credentialChaincode/Dockerfile
-            image_suffix: -chaincode
 
     steps:
       - name: Checkout repository
@@ -51,7 +37,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.image_suffix }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,prefix=
@@ -59,8 +45,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ${{ matrix.context }}
-          file: ${{ matrix.dockerfile }}
+          context: ./src/ledger/chaincode/credentialChaincode
+          file: ./src/ledger/chaincode/credentialChaincode/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
