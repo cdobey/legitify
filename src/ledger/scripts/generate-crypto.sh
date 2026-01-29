@@ -60,7 +60,7 @@ ln -sf ${ORG_DIR} ${LEDGER_PATH}/organizations
 # Generate Genesis Block
 infoln "Generating Genesis Block..."
 mkdir -p ${DATA_DIR}/channel-artifacts
-configtxgen -profile ChannelUsingRaft -channelID legitifychannel -outputBlock ${DATA_DIR}/channel-artifacts/genesis.block -configPath ${LEDGER_PATH}/config
+configtxgen -profile ChannelUsingRaft -channelID system-channel -outputBlock ${DATA_DIR}/channel-artifacts/genesis.block -configPath ${LEDGER_PATH}/config
 
 # Verify genesis block creation
 if [ ! -f "${DATA_DIR}/channel-artifacts/genesis.block" ]; then
