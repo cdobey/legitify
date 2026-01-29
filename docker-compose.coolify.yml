@@ -1,5 +1,5 @@
-# Legitify Coolify Production Deployment - FIXED VERSION
-# This file includes health checks, proper dependencies, and resource optimizations
+# Legitify Coolify Production Deployment - WORKING HEALTH CHECKS
+# This version uses health checks that actually work with Hyperledger Fabric
 
 version: '3.8'
 
@@ -59,7 +59,7 @@ services:
       - legitify-network
 
   # =============================================================================
-  # ORDERER (Single orderer for development - reduced resource usage)
+  # ORDERER (Single orderer for development)
   # =============================================================================
   orderer.legitifyapp.com:
     image: hyperledger/fabric-orderer:2.5.10
@@ -96,12 +96,13 @@ services:
     depends_on:
       fabric-init:
         condition: service_completed_successfully
+    # Simple health check - just verify the process is listening on port 7050
     healthcheck:
-      test: ['CMD-SHELL', 'netstat -tuln | grep -q ":7050 " || exit 1']
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
+      test: ['CMD-SHELL', 'ss -tuln | grep -q ":7050 " || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     deploy:
       resources:
         limits:
@@ -140,11 +141,11 @@ services:
       orderer.legitifyapp.com:
         condition: service_healthy
     healthcheck:
-      test: ['CMD-SHELL', 'netstat -tuln | grep -q ":7051 " || exit 1']
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
+      test: ['CMD-SHELL', 'ss -tuln | grep -q ":7051 " || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     deploy:
       resources:
         limits:
@@ -180,11 +181,11 @@ services:
       orderer.legitifyapp.com:
         condition: service_healthy
     healthcheck:
-      test: ['CMD-SHELL', 'netstat -tuln | grep -q ":8051 " || exit 1']
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
+      test: ['CMD-SHELL', 'ss -tuln | grep -q ":8051 " || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     deploy:
       resources:
         limits:
@@ -220,11 +221,11 @@ services:
       orderer.legitifyapp.com:
         condition: service_healthy
     healthcheck:
-      test: ['CMD-SHELL', 'netstat -tuln | grep -q ":9051 " || exit 1']
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
+      test: ['CMD-SHELL', 'ss -tuln | grep -q ":9051 " || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     deploy:
       resources:
         limits:
@@ -274,11 +275,11 @@ services:
       fabric-cli:
         condition: service_completed_successfully
     healthcheck:
-      test: ['CMD-SHELL', 'nc -zv localhost 9999 || exit 1']
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+      test: ['CMD-SHELL', 'ss -tuln | grep -q ":9999 " || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     deploy:
       resources:
         limits:
