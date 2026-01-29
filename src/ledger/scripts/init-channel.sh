@@ -7,10 +7,21 @@ source ${SCRIPT_PATH}/fabric-lib.sh
 
 # Environment Setup
 export CRYPTO_PATH=/data
-export FABRIC_CFG_PATH=${LEDGER_PATH}/config
+if [ -d "/data/config" ]; then
+    export FABRIC_CFG_PATH=/data/config
+else
+    export FABRIC_CFG_PATH=${LEDGER_PATH}/config
+fi
 export PATH=${LEDGER_PATH}/bin:${SCRIPT_PATH}:$PATH
 export VERBOSE=false
 export ORDERER_HOST=orderer.legitifyapp.com
+
+# Optional override: comma/space-separated list of orderer hostnames.
+# Example: ORDERER_HOSTS="orderer.legitifyapp.com"
+ORDERER_HOSTS=${ORDERER_HOSTS:-"orderer.legitifyapp.com,orderer2.legitifyapp.com,orderer3.legitifyapp.com,orderer4.legitifyapp.com"}
+
+# Normalize to space-separated list
+ORDERER_HOSTS_NORM=$(echo "${ORDERER_HOSTS}" | tr ',' ' ')
 
 echo "=== Fabric Network Initialization ==="
 infoln "CRYPTO_PATH: ${CRYPTO_PATH}"
@@ -73,7 +84,9 @@ chaincode_committed() {
 # --- Initialization Flow ---
 
 # 1. Wait for Infrastructure
-wait_for_peer orderer.legitifyapp.com 7050
+for ORDERER in ${ORDERER_HOSTS_NORM}; do
+    wait_for_peer "${ORDERER}" 7050
+done
 wait_for_peer peer0.orgissuer.com 7051
 wait_for_peer peer0.orgverifier.com 8051
 wait_for_peer peer0.orgholder.com 9051
@@ -116,16 +129,13 @@ else
     configtxgen -profile ChannelUsingRaft -outputBlock ${BLOCKFILE} -channelID ${CHANNEL_NAME} -configPath ${FABRIC_CFG_PATH}
     
     # Join Orderers
-    for i in 1 2 3 4; do
-        ORDERER_NAME="orderer"
-        if [ $i -gt 1 ]; then ORDERER_NAME="orderer${i}"; fi
-        
-        infoln "Joining ${ORDERER_NAME}.legitifyapp.com to channel..."
-        ORDERER_ADMIN_TLS_SIGN_CERT=${CRYPTO_PATH}/organizations/ordererOrganizations/legitifyapp.com/orderers/${ORDERER_NAME}.legitifyapp.com/tls/server.crt
-        ORDERER_ADMIN_TLS_PRIVATE_KEY=${CRYPTO_PATH}/organizations/ordererOrganizations/legitifyapp.com/orderers/${ORDERER_NAME}.legitifyapp.com/tls/server.key
-        ORDERER_CA_CERT=${CRYPTO_PATH}/organizations/ordererOrganizations/legitifyapp.com/orderers/${ORDERER_NAME}.legitifyapp.com/tls/ca.crt
+    for ORDERER in ${ORDERER_HOSTS_NORM}; do
+        infoln "Joining ${ORDERER} to channel..."
+        ORDERER_ADMIN_TLS_SIGN_CERT=${CRYPTO_PATH}/organizations/ordererOrganizations/legitifyapp.com/orderers/${ORDERER}/tls/server.crt
+        ORDERER_ADMIN_TLS_PRIVATE_KEY=${CRYPTO_PATH}/organizations/ordererOrganizations/legitifyapp.com/orderers/${ORDERER}/tls/server.key
+        ORDERER_CA_CERT=${CRYPTO_PATH}/organizations/ordererOrganizations/legitifyapp.com/orderers/${ORDERER}/tls/ca.crt
 
-        osnadmin channel join --channelID ${CHANNEL_NAME} --config-block ${BLOCKFILE} -o ${ORDERER_NAME}.legitifyapp.com:7053 --ca-file "${ORDERER_CA_CERT}" --client-cert "${ORDERER_ADMIN_TLS_SIGN_CERT}" --client-key "${ORDERER_ADMIN_TLS_PRIVATE_KEY}"
+        osnadmin channel join --channelID ${CHANNEL_NAME} --config-block ${BLOCKFILE} -o ${ORDERER}:7053 --ca-file "${ORDERER_CA_CERT}" --client-cert "${ORDERER_ADMIN_TLS_SIGN_CERT}" --client-key "${ORDERER_ADMIN_TLS_PRIVATE_KEY}"
     done
     
     # Join Peers

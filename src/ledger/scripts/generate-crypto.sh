@@ -17,6 +17,36 @@ CONFIG_DIR="${DATA_DIR}/config"
 
 infoln "Generating crypto material into ${DATA_DIR}..."
 
+# Optional orderer selection based on env
+ORDERER_HOSTS=${ORDERER_HOSTS:-"orderer.legitifyapp.com,orderer2.legitifyapp.com,orderer3.legitifyapp.com,orderer4.legitifyapp.com"}
+ORDERER_HOSTS_NORM=$(echo "${ORDERER_HOSTS}" | tr ',' ' ')
+ORDERER_COUNT=$(echo "${ORDERER_HOSTS_NORM}" | awk '{print NF}')
+ORDERER_MODE=${ORDERER_MODE:-""}
+if [ -z "${ORDERER_MODE}" ]; then
+    if [ "${ORDERER_COUNT}" -eq 1 ]; then
+        ORDERER_MODE="single"
+    else
+        ORDERER_MODE="raft"
+    fi
+fi
+
+case "${ORDERER_MODE}" in
+    single)
+        CRYPTO_CONFIG_SRC="${LEDGER_PATH}/config/crypto-config.single.yaml"
+        CONFIGTX_SRC="${LEDGER_PATH}/config/configtx.single.yaml"
+        ;;
+    raft)
+        CRYPTO_CONFIG_SRC="${LEDGER_PATH}/config/crypto-config.raft.yaml"
+        CONFIGTX_SRC="${LEDGER_PATH}/config/configtx.raft.yaml"
+        ;;
+    *)
+        warnln "Unknown ORDERER_MODE '${ORDERER_MODE}', defaulting to raft"
+        ORDERER_MODE="raft"
+        CRYPTO_CONFIG_SRC="${LEDGER_PATH}/config/crypto-config.raft.yaml"
+        CONFIGTX_SRC="${LEDGER_PATH}/config/configtx.raft.yaml"
+        ;;
+esac
+
 # Generate a unique crypto generation ID (timestamp + random)
 CRYPTO_GEN_ID="$(date +%s)-$(head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n')"
 infoln "Crypto Generation ID: ${CRYPTO_GEN_ID}"
@@ -36,18 +66,20 @@ echo "${CRYPTO_GEN_ID}" > ${DATA_DIR}/crypto_gen_id.txt
 infoln "Copying config files to shared volume..."
 cp ${LEDGER_PATH}/config/orderer.yaml ${CONFIG_DIR}/orderer.yaml
 cp ${LEDGER_PATH}/config/core.yaml ${CONFIG_DIR}/core.yaml
-cp ${LEDGER_PATH}/config/configtx.yaml ${CONFIG_DIR}/configtx.yaml
+cp ${CONFIGTX_SRC} ${CONFIG_DIR}/configtx.yaml
+cp ${CRYPTO_CONFIG_SRC} ${CONFIG_DIR}/crypto-config.yaml
+infoln "Using orderer mode: ${ORDERER_MODE} (ORDERER_HOSTS=${ORDERER_HOSTS_NORM})"
 
 # Copy ccp-template.json to data volume
 cp ${LEDGER_PATH}/config/ccp-template.json ${ORG_DIR}/ccp-template.json
 
 infoln "--- crypto-config.yaml content ---"
-cat ${LEDGER_PATH}/config/crypto-config.yaml
+cat ${CONFIG_DIR}/crypto-config.yaml
 infoln "-----------------------------------"
 
 # Generate keys using cryptogen
 infoln "Running cryptogen..."
-cryptogen generate --config=${LEDGER_PATH}/config/crypto-config.yaml --output="${ORG_DIR}"
+cryptogen generate --config=${CONFIG_DIR}/crypto-config.yaml --output="${ORG_DIR}"
 infoln "Cryptogen finished."
 
 # Create symlink so configtx.yaml relative paths work
@@ -60,7 +92,7 @@ ln -sf ${ORG_DIR} ${LEDGER_PATH}/organizations
 # Generate Genesis Block
 infoln "Generating Genesis Block..."
 mkdir -p ${DATA_DIR}/channel-artifacts
-configtxgen -profile ChannelUsingRaft -channelID system-channel -outputBlock ${DATA_DIR}/channel-artifacts/genesis.block -configPath ${LEDGER_PATH}/config
+configtxgen -profile ChannelUsingRaft -channelID system-channel -outputBlock ${DATA_DIR}/channel-artifacts/genesis.block -configPath ${CONFIG_DIR}
 
 # Verify genesis block creation
 if [ ! -f "${DATA_DIR}/channel-artifacts/genesis.block" ]; then

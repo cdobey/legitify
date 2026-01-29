@@ -53,6 +53,9 @@ services:
     restart: 'no'
     working_dir: /src/ledger/scripts
     command: /bin/bash -c "./generate-crypto.sh"
+    environment:
+      ORDERER_HOSTS: ${ORDERER_HOSTS:-orderer.legitifyapp.com,orderer2.legitifyapp.com,orderer3.legitifyapp.com,orderer4.legitifyapp.com}
+      ORDERER_MODE: ${ORDERER_MODE:-}
     volumes:
       - fabric_data:/data
     networks:
@@ -244,6 +247,8 @@ services:
     restart: 'no'
     working_dir: /src/ledger/scripts
     command: /bin/bash -c "./init-channel.sh"
+    environment:
+      ORDERER_HOSTS: ${ORDERER_HOSTS:-orderer.legitifyapp.com,orderer2.legitifyapp.com,orderer3.legitifyapp.com,orderer4.legitifyapp.com}
     volumes:
       - fabric_data:/data
       - /var/run/docker.sock:/host/var/run/docker.sock
