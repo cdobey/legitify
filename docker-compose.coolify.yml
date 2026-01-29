@@ -78,7 +78,8 @@ services:
       - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.crt
       - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.key
       - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/ca.crt]
-      - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
+      - ORDERER_GENERAL_BOOTSTRAPMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/data/channel-artifacts/genesis.block
       - ORDERER_CHANNELPARTICIPATION_ENABLED=true
       - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
       - ORDERER_ADMIN_TLS_ENABLED=true

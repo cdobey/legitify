@@ -78,9 +78,9 @@ wait_for_peer peer0.orgissuer.com 7051
 wait_for_peer peer0.orgverifier.com 8051
 wait_for_peer peer0.orgholder.com 9051
 
-# 2. Channel Creation & Join
+# 2. Channel Join
 CHANNEL_NAME="legitifychannel"
-BLOCKFILE="${LEDGER_PATH}/channel-artifacts/${CHANNEL_NAME}.block"
+BLOCKFILE="${LEDGER_PATH}/channel-artifacts/genesis.block"
 
 # Check if peers are on channel
 PEERS_ON_CHANNEL=false
@@ -100,33 +100,16 @@ if [ "$PEERS_ON_CHANNEL" = true ]; then
         errorln ""
         errorln "To fix this, you must delete ALL Docker volumes in Coolify:"
         errorln "  - fabric_data"
-        errorln "  - orderer_data, orderer2_data, orderer3_data, orderer4_data"
+        errorln "  - orderer_data"
         errorln "  - peer0_orgissuer, peer0_orgverifier, peer0_orgholder"
         errorln ""
         errorln "Then redeploy to start fresh."
         fatalln "Aborting due to crypto/ledger mismatch"
     fi
     
-    successln "Crypto material verified - all peers are already on channel '${CHANNEL_NAME}', skipping creation..."
+    successln "Crypto material verified - all peers are already on channel '${CHANNEL_NAME}', skipping join..."
 else
-    infoln "Creating Channel '${CHANNEL_NAME}'..."
-    mkdir -p ${LEDGER_PATH}/channel-artifacts
-    
-    # Generate channel genesis block
-    configtxgen -profile ChannelUsingRaft -outputBlock ${BLOCKFILE} -channelID ${CHANNEL_NAME} -configPath ${FABRIC_CFG_PATH}
-    
-    # Join Orderers
-    for i in 1 2 3 4; do
-        ORDERER_NAME="orderer"
-        if [ $i -gt 1 ]; then ORDERER_NAME="orderer${i}"; fi
-        
-        infoln "Joining ${ORDERER_NAME}.legitifyapp.com to channel..."
-        ORDERER_ADMIN_TLS_SIGN_CERT=${CRYPTO_PATH}/organizations/ordererOrganizations/legitifyapp.com/orderers/${ORDERER_NAME}.legitifyapp.com/tls/server.crt
-        ORDERER_ADMIN_TLS_PRIVATE_KEY=${CRYPTO_PATH}/organizations/ordererOrganizations/legitifyapp.com/orderers/${ORDERER_NAME}.legitifyapp.com/tls/server.key
-        ORDERER_CA_CERT=${CRYPTO_PATH}/organizations/ordererOrganizations/legitifyapp.com/orderers/${ORDERER_NAME}.legitifyapp.com/tls/ca.crt
-
-        osnadmin channel join --channelID ${CHANNEL_NAME} --config-block ${BLOCKFILE} -o ${ORDERER_NAME}.legitifyapp.com:7053 --ca-file "${ORDERER_CA_CERT}" --client-cert "${ORDERER_ADMIN_TLS_SIGN_CERT}" --client-key "${ORDERER_ADMIN_TLS_PRIVATE_KEY}"
-    done
+    infoln "Joining peers to Channel '${CHANNEL_NAME}'..."
     
     # Join Peers
     for ORG in 1 2 3; do
@@ -135,9 +118,7 @@ else
         peer channel join -b ${BLOCKFILE}
     done
     
-    infoln "Waiting for Raft leader election..."
-    sleep 5
-    successln "Channel '${CHANNEL_NAME}' setup complete."
+    successln "Peers joined channel '${CHANNEL_NAME}' successfully."
 fi
 
 # 3. Chaincode Deployment
