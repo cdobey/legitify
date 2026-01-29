@@ -5,7 +5,7 @@ FROM node:24-alpine
 WORKDIR /app
 
 # Install build dependencies for native modules and netcat for health checks
-RUN apk add --no-cache python3 make g++ netcat-openbsd
+RUN apk add --no-cache python3 make g++ netcat-openbsd curl
 
 # Install dependencies (all, not just production - we need ts-node)
 COPY package*.json ./
