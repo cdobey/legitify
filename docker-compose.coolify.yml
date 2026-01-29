@@ -47,6 +47,7 @@ services:
   fabric-init:
     image: ghcr.io/${GITHUB_REPOSITORY:-cdobey/legitify}-fabric-tools:latest
     container_name: fabric-init
+    restart: 'no'
     working_dir: /src/ledger/scripts
     command: /bin/bash -c "./generate-crypto.sh"
     volumes:
