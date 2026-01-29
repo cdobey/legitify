@@ -45,12 +45,11 @@ services:
   # FABRIC INITIALIZATION (Bootstraps the network certs)
   # =============================================================================
   fabric-init:
-    image: hyperledger/fabric-tools:2.5.10
+    image: ghcr.io/${GITHUB_REPOSITORY:-cdobey/legitify}-fabric-tools:latest
     container_name: fabric-init
-    working_dir: /src/ledger
-    command: /bin/bash -c "chmod +x ./scripts/generate-crypto.sh && ./scripts/generate-crypto.sh"
+    working_dir: /src/ledger/scripts
+    command: /bin/bash -c "./generate-crypto.sh"
     volumes:
-      - ./src/ledger:/src/ledger
       - fabric_data:/data
     networks:
       - legitify-network
@@ -261,12 +260,11 @@ services:
       - orderer.legitifyapp.com
 
   fabric-cli:
-    image: hyperledger/fabric-tools:2.5.10
+    image: ghcr.io/${GITHUB_REPOSITORY:-cdobey/legitify}-fabric-tools:latest
     container_name: fabric-cli
-    working_dir: /src/ledger
-    command: /bin/bash -c "chmod +x ./scripts/init-channel.sh && ./scripts/init-channel.sh && tail -f /dev/null"
+    working_dir: /src/ledger/scripts
+    command: /bin/bash -c "./init-channel.sh && tail -f /dev/null"
     volumes:
-      - ./src/ledger:/src/ledger
       - fabric_data:/data
       - /var/run/docker.sock:/host/var/run/docker.sock
     networks:

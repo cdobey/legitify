@@ -1,0 +1,10 @@
+# Ignore generated files that shouldn't be in the image
+organizations/
+*.block
+*.tx
+*.log
+
+# Keep these (they ARE copied):
+# scripts/
+# config/
+# channel-artifacts/
