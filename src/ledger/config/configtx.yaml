@@ -163,9 +163,6 @@ Orderer: &OrdererDefaults
   OrdererType: etcdraft
   Addresses:
     - orderer.legitifyapp.com:7050
-    - orderer2.legitifyapp.com:7050
-    - orderer3.legitifyapp.com:7050
-    - orderer4.legitifyapp.com:7050
   # Batch Timeout: The amount of time to wait before creating a batch
   BatchTimeout: 2s
   # Batch Size: Controls the number of messages batched into a block
@@ -243,18 +240,6 @@ Profiles:
             Port: 7050
             ClientTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.crt
             ServerTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.crt
-          - Host: orderer2.legitifyapp.com
-            Port: 7050
-            ClientTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/server.crt
-            ServerTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/server.crt
-          - Host: orderer3.legitifyapp.com
-            Port: 7050
-            ClientTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/server.crt
-            ServerTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/server.crt
-          - Host: orderer4.legitifyapp.com
-            Port: 7050
-            ClientTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/server.crt
-            ServerTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/server.crt
       Organizations:
         - *OrdererOrg
       Capabilities: *OrdererCapabilities

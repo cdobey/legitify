@@ -74,9 +74,6 @@ chaincode_committed() {
 
 # 1. Wait for Infrastructure
 wait_for_peer orderer.legitifyapp.com 7050
-wait_for_peer orderer2.legitifyapp.com 7050
-wait_for_peer orderer3.legitifyapp.com 7050
-wait_for_peer orderer4.legitifyapp.com 7050
 wait_for_peer peer0.orgissuer.com 7051
 wait_for_peer peer0.orgverifier.com 8051
 wait_for_peer peer0.orgholder.com 9051
