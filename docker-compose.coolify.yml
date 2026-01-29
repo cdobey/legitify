@@ -318,16 +318,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-    labels:
-      - 'coolify.managed=true'
-      - 'traefik.enable=true'
-      - 'traefik.http.routers.backend.rule=Host(`${BACKEND_DOMAIN:-api-legitify.dobey.dev}`)'
-      - 'traefik.http.routers.backend.entrypoints=websecure'
-      - 'traefik.http.routers.backend.tls=true'
-      - 'traefik.http.routers.backend.tls.certresolver=letsencrypt'
-      - 'traefik.http.services.backend.loadbalancer.server.port=3001'
-      - 'traefik.http.services.backend.loadbalancer.healthcheck.path=/health'
-      - 'traefik.http.services.backend.loadbalancer.healthcheck.interval=30s'
     deploy:
       resources:
         limits:
@@ -356,16 +346,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 20s
-    labels:
-      - 'coolify.managed=true'
-      - 'traefik.enable=true'
-      - 'traefik.http.routers.frontend.rule=Host(`${FRONTEND_DOMAIN:-legitify.dobey.dev}`)'
-      - 'traefik.http.routers.frontend.entrypoints=websecure'
-      - 'traefik.http.routers.frontend.tls=true'
-      - 'traefik.http.routers.frontend.tls.certresolver=letsencrypt'
-      - 'traefik.http.services.frontend.loadbalancer.server.port=80'
-      - 'traefik.http.middlewares.frontend-compress.compress=true'
-      - 'traefik.http.routers.frontend.middlewares=frontend-compress'
     deploy:
       resources:
         limits:
