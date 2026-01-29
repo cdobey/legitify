@@ -93,6 +93,11 @@ services:
     depends_on:
       fabric-init:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 7050 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   orderer2.legitifyapp.com:
     image: hyperledger/fabric-orderer:2.5.10
@@ -129,6 +134,11 @@ services:
     depends_on:
       fabric-init:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 7050 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   orderer3.legitifyapp.com:
     image: hyperledger/fabric-orderer:2.5.10
@@ -165,6 +175,11 @@ services:
     depends_on:
       fabric-init:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 7050 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   orderer4.legitifyapp.com:
     image: hyperledger/fabric-orderer:2.5.10
@@ -201,6 +216,11 @@ services:
     depends_on:
       fabric-init:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 7050 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # =============================================================================
   # PEERS (One per Org)
@@ -232,6 +252,11 @@ services:
       - legitify-network
     depends_on:
       - orderer.legitifyapp.com
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 7051 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   peer0.orgverifier.com:
     image: hyperledger/fabric-peer:2.5.10
@@ -260,6 +285,11 @@ services:
       - legitify-network
     depends_on:
       - orderer.legitifyapp.com
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 8051 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   peer0.orgholder.com:
     image: hyperledger/fabric-peer:2.5.10
@@ -288,6 +318,11 @@ services:
       - legitify-network
     depends_on:
       - orderer.legitifyapp.com
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 9051 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   fabric-cli:
     image: ghcr.io/${GITHUB_REPOSITORY:-cdobey/legitify}-fabric-tools:latest
@@ -319,6 +354,11 @@ services:
     depends_on:
       fabric-cli:
         condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 9999 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # =============================================================================
   # BACKEND API

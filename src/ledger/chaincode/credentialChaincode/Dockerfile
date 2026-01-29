@@ -20,6 +20,9 @@ FROM alpine:3.18
 
 WORKDIR /app
 
+# Install netcat for health checks
+RUN apk add --no-cache netcat-openbsd
+
 # Copy the binary from builder
 COPY --from=builder /chaincode-server .
 
