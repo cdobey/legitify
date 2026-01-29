@@ -277,7 +277,7 @@ services:
       - peer0.orgholder.com
 
   credential-chaincode:
-    image: ghcr.io/${GITHUB_REPOSITORY:-chrisdobey/legitify}-chaincode:latest
+    image: ghcr.io/${GITHUB_REPOSITORY:-cdobey/legitify}-chaincode:latest
     container_name: credential-chaincode
     restart: unless-stopped
     environment:
@@ -296,7 +296,7 @@ services:
   # BACKEND API
   # =============================================================================
   backend:
-    image: ghcr.io/${GITHUB_REPOSITORY:-chrisdobey/legitify}-backend:latest
+    image: ghcr.io/${GITHUB_REPOSITORY:-cdobey/legitify}-backend:latest
     container_name: legitify-backend
     restart: unless-stopped
     environment:
@@ -337,7 +337,7 @@ services:
   # FRONTEND
   # =============================================================================
   frontend:
-    image: ghcr.io/${GITHUB_REPOSITORY:-chrisdobey/legitify}-frontend:latest
+    image: ghcr.io/${GITHUB_REPOSITORY:-cdobey/legitify}-frontend:latest
     container_name: legitify-frontend
     restart: unless-stopped
     environment:
