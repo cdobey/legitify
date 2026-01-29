@@ -72,9 +72,18 @@ services:
       - ORDERER_GENERAL_TLS_PRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.key
       - ORDERER_GENERAL_TLS_CERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.crt
       - ORDERER_GENERAL_TLS_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/ca.crt]
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/ca.crt]
       - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
       - ORDERER_CHANNELPARTICIPATION_ENABLED=true
       - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.crt
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.key
+      - ORDERER_ADMIN_TLS_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_CLIENTAUTHREQUIRED=true
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/ca.crt]
       - FABRIC_CFG_PATH=/data/config
     volumes:
       - fabric_data:/data
@@ -99,9 +108,18 @@ services:
       - ORDERER_GENERAL_TLS_PRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/server.key
       - ORDERER_GENERAL_TLS_CERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/server.crt
       - ORDERER_GENERAL_TLS_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/ca.crt]
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/ca.crt]
       - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
       - ORDERER_CHANNELPARTICIPATION_ENABLED=true
       - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/server.crt
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/server.key
+      - ORDERER_ADMIN_TLS_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_CLIENTAUTHREQUIRED=true
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer2.legitifyapp.com/tls/ca.crt]
       - FABRIC_CFG_PATH=/data/config
     volumes:
       - fabric_data:/data
@@ -126,9 +144,18 @@ services:
       - ORDERER_GENERAL_TLS_PRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/server.key
       - ORDERER_GENERAL_TLS_CERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/server.crt
       - ORDERER_GENERAL_TLS_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/ca.crt]
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/ca.crt]
       - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
       - ORDERER_CHANNELPARTICIPATION_ENABLED=true
       - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/server.crt
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/server.key
+      - ORDERER_ADMIN_TLS_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_CLIENTAUTHREQUIRED=true
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer3.legitifyapp.com/tls/ca.crt]
       - FABRIC_CFG_PATH=/data/config
     volumes:
       - fabric_data:/data
@@ -153,9 +180,18 @@ services:
       - ORDERER_GENERAL_TLS_PRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/server.key
       - ORDERER_GENERAL_TLS_CERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/server.crt
       - ORDERER_GENERAL_TLS_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/ca.crt]
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/ca.crt]
       - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
       - ORDERER_CHANNELPARTICIPATION_ENABLED=true
       - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/server.crt
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/server.key
+      - ORDERER_ADMIN_TLS_ROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_CLIENTAUTHREQUIRED=true
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/data/organizations/ordererOrganizations/legitifyapp.com/orderers/orderer4.legitifyapp.com/tls/ca.crt]
       - FABRIC_CFG_PATH=/data/config
     volumes:
       - fabric_data:/data
