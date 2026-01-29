@@ -16,6 +16,14 @@ echo "=== Fabric Network Initialization ==="
 infoln "CRYPTO_PATH: ${CRYPTO_PATH}"
 infoln "FABRIC_CFG_PATH: ${FABRIC_CFG_PATH}"
 
+# Check for crypto generation marker
+if [ -f "${CRYPTO_PATH}/crypto_gen_id.txt" ]; then
+    CRYPTO_GEN_ID=$(cat ${CRYPTO_PATH}/crypto_gen_id.txt)
+    infoln "Crypto Generation ID: ${CRYPTO_GEN_ID}"
+else
+    warnln "No crypto generation marker found - this may indicate incomplete initialization"
+fi
+
 # Create symlink so configtx.yaml relative paths work
 # configtx.yaml uses ../organizations/* paths relative to config/
 infoln "Creating organization symlink for configtxgen..."
@@ -77,8 +85,32 @@ wait_for_peer peer0.orgholder.com 9051
 CHANNEL_NAME="legitifychannel"
 BLOCKFILE="${LEDGER_PATH}/channel-artifacts/${CHANNEL_NAME}.block"
 
+# Check if peers are on channel
+PEERS_ON_CHANNEL=false
 if peer_on_channel 1 ${CHANNEL_NAME} && peer_on_channel 2 ${CHANNEL_NAME} && peer_on_channel 3 ${CHANNEL_NAME}; then
-    successln "All peers are already on channel '${CHANNEL_NAME}', skipping creation..."
+    PEERS_ON_CHANNEL=true
+fi
+
+# If peers are on channel, verify crypto material matches by attempting a simple query
+if [ "$PEERS_ON_CHANNEL" = true ]; then
+    infoln "Peers report being on channel, verifying crypto material compatibility..."
+    setGlobals 1
+    
+    # Try to query committed chaincodes - this will fail if crypto doesn't match
+    if peer lifecycle chaincode querycommitted --channelID ${CHANNEL_NAME} 2>&1 | grep -q "access denied\|unknown authority\|creator is malformed"; then
+        errorln "CRITICAL: Crypto material mismatch detected!"
+        errorln "The peers have old ledger data but new crypto material was generated."
+        errorln ""
+        errorln "To fix this, you must delete ALL Docker volumes in Coolify:"
+        errorln "  - fabric_data"
+        errorln "  - orderer_data, orderer2_data, orderer3_data, orderer4_data"
+        errorln "  - peer0_orgissuer, peer0_orgverifier, peer0_orgholder"
+        errorln ""
+        errorln "Then redeploy to start fresh."
+        fatalln "Aborting due to crypto/ledger mismatch"
+    fi
+    
+    successln "Crypto material verified - all peers are already on channel '${CHANNEL_NAME}', skipping creation..."
 else
     infoln "Creating Channel '${CHANNEL_NAME}'..."
     mkdir -p ${LEDGER_PATH}/channel-artifacts

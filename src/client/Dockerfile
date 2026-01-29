@@ -20,6 +20,9 @@ RUN npm run build
 # Use Nginx to serve the app with runtime configuration
 FROM nginx:alpine
     
+# Install curl for health checks
+RUN apk add --no-cache curl
+
 # Copy built app
 COPY --from=build /app/dist /usr/share/nginx/html
     

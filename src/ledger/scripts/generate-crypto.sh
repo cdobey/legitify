@@ -17,12 +17,20 @@ CONFIG_DIR="${DATA_DIR}/config"
 
 infoln "Generating crypto material into ${DATA_DIR}..."
 
+# Generate a unique crypto generation ID (timestamp + random)
+CRYPTO_GEN_ID="$(date +%s)-$(head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+infoln "Crypto Generation ID: ${CRYPTO_GEN_ID}"
+
 # Always regenerate to ensure consistency
 rm -rf ${ORG_DIR}/*
 
 # Create directory structure
 mkdir -p ${ORG_DIR}
 mkdir -p ${CONFIG_DIR}
+
+# Write crypto generation marker - this will be checked by init-channel.sh
+# to detect crypto/ledger mismatch
+echo "${CRYPTO_GEN_ID}" > ${DATA_DIR}/crypto_gen_id.txt
 
 # Copy config files to shared volume (for orderers and peers)
 infoln "Copying config files to shared volume..."
