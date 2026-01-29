@@ -53,6 +53,12 @@ app.get('/', (req: Request, res: Response) => {
   res.send('TypeScript + Go Chaincode Credential API with Prisma');
 });
 
+// Health check for orchestration (returns 200 when the app is ready)
+app.get('/health', async (req: Request, res: Response) => {
+  // Keep this lightweight and avoid depending on DB or other services.
+  // If you want a deeper check, you can probe Prisma or other deps here.
+  res.status(200).json({ status: 'ok' });
+});
 app.use('/', indexRoutes);
 
 // Start Server
