@@ -16,6 +16,17 @@ echo "=== Fabric Network Initialization ==="
 infoln "CRYPTO_PATH: ${CRYPTO_PATH}"
 infoln "FABRIC_CFG_PATH: ${FABRIC_CFG_PATH}"
 
+# Create symlink so configtx.yaml relative paths work
+# configtx.yaml uses ../organizations/* paths relative to config/
+infoln "Creating organization symlink for configtxgen..."
+rm -rf ${LEDGER_PATH}/organizations 2>/dev/null || true
+ln -sf ${CRYPTO_PATH}/organizations ${LEDGER_PATH}/organizations
+
+# Also create channel-artifacts symlink to shared volume
+rm -rf ${LEDGER_PATH}/channel-artifacts 2>/dev/null || true
+mkdir -p ${CRYPTO_PATH}/channel-artifacts
+ln -sf ${CRYPTO_PATH}/channel-artifacts ${LEDGER_PATH}/channel-artifacts
+
 # --- Helper Functions ---
 
 # Check connectivity
