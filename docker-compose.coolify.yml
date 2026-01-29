@@ -75,10 +75,9 @@ services:
       - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
       - ORDERER_CHANNELPARTICIPATION_ENABLED=true
       - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
-      - FABRIC_CFG_PATH=/etc/hyperledger/fabric
+      - FABRIC_CFG_PATH=/data/config
     volumes:
       - fabric_data:/data
-      - ./src/ledger/config:/etc/hyperledger/fabric
       - orderer_data:/var/hyperledger/production/orderer
     networks:
       - legitify-network
@@ -103,10 +102,9 @@ services:
       - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
       - ORDERER_CHANNELPARTICIPATION_ENABLED=true
       - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
-      - FABRIC_CFG_PATH=/etc/hyperledger/fabric
+      - FABRIC_CFG_PATH=/data/config
     volumes:
       - fabric_data:/data
-      - ./src/ledger/config:/etc/hyperledger/fabric
       - orderer2_data:/var/hyperledger/production/orderer
     networks:
       - legitify-network
@@ -131,10 +129,9 @@ services:
       - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
       - ORDERER_CHANNELPARTICIPATION_ENABLED=true
       - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
-      - FABRIC_CFG_PATH=/etc/hyperledger/fabric
+      - FABRIC_CFG_PATH=/data/config
     volumes:
       - fabric_data:/data
-      - ./src/ledger/config:/etc/hyperledger/fabric
       - orderer3_data:/var/hyperledger/production/orderer
     networks:
       - legitify-network
@@ -159,10 +156,9 @@ services:
       - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
       - ORDERER_CHANNELPARTICIPATION_ENABLED=true
       - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
-      - FABRIC_CFG_PATH=/etc/hyperledger/fabric
+      - FABRIC_CFG_PATH=/data/config
     volumes:
       - fabric_data:/data
-      - ./src/ledger/config:/etc/hyperledger/fabric
       - orderer4_data:/var/hyperledger/production/orderer
     networks:
       - legitify-network
@@ -191,10 +187,9 @@ services:
       - CORE_PEER_TLS_CERT_FILE=/data/organizations/peerOrganizations/orgissuer.com/peers/peer0.orgissuer.com/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/data/organizations/peerOrganizations/orgissuer.com/peers/peer0.orgissuer.com/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/data/organizations/peerOrganizations/orgissuer.com/peers/peer0.orgissuer.com/tls/ca.crt
-      - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
+      - FABRIC_CFG_PATH=/data/config
     volumes:
       - fabric_data:/data
-      - ./src/ledger/config:/etc/hyperledger/peercfg
       - peer0_orgissuer:/var/hyperledger/production
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
@@ -220,10 +215,9 @@ services:
       - CORE_PEER_TLS_CERT_FILE=/data/organizations/peerOrganizations/orgverifier.com/peers/peer0.orgverifier.com/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/data/organizations/peerOrganizations/orgverifier.com/peers/peer0.orgverifier.com/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/data/organizations/peerOrganizations/orgverifier.com/peers/peer0.orgverifier.com/tls/ca.crt
-      - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
+      - FABRIC_CFG_PATH=/data/config
     volumes:
       - fabric_data:/data
-      - ./src/ledger/config:/etc/hyperledger/peercfg
       - peer0_orgverifier:/var/hyperledger/production
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
@@ -249,10 +243,9 @@ services:
       - CORE_PEER_TLS_CERT_FILE=/data/organizations/peerOrganizations/orgholder.com/peers/peer0.orgholder.com/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/data/organizations/peerOrganizations/orgholder.com/peers/peer0.orgholder.com/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/data/organizations/peerOrganizations/orgholder.com/peers/peer0.orgholder.com/tls/ca.crt
-      - FABRIC_CFG_PATH=/etc/hyperledger/peercfg
+      - FABRIC_CFG_PATH=/data/config
     volumes:
       - fabric_data:/data
-      - ./src/ledger/config:/etc/hyperledger/peercfg
       - peer0_orgholder:/var/hyperledger/production
       - /var/run/docker.sock:/var/run/docker.sock
     networks:

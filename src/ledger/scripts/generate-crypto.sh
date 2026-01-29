@@ -13,6 +13,7 @@ export VERBOSE=false
 # Root of the shared volume
 DATA_DIR="/data"
 ORG_DIR="${DATA_DIR}/organizations"
+CONFIG_DIR="${DATA_DIR}/config"
 
 infoln "Generating crypto material into ${DATA_DIR}..."
 
@@ -21,6 +22,13 @@ rm -rf ${ORG_DIR}/*
 
 # Create directory structure
 mkdir -p ${ORG_DIR}
+mkdir -p ${CONFIG_DIR}
+
+# Copy config files to shared volume (for orderers and peers)
+infoln "Copying config files to shared volume..."
+cp ${LEDGER_PATH}/config/orderer.yaml ${CONFIG_DIR}/orderer.yaml
+cp ${LEDGER_PATH}/config/core.yaml ${CONFIG_DIR}/core.yaml
+cp ${LEDGER_PATH}/config/configtx.yaml ${CONFIG_DIR}/configtx.yaml
 
 # Copy ccp-template.json to data volume
 cp ${LEDGER_PATH}/config/ccp-template.json ${ORG_DIR}/ccp-template.json
