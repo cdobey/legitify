@@ -47,8 +47,8 @@ services:
   fabric-init:
     image: hyperledger/fabric-tools:2.5.10
     container_name: fabric-init
-    working_dir: /src/ledger/scripts
-    command: /bin/bash -c "chmod +x ./generate-crypto.sh && ./generate-crypto.sh"
+    working_dir: /src/ledger
+    command: /bin/bash -c "chmod +x ./scripts/generate-crypto.sh && ./scripts/generate-crypto.sh"
     volumes:
       - ./src/ledger:/src/ledger
       - fabric_data:/data
@@ -263,8 +263,8 @@ services:
   fabric-cli:
     image: hyperledger/fabric-tools:2.5.10
     container_name: fabric-cli
-    working_dir: /src/ledger/scripts
-    command: /bin/bash -c "chmod +x ./init-channel.sh && ./init-channel.sh && tail -f /dev/null"
+    working_dir: /src/ledger
+    command: /bin/bash -c "chmod +x ./scripts/init-channel.sh && ./scripts/init-channel.sh && tail -f /dev/null"
     volumes:
       - ./src/ledger:/src/ledger
       - fabric_data:/data
