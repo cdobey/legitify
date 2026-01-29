@@ -47,7 +47,7 @@ services:
   fabric-init:
     image: hyperledger/fabric-tools:2.5.10
     container_name: fabric-init
-    working_dir: /src/ledger
+    working_dir: /src/ledger/scripts
     command: /bin/bash -c "chmod +x ./generate-crypto.sh && ./generate-crypto.sh"
     volumes:
       - ./src/ledger:/src/ledger
@@ -263,7 +263,7 @@ services:
   fabric-cli:
     image: hyperledger/fabric-tools:2.5.10
     container_name: fabric-cli
-    working_dir: /src/ledger
+    working_dir: /src/ledger/scripts
     command: /bin/bash -c "chmod +x ./init-channel.sh && ./init-channel.sh && tail -f /dev/null"
     volumes:
       - ./src/ledger:/src/ledger
@@ -302,12 +302,15 @@ services:
     environment:
       NODE_ENV: production
       SERVER_PORT: 3001
-      POSTGRES_CONNECTION_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      IS_DEPLOYMENT: 'true'
+      POSTGRES_CONNECTION_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-legitify}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       API_URL: https://${BACKEND_DOMAIN:-api-legitify.dobey.dev}
       MOCK_LEDGER: 'false'
       FRONTEND_URL: https://${FRONTEND_DOMAIN:-legitify.dobey.dev}
       FABRIC_CERTIFICATES_PATH: /app/fabric-data/organizations/peerOrganizations
+    ports:
+      - '3001:3001'
     depends_on:
       postgres:
         condition: service_healthy
@@ -315,9 +318,20 @@ services:
       - fabric_data:/app/fabric-data:ro
     networks:
       - legitify-network
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3001/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     labels:
       - 'coolify.managed=true'
-      - 'coolify.domain=${BACKEND_DOMAIN:-api-legitify.dobey.dev}'
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.backend.rule=Host(`${BACKEND_DOMAIN:-api-legitify.dobey.dev}`)'
+      - 'traefik.http.routers.backend.entrypoints=https'
+      - 'traefik.http.routers.backend.tls=true'
+      - 'traefik.http.routers.backend.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.backend.loadbalancer.server.port=3001'
 
   # =============================================================================
   # FRONTEND
@@ -328,10 +342,22 @@ services:
     restart: unless-stopped
     environment:
       VITE_API_URL: https://${BACKEND_DOMAIN:-api-legitify.dobey.dev}
+    ports:
+      - '3000:80'
     depends_on:
       - backend
     networks:
       - legitify-network
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:80']
+      interval: 30s
+      timeout: 10s
+      retries: 3
     labels:
       - 'coolify.managed=true'
-      - 'coolify.domain=${FRONTEND_DOMAIN:-legitify.dobey.dev}'
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.frontend.rule=Host(`${FRONTEND_DOMAIN:-legitify.dobey.dev}`)'
+      - 'traefik.http.routers.frontend.entrypoints=https'
+      - 'traefik.http.routers.frontend.tls=true'
+      - 'traefik.http.routers.frontend.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.frontend.loadbalancer.server.port=80'
