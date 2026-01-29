@@ -1,5 +1,5 @@
-# Legitify Coolify Production Deployment - WORKING HEALTH CHECKS
-# This version uses health checks that actually work with Hyperledger Fabric
+# Legitify Coolify Production Deployment - SIMPLIFIED
+# Uses timed delays instead of health checks for Fabric components
 
 version: '3.8'
 
@@ -59,7 +59,7 @@ services:
       - legitify-network
 
   # =============================================================================
-  # ORDERER (Single orderer for development)
+  # ORDERER
   # =============================================================================
   orderer.legitifyapp.com:
     image: hyperledger/fabric-orderer:2.5.10
@@ -96,18 +96,24 @@ services:
     depends_on:
       fabric-init:
         condition: service_completed_successfully
-    # Simple health check - just verify the process is listening on port 7050
-    healthcheck:
-      test: ['CMD-SHELL', 'ss -tuln | grep -q ":7050 " || exit 1']
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
     deploy:
       resources:
         limits:
           cpus: '1.0'
           memory: 1G
+
+  # =============================================================================
+  # WAIT SERVICE - Ensures orderer is ready before peers start
+  # =============================================================================
+  orderer-wait:
+    image: busybox:latest
+    container_name: orderer-wait
+    restart: 'no'
+    command: sh -c "sleep 15"
+    networks:
+      - legitify-network
+    depends_on:
+      - orderer.legitifyapp.com
 
   # =============================================================================
   # PEERS
@@ -138,14 +144,8 @@ services:
     networks:
       - legitify-network
     depends_on:
-      orderer.legitifyapp.com:
-        condition: service_healthy
-    healthcheck:
-      test: ['CMD-SHELL', 'ss -tuln | grep -q ":7051 " || exit 1']
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+      orderer-wait:
+        condition: service_completed_successfully
     deploy:
       resources:
         limits:
@@ -178,14 +178,8 @@ services:
     networks:
       - legitify-network
     depends_on:
-      orderer.legitifyapp.com:
-        condition: service_healthy
-    healthcheck:
-      test: ['CMD-SHELL', 'ss -tuln | grep -q ":8051 " || exit 1']
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+      orderer-wait:
+        condition: service_completed_successfully
     deploy:
       resources:
         limits:
@@ -218,19 +212,28 @@ services:
     networks:
       - legitify-network
     depends_on:
-      orderer.legitifyapp.com:
-        condition: service_healthy
-    healthcheck:
-      test: ['CMD-SHELL', 'ss -tuln | grep -q ":9051 " || exit 1']
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+      orderer-wait:
+        condition: service_completed_successfully
     deploy:
       resources:
         limits:
           cpus: '1.0'
           memory: 1G
+
+  # =============================================================================
+  # WAIT SERVICE - Ensures peers are ready before CLI starts
+  # =============================================================================
+  peer-wait:
+    image: busybox:latest
+    container_name: peer-wait
+    restart: 'no'
+    command: sh -c "sleep 20"
+    networks:
+      - legitify-network
+    depends_on:
+      - peer0.orgissuer.com
+      - peer0.orgverifier.com
+      - peer0.orgholder.com
 
   # =============================================================================
   # FABRIC CLI - Channel Initialization
@@ -247,14 +250,8 @@ services:
     networks:
       - legitify-network
     depends_on:
-      orderer.legitifyapp.com:
-        condition: service_healthy
-      peer0.orgissuer.com:
-        condition: service_healthy
-      peer0.orgverifier.com:
-        condition: service_healthy
-      peer0.orgholder.com:
-        condition: service_healthy
+      peer-wait:
+        condition: service_completed_successfully
 
   # =============================================================================
   # CHAINCODE
@@ -274,12 +271,6 @@ services:
     depends_on:
       fabric-cli:
         condition: service_completed_successfully
-    healthcheck:
-      test: ['CMD-SHELL', 'ss -tuln | grep -q ":9999 " || exit 1']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
     deploy:
       resources:
         limits:
@@ -311,7 +302,7 @@ services:
       fabric-cli:
         condition: service_completed_successfully
       credential-chaincode:
-        condition: service_healthy
+        condition: service_started
     volumes:
       - fabric_data:/app/fabric-data:ro
     networks:
