@@ -33,3 +33,8 @@ RUN chmod +x /docker-entrypoint.sh
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["npm", "start"]
+
+# Docker HEALTHCHECK so orchestration platforms (Coolify/Traefik) detect container health
+# Probes the lightweight /health endpoint we added in the app.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+	CMD curl -f http://localhost:3001/health || exit 1

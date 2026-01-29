@@ -44,3 +44,8 @@ EXPOSE 80
 
 # Use custom entrypoint to inject runtime environment variables
 ENTRYPOINT ["/docker-entrypoint.sh"]
+
+# Docker HEALTHCHECK so orchestration platforms (Coolify/Traefik) detect container health
+# Probes the frontend root which should return 200 when nginx is serving the SPA
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:80 || exit 1
