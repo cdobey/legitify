@@ -160,7 +160,7 @@ Application: &ApplicationDefaults
 #
 ################################################################################
 Orderer: &OrdererDefaults
-  OrdererType: etcdraft
+  OrdererType: solo
   Addresses:
     - orderer.legitifyapp.com:7050
   # Batch Timeout: The amount of time to wait before creating a batch
@@ -233,13 +233,7 @@ Profiles:
     <<: *ChannelDefaults
     Orderer:
       <<: *OrdererDefaults
-      OrdererType: etcdraft
-      EtcdRaft:
-        Consenters:
-          - Host: orderer.legitifyapp.com
-            Port: 7050
-            ClientTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.crt
-            ServerTLSCert: ../organizations/ordererOrganizations/legitifyapp.com/orderers/orderer.legitifyapp.com/tls/server.crt
+      OrdererType: solo
       Organizations:
         - *OrdererOrg
       Capabilities: *OrdererCapabilities
