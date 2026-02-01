@@ -1,5 +1,5 @@
-# Legitify Coolify Production Deployment - SIMPLIFIED
-# Uses timed delays instead of health checks for Fabric components
+# Legitify Coolify Fabric Deployment
+# Fabric-only stack intended to run alongside separate frontend/backend/Postgres services.
 
 version: '3.8'
 
@@ -9,41 +9,18 @@ networks:
     driver: bridge
 
 volumes:
-  pgdata:
   fabric_data:
+    name: legitify_fabric_data
   peer0_orgissuer:
+    name: legitify_peer0_orgissuer
   peer0_orgverifier:
+    name: legitify_peer0_orgverifier
   peer0_orgholder:
+    name: legitify_peer0_orgholder
   orderer_data:
+    name: legitify_orderer_data
 
 services:
-  # =============================================================================
-  # DATABASE
-  # =============================================================================
-  postgres:
-    image: postgres:15-alpine
-    container_name: legitify-db
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
-      POSTGRES_DB: ${POSTGRES_DB:-legitify}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-    networks:
-      - legitify-network
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
-
   # =============================================================================
   # FABRIC INITIALIZATION
   # =============================================================================
@@ -56,6 +33,7 @@ services:
     environment:
       ORDERER_HOSTS: ${ORDERER_HOSTS:-orderer.legitifyapp.com,orderer2.legitifyapp.com,orderer3.legitifyapp.com,orderer4.legitifyapp.com}
       ORDERER_MODE: ${ORDERER_MODE:-}
+      FORCE_CRYPTO_REGEN: ${FORCE_CRYPTO_REGEN:-false}
     volumes:
       - fabric_data:/data
     networks:
@@ -276,86 +254,6 @@ services:
     depends_on:
       fabric-cli:
         condition: service_completed_successfully
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-
-  # =============================================================================
-  # BACKEND API
-  # =============================================================================
-  backend:
-    image: ghcr.io/${GITHUB_REPOSITORY:-cdobey/legitify}-backend:latest
-    container_name: legitify-backend
-    restart: unless-stopped
-    environment:
-      NODE_ENV: production
-      SERVER_PORT: 3001
-      IS_DEPLOYMENT: 'true'
-      POSTGRES_CONNECTION_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-legitify}
-      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
-      API_URL: https://${BACKEND_DOMAIN:-api-legitify.dobey.dev}
-      MOCK_LEDGER: 'false'
-      FRONTEND_URL: https://${FRONTEND_DOMAIN:-legitify.dobey.dev}
-      FABRIC_CERTIFICATES_PATH: /app/fabric-data/organizations/peerOrganizations
-    ports:
-      - '3001:3001'
-    depends_on:
-      postgres:
-        condition: service_healthy
-      fabric-cli:
-        condition: service_completed_successfully
-      credential-chaincode:
-        condition: service_started
-    volumes:
-      - fabric_data:/app/fabric-data:ro
-    networks:
-      - legitify-network
-    healthcheck:
-      test: ['CMD-SHELL', 'curl -f http://localhost:3001/health || exit 1']
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    labels:
-      - 'traefik.enable=true'
-      - 'traefik.http.routers.legitify-backend.rule=Host(`api-legitify.dobey.dev`)'
-      - 'traefik.http.routers.legitify-backend.tls=true'
-      - 'traefik.http.services.legitify-backend.loadbalancer.server.port=3001'
-    deploy:
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 2G
-
-  # =============================================================================
-  # FRONTEND
-  # =============================================================================
-  frontend:
-    image: ghcr.io/${GITHUB_REPOSITORY:-cdobey/legitify}-frontend:latest
-    container_name: legitify-frontend
-    restart: unless-stopped
-    environment:
-      VITE_API_URL: https://${BACKEND_DOMAIN:-api-legitify.dobey.dev}
-    ports:
-      - '3000:80'
-    depends_on:
-      backend:
-        condition: service_healthy
-    networks:
-      - legitify-network
-    healthcheck:
-      test: ['CMD-SHELL', 'curl -f http://localhost:80 || exit 1']
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
-    labels:
-      - 'traefik.enable=true'
-      - 'traefik.http.routers.legitify-frontend.rule=Host(`legitify.dobey.dev`)'
-      - 'traefik.http.routers.legitify-frontend.tls=true'
-      - 'traefik.http.services.legitify-frontend.loadbalancer.server.port=80'
     deploy:
       resources:
         limits:

@@ -14,6 +14,7 @@ export VERBOSE=false
 DATA_DIR="/data"
 ORG_DIR="${DATA_DIR}/organizations"
 CONFIG_DIR="${DATA_DIR}/config"
+FORCE_CRYPTO_REGEN=${FORCE_CRYPTO_REGEN:-false}
 
 infoln "Generating crypto material into ${DATA_DIR}..."
 
@@ -47,11 +48,79 @@ case "${ORDERER_MODE}" in
         ;;
 esac
 
+# Connection profile helpers (used on first-gen or refresh)
+function one_line_pem {
+    echo "`awk 'NF {sub(/\\n/, ""); printf "%s\\\\\\\n",$0;}' $1`"
+}
+
+function json_ccp {
+    local ORG=$1
+    
+    # Read all TLS certs for all peers
+    local ISSUER_TLS_PEM=$(one_line_pem "${ORG_DIR}/peerOrganizations/orgissuer.com/tlsca/tlsca.orgissuer.com-cert.pem")
+    local VERIFIER_TLS_PEM=$(one_line_pem "${ORG_DIR}/peerOrganizations/orgverifier.com/tlsca/tlsca.orgverifier.com-cert.pem")
+    local HOLDER_TLS_PEM=$(one_line_pem "${ORG_DIR}/peerOrganizations/orgholder.com/tlsca/tlsca.orgholder.com-cert.pem")
+    
+    # Read all CA certs
+    local ISSUER_CA_PEM=$(one_line_pem "${ORG_DIR}/peerOrganizations/orgissuer.com/ca/ca.orgissuer.com-cert.pem")
+    local VERIFIER_CA_PEM=$(one_line_pem "${ORG_DIR}/peerOrganizations/orgverifier.com/ca/ca.orgverifier.com-cert.pem")
+    local HOLDER_CA_PEM=$(one_line_pem "${ORG_DIR}/peerOrganizations/orgholder.com/ca/ca.orgholder.com-cert.pem")
+    local ORDERER_TLS_PEM=$(one_line_pem "${ORG_DIR}/ordererOrganizations/legitifyapp.com/tlsca/tlsca.legitifyapp.com-cert.pem")
+
+    sed -e "s/\${ORG}/$ORG/" \
+        -e "s#\${ISSUER_TLS_PEM}#$ISSUER_TLS_PEM#" \
+        -e "s#\${VERIFIER_TLS_PEM}#$VERIFIER_TLS_PEM#" \
+        -e "s#\${HOLDER_TLS_PEM}#$HOLDER_TLS_PEM#" \
+        -e "s#\${ISSUER_CA_PEM}#$ISSUER_CA_PEM#" \
+        -e "s#\${VERIFIER_CA_PEM}#$VERIFIER_CA_PEM#" \
+        -e "s#\${HOLDER_CA_PEM}#$HOLDER_CA_PEM#" \
+        -e "s#\${ORDERER_TLS_PEM}#$ORDERER_TLS_PEM#" \
+        ${ORG_DIR}/ccp-template.json
+}
+
+crypto_present=false
+if [ -f "${ORG_DIR}/ordererOrganizations/legitifyapp.com/tlsca/tlsca.legitifyapp.com-cert.pem" ] && \
+   [ -f "${ORG_DIR}/peerOrganizations/orgissuer.com/tlsca/tlsca.orgissuer.com-cert.pem" ]; then
+    crypto_present=true
+fi
+
+if [ "${FORCE_CRYPTO_REGEN}" != "true" ] && [ "${crypto_present}" = true ]; then
+    infoln "Existing crypto material detected. Skipping regeneration."
+    if [ -f "${DATA_DIR}/crypto_gen_id.txt" ]; then
+        infoln "Crypto Generation ID: $(cat ${DATA_DIR}/crypto_gen_id.txt)"
+    else
+        warnln "No crypto generation marker found - assuming existing material is valid."
+    fi
+
+    # Ensure config files exist for orderers/peers
+    mkdir -p ${CONFIG_DIR}
+    [ -f "${CONFIG_DIR}/orderer.yaml" ] || cp ${LEDGER_PATH}/config/orderer.yaml ${CONFIG_DIR}/orderer.yaml
+    [ -f "${CONFIG_DIR}/core.yaml" ] || cp ${LEDGER_PATH}/config/core.yaml ${CONFIG_DIR}/core.yaml
+    [ -f "${CONFIG_DIR}/configtx.yaml" ] || cp ${CONFIGTX_SRC} ${CONFIG_DIR}/configtx.yaml
+    [ -f "${CONFIG_DIR}/crypto-config.yaml" ] || cp ${CRYPTO_CONFIG_SRC} ${CONFIG_DIR}/crypto-config.yaml
+
+    # Ensure ccp template exists
+    [ -f "${ORG_DIR}/ccp-template.json" ] || cp ${LEDGER_PATH}/config/ccp-template.json ${ORG_DIR}/ccp-template.json
+
+    # Refresh connection profiles only if missing
+    if [ ! -f "${ORG_DIR}/peerOrganizations/orgissuer.com/connection-orgissuer.json" ] || \
+       [ ! -f "${ORG_DIR}/peerOrganizations/orgverifier.com/connection-orgverifier.json" ] || \
+       [ ! -f "${ORG_DIR}/peerOrganizations/orgholder.com/connection-orgholder.json" ]; then
+        infoln "Generating missing connection profiles..."
+        json_ccp "OrgIssuer" > "${ORG_DIR}/peerOrganizations/orgissuer.com/connection-orgissuer.json"
+        json_ccp "OrgVerifier" > "${ORG_DIR}/peerOrganizations/orgverifier.com/connection-orgverifier.json"
+        json_ccp "OrgHolder" > "${ORG_DIR}/peerOrganizations/orgholder.com/connection-orgholder.json"
+    fi
+
+    successln "Crypto material already present - no changes made."
+    exit 0
+fi
+
 # Generate a unique crypto generation ID (timestamp + random)
 CRYPTO_GEN_ID="$(date +%s)-$(head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n')"
 infoln "Crypto Generation ID: ${CRYPTO_GEN_ID}"
 
-# Always regenerate to ensure consistency
+# Regenerate crypto material
 rm -rf ${ORG_DIR}/*
 
 # Create directory structure
@@ -103,36 +172,6 @@ successln "Crypto generation completed."
 
 # Generate Connection Profiles (Docker Internal)
 infoln "Generating Connection Profiles..."
-
-function one_line_pem {
-    echo "`awk 'NF {sub(/\\n/, ""); printf "%s\\\\\\\n",$0;}' $1`"
-}
-
-function json_ccp {
-    local ORG=$1
-    
-    # Read all TLS certs for all peers
-    local ISSUER_TLS_PEM=$(one_line_pem "${ORG_DIR}/peerOrganizations/orgissuer.com/tlsca/tlsca.orgissuer.com-cert.pem")
-    local VERIFIER_TLS_PEM=$(one_line_pem "${ORG_DIR}/peerOrganizations/orgverifier.com/tlsca/tlsca.orgverifier.com-cert.pem")
-    local HOLDER_TLS_PEM=$(one_line_pem "${ORG_DIR}/peerOrganizations/orgholder.com/tlsca/tlsca.orgholder.com-cert.pem")
-    
-    # Read all CA certs
-    local ISSUER_CA_PEM=$(one_line_pem "${ORG_DIR}/peerOrganizations/orgissuer.com/ca/ca.orgissuer.com-cert.pem")
-    local VERIFIER_CA_PEM=$(one_line_pem "${ORG_DIR}/peerOrganizations/orgverifier.com/ca/ca.orgverifier.com-cert.pem")
-    local HOLDER_CA_PEM=$(one_line_pem "${ORG_DIR}/peerOrganizations/orgholder.com/ca/ca.orgholder.com-cert.pem")
-    local ORDERER_TLS_PEM=$(one_line_pem "${ORG_DIR}/ordererOrganizations/legitifyapp.com/tlsca/tlsca.legitifyapp.com-cert.pem")
-
-    sed -e "s/\${ORG}/$ORG/" \
-        -e "s#\${ISSUER_TLS_PEM}#$ISSUER_TLS_PEM#" \
-        -e "s#\${VERIFIER_TLS_PEM}#$VERIFIER_TLS_PEM#" \
-        -e "s#\${HOLDER_TLS_PEM}#$HOLDER_TLS_PEM#" \
-        -e "s#\${ISSUER_CA_PEM}#$ISSUER_CA_PEM#" \
-        -e "s#\${VERIFIER_CA_PEM}#$VERIFIER_CA_PEM#" \
-        -e "s#\${HOLDER_CA_PEM}#$HOLDER_CA_PEM#" \
-        -e "s#\${ORDERER_TLS_PEM}#$ORDERER_TLS_PEM#" \
-        ${ORG_DIR}/ccp-template.json
-}
-
 # OrgIssuer
 json_ccp "OrgIssuer" > "${ORG_DIR}/peerOrganizations/orgissuer.com/connection-orgissuer.json"
 # OrgVerifier

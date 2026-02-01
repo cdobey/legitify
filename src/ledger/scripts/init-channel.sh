@@ -14,7 +14,7 @@ else
 fi
 export PATH=${LEDGER_PATH}/bin:${SCRIPT_PATH}:$PATH
 export VERBOSE=false
-export ORDERER_HOST=orderer.legitifyapp.com
+export ORDERER_HOST=${ORDERER_HOST:-}
 
 # Optional override: comma/space-separated list of orderer hostnames.
 # Example: ORDERER_HOSTS="orderer.legitifyapp.com"
@@ -22,6 +22,9 @@ ORDERER_HOSTS=${ORDERER_HOSTS:-"orderer.legitifyapp.com,orderer2.legitifyapp.com
 
 # Normalize to space-separated list
 ORDERER_HOSTS_NORM=$(echo "${ORDERER_HOSTS}" | tr ',' ' ')
+if [ -z "${ORDERER_HOST}" ]; then
+    ORDERER_HOST=$(echo "${ORDERER_HOSTS_NORM}" | awk '{print $1}')
+fi
 
 echo "=== Fabric Network Initialization ==="
 infoln "CRYPTO_PATH: ${CRYPTO_PATH}"

@@ -25,7 +25,7 @@ app.use(
   cors({
     origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Maintenance-Bypass'],
     credentials: true,
     maxAge: 86400, // Cache preflight requests for 24 hours
   }),
@@ -47,6 +47,34 @@ app.use((req, res, next) => {
 });
 
 app.use(morgan('dev'));
+
+// Maintenance mode: block write requests during reseed/upgrade windows.
+app.use((req, res, next) => {
+  const maintenanceEnabled = process.env.MAINTENANCE_MODE === 'true';
+  if (!maintenanceEnabled) {
+    return next();
+  }
+
+  const bypassToken = process.env.MAINTENANCE_BYPASS_TOKEN;
+  const bypassHeader = req.header('x-maintenance-bypass');
+  if (bypassToken && bypassHeader === bypassToken) {
+    return next();
+  }
+
+  const writeMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+  if (!writeMethods.has(req.method)) {
+    return next();
+  }
+
+  if (req.path === '/auth/login') {
+    return next();
+  }
+
+  res.status(503).json({
+    error: 'Maintenance mode: write operations are temporarily disabled',
+    maintenance: true,
+  });
+});
 
 // Basic test route
 app.get('/', (req: Request, res: Response) => {

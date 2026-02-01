@@ -35,3 +35,8 @@ EXPOSE 9999
 
 # Run the chaincode server
 ENTRYPOINT ["./docker-entrypoint.sh"]
+
+# Docker HEALTHCHECK so orchestration platforms (Coolify/Traefik) detect container health
+# Checks that the chaincode server is listening on 9999
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD nc -z localhost 9999 || exit 1
