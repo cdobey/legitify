@@ -7,6 +7,9 @@ networks:
   legitify-network:
     name: fabric_test
     driver: bridge
+  coolify:
+    external: true
+    name: coolify
 
 volumes:
   pgdata:
@@ -312,6 +315,7 @@ services:
       - fabric_data:/app/fabric-data:ro
     networks:
       - legitify-network
+      - coolify
     healthcheck:
       test: ['CMD-SHELL', 'curl -f http://localhost:3001/health || exit 1']
       interval: 30s
@@ -320,6 +324,7 @@ services:
       start_period: 60s
     labels:
       - 'traefik.enable=true'
+      - 'traefik.docker.network=coolify'
       - 'traefik.http.routers.legitify-backend.rule=Host(`api-legitify.dobey.dev`)'
       - 'traefik.http.routers.legitify-backend.tls=true'
       - 'traefik.http.services.legitify-backend.loadbalancer.server.port=3001'
@@ -345,6 +350,7 @@ services:
         condition: service_healthy
     networks:
       - legitify-network
+      - coolify
     healthcheck:
       test: ['CMD-SHELL', 'curl -f http://localhost:80 || exit 1']
       interval: 30s
@@ -353,6 +359,7 @@ services:
       start_period: 20s
     labels:
       - 'traefik.enable=true'
+      - 'traefik.docker.network=coolify'
       - 'traefik.http.routers.legitify-frontend.rule=Host(`legitify.dobey.dev`)'
       - 'traefik.http.routers.legitify-frontend.tls=true'
       - 'traefik.http.services.legitify-frontend.loadbalancer.server.port=80'
