@@ -12,8 +12,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:studio": "prisma studio",
-    "db:init": "bash scripts/start-fresh-db.sh",
-    "ledger:reseed": "ts-node -r tsconfig-paths/register scripts/ledger-reseed.ts"
+    "db:init": "bash scripts/start-fresh-db.sh"
   },
   "prisma": {
     "schema": "src/prisma/schema.prisma"

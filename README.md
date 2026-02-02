@@ -85,7 +85,7 @@ legitify/
 │   ├── server/           # Node.js backend
 │   └── ledger/           # Hyperledger Fabric
 ├── docker-compose.yml     # Local development
-├── docker-compose.coolify.yml  # Fabric-only deployment for Coolify
+├── docker-compose.coolify.yml  # Production deployment
 └── DEPLOYMENT.md         # Deployment guide
 ```
 
