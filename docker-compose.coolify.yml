@@ -40,7 +40,9 @@ services:
       retries: 5
       start_period: 10s
     networks:
-      - legitify-network
+      legitify-network:
+        aliases:
+          - legitify-db
     deploy:
       resources:
         limits:
@@ -309,7 +311,7 @@ services:
       NODE_ENV: production
       SERVER_PORT: 3001
       IS_DEPLOYMENT: 'true'
-      POSTGRES_CONNECTION_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-legitify}
+      POSTGRES_CONNECTION_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@legitify-db:5432/${POSTGRES_DB:-legitify}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       API_URL: https://${BACKEND_DOMAIN:-api-legitify.dobey.dev}
       MOCK_LEDGER: 'false'
