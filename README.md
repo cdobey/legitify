@@ -1,14 +1,14 @@
 # Legitify
 
-A blockchain-based credential verification platform that enables secure issuance, management, and verification of digital credentials.
+Legitify is a credential issuance and verification platform. Issuers create credentials, holders control access, and verifiers can confirm authenticity. The ledger integration is optional; the database is the source of truth for users and application state, while Fabric provides tamper-evident records.
 
 ## Features
 
-- 🔐 **Secure Credential Issuance** - Organizations can issue tamper-proof digital credentials
-- ✅ **Instant Verification** - Verify credentials in real-time against the blockchain
-- 👤 **User-Controlled** - Holders maintain full control over their credentials
-- 🔗 **Blockchain-Backed** - Optional Hyperledger Fabric integration for immutability
-- 🌐 **Modern Web Stack** - React frontend with Node.js/Express backend
+- Secure credential issuance with issuer/member controls
+- Holder-managed access grants
+- Verifier lookup with hash checks
+- Optional Hyperledger Fabric ledger for immutability
+- React frontend + Express/Prisma backend
 
 ## Architecture
 
@@ -28,9 +28,21 @@ A blockchain-based credential verification platform that enables secure issuance
                         └─────────────────┘
 ```
 
-## Quick Start
+## Data model (high level)
 
-### Using Docker (Recommended)
+- **User**: issuer/holder/verifier accounts
+- **Issuer**: organization metadata and membership
+- **Credential**: stored in DB, optionally mirrored to ledger
+- **Request**: access requests and grants
+- **WalletIdentity**: Fabric identities stored in DB
+
+## Ledger behavior
+
+- `MOCK_LEDGER=true` bypasses Fabric calls but keeps application flows working.
+- When Fabric is enabled, credentials are issued on-chain and status updates are recorded.
+- Wallet identities are derived from cryptogen admin identities and stored in Postgres.
+
+## Quick Start (Docker)
 
 ```bash
 # Clone the repository
@@ -50,18 +62,13 @@ Access:
 - API: http://localhost:3001
 - API Docs: http://localhost:3001/docs
 
-### Manual Setup
+## Local Development
 
-See [src/README.md](src/README.md) for detailed development instructions.
+See `src/README.md` for local setup, scripts, and environment variables.
 
 ## Deployment
 
-Legitify is designed for deployment on Coolify. See [DEPLOYMENT.md](DEPLOYMENT.md) for:
-
-- Complete deployment instructions
-- Environment variable reference
-- DNS configuration
-- Security checklist
+Production is split into services (frontend, backend, database, Fabric compose). Notes live in `DEPLOYMENT.md`.
 
 ## Tech Stack
 
@@ -78,15 +85,15 @@ Legitify is designed for deployment on Coolify. See [DEPLOYMENT.md](DEPLOYMENT.m
 
 ```
 legitify/
-├── .github/workflows/     # GitHub Actions CI/CD
-├── docs/                  # Documentation
+├── .github/workflows/           # GitHub Actions CI/CD
 ├── src/
-│   ├── client/           # React frontend
-│   ├── server/           # Node.js backend
-│   └── ledger/           # Hyperledger Fabric
-├── docker-compose.yml     # Local development
-├── docker-compose.coolify.yml  # Production deployment
-└── DEPLOYMENT.md         # Deployment guide
+│   ├── client/                  # React frontend
+│   ├── server/                  # Node.js backend
+│   └── ledger/                  # Hyperledger Fabric configs + chaincode
+├── docker-compose.yml           # Local development
+├── docker-compose.coolify.yml   # Fabric-only deployment for Coolify
+├── DEPLOYMENT.md                # Deployment notes
+└── README.md
 ```
 
 ## Development
@@ -98,15 +105,8 @@ cd src/client && npm test
 
 # Build Docker images locally
 docker compose build
-
-# Format code
-npm run format
 ```
 
 ## License
 
-MIT License - See [LICENSE](LICENSE) for details.
-
-## Contributing
-
-Contributions are welcome! Please read our contributing guidelines before submitting PRs.
+MIT License. See `LICENSE` for details.
