@@ -59,6 +59,7 @@ services:
     environment:
       ORDERER_HOSTS: ${ORDERER_HOSTS:-orderer.legitifyapp.com,orderer2.legitifyapp.com,orderer3.legitifyapp.com,orderer4.legitifyapp.com}
       ORDERER_MODE: ${ORDERER_MODE:-}
+      FORCE_CRYPTO_REGEN: ${FORCE_CRYPTO_REGEN:-false}
     volumes:
       - fabric_data:/data
     networks:
@@ -112,10 +113,10 @@ services:
   # WAIT SERVICE - Ensures orderer is ready before peers start
   # =============================================================================
   orderer-wait:
-    image: busybox:latest
+    image: curlimages/curl:8.6.0
     container_name: orderer-wait
     restart: 'no'
-    command: sh -c "sleep 15"
+    command: sh -c "until curl -sf http://orderer.legitifyapp.com:9443/healthz; do echo 'waiting for orderer...'; sleep 2; done"
     networks:
       - legitify-network
     depends_on:
@@ -142,6 +143,10 @@ services:
       - CORE_PEER_TLS_CERT_FILE=/data/organizations/peerOrganizations/orgissuer.com/peers/peer0.orgissuer.com/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/data/organizations/peerOrganizations/orgissuer.com/peers/peer0.orgissuer.com/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/data/organizations/peerOrganizations/orgissuer.com/peers/peer0.orgissuer.com/tls/ca.crt
+      - CORE_PEER_GOSSIP_ENDPOINT=peer0.orgissuer.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orgissuer.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.orgissuer.com:7051
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9443
       - FABRIC_CFG_PATH=/data/config
     volumes:
       - fabric_data:/data
@@ -176,6 +181,10 @@ services:
       - CORE_PEER_TLS_CERT_FILE=/data/organizations/peerOrganizations/orgverifier.com/peers/peer0.orgverifier.com/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/data/organizations/peerOrganizations/orgverifier.com/peers/peer0.orgverifier.com/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/data/organizations/peerOrganizations/orgverifier.com/peers/peer0.orgverifier.com/tls/ca.crt
+      - CORE_PEER_GOSSIP_ENDPOINT=peer0.orgverifier.com:8051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orgverifier.com:8051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.orgverifier.com:8051
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9443
       - FABRIC_CFG_PATH=/data/config
     volumes:
       - fabric_data:/data
@@ -210,6 +219,10 @@ services:
       - CORE_PEER_TLS_CERT_FILE=/data/organizations/peerOrganizations/orgholder.com/peers/peer0.orgholder.com/tls/server.crt
       - CORE_PEER_TLS_KEY_FILE=/data/organizations/peerOrganizations/orgholder.com/peers/peer0.orgholder.com/tls/server.key
       - CORE_PEER_TLS_ROOTCERT_FILE=/data/organizations/peerOrganizations/orgholder.com/peers/peer0.orgholder.com/tls/ca.crt
+      - CORE_PEER_GOSSIP_ENDPOINT=peer0.orgholder.com:9051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.orgholder.com:9051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.orgholder.com:9051
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9443
       - FABRIC_CFG_PATH=/data/config
     volumes:
       - fabric_data:/data
@@ -230,10 +243,10 @@ services:
   # WAIT SERVICE - Ensures peers are ready before CLI starts
   # =============================================================================
   peer-wait:
-    image: busybox:latest
+    image: curlimages/curl:8.6.0
     container_name: peer-wait
     restart: 'no'
-    command: sh -c "sleep 20"
+    command: sh -c "until curl -sf http://peer0.orgissuer.com:9443/healthz && curl -sf http://peer0.orgverifier.com:9443/healthz && curl -sf http://peer0.orgholder.com:9443/healthz; do echo 'waiting for peers...'; sleep 2; done"
     networks:
       - legitify-network
     depends_on:

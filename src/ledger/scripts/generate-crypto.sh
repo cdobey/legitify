@@ -17,6 +17,13 @@ CONFIG_DIR="${DATA_DIR}/config"
 
 infoln "Generating crypto material into ${DATA_DIR}..."
 
+# Skip regeneration unless explicitly forced
+FORCE_CRYPTO_REGEN=${FORCE_CRYPTO_REGEN:-false}
+if [ -f "${DATA_DIR}/crypto_gen_id.txt" ] && [ "${FORCE_CRYPTO_REGEN}" != "true" ]; then
+    infoln "Existing crypto material detected and FORCE_CRYPTO_REGEN=false; skipping regeneration."
+    exit 0
+fi
+
 # Optional orderer selection based on env
 ORDERER_HOSTS=${ORDERER_HOSTS:-"orderer.legitifyapp.com,orderer2.legitifyapp.com,orderer3.legitifyapp.com,orderer4.legitifyapp.com"}
 ORDERER_HOSTS_NORM=$(echo "${ORDERER_HOSTS}" | tr ',' ' ')
